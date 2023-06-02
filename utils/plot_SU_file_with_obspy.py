@@ -118,6 +118,13 @@ def plot_SU_file(file,show_plot):
             plt.ylabel("Counts")
             plt.show()
 
+        # Wait for the user input to terminate the program
+        input("Press any key to terminate the program")
+
+    print("")
+    print("all done")
+    print("")
+
 
 def usage():
     print("usage: ./plot_SU_file_with_obspy.py su_file [show]")

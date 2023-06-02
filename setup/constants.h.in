@@ -43,24 +43,14 @@
 ! set to SIZE_DOUBLE to run in double precision (increases memory size by 2)
   integer, parameter :: CUSTOM_REAL = @CUSTOM_REAL@
 
-!----------- parameters that can be changed by the user -----------
-
-! for validation of undoing of attenuation versus an exact solution saved to disk
-! should never be needed any more, it was developed and used for Figure 3 of
-! D. Komatitsch, Z. Xie, E. Bozdag, E. Sales de Andrade, D. Peter, Q. Liu and J. Tromp,
-! Anelastic sensitivity kernels with parsimonious storage for adjoint tomography and full waveform inversion,
-! Geophysical Journal International, vol. 206(3), p. 1467-1478, doi: 10.1093/gji/ggw224 (2016).
-  logical, parameter :: EXACT_UNDOING_TO_DISK = .false.
-! ID of the huge file in which we dump all the time steps of the simulation
-  integer, parameter :: IFILE_FOR_EXACT_UNDOING = 244
-
 ! set to .false.  if running on a Beowulf-type machine with local disks
 ! set to .true. if running on a shared-memory machine with common file system
 ! if running on a Beowulf, also modify name of nodes in filter_machine_file.f90
   logical, parameter :: LOCAL_PATH_IS_ALSO_GLOBAL = .@LOCAL_PATH_IS_ALSO_GLOBAL@.
 
-! maximum length of strings used for paths, reading from files, etc.
-  integer, parameter :: MAX_STRING_LEN = 512
+
+!----------- parameters that can be changed by the user -----------
+
 
 !!-----------------------------------------------------------
 !!
@@ -116,6 +106,9 @@
 
 ! ignore variable name field (junk) at the beginning of each input line
   logical, parameter :: IGNORE_JUNK = .true.,DONT_IGNORE_JUNK = .false.
+
+! maximum length of strings used for paths, reading from files, etc.
+  integer, parameter :: MAX_STRING_LEN = 512
 
 !!-----------------------------------------------------------
 !!
@@ -196,6 +189,12 @@
 ! of the manual. This source decay rate to mimic an equivalent triangle
 ! was found by trial and error
   double precision, parameter :: SOURCE_DECAY_MIMIC_TRIANGLE = 1.628d0
+
+! monochromatic source time function
+! flag to use monochromatic source time function for CMT sources
+  logical, parameter :: USE_MONOCHROMATIC_CMT_SOURCE = .false.
+! This parameter determines the taper length of monochromatic source time function in seconds
+  double precision, parameter :: TAPER_MONOCHROMATIC_SOURCE = 200.0d0
 
 ! receivers
 
@@ -284,10 +283,6 @@
   integer, parameter :: Ntime_step_dsm = 100
   integer, parameter :: IIN_veloc_dsm = 51, IIN_tract_dsm = 52
   integer, parameter :: IIN_displ_axisem = 54
-
-! stores mesh files as cubit-exported files into directory MESH/ (for single process run)
-! todo: we could put this parameter into the Mesh_Par_file
-  logical, parameter :: SAVE_MESH_AS_CUBIT = .false.
 
 !!-----------------------------------------------------------
 !!
@@ -488,37 +483,9 @@
 ! plots PNM cross-section image
 ! (EXPERIMENTAL feature)
 ! (additional cross-section parameters can be specified in create_color_image.f90)
-!! DK DK Jan 2013: here for performance and to reduce the size of the files, one day
-!! DK DK Jan 2013: we should switch to using the JPEG library directly, as already implemented in SPECFEM2D
+! todo: here for performance and to reduce the size of the files, one day
+!       we should switch to using the JPEG library directly, as already implemented in SPECFEM2D
   logical, parameter :: PNM_IMAGE = .false.
-
-! image data output:
-!   type = 1 : displ/velocity x-component
-!   type = 2 : displ/velocity y-component
-!   type = 3 : displ/velocity z-component
-!   type = 4 : displ/velocity norm
-  integer,parameter:: PNM_IMAGE_TYPE = 4
-
-! cross-section surface
-! cross-section origin point
-  real(kind=CUSTOM_REAL),parameter:: PNM_section_xorg = 0.0
-  real(kind=CUSTOM_REAL),parameter:: PNM_section_yorg = 0.0
-  real(kind=CUSTOM_REAL),parameter:: PNM_section_zorg = -100.0
-
-! cross-section surface normal
-  real(kind=CUSTOM_REAL),parameter:: PNM_section_nx = 0.0
-  real(kind=CUSTOM_REAL),parameter:: PNM_section_ny = 0.0
-  real(kind=CUSTOM_REAL),parameter:: PNM_section_nz = 1.0 ! for horizontal cross-section
-
-! cross-section (in-plane) horizontal-direction
-  real(kind=CUSTOM_REAL),parameter:: PNM_section_hdirx = 1.0
-  real(kind=CUSTOM_REAL),parameter:: PNM_section_hdiry = 0.0
-  real(kind=CUSTOM_REAL),parameter:: PNM_section_hdirz = 0.0
-
-! cross-section (in-plane) vertical-direction
-  real(kind=CUSTOM_REAL),parameter:: PNM_section_vdirx = 0.0
-  real(kind=CUSTOM_REAL),parameter:: PNM_section_vdiry = 1.0
-  real(kind=CUSTOM_REAL),parameter:: PNM_section_vdirz = 0.0
 
 ! geometry tolerance parameter to calculate number of independent grid points
 ! sensitive to actual size of model, assumes reference sphere of radius 1
@@ -558,12 +525,17 @@
 ! adds overlap elements
   logical,parameter :: LTS_OVERLAP_REGION   = .false.
 
-! uses only 1 single p-level (for debugging)
+! uses only 1 single p-level
   logical,parameter :: LTS_SINGLE_P_LEVEL = .false.
-! uses only 2 p-levels (for debugging)
+! uses only 2 p-levels
   logical,parameter :: LTS_TWO_P_LEVEL = .false.
 
 ! decreases final coarsest time step for stability
+! note: LTS must decrease time step for stability depending on p depth;
+!       to avoid this decrease, one can try to overlap the fine region by one/two elements.
+!       by default, we add an LTS_SAFETY_MARGIN to the suggested LTS time steps and LTS element binning;
+!       where the coarsest time step is calculated as a multiple of the user DT input in Par_file.
+!       here, we can further decrease this coarsest step for LTS simulations to add additional stability.
   logical,parameter :: LTS_DECREASE_DT = .false.
 ! time step margin to use for decrease
   double precision,parameter :: LTS_STABILITY_MARGIN_DT = 0.6d0
@@ -608,6 +580,20 @@
 ! debugging: without MPI assembly
   logical,parameter :: ASSEMBLE_MPI_OFF = .false.
 
+!!-----------------------------------------------------------
+!!
+!! undo attenuation validation
+!!
+!!-----------------------------------------------------------
+
+! for validation of undoing of attenuation versus an exact solution saved to disk
+! should never be needed any more, it was developed and used for Figure 3 of
+! D. Komatitsch, Z. Xie, E. Bozdag, E. Sales de Andrade, D. Peter, Q. Liu and J. Tromp,
+! Anelastic sensitivity kernels with parsimonious storage for adjoint tomography and full waveform inversion,
+! Geophysical Journal International, vol. 206(3), p. 1467-1478, doi: 10.1093/gji/ggw224 (2016).
+  logical, parameter :: EXACT_UNDOING_TO_DISK = .false.
+! ID of the huge file in which we dump all the time steps of the simulation
+  integer, parameter :: IFILE_FOR_EXACT_UNDOING = 244
 
 !------------------------------------------------------
 !----------- do not modify anything below -------------
@@ -694,7 +680,7 @@
 
 ! number of lines per source in CMTSOLUTION file
   integer, parameter :: NLINES_PER_CMTSOLUTION_SOURCE = 13
-  integer, parameter :: NLINES_PER_FORCESOLUTION_SOURCE = 10
+  integer, parameter :: NLINES_PER_FORCESOLUTION_SOURCE = 11
 
 ! number of iterations to solve the system for xi and eta
 ! setting it to 5 instead of 4 ensures that the result obtained is not compiler dependent

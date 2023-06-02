@@ -166,6 +166,7 @@ xcombine_surf_data_OBJECTS = \
 
 xcombine_surf_data_SHARED_OBJECTS = \
 	$O/shared_par.shared_module.o \
+	$O/count_number_of_sources.shared.o \
 	$O/exit_mpi.shared.o \
 	$O/read_parameter_file.shared.o \
 	$O/read_value_parameters.shared.o \
@@ -192,6 +193,7 @@ xcombine_vol_data_OBJECTS = \
 
 xcombine_vol_data_SHARED_OBJECTS = \
 	$O/shared_par.shared_module.o \
+	$O/count_number_of_sources.shared.o \
 	$O/exit_mpi.shared.o \
 	$O/read_parameter_file.shared.o \
 	$O/read_value_parameters.shared.o \
@@ -374,6 +376,7 @@ xproject_and_combine_vol_data_on_regular_grid_SHARED_OBJECTS = \
 	$O/check_mesh_resolution.shared.o \
 	$O/create_name_database.shared.o \
 	$O/define_derivation_matrices.shared.o \
+	$O/define_mass_matrices.shared.o \
 	$O/detect_surface.shared.o \
 	$O/force_ftz.cc.o \
 	$O/get_attenuation_model.shared.o \
@@ -381,6 +384,7 @@ xproject_and_combine_vol_data_on_regular_grid_SHARED_OBJECTS = \
 	$O/get_jacobian_boundaries.shared.o \
 	$O/get_shape3D.shared.o \
 	$O/gll_library.shared.o \
+	$O/hdf5_manager.shared_hdf5_module.o \
 	$O/hex_nodes.shared.o \
 	$O/lagrange_poly.shared.o \
 	$O/netlib_specfun_erf.shared.o \
@@ -419,6 +423,7 @@ xcreate_movie_shakemap_AVS_DX_GMT_OBJECTS = \
 
 xcreate_movie_shakemap_AVS_DX_GMT_SHARED_OBJECTS = \
 	$O/shared_par.shared_module.o \
+	$O/count_number_of_sources.shared.o \
 	$O/get_global.shared.o \
 	$O/param_reader.cc.o \
 	$O/read_parameter_file.shared.o \
@@ -445,6 +450,7 @@ xconvolve_source_timefunction_OBJECTS = \
 
 xconvolve_source_timefunction_SHARED_OBJECTS = \
 	$O/shared_par.shared_module.o \
+	$O/count_number_of_sources.shared.o \
 	$O/exit_mpi.shared.o \
 	$O/param_reader.cc.o \
 	$O/read_parameter_file.shared.o \
@@ -470,6 +476,7 @@ xdetect_duplicates_stations_file_OBJECTS = \
 
 xdetect_duplicates_stations_file_SHARED_OBJECTS = \
 	$O/shared_par.shared_module.o \
+	$O/count_number_of_sources.shared.o \
 	$O/exit_mpi.shared.o \
 	$O/param_reader.cc.o \
 	$O/read_parameter_file.shared.o \

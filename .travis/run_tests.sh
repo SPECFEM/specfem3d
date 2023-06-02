@@ -47,6 +47,7 @@ case "$TESTDIR" in
   26) dir=EXAMPLES/small_adjoint_multiple_sources/ ;;
   27) dir=EXAMPLES/Gmsh_simple_box_hex27/ ;;
   28) dir=EXAMPLES/waterlayered_poroelastic/ ;;
+  29) dir=EXAMPLES/inversion_examples/fwi_test_acoustic/ ;;
   *) dir=EXAMPLES/homogeneous_halfspace/ ;;
 esac
 
@@ -211,6 +212,17 @@ else
   if [ "$TESTID" == "35" ]; then
     sed -i "s:^NSTEP .*:NSTEP    = 1000:" DATA/Par_file
   fi
+  # inversion example
+  if [ "$TESTID" == "36" ]; then
+    sed -i "s:^NTSTEP_BETWEEN_OUTPUT_INFO .*:NTSTEP_BETWEEN_OUTPUT_INFO    = 500:" DATA/Par_file
+    # reduce mesh resolution to get an output within the 10-min limit of travis
+    # (otherwise example will fail due to a stall output error)
+    sed -i "s:20:16:g" DATA/meshfem3D_files/Mesh_Par_file.INIT
+    sed -i "s:20:16:g" DATA/meshfem3D_files/Mesh_Par_file.TRUE
+    sed -i "s:20:16:g" DATA/meshfem3D_files/interfaces.dat
+    sed -i "s/Niter .*/Niter       : 1/" DATA/inverse_problem/inversion_fwi.dat
+    sed -i "s/NSTEP .*/NSTEP         : 100/" DATA/inverse_problem/acquisition.dat
+  fi
 
   # coverage run
   if [ "$TESTCOV" == "1" ]; then
@@ -238,7 +250,7 @@ else
   echo
 
   # seismogram comparison
-  if [ "$TESTCOV" == "0" ] && [ ! "$TESTID" == "11" ]; then
+  if [ "$TESTCOV" == "0" ] && [ ! "$TESTID" == "11" ] && [ ! "$TESTID" == "36" ]; then
     my_test
   fi
 fi
@@ -264,24 +276,24 @@ cd $WORKDIR
 ##
 ## homogeneous halfspace examples
 ##
-echo 'Coverage...' && echo -en 'travis_fold:start:coverage.elastic-noabs\\r'
-if [ "$TESTCOV" == "1" ] && [ "$TESTID" == "1" ]; then
-  ##
-  ## testing homogeneous halfspace
-  ##
-  echo "##################################################################"
-  echo "EXAMPLES/homogeneous_halfspace_HEX8_elastic_no_absorbing/"
-  echo
-  cd EXAMPLES/homogeneous_halfspace_HEX8_elastic_no_absorbing/
-  sed -i "s:^NSTEP .*:NSTEP    = 5:" DATA/Par_file
-  ./run_this_example.sh
-  if [[ $? -ne 0 ]]; then exit 1; fi
-  cd $WORKDIR
-fi
-echo -en 'travis_fold:end:coverage.elastic-noabs\\r'
+#echo 'Coverage...' && echo -en 'travis_fold:start:coverage.elastic-noabs\\r'
+#if [ "$TESTCOV" == "1" ] && [ "$TESTID" == "0" ]; then
+#  ##
+#  ## testing homogeneous halfspace
+#  ##
+#  echo "##################################################################"
+#  echo "EXAMPLES/homogeneous_halfspace_HEX8_elastic_no_absorbing/"
+#  echo
+#  cd EXAMPLES/homogeneous_halfspace_HEX8_elastic_no_absorbing/
+#  sed -i "s:^NSTEP .*:NSTEP    = 5:" DATA/Par_file
+#  ./run_this_example.sh
+#  if [[ $? -ne 0 ]]; then exit 1; fi
+#  cd $WORKDIR
+#fi
+#echo -en 'travis_fold:end:coverage.elastic-noabs\\r'
 
 echo 'Coverage...' && echo -en 'travis_fold:start:coverage.elastic-hex27-noabs\\r'
-if [ "$TESTCOV" == "1" ] && [ "$TESTID" == "1" ]; then
+if [ "$TESTCOV" == "1" ] && [ "$TESTID" == "0" ]; then
   ##
   ## testing hex27 example
   ##
@@ -297,7 +309,7 @@ fi
 echo -en 'travis_fold:end:coverage.elastic-hex27-noabs\\r'
 
 echo 'Coverage...' && echo -en 'travis_fold:start:coverage.poro\\r'
-if [ "$TESTCOV" == "1" ] && [ "$TESTID" == "1" ]; then
+if [ "$TESTCOV" == "1" ] && [ "$TESTID" == "0" ]; then
   ##
   ## testing poroelastic
   ##
@@ -314,7 +326,7 @@ echo -en 'travis_fold:end:coverage.poro\\r'
 
 ## kernel example
 echo 'Coverage...' && echo -en 'travis_fold:start:coverage.kernel\\r'
-if [ "$TESTCOV" == "1" ] && [ "$TESTID" == "1" ]; then
+if [ "$TESTCOV" == "1" ] && [ "$TESTID" == "0" ]; then
   ##
   ## testing acoustic kernel simulation
   ##
@@ -324,6 +336,7 @@ if [ "$TESTCOV" == "1" ] && [ "$TESTID" == "1" ]; then
   cd EXAMPLES/homogeneous_acoustic/
   cp -v DATA/Par_file DATA/Par_file.org
   sed -i "s:^NSTEP .*:NSTEP    = 5:" DATA/Par_file
+  sed -i "s:300:5:" run_this_example_kernel.sh
   sed -i "s:^t_start.*:t_start=-6.0:" create_adjoint_sources.sh
   sed -i "s:^t_end.*:t_end=-5.55:" create_adjoint_sources.sh
   ./run_this_example_kernel.sh

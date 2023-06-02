@@ -40,6 +40,9 @@
   double precision :: tCPU,tstart
   double precision, external :: wtime
 
+  ! checks if anything to do
+  if (.not. IO_compute_task) return
+
   ! synchonizes
   call synchronize_all()
 
@@ -259,7 +262,7 @@
   ! to make sure all the nodes have finished to read their databases
   call synchronize_all()
 
-  ! the mass matrix needs to be assembled with MPI here once and for all
+  ! sets up mass matrices
   if (ACOUSTIC_SIMULATION) then
     ! adds contributions
     if (STACEY_ABSORBING_CONDITIONS) then
@@ -272,16 +275,6 @@
       ! not needed anymore
       deallocate(rmassz_acoustic)
     endif
-
-    call assemble_MPI_scalar_blocking(NPROC,NGLOB_AB,rmass_acoustic, &
-                                      num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
-                                      nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
-                                      my_neighbors_ext_mesh)
-
-    ! fill mass matrix with fictitious non-zero values to make sure it can be inverted globally
-    where(rmass_acoustic <= 0._CUSTOM_REAL) rmass_acoustic = 1._CUSTOM_REAL
-    rmass_acoustic(:) = 1._CUSTOM_REAL / rmass_acoustic(:)
-
   endif
 
   if (ELASTIC_SIMULATION) then
@@ -302,9 +295,26 @@
       rmassy(:) = rmass(:)
       rmassz(:) = rmass(:)
     endif
-    ! not needed anymore
-    deallocate(rmass)
+  endif
 
+  ! LTS mass matrices
+  if (LTS_MODE) call lts_prepare_mass_matrices()
+
+  ! the mass matrices need to be assembled with MPI here once and for all
+  ! acoustic domains
+  if (ACOUSTIC_SIMULATION) then
+    call assemble_MPI_scalar_blocking(NPROC,NGLOB_AB,rmass_acoustic, &
+                                      num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
+                                      nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
+                                      my_neighbors_ext_mesh)
+
+    ! fill mass matrix with fictitious non-zero values to make sure it can be inverted globally
+    where(rmass_acoustic <= 0._CUSTOM_REAL) rmass_acoustic = 1._CUSTOM_REAL
+    rmass_acoustic(:) = 1._CUSTOM_REAL / rmass_acoustic(:)
+  endif
+
+  ! elastic domains
+  if (ELASTIC_SIMULATION) then
     ! assemble mass matrix
     call assemble_MPI_scalar_blocking(NPROC,NGLOB_AB,rmassx, &
                                       num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
@@ -338,6 +348,7 @@
     endif
   endif
 
+  ! poroelastic domains
   if (POROELASTIC_SIMULATION) then
     call assemble_MPI_scalar_blocking(NPROC,NGLOB_AB,rmass_solid_poroelastic, &
                                       num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
@@ -356,8 +367,17 @@
     rmass_fluid_poroelastic(:) = 1._CUSTOM_REAL / rmass_fluid_poroelastic(:)
   endif
 
+  ! LTS mass matrices
+  if (LTS_MODE) call lts_prepare_mass_matrices_invert()
+
   ! synchonizes
   call synchronize_all()
+
+  ! frees arrays
+  if (ELASTIC_SIMULATION) then
+    ! not needed anymore
+    deallocate(rmass)
+  endif
 
   end subroutine prepare_timerun_mass_matrices
 
@@ -1124,8 +1144,7 @@
         endif
         b_boundary_injection_field(:,:,:) = 0.0_CUSTOM_REAL
       endif
-
-    endif
+    endif  ! elastic
 
     ! acoustic domains
     if (ACOUSTIC_SIMULATION) then
@@ -1144,7 +1163,6 @@
         ! size of single record
         b_reclen_potential = CUSTOM_REAL * NGLLSQUARE * num_abs_boundary_faces * NB_RUNS_ACOUSTIC_GPU
 
-
         ! check integer size limit: size of b_reclen_potential must fit onto an 4-byte integer
         if (num_abs_boundary_faces > int(2147483646.0 / (CUSTOM_REAL * NGLLSQUARE))) then
           print *,'reclen needed exceeds integer 4-byte limit: ',b_reclen_potential
@@ -1155,7 +1173,7 @@
 
         ! total file size (two lines to implicitly convert to 8-byte integers)
         filesize = b_reclen_potential
-        filesize = filesize*NSTEP
+        filesize = filesize * NSTEP
 
         ! debug check size limit
         !if (NSTEP > 2147483646 / b_reclen_potential) then
@@ -1177,7 +1195,22 @@
                               filesize)
         endif
       endif
-    endif
+
+      if (COUPLE_WITH_INJECTION_TECHNIQUE) then
+        ! boundary contribution to save together with absorbing boundary array b_absorb_field
+        ! for reconstructing backward wavefields in kernel simulations
+        if (b_num_abs_boundary_faces > 0 .and. SIMULATION_TYPE == 1) then
+          ! only needed for forward simulation to store boundary contributions
+          allocate(b_boundary_injection_potential(NGLLSQUARE,b_num_abs_boundary_faces),stat=ier)
+          if (ier /= 0) call exit_MPI_without_rank('error allocating array 2144b')
+          if (ier /= 0) stop 'error allocating array b_boundary_injection_field'
+        else
+          ! dummy
+          allocate(b_boundary_injection_potential(1,1))
+        endif
+        b_boundary_injection_potential(:,:) = 0.0_CUSTOM_REAL
+      endif
+    endif  ! acoustic
 
     ! poroelastic domains
     if (POROELASTIC_SIMULATION) then
@@ -1211,7 +1244,7 @@
 
         ! total file size
         filesize = b_reclen_field_poro
-        filesize = filesize*NSTEP
+        filesize = filesize * NSTEP
 
         if (SIMULATION_TYPE == 3) then
           ! opens existing files
@@ -1231,7 +1264,7 @@
                               filesize)
         endif
       endif
-    endif
+    endif   ! poroelastic
 
   else
     ! no STACEY_ABSORBING_CONDITIONS

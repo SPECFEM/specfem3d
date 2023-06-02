@@ -1,5 +1,5 @@
  Force source located at the origin (0,0,0)
- Receiver located in (x,y,z) =    500.00000000000000        500.00000000000000        500.00000000000000     
+ Receiver located in (x,y,z) =    500.00000000000000        500.00000000000000        500.00000000000000
  BEWARE: computing the elastic reference solution (i.e., without attenuation) instead of the viscoelastic solution
  Computing the full solution, including the near-field term of the Green function
 

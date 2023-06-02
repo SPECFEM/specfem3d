@@ -32,6 +32,9 @@
 
   implicit none
 
+  ! checks if anything to do
+  if (.not. IO_compute_task) return
+
   ! setup for point search
   call setup_point_search_arrays()
 
@@ -66,9 +69,11 @@
   endif
 
   ! frees memory
-  deallocate(xyz_midpoints)
-  deallocate(anchor_iax,anchor_iay,anchor_iaz)
-  if (.not. DO_BRUTE_FORCE_POINT_SEARCH) call setup_free_kdtree()
+  if (.not. INVERSE_FWI_FULL_PROBLEM) then
+    deallocate(xyz_midpoints)
+    deallocate(anchor_iax,anchor_iay,anchor_iaz)
+    if (.not. DO_BRUTE_FORCE_POINT_SEARCH) call setup_free_kdtree()
+  endif
 
   ! synchronizes processes
   call synchronize_all()
@@ -122,7 +127,8 @@
 
   use specfem_par, only: myrank,NSTEP,SIMULATION_TYPE, &
     NTSTEP_BETWEEN_OUTPUT_SEISMOS,NTSTEP_BETWEEN_READ_ADJSRC, &
-    SAVE_ALL_SEISMOS_IN_ONE_FILE,ASDF_FORMAT
+    SAVE_ALL_SEISMOS_IN_ONE_FILE, &
+    ASDF_FORMAT,HDF5_FORMAT
 
   implicit none
 
@@ -152,6 +158,13 @@
       call exit_MPI(myrank,'Error: Setting ASDF_FORMAT to .true. requires NTSTEP_BETWEEN_OUTPUT_SEISMOS >= NSTEP')
     endif
   endif
+  if (HDF5_FORMAT) then
+    ! HDF5 storage requires to have full length of seismograms
+    if (NTSTEP_BETWEEN_OUTPUT_SEISMOS < NSTEP) then
+      print *, 'Error: Setting HDF5_FORMAT to .true. requires NTSTEP_BETWEEN_OUTPUT_SEISMOS >= NSTEP'
+      call exit_MPI(myrank,'Error: Setting HDF5_FORMAT to .true. requires NTSTEP_BETWEEN_OUTPUT_SEISMOS >= NSTEP')
+    endif
+  endif
 
   end subroutine setup_timesteps
 
@@ -168,10 +181,16 @@
   ! local parameters
   integer :: isource,ier
 
+  ! initializes onset time (depends on hdur and source time function)
+  t0 = 0.d0
+
   ! user output
   if (myrank == 0) then
     write(IMAIN,*)
-    write(IMAIN,*) 'sources:',NSOURCES
+    write(IMAIN,*) 'sources: ',NSOURCES
+    ! finite fault simulations ignore CMT and force sources
+    if (HAS_FINITE_FAULT_SOURCE) &
+      write(IMAIN,*) '         finite fault simulation'
     call flush_IMAIN()
   endif
 
@@ -207,31 +226,28 @@
   nu_source(:,:,:) = 0.d0
 
   if (USE_FORCE_POINT_SOURCE) then
-    allocate(factor_force_source(NSOURCES),stat=ier)
-    if (ier /= 0) call exit_MPI_without_rank('error allocating array 2050')
-    allocate(comp_dir_vect_source_E(NSOURCES),stat=ier)
-    if (ier /= 0) call exit_MPI_without_rank('error allocating array 2051')
-    allocate(comp_dir_vect_source_N(NSOURCES),stat=ier)
-    if (ier /= 0) call exit_MPI_without_rank('error allocating array 2052')
-    allocate(comp_dir_vect_source_Z_UP(NSOURCES),stat=ier)
+    allocate(force_stf(NSOURCES), &
+             factor_force_source(NSOURCES), &
+             comp_dir_vect_source_E(NSOURCES), &
+             comp_dir_vect_source_N(NSOURCES), &
+             comp_dir_vect_source_Z_UP(NSOURCES),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 2053')
   else
-    allocate(factor_force_source(1),stat=ier)
-    if (ier /= 0) call exit_MPI_without_rank('error allocating array 2054')
-    allocate(comp_dir_vect_source_E(1),stat=ier)
-    if (ier /= 0) call exit_MPI_without_rank('error allocating array 2055')
-    allocate(comp_dir_vect_source_N(1),stat=ier)
-    if (ier /= 0) call exit_MPI_without_rank('error allocating array 2056')
-    allocate(comp_dir_vect_source_Z_UP(1),stat=ier)
+    allocate(force_stf(1), &
+             factor_force_source(1), &
+             comp_dir_vect_source_E(1), &
+             comp_dir_vect_source_N(1), &
+             comp_dir_vect_source_Z_UP(1),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 2057')
   endif
   if (ier /= 0) stop 'error allocating arrays for force point sources'
+  force_stf(:) = 0
   factor_force_source(:) = 0.d0
   comp_dir_vect_source_E(:) = 0.d0
   comp_dir_vect_source_N(:) = 0.d0
   comp_dir_vect_source_Z_UP(:) = 0.d0
 
-  !! VM VM set the size of user_source_time_function
+  ! sets the size of user_source_time_function array
   if (USE_EXTERNAL_SOURCE_FILE) then
     NSTEP_STF = NSTEP
     NSOURCES_STF = NSOURCES
@@ -240,17 +256,30 @@
     NSTEP_STF = 1
     NSOURCES_STF = 1
   endif
-  !! allocate the array contains the user defined source time function
+  ! allocate array that contains the user defined source time function
   allocate(user_source_time_function(NSTEP_STF, NSOURCES_STF),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 2058')
   if (ier /= 0) stop 'error allocating arrays for user sources time function'
   user_source_time_function(:,:) = 0.0_CUSTOM_REAL
 
+  ! fused wavefield simulations
+  call get_run_number_of_the_source()
+
+  ! checks if anything left to do
+  if (INVERSE_FWI_FULL_PROBLEM) then
+    ! fwi will determine acquisition receivers later
+    if (myrank == 0) then
+      write(IMAIN,*)
+      write(IMAIN,*) 'running inverse FWI full problem, will determine sources later...'
+      write(IMAIN,*)
+      call flush_IMAIN()
+    endif
+    ! all done
+    return
+  endif
+
   ! locate sources in the mesh
   call locate_source()
-
-  ! determines onset time
-  call setup_stf_constants()
 
   ! count number of sources located in this slice
   nsources_local = 0
@@ -261,11 +290,11 @@
   ! checks if source is in an acoustic element and exactly on the free surface because pressure is zero there
   call setup_sources_check_acoustic()
 
+  ! determines onset time
+  call setup_stf_constants()
+
   ! prints source time functions to output files
   if (PRINT_SOURCE_TIME_FUNCTION) call print_stf_file()
-
-  ! fused wavefield simulations
-  call get_run_number_of_the_source()
 
   end subroutine setup_sources
 !
@@ -343,8 +372,10 @@
       write(IMAIN,*)
       ! warning
       if (NSOURCES /= NB_RUNS_ACOUSTIC_GPU) then
+        write(IMAIN,*) '  ***'
         write(IMAIN,*) '  *** WARNING: number of sources ',NSOURCES, &
                        ' does not match number of runs ',NB_RUNS_ACOUSTIC_GPU,' ***'
+        write(IMAIN,*) '  ***'
         write(IMAIN,*)
       endif
       call flush_IMAIN()
@@ -368,11 +399,18 @@
   double precision :: t0_acoustic
   integer :: isource,ispec
 
+  ! initializes simulation start time t0
+  t0 = 0.d0
+
+  ! checks if anything to do, finite fault simulations ignore CMT and force sources
+  if (HAS_FINITE_FAULT_SOURCE) return
+
   if (abs(minval(tshift_src)) > TINYVAL) then
-!! DK DK this should be a warning, not an error; I thus changed it; users can decide to do this purposely
-!! DK DK (in particular for applications outside of seismology, e.g. in imaging or in non-destructive testing)
-!   call exit_MPI(myrank,'one tshift_src must be zero, others must be positive')
+    ! this should be a warning; users can decide to do this purposely
+    ! (in particular for applications outside of seismology, e.g. in imaging or in non-destructive testing)
+    write(IMAIN,*)
     write(IMAIN,*) 'INFORMATION: no tshift_src is equal to zero, thus the origin time is not t0, it is changed by tshift_src'
+    write(IMAIN,*)
   endif
 
   ! filter source time function by Gaussian with hdur = HDUR_MOVIE when outputing movies or shakemaps
@@ -384,15 +422,65 @@
       write(IMAIN,*)
       call flush_IMAIN()
     endif
+
+    ! one cannot use a Heaviside source for the movies
+    ! checks if CMT source time function is a Heaviside
+    ! (high-frequency oscillations don't look good in movies)
+    if (.not. USE_FORCE_POINT_SOURCE .and. &
+        .not. USE_EXTERNAL_SOURCE_FILE) then
+      if (minval(hdur(:)) < TINYVAL) &
+        stop 'Error hdur too small for movie creation, movies do not make sense for Heaviside source'
+    endif
   endif
 
   ! convert the half duration for triangle STF to the one for Gaussian STF
   hdur_Gaussian(:) = hdur(:) / SOURCE_DECAY_MIMIC_TRIANGLE
 
   ! define t0 as the earliest start time
-  ! note: an earlier start time also reduces numerical noise due to a
-  !          non-zero offset at the beginning of the source time function
-  t0 = - 2.0d0 * minval(tshift_src(:) - hdur(:))   ! - 1.5d0 * minval(tshift_src-hdur)
+  if (USE_FORCE_POINT_SOURCE) then
+    ! point force sources
+    ! (might start depending on the frequency given by hdur)
+    ! note: point force sources will give the dominant frequency in hdur, thus the main period is 1/hdur.
+    !       also, these sources might use a Ricker source time function instead of a Gaussian.
+    !       For a Ricker source time function, a start time ~1.2 * main_period is a good choice.
+    t0 = 0.d0
+    do isource = 1,NSOURCES
+      select case(force_stf(isource))
+      case (0)
+        ! Gaussian source time function
+        t0 = min(t0,1.5d0 * (tshift_src(isource) - hdur(isource)))
+      case (1)
+        ! Ricker source time function
+        t0 = min(t0,1.2d0 * (tshift_src(isource) - 1.0d0/hdur(isource)))
+      case (2)
+        ! Heaviside
+        t0 = min(t0,1.5d0 * (tshift_src(isource) - hdur(isource)))
+      case (3)
+        ! Monochromatic
+        t0 = 0.d0
+      case (4)
+        ! Gaussian source time function by Meschede et al. (2011)
+        t0 = min(t0,1.5d0 * (tshift_src(isource) - hdur(isource)))
+      case default
+        stop 'unsupported force_stf value!'
+      end select
+    enddo
+    ! start time defined as positive value, will be subtracted
+    t0 = - t0
+  else
+    ! moment tensors
+    if (USE_RICKER_TIME_FUNCTION) then
+      ! note: sources will give the dominant frequency in hdur,
+      !       thus the main period is 1/hdur.
+      !       for a Ricker source time function, a start time ~1.2 * dominant_period is a good choice
+      t0 = - 1.2d0 * minval(tshift_src(:) - 1.0d0/hdur(:))
+    else
+      ! (based on Heaviside functions)
+      ! note: an earlier start time also reduces numerical noise due to a
+      !          non-zero offset at the beginning of the source time function
+      t0 = - 2.0d0 * minval(tshift_src(:) - hdur(:))   ! - 1.5d0 * minval(tshift_src-hdur)
+    endif
+  endif
 
   ! uses an earlier start time if source is acoustic with a Gaussian source time function
   t0_acoustic = 0.0d0
@@ -401,7 +489,17 @@
       ispec = ispec_selected_source(isource)
       if (ispec_is_acoustic(ispec)) then
         ! uses an earlier start time
-        t0_acoustic = - 3.0d0 * ( tshift_src(isource) - hdur(isource) )
+        if (USE_FORCE_POINT_SOURCE) then
+          if (force_stf(isource) == 0) then
+            ! Gaussian
+            t0_acoustic = - 3.0d0 * ( tshift_src(isource) - hdur(isource) )
+          endif
+        else
+          if (.not. USE_RICKER_TIME_FUNCTION) then
+            ! Gaussian STF by default
+            t0_acoustic = - 3.0d0 * ( tshift_src(isource) - hdur(isource) )
+          endif
+        endif
         if (t0_acoustic > t0 ) t0 = t0_acoustic
       endif
     endif
@@ -410,21 +508,6 @@
   ! note: t0 is defined positive and will be subtracted from simulation time (it-1)*DT
   t0_acoustic = t0
   call max_all_all_dp(t0_acoustic,t0)
-
-  ! point force sources will start depending on the frequency given by hdur
-  !if (USE_FORCE_POINT_SOURCE .or. USE_RICKER_TIME_FUNCTION) then
-  !! COMMENTED BY FS FS -> account for the case USE_FORCE_POINT_SOURCE but NOT using a ricker (i.e. using a Gaussian),
-  ! in this case the above defined t0 = - 2.0d0 * minval(tshift_src(:) - hdur(:)) is correct
-  ! (analogous to using error function in case of moment tensor sources). You only need to be aware that hdur=0
-  ! then has a different behaviour for point forces (compared with moment tensor sources):
-  ! then hdur is set to TINYVAL and NOT to 5*DT as in case of moment tensor source (Heaviside)
-  if (USE_RICKER_TIME_FUNCTION) then !! ADDED BY FS FS
-    ! note: point force sources will give the dominant frequency in hdur,
-    !       thus the main period is 1/hdur.
-    !       also, these sources use a Ricker source time function instead of a Gaussian.
-    !       for a Ricker source time function, a start time ~1.2 * dominant_period is a good choice
-    t0 = - 1.2d0 * minval(tshift_src(:) - 1.0d0/hdur(:))
-  endif
 
   !! VM VM for external source the time will begin with simulation
   if (USE_EXTERNAL_SOURCE_FILE) then
@@ -510,7 +593,7 @@
   integer :: isource,ixmin,ixmax,iymin,iymax,izmin,izmax,iface,ispec
   logical :: is_on,is_on_all
 
-! outputs a warning in case of an acoustic source lying on the free surface
+  ! outputs a warning in case of an acoustic source lying on the free surface
   do isource = 1,NSOURCES
     ! checks if source is close to face
     is_on = .false.
@@ -603,6 +686,11 @@
   character(len=MAX_STRING_LEN) :: filename
   character(len=MAX_STRING_LEN) :: adj_source_file
 
+  ! initializes
+  nrec = 0
+  nrec_filtered = 0
+  nrec_local = 0
+
   ! user output
   if (myrank == 0) then
     write(IMAIN,*)
@@ -610,31 +698,39 @@
     call flush_IMAIN()
   endif
 
-  ! reads in station file
-  if (SIMULATION_TYPE == 1) then
-    rec_filename = IN_DATA_FILES(1:len_trim(IN_DATA_FILES))//'STATIONS'
-    filtered_rec_filename = IN_DATA_FILES(1:len_trim(IN_DATA_FILES))//'STATIONS_FILTERED'
+  ! gets number of stations
+  if (INVERSE_FWI_FULL_PROBLEM) then
+    ! stations will be determined later...
+    nrec = 0
+    nrec_local = 0
   else
-    rec_filename = IN_DATA_FILES(1:len_trim(IN_DATA_FILES))//'STATIONS_ADJOINT'
-    filtered_rec_filename = IN_DATA_FILES(1:len_trim(IN_DATA_FILES))//'STATIONS_ADJOINT_FILTERED'
+    ! reads in station file
+    if (SIMULATION_TYPE == 1) then
+      rec_filename = IN_DATA_FILES(1:len_trim(IN_DATA_FILES))//'STATIONS'
+      filtered_rec_filename = IN_DATA_FILES(1:len_trim(IN_DATA_FILES))//'STATIONS_FILTERED'
+    else
+      rec_filename = IN_DATA_FILES(1:len_trim(IN_DATA_FILES))//'STATIONS_ADJOINT'
+      filtered_rec_filename = IN_DATA_FILES(1:len_trim(IN_DATA_FILES))//'STATIONS_ADJOINT_FILTERED'
+    endif
+
+    ! see if we are running several independent runs in parallel
+    ! if so, add the right directory for that run
+    ! (group numbers start at zero, but directory names start at run0001, thus we add one)
+    ! a negative value for "mygroup" is a convention that indicates that groups (i.e. sub-communicators, one per run) are off
+    if (NUMBER_OF_SIMULTANEOUS_RUNS > 1 .and. mygroup >= 0) then
+      write(path_to_add,"('run',i4.4,'/')") mygroup + 1
+      rec_filename = path_to_add(1:len_trim(path_to_add))//rec_filename(1:len_trim(rec_filename))
+      filtered_rec_filename = path_to_add(1:len_trim(path_to_add))//filtered_rec_filename(1:len_trim(filtered_rec_filename))
+    endif
+
+    call station_filter(rec_filename,filtered_rec_filename,nrec_filtered)
+
+    ! sets actual number of stations
+    nrec = nrec_filtered
+
+    if (nrec < 1) call exit_MPI(myrank,'need at least one receiver')
   endif
 
-  ! see if we are running several independent runs in parallel
-  ! if so, add the right directory for that run
-  ! (group numbers start at zero, but directory names start at run0001, thus we add one)
-  ! a negative value for "mygroup" is a convention that indicates that groups (i.e. sub-communicators, one per run) are off
-  if (NUMBER_OF_SIMULTANEOUS_RUNS > 1 .and. mygroup >= 0) then
-    write(path_to_add,"('run',i4.4,'/')") mygroup + 1
-    rec_filename = path_to_add(1:len_trim(path_to_add))//rec_filename(1:len_trim(rec_filename))
-    filtered_rec_filename = path_to_add(1:len_trim(path_to_add))//filtered_rec_filename(1:len_trim(filtered_rec_filename))
-  endif
-
-  call station_filter(rec_filename,filtered_rec_filename,nrec_filtered)
-
-  ! sets actual number of stations
-  nrec = nrec_filtered
-
-  if (nrec < 1) call exit_MPI(myrank,'need at least one receiver')
   call synchronize_all()
 
   if (myrank == 0) then
@@ -672,6 +768,19 @@
   if (ier /= 0 ) call exit_MPI(myrank,'Error allocating receiver arrays')
   stlat(:) = 0.d0; stlon(:) = 0.d0; stele(:) = 0.d0; stbur(:) = 0.d0
   station_name(:) = ""; network_name(:) = ""
+
+  ! checks if anything left to do
+  if (INVERSE_FWI_FULL_PROBLEM) then
+    ! fwi will determine acquisition receivers later
+    if (myrank == 0) then
+      write(IMAIN,*)
+      write(IMAIN,*) 'running inverse FWI full problem, will determine receivers later...'
+      write(IMAIN,*)
+      call flush_IMAIN()
+    endif
+    ! all done
+    return
+  endif
 
   ! locate receivers in the mesh
   call locate_receivers(filtered_rec_filename,utm_x_source(1),utm_y_source(1))
@@ -1116,10 +1225,10 @@
   endif
 
   ! frees dynamically allocated memory
-  deallocate(factor_force_source)
-  deallocate(comp_dir_vect_source_E)
-  deallocate(comp_dir_vect_source_N)
-  deallocate(comp_dir_vect_source_Z_UP)
+  if (allocated(factor_force_source)) &
+    deallocate(factor_force_source)
+  if (allocated(comp_dir_vect_source_E)) &
+    deallocate(comp_dir_vect_source_E,comp_dir_vect_source_N,comp_dir_vect_source_Z_UP)
 
   end subroutine setup_sources_precompute_arrays
 
@@ -1135,7 +1244,7 @@
   implicit none
 
   ! local parameters
-  integer :: irec,irec_local,isource,ier,nrec_store
+  integer :: irec,irec_local,isource,ier
   integer,dimension(0:NPROC-1) :: tmp_rec_local_all
   integer :: maxrec,maxproc(1)
   double precision :: sizeval,size_s
@@ -1171,6 +1280,7 @@
     write(IMAIN,*) '  Total number of samples for seismograms                        = ',NSTEP/NTSTEP_BETWEEN_OUTPUT_SAMPLE
     write(IMAIN,*)
   endif
+
   ! checks SU_FORMAT output length
   if (SU_FORMAT .and. (NSTEP/NTSTEP_BETWEEN_OUTPUT_SAMPLE > 32768)) then
     print *
@@ -1179,12 +1289,18 @@
     call exit_MPI(myrank,'Error: Two many samples for SU format ! The .su file created will be unusable')
   endif
 
-  ! seismogram array length
+  ! safety check for strain seismograms
+  if (SAVE_SEISMOGRAMS_STRAIN .and. WRITE_SEISMOGRAMS_BY_MAIN) then
+    call exit_MPI(myrank,'SAVE_SEISMOGRAMS_STRAIN works only correctly when WRITE_SEISMOGRAMS_BY_MAIN = .false.')
+  endif
+
+  ! seismogram array length (to write out time portions of the full seismograms)
   nlength_seismogram = NTSTEP_BETWEEN_OUTPUT_SEISMOS / NTSTEP_BETWEEN_OUTPUT_SAMPLE
 
   ! statistics about allocation memory for seismograms & source_adjoint seismograms
   ! gather from secondarys on main
   call gather_all_singlei(nrec_local,tmp_rec_local_all,NPROC)
+
   ! user output
   if (myrank == 0) then
     ! determines maximum number of local receivers and corresponding rank
@@ -1200,11 +1316,8 @@
     if (SAVE_SEISMOGRAMS_VELOCITY) sizeval = sizeval + size_s
     if (SAVE_SEISMOGRAMS_ACCELERATION) sizeval = sizeval + size_s
     if (SAVE_SEISMOGRAMS_PRESSURE) sizeval = sizeval + dble(NB_RUNS_ACOUSTIC_GPU) * size_s
-    ! adjoint strain seismogram needs seismograms_eps(NDIM*NDIM,nrec_local,NSTEP/NTSTEP_BETWEEN_OUTPUT_SAMPLE)
-    if (SIMULATION_TYPE == 2) then
-      sizeval = sizeval + dble(maxrec) * dble(NDIM * NDIM)  &
-                          * dble(NSTEP/NTSTEP_BETWEEN_OUTPUT_SAMPLE * CUSTOM_REAL / 1024. / 1024. )
-    endif
+    ! strain seismogram needs seismograms_eps(NDIM,NDIM,nrec_local,NSTEP/NTSTEP_BETWEEN_OUTPUT_SAMPLE)
+    if (SAVE_SEISMOGRAMS_STRAIN) sizeval = sizeval + dble(NDIM) * size_s
 
     ! outputs info
     write(IMAIN,*) '  maximum number of local receivers is ',maxrec,' in slice ',maxproc(1)
@@ -1221,6 +1334,7 @@
 
     ! gather from secondarys on main
     call gather_all_singlei(nadj_rec_local,tmp_rec_local_all,NPROC)
+
     ! user output
     if (myrank == 0) then
       ! determines maximum number of local receivers and corresponding rank
@@ -1332,22 +1446,14 @@
     ! dummy arrays
     ! VM VM need to allocate Lagrange interpolators for receivers with 0 because it is used
     ! in calling subroutines parmeters. (otherwise it can be crash at runtime).
-    allocate(hxir_store(1,1),stat=ier)
-    if (ier /= 0) call exit_MPI_without_rank('error allocating array 2081')
-    allocate(hetar_store(1,1),stat=ier)
-    if (ier /= 0) call exit_MPI_without_rank('error allocating array 2082')
-    allocate(hgammar_store(1,1),stat=ier)
-    if (ier /= 0) call exit_MPI_without_rank('error allocating array 2083')
-    if (ier /= 0) stop 'error allocating array hxir_store etc.'
+    allocate(hxir_store(1,1), &
+             hetar_store(1,1), &
+             hgammar_store(1,1))
     ! allocates derivatives
     if (SIMULATION_TYPE == 2) then
-      allocate(hpxir_store(1,1),stat=ier)
-      if (ier /= 0) call exit_MPI_without_rank('error allocating array 2084')
-      allocate(hpetar_store(1,1),stat=ier)
-      if (ier /= 0) call exit_MPI_without_rank('error allocating array 2085')
-      allocate(hpgammar_store(1,1),stat=ier)
-      if (ier /= 0) call exit_MPI_without_rank('error allocating array 2086')
-      if (ier /= 0) stop 'error allocating array hpxir_store'
+      allocate(hpxir_store(1,1), &
+               hpetar_store(1,1), &
+               hpgammar_store(1,1))
     endif
   endif ! nrec_local > 0
 
@@ -1394,38 +1500,29 @@
     endif
     if (ier /= 0) stop 'error allocating array seismograms_p'
 
+    if (SAVE_SEISMOGRAMS_STRAIN) then
+      allocate(seismograms_eps(NDIM,NDIM,nrec_local,nlength_seismogram),stat=ier)
+      if (ier /= 0) call exit_MPI_without_rank('error allocating array 2087')
+    else
+      allocate(seismograms_eps(1,1,1,1),stat=ier)
+      if (ier /= 0) call exit_MPI_without_rank('error allocating array 2088')
+    endif
+    if (ier /= 0) stop 'error allocating array seismograms_d'
+
     ! initialize seismograms
     seismograms_d(:,:,:) = 0._CUSTOM_REAL
     seismograms_v(:,:,:) = 0._CUSTOM_REAL
     seismograms_a(:,:,:) = 0._CUSTOM_REAL
     seismograms_p(:,:,:) = 0._CUSTOM_REAL
+    seismograms_eps(:,:,:,:) = 0._CUSTOM_REAL
   else
     ! dummy allocations
-    allocate(seismograms_d(1,1,1))
-    allocate(seismograms_v(1,1,1))
-    allocate(seismograms_a(1,1,1))
-    allocate(seismograms_p(1,1,1))
+    allocate(seismograms_d(1,1,1), &
+             seismograms_v(1,1,1), &
+             seismograms_a(1,1,1), &
+             seismograms_p(1,1,1), &
+             seismograms_eps(1,1,1,1))
   endif
-
-  ! seismograms
-  if (SIMULATION_TYPE == 2) then
-    ! strain
-    ! for adjoint simulations, nrec_local is the number of "receivers" at which we store seismograms and the strain (epsilon)
-    ! field. "receiver" locations for adjoint simulations are determined by the CMTSOLUTIONs locations, i.e., original sources.
-    ! Thus, we flip this assignment for pure adjoint simulations, that is source locations becomes receiver locations,
-    ! and receiver locations become "adjoint source" locations.
-    if (nrec_local > 0) then
-      allocate(seismograms_eps(NDIM,NDIM,nrec_local,NSTEP/NTSTEP_BETWEEN_OUTPUT_SAMPLE),stat=ier)
-      if (ier /= 0) call exit_MPI_without_rank('error allocating array 2095')
-      if (ier /= 0) stop 'error allocating array seismograms_eps'
-      seismograms_eps(:,:,:,:) = 0._CUSTOM_REAL
-    else
-      ! dummy array
-      allocate(seismograms_eps(1,1,1,1))
-    endif
-  endif
-  ! adjoint seismograms writing
-  it_adj_written = 0
 
   ! adjoint sources
   ! optimizing arrays for adjoint sources
@@ -1489,6 +1586,19 @@
         hetar_adjstore => hetar_store
         hgammar_adjstore => hgammar_store
       endif
+    else
+      ! dummy arrays
+      if (SIMULATION_TYPE == 2) then
+        allocate(number_adjsources_global(1), &
+                 hxir_adjstore(1,1), &
+                 hetar_adjstore(1,1), &
+                 hgammar_adjstore(1,1))
+      else
+        number_adjsources_global => number_receiver_global
+        hxir_adjstore => hxir_store
+        hetar_adjstore => hetar_store
+        hgammar_adjstore => hgammar_store
+      endif
     endif ! nadj_rec_local
   endif
 
@@ -1524,18 +1634,6 @@
     endif
   endif
 
-  ! ASDF format seismograms
-  if (ASDF_FORMAT) then
-    if (.not. (SIMULATION_TYPE == 3 .and. (.not. SAVE_SEISMOGRAMS_IN_ADJOINT_RUN)) ) then
-      ! initializes the ASDF data structure by allocating arrays
-      ! note: each process stores its local receiver's seismograms
-      !       the write_asdf() routine will handle file output (also in case choosen by main process only)
-      nrec_store = nrec_local * NB_RUNS_ACOUSTIC_GPU
-      call init_asdf_data(nrec_store)
-      call synchronize_all()
-    endif
-  endif
-
   ! seismogram check
   if (SAVE_SEISMOGRAMS_PRESSURE .and. ELASTIC_SIMULATION .and. ATTENUATION) then
     ! pressure output for receivers in elastic domains is only calculated based on non-attenuation stresses
@@ -1559,7 +1657,11 @@
     enddo
     ! warning
     if (has_receiver_in_elastic_domain) then
-      print *, "Warning: Pressure seismogram output for receivers in elastic domains is valid only for non-attenuation case"
+      write(IMAIN,*) '  ***'
+      write(IMAIN,*) '  *** Warning: Pressure seismogram output for receivers in elastic domains&
+                                     &is valid only for non-attenuation case ***'
+      write(IMAIN,*) '  ***'
+      call flush_IMAIN()
     endif
   endif
 
@@ -1816,6 +1918,7 @@
 
   ! checks if anything to do
   if (DO_BRUTE_FORCE_POINT_SEARCH) return
+  if (INVERSE_FWI_FULL_PROBLEM) return
 
   ! deletes tree arrays
   deallocate(kdtree_nodes_location)

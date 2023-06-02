@@ -1,38 +1,41 @@
-  module rotation_matrix
-  contains
-    subroutine def_rot_matrix(srccolat,srclon,rot_mat,trans_rot_mat)
+module rotation_matrix
 
-      use global_parameters, only: CUSTOM_REAL
-      real(kind=CUSTOM_REAL), dimension(3,3)  :: rot_mat,trans_rot_mat
-      integer                       :: i, j
-      real(kind=CUSTOM_REAL)                  :: smallval,srccolat,srclon
+contains
 
-      smallval=1e-11
+  subroutine def_rot_matrix(srccolat,srclon,rot_mat,trans_rot_mat)
 
-      ! This is the rotation matrix of Nissen-Meyer, Dahlen, Fournier, GJI 2007.
-      rot_mat(1,1) = dcos(srccolat) * dcos(srclon)
-      rot_mat(2,2) = dcos(srclon)
-      rot_mat(3,3) = dcos(srccolat)
-      rot_mat(2,1) = dcos(srccolat) * dsin(srclon)
-      rot_mat(3,1) = -dsin(srccolat)
-      rot_mat(3,2) = 0.d0
-      rot_mat(1,2) = -dsin(srclon)
-      rot_mat(1,3) = dsin(srccolat) * dcos(srclon)
-      rot_mat(2,3) = dsin(srccolat) * dsin(srclon)
+    use global_parameters, only: CUSTOM_REAL
+    real(kind=CUSTOM_REAL), dimension(3,3)  :: rot_mat,trans_rot_mat
+    integer                       :: i, j
+    real(kind=CUSTOM_REAL)                  :: smallval,srccolat,srclon
 
-      where (dabs(rot_mat) < smallval) rot_mat = 0.0
+    smallval=1e-11
 
-      trans_rot_mat = transpose(rot_mat)
+    ! This is the rotation matrix of Nissen-Meyer, Dahlen, Fournier, GJI 2007.
+    rot_mat(1,1) = dcos(srccolat) * dcos(srclon)
+    rot_mat(2,2) = dcos(srclon)
+    rot_mat(3,3) = dcos(srccolat)
+    rot_mat(2,1) = dcos(srccolat) * dsin(srclon)
+    rot_mat(3,1) = -dsin(srccolat)
+    rot_mat(3,2) = 0.d0
+    rot_mat(1,2) = -dsin(srclon)
+    rot_mat(1,3) = dsin(srccolat) * dcos(srclon)
+    rot_mat(2,3) = dsin(srccolat) * dsin(srclon)
 
-      write(*,*) ' ROTATION MATRIX '
-      write(*,*) rot_mat(1,1),rot_mat(1,2),rot_mat(1,3)
-      write(*,*) rot_mat(2,1),rot_mat(2,2),rot_mat(2,3)
-      write(*,*) rot_mat(3,1),rot_mat(3,2),rot_mat(3,3)
-      write(*,*)
-    end subroutine def_rot_matrix
+    where (dabs(rot_mat) < smallval) rot_mat = 0.0
+
+    trans_rot_mat = transpose(rot_mat)
+
+    write(*,*) 'ROTATION MATRIX '
+    write(*,*) '  ',rot_mat(1,1),rot_mat(1,2),rot_mat(1,3)
+    write(*,*) '  ',rot_mat(2,1),rot_mat(2,2),rot_mat(2,3)
+    write(*,*) '  ',rot_mat(3,1),rot_mat(3,2),rot_mat(3,3)
+    write(*,*)
+
+  end subroutine def_rot_matrix
 ! --------------------------------------------
 
-subroutine def_rot_matrix_DG(srccolat,srclon,rot_mat,trans_rot_mat)
+  subroutine def_rot_matrix_DG(srccolat,srclon,rot_mat,trans_rot_mat)
 
     use global_parameters, only: CUSTOM_REAL
     !integer, parameter :: CUSTOM_REAL=8
@@ -79,40 +82,42 @@ subroutine def_rot_matrix_DG(srccolat,srclon,rot_mat,trans_rot_mat)
     rot_mat(3,1) = 0.
     rot_mat(3,2) = sin(srccolat) !sin(srccolat) * sin(srclon)
 
+    where (abs(rot_mat) < smallval) rot_mat = 0.0
 
-   where (abs(rot_mat) < smallval) rot_mat = 0.0
-
-    write(*,*) rot_mat(1,1),rot_mat(1,2),rot_mat(1,3)
-    write(*,*) rot_mat(2,1),rot_mat(2,2),rot_mat(2,3)
-    write(*,*) rot_mat(3,1),rot_mat(3,2),rot_mat(3,3)
+    write(*,*) 'ROTATION MATRIX DG'
+    write(*,*) '  ',rot_mat(1,1),rot_mat(1,2),rot_mat(1,3)
+    write(*,*) '  ',rot_mat(2,1),rot_mat(2,2),rot_mat(2,3)
+    write(*,*) '  ',rot_mat(3,1),rot_mat(3,2),rot_mat(3,3)
+    write(*,*)
 
     trans_rot_mat = transpose(rot_mat)
+
   end subroutine def_rot_matrix_DG
 
 
 !--------------------------------------------------
 
-subroutine def_rot_azi_chunk(rot,trot,azi)
+  subroutine def_rot_azi_chunk(rot,trot,azi)
 
-  use global_parameters, only: CUSTOM_REAL
-  real(kind=CUSTOM_REAL)                  :: azi
-  real(kind=CUSTOM_REAL), dimension(3,3)  :: rot,trot
+    use global_parameters, only: CUSTOM_REAL
+    real(kind=CUSTOM_REAL)                  :: azi
+    real(kind=CUSTOM_REAL), dimension(3,3)  :: rot,trot
 
-  rot(1,1)=cos(azi)
-  rot(1,2)=-1.0*sin(azi) !sin(azi)
-  rot(1,3)=0._CUSTOM_REAL
+    rot(1,1)=cos(azi)
+    rot(1,2)=-1.0*sin(azi) !sin(azi)
+    rot(1,3)=0._CUSTOM_REAL
 
-  rot(2,1)=sin(azi) !-sin(azi)
-  rot(2,2)=cos(azi)
-  rot(2,3)=0._CUSTOM_REAL
+    rot(2,1)=sin(azi) !-sin(azi)
+    rot(2,2)=cos(azi)
+    rot(2,3)=0._CUSTOM_REAL
 
-  rot(3,1)=0._CUSTOM_REAL
-  rot(3,2)=0._CUSTOM_REAL
-  rot(3,3)=1._CUSTOM_REAL
+    rot(3,1)=0._CUSTOM_REAL
+    rot(3,2)=0._CUSTOM_REAL
+    rot(3,3)=1._CUSTOM_REAL
 
-  trot=transpose(rot)
+    trot=transpose(rot)
 
-end subroutine def_rot_azi_chunk
+  end subroutine def_rot_azi_chunk
 
 !----------------------------------------------------
 
@@ -143,4 +148,4 @@ end subroutine def_rot_azi_chunk
   end subroutine rotate_box
 
 !----------------------------------------------
-  end module rotation_matrix
+end module rotation_matrix

@@ -1,0 +1,306 @@
+
+ **********************************
+ Inverse problem for model - event:            1  out of            2
+ **********************************
+
+ Simulation type:            1
+
+ Mesh resolution:
+
+ ********
+ minimum and maximum number of elements
+ and points in the CUBIT + SCOTCH mesh:
+
+ NSPEC_global_min =         4000
+ NSPEC_global_max =         4000
+ NSPEC_global_max / NSPEC_global_min imbalance =    1.00000000      =    0.00000000      %
+ NSPEC_global_sum =         8000
+
+ NGLOB_global_min =       269001
+ NGLOB_global_max =       269001
+ NGLOB_global_max / NGLOB_global_min imbalance =    1.00000000      =    0.00000000      %
+ NGLOB_global_sum =       538002
+
+ If you have elements of a single type (all acoustic, all elastic, all poroelastic, and without CPML)
+ in the whole mesh, then there should be no significant imbalance in the above numbers.
+ Otherwise, it is normal to have imbalance in elements and points because the domain decomposer
+ compensates for the different cost of different elements by partitioning them unevenly among processes.
+ ********
+
+
+ ********
+ Model: P   velocity min,max =    2800.00000       2800.00000
+ Model: S   velocity min,max =    0.00000000       0.00000000
+
+ Model: Poisson's ratio min,max =   0.500000000      0.500000000
+ ********
+
+ *********************************************
+ *** Verification of simulation parameters ***
+ *********************************************
+
+ *** Xmin and Xmax of the model =    0.00000000       1000.00000
+ *** Ymin and Ymax of the model =    0.00000000       1000.00000
+ *** Zmin and Zmax of the model =   -1000.00000       0.00000000
+
+ *** Max GLL point distance =    16.3663483
+ *** Min GLL point distance =    8.63365173
+ *** Max/min ratio =    1.89564610
+
+ *** Max element size =    50.0000000
+ *** Min element size =    50.0000000
+ *** Max/min ratio =    1.00000000
+
+ *** Minimum period resolved =    2.23214291E-02
+ *** Maximum suggested time step =    1.54172350E-03
+
+ *** for DT :    1.2000000569969416E-003
+ *** Max stability for wave velocities =   0.389174849
+
+ Elapsed time for checking mesh resolution in seconds =    1.7899999999997362E-003
+ saving VTK files for Courant number and minimum period
+
+ All processes are synchronized before the time loop
+
+ Starting time iteration loop...
+
+ Time step #            5
+ Time:   -2.52000000E-02  seconds
+ Elapsed time in seconds =    2.0160000000000178E-002
+ Elapsed time in hh:mm:ss =      0 h 00 m 00 s
+ Mean elapsed time per time step in seconds =    4.03199997E-03
+ Max norm pressure P in all slices (Pa) =    4.66923041E-07
+ Time steps done =            5  out of          400
+ Time steps remaining =          395
+ Estimated remaining time in seconds =    1.59264004
+ Estimated remaining time in hh:mm:ss =      0 h 00 m 01 s
+ Estimated total run time in seconds =    1.61280000
+ Estimated total run time in hh:mm:ss =      0 h 00 m 01 s
+ We have done    1.25000000     % of that
+ The run will finish approximately on (in local time): Thu Mar 09, 2023 17:47
+ ************************************************************
+ **** BEWARE: the above time estimates are not very reliable
+ **** because fewer than 100 iterations have been performed
+ ************************************************************
+
+ Time step #          400
+ Time:   0.448799998      seconds
+ Elapsed time in seconds =    2.0299640000000001
+ Elapsed time in hh:mm:ss =      0 h 00 m 02 s
+ Mean elapsed time per time step in seconds =    5.07490989E-03
+ Max norm pressure P in all slices (Pa) =    1.94976979E-03
+ Time steps done =          400  out of          400
+ Time steps remaining =            0
+ Estimated remaining time in seconds =    0.00000000
+ Estimated remaining time in hh:mm:ss =      0 h 00 m 00 s
+ Estimated total run time in seconds =    2.02996397
+ Estimated total run time in hh:mm:ss =      0 h 00 m 02 s
+ We have done    100.000000     % of that
+
+ Time loop finished. Timing info:
+ Total elapsed time in seconds =    2.0352130000000002
+ Total elapsed time in hh:mm:ss =      0 h 00 m 02 s
+
+
+ **********************************
+ Inverse problem for model - event:            1  out of            2
+ **********************************
+
+ Simulation type:            3
+
+ All processes are synchronized before the time loop
+
+ Starting time iteration loop...
+
+ Time step #            5
+ Time:   -2.52000000E-02  seconds
+ Elapsed time in seconds =    8.6276999999999937E-002
+ Elapsed time in hh:mm:ss =      0 h 00 m 00 s
+ Mean elapsed time per time step in seconds =    1.72553994E-02
+ Max norm pressure P in all slices (Pa) =    0.00000000
+ Max norm pressure P (backward) in all slices (Pa) =    2.27157935E-03
+ Time steps done =            5  out of          400
+ Time steps remaining =          395
+ Estimated remaining time in seconds =    6.81588316
+ Estimated remaining time in hh:mm:ss =      0 h 00 m 06 s
+ Estimated total run time in seconds =    6.90216017
+ Estimated total run time in hh:mm:ss =      0 h 00 m 06 s
+ We have done    1.25000000     % of that
+ The run will finish approximately on (in local time): Thu Mar 09, 2023 17:47
+ ************************************************************
+ **** BEWARE: the above time estimates are not very reliable
+ **** because fewer than 100 iterations have been performed
+ ************************************************************
+
+ Time step #          400
+ Time:   0.448799998      seconds
+ Elapsed time in seconds =    8.5121979999999997
+ Elapsed time in hh:mm:ss =      0 h 00 m 08 s
+ Mean elapsed time per time step in seconds =    2.12804954E-02
+ Max norm pressure P in all slices (Pa) =   0.375141233
+ Max norm pressure P (backward) in all slices (Pa) =    5.44122668E-06
+ Time steps done =          400  out of          400
+ Time steps remaining =            0
+ Estimated remaining time in seconds =    0.00000000
+ Estimated remaining time in hh:mm:ss =      0 h 00 m 00 s
+ Estimated total run time in seconds =    8.51219845
+ Estimated total run time in hh:mm:ss =      0 h 00 m 08 s
+ We have done    100.000000     % of that
+
+ Time loop finished. Timing info:
+ Total elapsed time in seconds =    8.5346960000000003
+ Total elapsed time in hh:mm:ss =      0 h 00 m 08 s
+
+
+ **********************************
+ Inverse problem for model - event:            1  out of            2
+ **********************************
+
+ Simulation type:            1
+
+ Mesh resolution:
+
+ ********
+ minimum and maximum number of elements
+ and points in the CUBIT + SCOTCH mesh:
+
+ NSPEC_global_min =         4000
+ NSPEC_global_max =         4000
+ NSPEC_global_max / NSPEC_global_min imbalance =    1.00000000      =    0.00000000      %
+ NSPEC_global_sum =         8000
+
+ NGLOB_global_min =       269001
+ NGLOB_global_max =       269001
+ NGLOB_global_max / NGLOB_global_min imbalance =    1.00000000      =    0.00000000      %
+ NGLOB_global_sum =       538002
+
+ If you have elements of a single type (all acoustic, all elastic, all poroelastic, and without CPML)
+ in the whole mesh, then there should be no significant imbalance in the above numbers.
+ Otherwise, it is normal to have imbalance in elements and points because the domain decomposer
+ compensates for the different cost of different elements by partitioning them unevenly among processes.
+ ********
+
+
+ ********
+ Model: P   velocity min,max =    2790.41943       2824.08179
+ Model: S   velocity min,max =    0.00000000       0.00000000
+
+ Model: Poisson's ratio min,max =   0.500000000      0.500000000
+ ********
+
+ *********************************************
+ *** Verification of simulation parameters ***
+ *********************************************
+
+ *** Xmin and Xmax of the model =    0.00000000       1000.00000
+ *** Ymin and Ymax of the model =    0.00000000       1000.00000
+ *** Zmin and Zmax of the model =   -1000.00000       0.00000000
+
+ *** Max GLL point distance =    16.3663483
+ *** Min GLL point distance =    8.63365173
+ *** Max/min ratio =    1.89564610
+
+ *** Max element size =    50.0000000
+ *** Min element size =    50.0000000
+ *** Max/min ratio =    1.00000000
+
+ *** Minimum period resolved =    2.23980658E-02
+ *** Maximum suggested time step =    1.52857683E-03
+
+ *** for DT :    1.2000000569969416E-003
+ *** Max stability for wave velocities =   0.392522007
+
+ Elapsed time for checking mesh resolution in seconds =    2.0819999999979188E-003
+ saving VTK files for Courant number and minimum period
+
+ All processes are synchronized before the time loop
+
+ Starting time iteration loop...
+
+ Time step #            5
+ Time:   -2.52000000E-02  seconds
+ Elapsed time in seconds =    2.0520999999998679E-002
+ Elapsed time in hh:mm:ss =      0 h 00 m 00 s
+ Mean elapsed time per time step in seconds =    4.10419982E-03
+ Max norm pressure P in all slices (Pa) =    4.66209428E-07
+ Time steps done =            5  out of          400
+ Time steps remaining =          395
+ Estimated remaining time in seconds =    1.62115896
+ Estimated remaining time in hh:mm:ss =      0 h 00 m 01 s
+ Estimated total run time in seconds =    1.64168000
+ Estimated total run time in hh:mm:ss =      0 h 00 m 01 s
+ We have done    1.25000000     % of that
+ The run will finish approximately on (in local time): Thu Mar 09, 2023 17:48
+ ************************************************************
+ **** BEWARE: the above time estimates are not very reliable
+ **** because fewer than 100 iterations have been performed
+ ************************************************************
+
+ Time step #          400
+ Time:   0.448799998      seconds
+ Elapsed time in seconds =    2.0296159999999972
+ Elapsed time in hh:mm:ss =      0 h 00 m 02 s
+ Mean elapsed time per time step in seconds =    5.07404003E-03
+ Max norm pressure P in all slices (Pa) =    1.94591458E-03
+ Time steps done =          400  out of          400
+ Time steps remaining =            0
+ Estimated remaining time in seconds =    0.00000000
+ Estimated remaining time in hh:mm:ss =      0 h 00 m 00 s
+ Estimated total run time in seconds =    2.02961612
+ Estimated total run time in hh:mm:ss =      0 h 00 m 02 s
+ We have done    100.000000     % of that
+
+ Time loop finished. Timing info:
+ Total elapsed time in seconds =    2.0352359999999976
+ Total elapsed time in hh:mm:ss =      0 h 00 m 02 s
+
+
+ **********************************
+ Inverse problem for model - event:            1  out of            2
+ **********************************
+
+ Simulation type:            3
+
+ All processes are synchronized before the time loop
+
+ Starting time iteration loop...
+
+ Time step #            5
+ Time:   -2.52000000E-02  seconds
+ Elapsed time in seconds =    8.8283000000000555E-002
+ Elapsed time in hh:mm:ss =      0 h 00 m 00 s
+ Mean elapsed time per time step in seconds =    1.76566001E-02
+ Max norm pressure P in all slices (Pa) =    0.00000000
+ Max norm pressure P (backward) in all slices (Pa) =    2.21889233E-03
+ Time steps done =            5  out of          400
+ Time steps remaining =          395
+ Estimated remaining time in seconds =    6.97435713
+ Estimated remaining time in hh:mm:ss =      0 h 00 m 06 s
+ Estimated total run time in seconds =    7.06264019
+ Estimated total run time in hh:mm:ss =      0 h 00 m 07 s
+ We have done    1.25000000     % of that
+ The run will finish approximately on (in local time): Thu Mar 09, 2023 17:48
+ ************************************************************
+ **** BEWARE: the above time estimates are not very reliable
+ **** because fewer than 100 iterations have been performed
+ ************************************************************
+
+ Time step #          400
+ Time:   0.448799998      seconds
+ Elapsed time in seconds =    8.7279569999999964
+ Elapsed time in hh:mm:ss =      0 h 00 m 08 s
+ Mean elapsed time per time step in seconds =    2.18198933E-02
+ Max norm pressure P in all slices (Pa) =   0.333075672
+ Max norm pressure P (backward) in all slices (Pa) =    3.96197538E-06
+ Time steps done =          400  out of          400
+ Time steps remaining =            0
+ Estimated remaining time in seconds =    0.00000000
+ Estimated remaining time in hh:mm:ss =      0 h 00 m 00 s
+ Estimated total run time in seconds =    8.72795677
+ Estimated total run time in hh:mm:ss =      0 h 00 m 08 s
+ We have done    100.000000     % of that
+
+ Time loop finished. Timing info:
+ Total elapsed time in seconds =    8.7502769999999970
+ Total elapsed time in hh:mm:ss =      0 h 00 m 08 s
+

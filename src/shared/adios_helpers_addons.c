@@ -141,5 +141,21 @@ FC_FUNC_(show_adios2_all_attributes,SHOW_ADIOS2_ALL_ATTRIBUTES)(adios2_io **adio
 
 }
 
+/* ------------------------------------------------------------- */
+
+void
+FC_FUNC_(get_adios2_version_numbers,GET_ADIOS2_VERSION_NUMBERS)(int* major, int* minor) {
+
+// this routine can be called in fortran code to determine the compiled ADIOS2 version.
+//
+// adios header files define in include/adios2/common/ADIOSConfig.h :
+// #define ADIOS2_VERSION_STR   "2.8.3"
+// #define ADIOS2_VERSION_MAJOR 2
+// #define ADIOS2_VERSION_MINOR 8
+
+  *major = ADIOS2_VERSION_MAJOR;
+  *minor = ADIOS2_VERSION_MINOR;
+
+}
 #endif
 

@@ -36,7 +36,8 @@
     CREATE_ABAQUS_FILES,CREATE_DX_FILES,CREATE_VTK_FILES, &
     USE_REGULAR_MESH,NDOUBLINGS,ner_doublings, &
     THICKNESS_OF_X_PML,THICKNESS_OF_Y_PML,THICKNESS_OF_Z_PML, &
-    myrank,sizeprocs,NUMBER_OF_MATERIAL_PROPERTIES
+    myrank,sizeprocs,NUMBER_OF_MATERIAL_PROPERTIES, &
+    SAVE_MESH_AS_CUBIT
 
   use constants, only: IIN,MF_IN_DATA_FILES,MAX_STRING_LEN,IMAIN, &
     IDOMAIN_ACOUSTIC,IDOMAIN_ELASTIC,IDOMAIN_POROELASTIC, &
@@ -168,6 +169,10 @@
   if (ier /= 0) stop 'Error reading Mesh parameter CREATE_DX_FILES'
   call read_value_logical_mesh(IIN,IGNORE_JUNK,CREATE_VTK_FILES, 'CREATE_VTK_FILES', ier)
   if (ier /= 0) stop 'Error reading Mesh parameter CREATE_VTK_FILES'
+
+  ! save as CUBIT-mesh
+  call read_value_logical_mesh(IIN,IGNORE_JUNK,SAVE_MESH_AS_CUBIT, 'SAVE_MESH_AS_CUBIT', ier)
+  if (ier /= 0) stop 'Error reading Mesh parameter SAVE_MESH_AS_CUBIT'
 
   ! file in which we store the databases
   call read_value_string_mesh(IIN,IGNORE_JUNK,LOCAL_PATH, 'LOCAL_PATH', ier)
@@ -442,6 +447,10 @@
   ! checks number of processes
   if (sizeprocs == 1 .and. (NPROC_XI /= 1 .or. NPROC_ETA /= 1)) &
     stop 'Error: must have NPROC_XI = NPROC_ETA = 1 for a serial run'
+
+  ! checks CUBIT output
+  if (SAVE_MESH_AS_CUBIT .and. NPROC_XI /= 1 .and. NPROC_ETA /= 1) &
+    stop 'Error: SAVE_MESH_AS_CUBIT must have NPROC_XI = NPROC_ETA = 1'
 
   ! make sure everybody is synchronized
   call synchronize_all()

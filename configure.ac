@@ -9,7 +9,7 @@ dnl You must have recent versions of Autoconf and Automake installed.
 ############################################################
 
 AC_PREREQ(2.61)
-AC_INIT([Specfem3D], [3.0.0], [see the wiki], [Specfem3D])
+AC_INIT([Specfem3D], m4_normalize(m4_include([VERSION])), [see the wiki], [Specfem3D])
 AC_CONFIG_SRCDIR([src/specfem3D/specfem3D.F90])
 
 AC_CONFIG_HEADERS([setup/config.h])
@@ -116,6 +116,7 @@ AM_CONDITIONAL([COND_CUDA8], [test x"$want_cuda" = xcuda8])
 AM_CONDITIONAL([COND_CUDA9], [test x"$want_cuda" = xcuda9])
 AM_CONDITIONAL([COND_CUDA10], [test x"$want_cuda" = xcuda10])
 AM_CONDITIONAL([COND_CUDA11], [test x"$want_cuda" = xcuda11])
+AM_CONDITIONAL([COND_CUDA12], [test x"$want_cuda" = xcuda12])
 
 # cuda linking for cuda 5x and 6x and 7x and 8x and ..
 AM_CONDITIONAL([COND_CUDA_PLUS],
@@ -126,7 +127,8 @@ AM_CONDITIONAL([COND_CUDA_PLUS],
      -o "$want_cuda" = cuda8 \
      -o "$want_cuda" = cuda9 \
      -o "$want_cuda" = cuda10 \
-     -o "$want_cuda" = cuda11 \]
+     -o "$want_cuda" = cuda11 \
+     -o "$want_cuda" = cuda12 \]
 )
 
 ## HIP
@@ -148,6 +150,7 @@ AM_CONDITIONAL([COND_HIP_CUDA8], [test x"$want_hip" = xcuda8])
 AM_CONDITIONAL([COND_HIP_CUDA9], [test x"$want_hip" = xcuda9])
 AM_CONDITIONAL([COND_HIP_CUDA10], [test x"$want_hip" = xcuda10])
 AM_CONDITIONAL([COND_HIP_CUDA11], [test x"$want_hip" = xcuda11])
+AM_CONDITIONAL([COND_HIP_CUDA12], [test x"$want_hip" = xcuda12])
 
 ###
 ### OpenMP
@@ -210,6 +213,17 @@ AC_ARG_WITH([asdf],
     [want_asdf="$withval"],
     [want_asdf=no])
 AM_CONDITIONAL([COND_ASDF], [test x$"$want_asdf" != xno])
+
+###
+### HDF5
+###
+
+AC_ARG_WITH([hdf5],
+    [AS_HELP_STRING([--with-hdf5],
+        [build HDF5 enabled version @<:@default=no@:>@])],
+    [want_hdf5="$withval"],
+    [want_hdf5=no])
+AM_CONDITIONAL([COND_HDF5], [test x$"$want_hdf5" != xno])
 
 ############################################################
 
@@ -335,14 +349,25 @@ if test "x${scotch_usable}" = "xyes"; then
 else
  AC_DEFINE([HAVE_SCOTCH],[1],[defined if Scotch is installed])
  AC_MSG_RESULT([no, using bundled scotch instead])
- AC_PROG_LEX
+
+ dnl autoconf 2.69 AC_PROG_LEX has no parameters
+ dnl autoconf 2.70 AC_PROG_LEX prints a deprecation warning without params
+ m4_if(m4_version_compare(m4_defn([AC_AUTOCONF_VERSION]), [2.70]), [-1], [dnl
+   dnl autoconf < 2.70
+   AC_PROG_LEX
+ ], [
+   dnl autoconf >= 2.70
+   AC_PROG_LEX([noyywrap])
+ ])
  if test -z "$LEX" || test "X$LEX" = "Xno"; then
    AC_MSG_ERROR([No suitable lex found])
  fi
+
  AC_PROG_YACC
  if test -z "$YACC" || test "X$YACC" = "Xno"; then
    AC_MSG_ERROR([No suitable yacc or bison found])
  fi
+
  ACX_PTHREAD(AC_MSG_RESULT([pthread found]), AC_MSG_ERROR([pthread not found]))
 
  # scotch only needed with mpi support
@@ -491,7 +516,7 @@ AS_IF([test x"$want_asdf" != xno], [
 #mpbl: adding flags to config.h.in through autoheader in order to save them into the adios file.
 #configure_flags_str="FC=$FC FCFLAGS=$FCFLAGS $FLAGS_CHECK"
 #AC_DEFINE_UNQUOTED([CONFIGURE_FLAGS],["${configure_flags_str}"],
- #         [configuration flags to be saved in the adios output file.])
+#         [configuration flags to be saved in the adios output file.])
 CONFIGURE_FLAGS="FC=$FC FCFLAGS=$FCFLAGS"
 AC_SUBST([CONFIGURE_FLAGS])
 
@@ -712,22 +737,64 @@ AS_IF([test x"$want_vtk" != xno], [
     CIT_PATH_VTK
 ])
 
+###
+### HDF5
+###
+AS_IF([test x"$want_hdf5" != xno], [
+    AS_BOX([HDF5])
+    AC_MSG_NOTICE([HDF5 is enabled])
+
+    AC_ARG_VAR(HDF5_INC, [HDF5 include directory])
+    AC_ARG_VAR(HDF5_FCFLAGS, [Fortran compiler flags])
+    AC_ARG_VAR(HDF5_LIBS, [extra libraries for linking programs])
+
+    # HDF5 checking for Fortran
+    AC_LANG_PUSH(Fortran)
+    AC_MSG_CHECKING([for HDF5 modules])
+    FCFLAGS="$HDF5_FCFLAGS $FCFLAGS"
+    # adds include directory
+    if test "x$HDF5_INC" != "x"; then
+      HDF5_INCLUDES="-I$HDF5_INC"
+      FCFLAGS+=" $HDF5_INCLUDES"
+    fi
+    # compilation test
+    AC_COMPILE_IFELSE([
+      AC_LANG_PROGRAM([], [[
+      use hdf5
+      ]])
+    ], [
+      AC_MSG_RESULT(yes)
+    ], [
+      AC_MSG_RESULT(no)
+      AC_MSG_ERROR([HDF5 module not found; is HDF5 built with Fortran support for this compiler?])
+    ])
+    AC_LANG_POP([Fortran])
+    AC_SUBST([HDF5_INCLUDES])
+])
+
 ##
 ## Git version info
 ##
 AS_BOX([git version info])
 CIG_PKG_GIT(SPECFEM3D)
+
 AC_DEFINE_UNQUOTED([SPECFEM3D_VERSION], ["$PACKAGE_VERSION"], [Define SPECFEM3D version])
 #AC_DEFINE_UNQUOTED([SPECFEM3D_DOI], ["10.5281/zenodo.xxxxx"], [Define SPECFEM3D doi])
-AS_IF([test -d $srcdir/.git], [
-    GIT_VERSION_DEPS="$srcdir/.git/logs/HEAD"
-    AC_MSG_NOTICE([building from git repository])
-    AC_SUBST(GIT_VERSION_DEPS)
-], [
-    dnl Only substitute if not in a git repository.
-    AC_MSG_NOTICE([not a git repository])
-    AC_CONFIG_FILES([setup/version.fh])
+
+AS_IF([test x"$SPECFEM3D_RELEASE_VERSION" = x0],[
+  AC_MSG_NOTICE([building from git repository])
+  GIT_PACKAGE_VERSION=$SPECFEM3D_GIT_REVISION
+  GIT_COMMIT_VERSION=$SPECFEM3D_GIT_HASH
+  GIT_DATE_VERSION=$SPECFEM3D_GIT_DATE
+],[
+  AC_MSG_NOTICE([not a git repository])
+  GIT_PACKAGE_VERSION=$PACKAGE_VERSION
+  GIT_COMMIT_VERSION="unknown"
+  GIT_DATE_VERSION="unknown"
 ])
+AC_SUBST([GIT_PACKAGE_VERSION])
+AC_SUBST([GIT_COMMIT_VERSION])
+AC_SUBST([GIT_DATE_VERSION])
 
 ############################################################
 
@@ -740,6 +807,7 @@ AC_CONFIG_FILES([
     setup/constants_tomography.h
     setup/precision.h
     setup/config.fh
+    setup/version.fh
 ])
 
 # Scotch makefile

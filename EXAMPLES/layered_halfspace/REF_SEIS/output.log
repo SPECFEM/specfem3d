@@ -5,12 +5,12 @@ running example: Thu Feb 22 11:13:07 AST 2018
 
   decomposing mesh...
 
- 
+
  **********************
  Serial mesh decomposer
  **********************
- 
- total number of nodes: 
+
+ total number of nodes:
    nnodes =        76819
  total number of spectral elements:
    nspec =        70200
@@ -34,12 +34,12 @@ running example: Thu Feb 22 11:13:07 AST 2018
    nsize =           16 sup_neighbor =          102
  mesh2dual:
    max_neighbor =           54
- partitions: 
+ partitions:
    num =           16
- 
+
  Databases files in directory: ./OUTPUT_FILES/DATABASES_MPI
  finished successfully
- 
+
 
   running database generation on  16  processors...
 

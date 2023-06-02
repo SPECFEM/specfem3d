@@ -107,8 +107,8 @@
   do iphase = 1,2
 
     ! debug timing
-    if (DO_TIMING .and. myrank == 0 .and. iphase == 2) then
-      t_start = wtime()
+    if (DO_TIMING) then
+      if (myrank == 0 .and. iphase == 2) t_start = wtime()
     endif
 
     ! elastic term
@@ -132,9 +132,11 @@
     endif
 
     ! debug timing
-    if (DO_TIMING .and. myrank == 0 .and. iphase == 2) then
-      tCPU = wtime() - t_start
-      print *,'timing: compute_forces_viscoelastic elapsed time ',tCPU,'s'
+    if (DO_TIMING) then
+      if (myrank == 0 .and. iphase == 2) then
+        tCPU = wtime() - t_start
+        print *,'timing: compute_forces_viscoelastic elapsed time ',tCPU,'s'
+      endif
     endif
 
     ! while inner elements compute "Kernel_2", we wait for MPI to
@@ -259,7 +261,7 @@
       ! adds source term (single-force/moment-tensor solution)
       if (.not. GPU_MODE) then
         ! on CPU
-        call compute_add_sources_viscoelastic()
+        call compute_add_sources_viscoelastic(accel)
       else
         ! on GPU
         call compute_add_sources_viscoelastic_GPU()
@@ -360,9 +362,9 @@
   if (.not. GPU_MODE) then
     ! on CPU
     do iglob = 1,NGLOB_AB
-      accel(1,iglob) = accel(1,iglob)*rmassx(iglob)
-      accel(2,iglob) = accel(2,iglob)*rmassy(iglob)
-      accel(3,iglob) = accel(3,iglob)*rmassz(iglob)
+      accel(1,iglob) = accel(1,iglob) * rmassx(iglob)
+      accel(2,iglob) = accel(2,iglob) * rmassy(iglob)
+      accel(3,iglob) = accel(3,iglob) * rmassz(iglob)
     enddo
   else
     ! on GPU
@@ -406,7 +408,6 @@
           displ(:,iglob) = 0._CUSTOM_REAL
           PML_displ_old(:,i,j,k,ispec_CPML) = 0._CUSTOM_REAL
           PML_displ_new(:,i,j,k,ispec_CPML) = 0._CUSTOM_REAL
-
         enddo
       endif ! ispec_is_elastic
 !!!        endif
@@ -434,7 +435,7 @@
     if (USE_LDDRK) then
       call update_veloc_elastic_lddrk()
     else
-      veloc(:,:) = veloc(:,:) + deltatover2*accel(:,:)
+      call update_veloc_elastic()
     endif
   else
     ! on GPU
@@ -590,7 +591,7 @@
       !       to avoid calling the same routine twice and to check if the source element is an inner/outer element
       if (.not. GPU_MODE) then
         ! on CPU
-        call compute_add_sources_viscoelastic_backward()
+        call compute_add_sources_viscoelastic_backward(b_accel)
       else
         ! on GPU
         call compute_add_sources_viscoelastic_backward_GPU()
@@ -650,9 +651,9 @@
   if (.not. GPU_MODE) then
     ! on CPU
     ! adjoint simulations
-    b_accel(1,:) = b_accel(1,:)*rmassx(:)
-    b_accel(2,:) = b_accel(2,:)*rmassy(:)
-    b_accel(3,:) = b_accel(3,:)*rmassz(:)
+    b_accel(1,:) = b_accel(1,:) * rmassx(:)
+    b_accel(2,:) = b_accel(2,:) * rmassy(:)
+    b_accel(3,:) = b_accel(3,:) * rmassz(:)
   else
     ! on GPU
     call kernel_3_a_cuda(Mesh_pointer,deltatover2,b_deltatover2,APPROXIMATE_OCEAN_LOAD,3) ! 3 == backward
@@ -694,8 +695,12 @@
 !   updates the velocity term which requires a(t+delta)
   if (.not. GPU_MODE) then
     ! on CPU
-    ! adjoint simulations
-    b_veloc(:,:) = b_veloc(:,:) + b_deltatover2*b_accel(:,:)
+    if (USE_LDDRK) then
+      stop 'USE_LDDRK not implemented for backward viscoelastic simulations'
+    else
+      ! adjoint simulations
+      call update_veloc_elastic_backward()
+    endif
   else
     ! on GPU
     ! only call in case of ocean load, otherwise already done in kernel 3 a

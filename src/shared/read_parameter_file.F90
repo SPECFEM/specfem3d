@@ -488,6 +488,13 @@
       write(*,*)
     endif
 
+    call read_value_logical(SAVE_SEISMOGRAMS_STRAIN, 'SAVE_SEISMOGRAMS_STRAIN', ier)
+    if (ier /= 0) then
+      some_parameters_missing_from_Par_file = .true.
+      write(*,'(a)') 'SAVE_SEISMOGRAMS_STRAIN         = .false.'
+      write(*,*)
+    endif
+
     call read_value_logical(SAVE_SEISMOGRAMS_IN_ADJOINT_RUN, 'SAVE_SEISMOGRAMS_IN_ADJOINT_RUN', ier)
     if (ier /= 0) then
       some_parameters_missing_from_Par_file = .true.
@@ -531,6 +538,9 @@
       write(*,'(a)') 'ASDF_FORMAT                       = .false.'
       write(*,*)
     endif
+
+    ! (optional) hdf5 seismograms
+    call read_value_logical(HDF5_FORMAT, 'HDF5_FORMAT', ier); ier = 0
 
     call read_value_logical(WRITE_SEISMOGRAMS_BY_MAIN, 'WRITE_SEISMOGRAMS_BY_MAIN', ier)
     if (ier /= 0) then
@@ -729,6 +739,10 @@
       write(*,*)
     endif
 
+    !-------------------------------------------------------
+    ! file I/O
+    !-------------------------------------------------------
+
     !> Read ADIOS related flags from the Par_file
     !! \param ADIOS_ENABLED Main flag to decide if ADIOS is used.
     !!                      If set to .false., no other parameter is taken into account.
@@ -779,6 +793,23 @@
       some_parameters_missing_from_Par_file = .true.
       write(*,'(a)') 'ADIOS_FOR_UNDO_ATTENUATION      = .false.'
       write(*,*)
+    endif
+
+    ! HDF5 file I/O
+    ! (optional) hdf5 database io flag
+    call read_value_logical(HDF5_ENABLED, 'HDF5_ENABLED', ier); ier = 0
+    ! or enforces flag to be present in Par_file
+    !if (ier /= 0) then
+    !  some_parameters_missing_from_Par_file = .true.
+    !  write(*,'(a)') 'HDF5_ENABLED                    = .false.'
+    !  write(*,*)
+    !endif
+    ! HDF file I/O server
+    if (HDF5_ENABLED) then
+      ! (optional) movie outputs
+      call read_value_logical(HDF5_FOR_MOVIES, 'HDF5_FOR_MOVIES', ier); ier = 0
+      ! (optional) number of io dedicated nodes
+      call read_value_integer(HDF5_IO_NODES, 'HDF5_IO_NODES', ier); ier = 0
     endif
 
     ! closes parameter file
@@ -885,9 +916,10 @@
 
   ! seismogram output
   if (.not. SAVE_SEISMOGRAMS_DISPLACEMENT .and. .not. SAVE_SEISMOGRAMS_VELOCITY .and. &
-     .not. SAVE_SEISMOGRAMS_ACCELERATION .and. .not. SAVE_SEISMOGRAMS_PRESSURE) &
-   stop 'Error: at least one of SAVE_SEISMOGRAMS_DISPLACEMENT SAVE_SEISMOGRAMS_VELOCITY SAVE_SEISMOGRAMS_ACCELERATION &
-             &SAVE_SEISMOGRAMS_PRESSURE must be true'
+     .not. SAVE_SEISMOGRAMS_ACCELERATION .and. .not. SAVE_SEISMOGRAMS_PRESSURE .and. &
+     .not. SAVE_SEISMOGRAMS_STRAIN) &
+   stop 'Error: at least one of SAVE_SEISMOGRAMS_DISPLACEMENT, SAVE_SEISMOGRAMS_VELOCITY, SAVE_SEISMOGRAMS_ACCELERATION, &
+             &SAVE_SEISMOGRAMS_PRESSURE, or SAVE_SEISMOGRAMS_STRAIN must be true'
 
   if (NTSTEP_BETWEEN_OUTPUT_SAMPLE < 1) &
     stop 'Error: NTSTEP_BETWEEN_OUTPUT_SAMPLE must be >= 1'
@@ -900,6 +932,11 @@
     stop 'USE_TRICK_FOR_BETTER_PRESSURE is currently incompatible with &
         &SAVE_SEISMOGRAMS_DISPLACEMENT .or. SAVE_SEISMOGRAMS_VELOCITY .or. SAVE_SEISMOGRAMS_ACCELERATION, &
         &only SAVE_SEISMOGRAMS_PRESSURE can be used'
+
+  if (SAVE_SEISMOGRAMS_STRAIN) then
+    if (WRITE_SEISMOGRAMS_BY_MAIN) &
+      stop 'SAVE_SEISMOGRAMS_STRAIN works only correctly when WRITE_SEISMOGRAMS_BY_MAIN = .false.'
+  endif
 
   ! LDDRK
   if (USE_LDDRK) then
@@ -931,10 +968,44 @@
   endif
 #endif
 
+  ! HDF5 file I/O
+#if !defined(USE_HDF5)
+  if (HDF5_ENABLED .or. HDF5_FORMAT) then
+    print *
+    print *,'**************'
+    print *,'**************'
+    print *,'HDF5 is enabled in parameter file but the code was not compiled with HDF5 support.'
+    print *,'See --with-hdf5 configure options.'
+    print *,'**************'
+    print *,'**************'
+    print *
+    stop 'an error occurred while reading the parameter file: HDF5 is enabled but code not built with HDF5'
+  endif
+#endif
+  ! mutually exclusive ADIOS and HDF5
+  if (HDF5_ENABLED .and. ADIOS_ENABLED) &
+    stop 'ADIOS_ENABLED and HDF5_ENABLED together are not supported, please use only one of them'
+
+  ! seismogram formats
+  if (ASDF_FORMAT .and. SU_FORMAT) &
+    stop 'ASDF_FORMAT and SU_FORMAT together are not supported, please use only one of them'
+  ! note: on some systems, ASDF stalls when writing out seismos in parallel.
+  !       here, we could enforce to write only by main - not done so far, let's give it a try first...
+  !if (ASDF_FORMAT .and. .not. WRITE_SEISMOGRAMS_BY_MAIN) &
+  !  stop 'ASDF_FORMAT must have WRITE_SEISMOGRAMS_BY_MAIN set to .true.'
+  if (HDF5_FORMAT .and. ASDF_FORMAT) &
+    stop 'HDF5_FORMAT and ASDF_FORMAT together are not supported, please use only one of them'
+  if (HDF5_FORMAT .and. SU_FORMAT) &
+    stop 'HDF5_FORMAT and SU_FORMAT together are not supported, please use only one of them'
+  if (HDF5_FORMAT .and. .not. WRITE_SEISMOGRAMS_BY_MAIN) &
+    stop 'HDF5_FORMAT must have WRITE_SEISMOGRAMS_BY_MAIN set to .true.'
+  ! hdf5 i/o server
+  if (HDF5_IO_NODES < 0) &
+    stop 'HDF5_IO_NODES must be zero or positive'
+
   ! PML
   if (PML_CONDITIONS) then
-!! DK DK added this for now (March 2013)
-!! DK DK we will soon add it
+    !#TODO: check if PML works for adjoint/kernel simulations
     if (SAVE_FORWARD .or. SIMULATION_TYPE == 3) &
       stop 'PML_CONDITIONS is still under test for adjoint simulation'
 
@@ -1019,7 +1090,7 @@
   ! a negative value for "mygroup" is a convention that indicates that groups (i.e. sub-communicators, one per run) are off
   if (NUMBER_OF_SIMULTANEOUS_RUNS > 1 .and. mygroup >= 0) then
 
-!! DK DK remove leading ./ if any, Paul Cristini said it could lead to problems when NUMBER_OF_SIMULTANEOUS_RUNS > 1
+    ! removes leading ./ if any, Paul Cristini said it could lead to problems when NUMBER_OF_SIMULTANEOUS_RUNS > 1
     tmp_LOCAL_PATH = adjustl(LOCAL_PATH)
     if (index (tmp_LOCAL_PATH, './') == 1) then
       LOCAL_PATH = tmp_LOCAL_PATH(3:)
@@ -1131,7 +1202,13 @@
   endif
 
   ! determines number of sources depending on number of lines in sources file
-  call get_number_of_sources(sources_filename)
+  if (INVERSE_FWI_FULL_PROBLEM) then
+    ! sources will be set later in input_output_mod.f90 based on acquisition setting
+    NSOURCES = 0
+  else
+    ! gets number of sources
+    call count_number_of_sources(NSOURCES,sources_filename)
+  endif
 
   ! converts all string characters to lowercase
   irange = iachar('a') - iachar('A')
@@ -1199,176 +1276,11 @@
   ! check
   if (IMODEL == IMODEL_IPATI .or. IMODEL == IMODEL_IPATI_WATER) then
     if (USE_RICKER_TIME_FUNCTION .eqv. .false.) &
-      stop 'Error for IPATI model, please set USE_RICKER_TIME_FUNCTION to .true. in Par_file and recompile solver'
+      stop 'Error for IPATI model, please set USE_RICKER_TIME_FUNCTION to .true. in Par_file and rerun solver'
   endif
 
   end subroutine read_compute_parameters
 
-!
-!-------------------------------------------------------------------------------------------------
-!
-
-  subroutine get_number_of_sources(sources_filename)
-
-! determines number of sources depending on number of lines in source file
-! (only executed by main process)
-
-  use constants, only: IIN,IIN_PAR,IN_DATA_FILES,HUGEVAL,TINYVAL, &
-    NLINES_PER_CMTSOLUTION_SOURCE,NLINES_PER_FORCESOLUTION_SOURCE,mygroup
-
-  use shared_parameters
-
-  implicit none
-
-  character(len=MAX_STRING_LEN),intent(in) :: sources_filename
-
-  ! local variables
-  integer :: icounter,isource,idummy,ier,nlines_per_source
-  double precision :: hdur, minval_hdur
-  character(len=MAX_STRING_LEN) :: fault_filename,dummystring
-  character(len=MAX_STRING_LEN) :: path_to_add
-
-  ! initializes
-  NSOURCES = 0
-
-  ! checks if finite fault source
-  fault_filename = IN_DATA_FILES(1:len_trim(IN_DATA_FILES))//'Par_file_faults'
-  ! see if we are running several independent runs in parallel
-  ! if so, add the right directory for that run
-  ! (group numbers start at zero, but directory names start at run0001, thus we add one)
-  ! a negative value for "mygroup" is a convention that indicates that groups (i.e. sub-communicators, one per run) are off
-  if (NUMBER_OF_SIMULTANEOUS_RUNS > 1 .and. mygroup >= 0) then
-    write(path_to_add,"('run',i4.4,'/')") mygroup + 1
-    fault_filename = path_to_add(1:len_trim(path_to_add))//fault_filename(1:len_trim(fault_filename))
-  endif
-
-  open(unit=IIN_PAR,file=trim(fault_filename),status='old',iostat=ier)
-  if (ier == 0) then
-    HAS_FINITE_FAULT_SOURCE = .true.
-    !write(IMAIN,*) 'provides finite faults'
-    close(IIN_PAR)
-  else
-    HAS_FINITE_FAULT_SOURCE = .false.
-  endif
-
-  ! gets number of point sources
-  if (USE_FORCE_POINT_SOURCE) then
-    ! compute the total number of sources in the FORCESOLUTION file
-    ! there are NLINES_PER_FORCESOLUTION_SOURCE lines per source in that file
-    open(unit=IIN,file=trim(sources_filename),status='old',action='read',iostat=ier)
-    if (ier /= 0) then
-      if (HAS_FINITE_FAULT_SOURCE) then
-        ! no need for FORCESOLUTION file
-        return
-      else
-        stop 'Error opening FORCESOLUTION file'
-      endif
-    endif
-    !write(IMAIN,*) 'provides force solution'
-
-    icounter = 0
-    do while (ier == 0)
-      read(IIN,"(a)",iostat=ier) dummystring
-      if (ier == 0) icounter = icounter + 1
-    enddo
-    close(IIN)
-
-    ! number of lines for source description
-    if (USE_EXTERNAL_SOURCE_FILE) then
-      !! VM VM in case of USE_EXTERNAL_SOURCE_FILE we have to read one additional line per source (the name of external source file)
-      nlines_per_source = NLINES_PER_FORCESOLUTION_SOURCE + 1
-    else
-      nlines_per_source = NLINES_PER_FORCESOLUTION_SOURCE
-    endif
-
-    ! checks lines are a multiple
-    if (mod(icounter,nlines_per_source) /= 0) then
-      print *,'Error: total number of lines in FORCESOLUTION file should be a multiple of ',nlines_per_source
-      stop 'Error total number of lines in FORCESOLUTION file should be a multiple of NLINES_PER_FORCESOLUTION_SOURCE'
-    endif
-
-    ! number of sources in file
-    NSOURCES = icounter / nlines_per_source
-
-    ! checks if any
-    if (NSOURCES < 1) stop 'Error need at least one source in FORCESOLUTION file'
-
-  else
-    ! compute the total number of sources in the CMTSOLUTION file
-    ! there are NLINES_PER_CMTSOLUTION_SOURCE lines per source in that file
-    open(unit=IIN,file=trim(sources_filename),status='old',action='read',iostat=ier)
-    if (ier /= 0) then
-      if (HAS_FINITE_FAULT_SOURCE) then
-        ! no need for CMTSOLUTION file
-        return
-      else
-        stop 'Error opening CMTSOLUTION file'
-      endif
-    endif
-    !write(IMAIN,*) 'provides CMT solution'
-
-    icounter = 0
-    do while (ier == 0)
-      read(IIN,"(a)",iostat=ier) dummystring
-      if (ier == 0) icounter = icounter + 1
-    enddo
-    close(IIN)
-
-    ! number of lines for source description
-    if (USE_EXTERNAL_SOURCE_FILE) then
-      !! VM VM in case of USE_EXTERNAL_SOURCE_FILE we have to read one additional line per source (the name of external source file)
-      nlines_per_source = NLINES_PER_CMTSOLUTION_SOURCE + 1
-    else
-      nlines_per_source = NLINES_PER_CMTSOLUTION_SOURCE
-    endif
-
-    ! checks number of lines
-    if (mod(icounter,nlines_per_source) /= 0) then
-      print *,'Error: total number of lines in CMTSOLUTION file should be a multiple of ',nlines_per_source
-      stop 'Error total number of lines in CMTSOLUTION file should be a multiple of NLINES_PER_CMTSOLUTION_SOURCE'
-    endif
-
-    ! number of sources in file
-    NSOURCES = icounter / nlines_per_source
-
-    ! checks if any
-    if (NSOURCES < 1) stop 'Error need at least one source in CMTSOLUTION file'
-
-    ! compute the minimum value of hdur in CMTSOLUTION file
-    open(unit=IIN,file=trim(sources_filename),status='old',action='read')
-    minval_hdur = HUGEVAL
-    do isource = 1,NSOURCES
-
-      ! skip other information
-      do idummy = 1,3
-        read(IIN,"(a)") dummystring
-      enddo
-
-      ! read half duration and compute minimum
-      read(IIN,"(a)") dummystring
-      read(dummystring(15:len_trim(dummystring)),*) hdur
-
-      ! checks half-duration
-      ! null half-duration indicates a Heaviside
-      ! replace with very short error function
-      if (hdur < 5.d0 * DT) hdur = 5.d0 * DT
-
-      minval_hdur = min(minval_hdur,hdur)
-
-      ! reads till the end of this source
-      do idummy = 5,nlines_per_source
-        read(IIN,"(a)") dummystring
-      enddo
-
-    enddo
-    close(IIN)
-
-    ! one cannot use a Heaviside source for the movies
-    if ((MOVIE_SURFACE .or. MOVIE_VOLUME) .and. sqrt(minval_hdur**2 + HDUR_MOVIE**2) < TINYVAL) &
-      stop 'Error hdur too small for movie creation, movies do not make sense for Heaviside source'
-  endif
-
-  end subroutine get_number_of_sources
 
 !
 !-------------------------------------------------------------------------------------------------
@@ -1464,11 +1376,14 @@
 
   ! seismograms
   call bcast_all_singlei(NTSTEP_BETWEEN_OUTPUT_SEISMOS)
+
   call bcast_all_singlel(SAVE_SEISMOGRAMS_DISPLACEMENT)
   call bcast_all_singlel(SAVE_SEISMOGRAMS_VELOCITY)
   call bcast_all_singlel(SAVE_SEISMOGRAMS_ACCELERATION)
   call bcast_all_singlel(SAVE_SEISMOGRAMS_PRESSURE)
+  call bcast_all_singlel(SAVE_SEISMOGRAMS_STRAIN)
   call bcast_all_singlel(SAVE_SEISMOGRAMS_IN_ADJOINT_RUN)
+
   call bcast_all_singlei(NTSTEP_BETWEEN_OUTPUT_SAMPLE)
   call bcast_all_singlel(USE_BINARY_FOR_SEISMOGRAMS)
   call bcast_all_singlel(SU_FORMAT)
@@ -1516,6 +1431,12 @@
   call bcast_all_singlel(ADIOS_FOR_KERNELS)
   call bcast_all_singlel(ADIOS_FOR_UNDO_ATTENUATION)
 
+  ! HDF5 file I/O
+  call bcast_all_singlel(HDF5_FORMAT)
+  call bcast_all_singlel(HDF5_ENABLED)
+  call bcast_all_singlel(HDF5_FOR_MOVIES)
+  call bcast_all_singlei(HDF5_IO_NODES)
+
   ! broadcast all parameters computed from others
   call bcast_all_singlei(IMODEL)
   call bcast_all_singlei(NGNOD2D)
@@ -1525,3 +1446,94 @@
 
   end subroutine broadcast_computed_parameters
 
+!
+!-------------------------------------------------------------------------------------------------
+!
+
+  subroutine get_timestep_limit_significant_digit(time_step)
+
+  ! cut at a significant number of digits (e.g., 2 digits) using 1/2 rounding
+  ! example: 0.0734815 -> 0.0730
+  !      and 0.0737777 -> 0.0735
+  !
+  ! also works with different magnitudes of time step sizes (0.118, 0.00523, ..). always cut of after 2 significant digits:
+  ! example: 0.118749999 -> 0.115
+
+  use constants, only: CUSTOM_REAL
+
+  implicit none
+
+  real(kind=CUSTOM_REAL),intent(inout) :: time_step  ! CUSTOM_REAL
+
+  ! rounding
+  integer :: lpow,ival
+  double precision :: fac_pow,dt_cut
+
+  ! initializes
+  dt_cut = time_step
+
+  ! cut at a significant number of digits (2 digits)
+  ! example: 0.0734815 -> lpow = (2 - (-1) = 3
+  lpow = int(2.d0 - log10(dt_cut))
+
+  ! example: -> factor 10**3
+  fac_pow = 10.d0**(lpow)
+
+  ! example: -> 73
+  ival = int(fac_pow * dt_cut)
+
+  ! adds .5-digit (in case): 73.0 -> 0.073
+  if ( (fac_pow * dt_cut - ival) >= 0.5 ) then
+    dt_cut = (dble(ival) + 0.5d0) / fac_pow
+  else
+    dt_cut = dble(ival) / fac_pow
+  endif
+
+  time_step = real(dt_cut,kind=CUSTOM_REAL)
+
+  end subroutine get_timestep_limit_significant_digit
+
+!
+!-------------------------------------------------------------------------------------------------
+!
+
+  subroutine get_timestep_limit_significant_digit_dp(time_step)
+
+  ! cut at a significant number of digits (e.g., 2 digits) using 1/2 rounding
+  ! example: 0.0734815 -> 0.0730
+  !      and 0.0737777 -> 0.0735
+  !
+  ! also works with different magnitudes of time step sizes (0.118, 0.00523, ..). always cut of after 2 significant digits:
+  ! example: 0.118749999 -> 0.115
+
+  implicit none
+
+  double precision,intent(inout) :: time_step      ! double precision
+
+  ! rounding
+  integer :: lpow,ival
+  double precision :: fac_pow,dt_cut
+
+  ! initializes
+  dt_cut = time_step
+
+  ! cut at a significant number of digits (2 digits)
+  ! example: 0.0734815 -> lpow = (2 - (-1) = 3
+  lpow = int(2.d0 - log10(dt_cut))
+
+  ! example: -> factor 10**3
+  fac_pow = 10.d0**(lpow)
+
+  ! example: -> 73
+  ival = int(fac_pow * dt_cut)
+
+  ! adds .5-digit (in case): 73.0 -> 0.073
+  if ( (fac_pow * dt_cut - ival) >= 0.5 ) then
+    dt_cut = (dble(ival) + 0.5d0) / fac_pow
+  else
+    dt_cut = dble(ival) / fac_pow
+  endif
+
+  time_step = dt_cut
+
+  end subroutine get_timestep_limit_significant_digit_dp

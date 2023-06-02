@@ -63,6 +63,12 @@ if [[ $? -ne 0 ]]; then echo "configuration failed:"; cat config.log; echo ""; e
 # we output to console
 sed -i "s:IMAIN .*:IMAIN = ISTANDARD_OUTPUT:" setup/constants.h
 
+# inversion example
+if [ "$TESTID" == "36" ]; then
+  sed -i "s:IMAIN .*:IMAIN = 42:" setup/constants.h
+  sed -i "s:INVERSE_LOG_FILE .*:INVERSE_LOG_FILE = 6:" src/inverse_problem_for_model/inverse_problem_par.f90
+fi
+
 # layered example w/ NGLL = 6
 if [ "$TESTID" == "28" ]; then
   sed -i "s:NGLLX =.*:NGLLX = 6:" setup/constants.h

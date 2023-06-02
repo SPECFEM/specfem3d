@@ -40,8 +40,10 @@ shared_OBJECTS = \
 	$O/adios_manager.shared_adios_module.o \
 	$O/assemble_MPI_scalar.shared.o \
 	$O/check_mesh_resolution.shared.o \
+	$O/count_number_of_sources.shared.o \
 	$O/create_name_database.shared.o \
 	$O/define_derivation_matrices.shared.o \
+	$O/define_mass_matrices.shared.o \
 	$O/detect_surface.shared.o \
 	$O/exit_mpi.shared.o \
 	$O/force_ftz.cc.o \
@@ -52,6 +54,7 @@ shared_OBJECTS = \
 	$O/get_shape2D.shared.o \
 	$O/get_shape3D.shared.o \
 	$O/gll_library.shared.o \
+	$O/hdf5_manager.shared_hdf5_module.o \
 	$O/hex_nodes.shared.o \
 	$O/heap_sort.shared.o \
 	$O/init_openmp.shared.o \
@@ -76,6 +79,7 @@ shared_OBJECTS = \
 
 shared_MODULES = \
 	$(FC_MODDIR)/constants.$(FC_MODEXT) \
+	$(FC_MODDIR)/manager_hdf5.$(FC_MODEXT) \
 	$(FC_MODDIR)/manager_adios.$(FC_MODEXT) \
 	$(FC_MODDIR)/kdtree_search.$(FC_MODEXT) \
 	$(FC_MODDIR)/safe_alloc_mod.$(FC_MODEXT) \
@@ -133,6 +137,10 @@ $O/adios_helpers.shared_adios.o: $O/adios_helpers_readers.shared_adios.o $O/adio
 else ifeq ($(ADIOS2),yes)
 $O/adios_helpers.shared_adios.o: $O/adios_helpers_readers.shared_adios.o $O/adios_helpers_writers.shared_adios.o $O/adios_helpers_definitions.shared_adios.o
 endif
+
+# HDF5 file i/o
+$O/check_mesh_resolution.shared.o: $O/hdf5_manager.shared_hdf5_module.o
+$O/get_attenuation_model.shared.o: $O/hdf5_manager.shared_hdf5_module.o
 
 ###
 ### ASDF
@@ -207,6 +215,19 @@ $O/%.shared_noadios.o: $S/%.f90
 ## asdf
 
 $O/%.shared_asdf.o: $S/%.f90
+	${FCCOMPILE_CHECK} ${FCFLAGS_f90} -c -o $@ $<
+
+## HDF5
+$O/%.shared_hdf5_module.o: $S/%.f90 $O/shared_par.shared_module.o
+	${FCCOMPILE_CHECK} ${FCFLAGS_f90} -c -o $@ $<
+
+$O/%.shared_hdf5_module.o: $S/%.F90 $O/shared_par.shared_module.o
+	${FCCOMPILE_CHECK} ${FCFLAGS_f90} -c -o $@ $<
+
+$O/%.shared_hdf5.o: $S/%.f90 $O/hdf5_manager.shared_hdf5_module.o
+	${FCCOMPILE_CHECK} ${FCFLAGS_f90} -c -o $@ $<
+
+$O/%.shared_hdf5.o: $S/%.F90 $O/hdf5_manager.shared_hdf5_module.o
 	${FCCOMPILE_CHECK} ${FCFLAGS_f90} -c -o $@ $<
 
 ##

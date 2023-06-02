@@ -1,18 +1,37 @@
-CC=icc
+################################################
+#   GNU gfortran (default)
+################################################
+
+CC=gcc
 FC=mpif90
+
 CCFLAGS = -O3
-# for debugging: change -O3 -check nobounds to      -check all -debug -g -O0 -fp-stack-check -traceback -ftrapuv
 
-# for full vectorization on CURIE, change -xHost to -xAVX (since the frontend node has Nehalem processors, not Sandy Bridge)
+# run
+FFLAGS = -O3 -std=legacy -Wall -Wno-unused-variable -Wno-conversion -Wno-unused-dummy-argument -Wno-maybe-uninitialized
 
-FFLAGS = -O3 -check nobounds -xAVX -ftz -assume buffered_io -assume byterecl -vec-report0 -implicitnone -warn truncated_source -warn argument_checking -warn declarations -warn alignments -warn ignore_loc -warn usage -mcmodel=large -shared-intel
-
-#FFLAGS = -check all -debug -g -O0 -fp-stack-check -traceback -ftrapuv -implicitnone -warn truncated_source -warn argument_checking -warn declarations -warn alignments -warn ignore_loc -warn usage -mcmodel=medium -shared-intel
+# debugging
+#FFLAGS = -std=gnu -fimplicit-none -frange-check -O2 -pedantic -pedantic-errors -Waliasing -Wampersand -Wline-truncation -Wsurprising -Wunderflow -fbounds-check
 
 
 ################################################
 #   Intel ifort
 ################################################
+
+#CC=icc
+#FC=mpif90
+
+#CCFLAGS = -O3
+
+# for debugging: change -O3 -check nobounds to      -check all -debug -g -O0 -fp-stack-check -traceback -ftrapuv
+# for full vectorization on CURIE, change -xHost to -xAVX (since the frontend node has Nehalem processors, not Sandy Bridge)
+
+# run
+#FFLAGS = -O3 -check nobounds -xAVX -ftz -assume buffered_io -assume byterecl -vec-report0 -implicitnone -warn truncated_source -warn argument_checking -warn declarations -warn alignments -warn ignore_loc -warn usage -mcmodel=large -shared-intel
+
+# debugging
+#FFLAGS = -check all -debug -g -O0 -fp-stack-check -traceback -ftrapuv -implicitnone -warn truncated_source -warn argument_checking -warn declarations -warn alignments -warn ignore_loc -warn usage -mcmodel=medium -shared-intel
+
 
 # it is crucial to use -xAVX here, so that big loops that contain double precision complex numbers are vectorized;
 # this means that only Intel Sandy Bridge processors can vectorize these loops, not Intel Nehalem processors,
@@ -29,16 +48,15 @@ FFLAGS = -O3 -check nobounds -xAVX -ftz -assume buffered_io -assume byterecl -ve
 
 # change    -vec-report0      to      -vec-report3     to get a vectorization report
 
-################################################
-#   GNU gfortran
-################################################
-
-#FC = mpif90
-#FFLAGS = -std=gnu -fimplicit-none -frange-check -O2 -pedantic -pedantic-errors -Waliasing -Wampersand -Wline-truncation -Wsurprising -Wunderflow -fbounds-check
 
 ################################################
 #   IBM Blue Gene
 ################################################
+
+#CC=xlc_r
+#FC=mpixlf95_r
+
+#CCFLAGS = -O3
 
 # at IDRIS (France) maybe change -qarch=auto to -qarch=450d
 #
@@ -54,6 +72,5 @@ FFLAGS = -O3 -check nobounds -xAVX -ftz -assume buffered_io -assume byterecl -ve
 #
 # options -qreport -qsource -qlist create a *.lst file containing detailed information about vectorization
 #
-#FC = mpixlf95_r
 #FFLAGS = -O4 -qnostrict -qhot -qsimd=auto -qassert=contig -g -Q -qarch=auto -q64 -qfree=f90 -qsuffix=f=f90 -qsuppress=1500-036 -qreport -qsource -qlist
 

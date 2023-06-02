@@ -43,10 +43,13 @@
   use constants, only: CUSTOM_REAL,NGLLX,NGLLY,NGLLZ,NDIM,N_SLS,ONE_THIRD,FOUR_THIRDS, &
     m1,m2
 
+  use shared_parameters, only: SIMULATION_TYPE, &
+    USE_LDDRK,LTS_MODE,SAVE_MOHO_MESH, &
+    ATTENUATION,ANISOTROPY,MOVIE_VOLUME_STRESS
+
   use fault_solver_common, only: Kelvin_Voigt_eta,USE_KELVIN_VOIGT_DAMPING
 
-  use specfem_par, only: SAVE_MOHO_MESH,USE_LDDRK, &
-                         xixstore,xiystore,xizstore,etaxstore,etaystore,etazstore, &
+  use specfem_par, only: xixstore,xiystore,xizstore,etaxstore,etaystore,etazstore, &
                          gammaxstore,gammaystore,gammazstore,jacobianstore, &
                          NSPEC_AB,NGLOB_AB, &
                          hprime_xx,hprime_xxT, &
@@ -55,12 +58,10 @@
                          hprimewgll_xx,hprimewgll_xxT, &
                          hprimewgll_yy,hprimewgll_zz, &
                          kappastore,mustore,ibool, &
-                         ATTENUATION, &
                          NSPEC_ATTENUATION_AB,NSPEC_ATTENUATION_AB_LDDRK, &
-                         ANISOTROPY,SIMULATION_TYPE, &
-                         NSPEC_ADJOINT,is_moho_top,is_moho_bot, &
-                         irregular_element_number,xix_regular,jacobian_regular,&
-                         MOVIE_VOLUME_STRESS
+                         NSPEC_ADJOINT, &
+                         is_moho_top,is_moho_bot, &
+                         irregular_element_number,xix_regular,jacobian_regular
 
   use specfem_par, only: wgllwgll_xy_3D,wgllwgll_xz_3D,wgllwgll_yz_3D
   !or: use specfem_par, only: wgllwgll_xy,wgllwgll_xz,wgllwgll_yz
@@ -75,7 +76,11 @@
                                  ispec2D_moho_top,ispec2D_moho_bot, &
                                  nspec_inner_elastic,nspec_outer_elastic,phase_ispec_inner_elastic
 
+  ! PML
   use pml_par, only: is_CPML,NSPEC_CPML
+
+  ! LTS
+  use specfem_par_lts, only: lts_type_compute_pelem,current_lts_elem,current_lts_boundary_elem
 
 #ifdef FORCE_VECTORIZATION
   use constants, only: NGLLCUBE
@@ -201,7 +206,8 @@
 !$OMP epsilondev_xx,epsilondev_yy,epsilondev_xy,epsilondev_xz,epsilondev_yz,epsilondev_trace,epsilon_trace_over_3, &
 !$OMP USE_LDDRK,R_xx_lddrk,R_yy_lddrk,R_xy_lddrk,R_xz_lddrk,R_yz_lddrk,R_trace_lddrk, &
 !$OMP NSPEC_AB,NSPEC_ATTENUATION_AB,NSPEC_ATTENUATION_AB_LDDRK,NSPEC_STRAIN_ONLY, &
-!$OMP SAVE_MOHO_MESH,dsdx_top,dsdx_bot,ispec2D_moho_top,ispec2D_moho_bot,is_moho_top,is_moho_bot &
+!$OMP SAVE_MOHO_MESH,dsdx_top,dsdx_bot,ispec2D_moho_top,ispec2D_moho_bot,is_moho_top,is_moho_bot, &
+!$OMP LTS_MODE,lts_type_compute_pelem,current_lts_elem,current_lts_boundary_elem &
 !$OMP ) &
 !$OMP PRIVATE( &
 !$OMP ispec_p,ispec,ispec_irreg,i,j,k,l,iglob,ispec2D, &
@@ -243,6 +249,22 @@
     ispec = phase_ispec_inner_elastic(ispec_p,iphase)
 
     ! selects element contribution
+
+    ! LTS
+    if (LTS_MODE) then
+      if (lts_type_compute_pelem) then
+        ! p-element call
+        ! if not in this p-level, skip
+        if (.not. current_lts_elem(ispec)) cycle
+        ! only work on elements _strictly_ in this level (all 125 nodes in P)
+        if (current_lts_boundary_elem(ispec)) cycle
+      else
+        ! boundary-element call
+        ! only for boundary elements
+        if (.not. current_lts_boundary_elem(ispec)) cycle
+      endif
+    endif
+
     ! PML elements will be computed later
     if (is_CPML(ispec) .and. .not. backward_simulation) cycle
 
@@ -808,13 +830,31 @@
 
     ! save deviatoric strain for Runge-Kutta scheme
     if (COMPUTE_AND_STORE_STRAIN) then
-      if (ATTENUATION .and. .not. is_CPML(ispec)) epsilondev_trace(:,:,:,ispec) = epsilondev_trace_loc(:,:,:)
-      ! already stored epsilon_trace_over_3(:,:,:,ispec) above for SIMULATION_TYPE == 3
-      epsilondev_xx(:,:,:,ispec) = epsilondev_xx_loc(:,:,:)
-      epsilondev_yy(:,:,:,ispec) = epsilondev_yy_loc(:,:,:)
-      epsilondev_xy(:,:,:,ispec) = epsilondev_xy_loc(:,:,:)
-      epsilondev_xz(:,:,:,ispec) = epsilondev_xz_loc(:,:,:)
-      epsilondev_yz(:,:,:,ispec) = epsilondev_yz_loc(:,:,:)
+      ! LTS
+      if (LTS_MODE .and. .not. lts_type_compute_pelem) then
+        ! note: we first call this compute_forces routine for p-elements only, then in a second call for boundary-elements.
+        !       to store strains, we will in the first call re-set the strain as by default, but in the second call
+        !       only add to the existing values.
+        ! boundary-element call
+        ! adds contributions
+        if (ATTENUATION .and. .not. is_CPML(ispec)) &
+          epsilondev_trace(:,:,:,ispec) = epsilondev_trace(:,:,:,ispec) + epsilondev_trace_loc(:,:,:)
+        ! already stored epsilon_trace_over_3(:,:,:,ispec) above for SIMULATION_TYPE == 3
+        epsilondev_xx(:,:,:,ispec) = epsilondev_xx(:,:,:,ispec) + epsilondev_xx_loc(:,:,:)
+        epsilondev_yy(:,:,:,ispec) = epsilondev_yy(:,:,:,ispec) + epsilondev_yy_loc(:,:,:)
+        epsilondev_xy(:,:,:,ispec) = epsilondev_xy(:,:,:,ispec) + epsilondev_xy_loc(:,:,:)
+        epsilondev_xz(:,:,:,ispec) = epsilondev_xz(:,:,:,ispec) + epsilondev_xz_loc(:,:,:)
+        epsilondev_yz(:,:,:,ispec) = epsilondev_yz(:,:,:,ispec) + epsilondev_yz_loc(:,:,:)
+      else
+        ! default
+        if (ATTENUATION .and. .not. is_CPML(ispec)) epsilondev_trace(:,:,:,ispec) = epsilondev_trace_loc(:,:,:)
+        ! already stored epsilon_trace_over_3(:,:,:,ispec) above for SIMULATION_TYPE == 3
+        epsilondev_xx(:,:,:,ispec) = epsilondev_xx_loc(:,:,:)
+        epsilondev_yy(:,:,:,ispec) = epsilondev_yy_loc(:,:,:)
+        epsilondev_xy(:,:,:,ispec) = epsilondev_xy_loc(:,:,:)
+        epsilondev_xz(:,:,:,ispec) = epsilondev_xz_loc(:,:,:)
+        epsilondev_yz(:,:,:,ispec) = epsilondev_yz_loc(:,:,:)
+      endif
     endif
 
   enddo  ! spectral element loop

@@ -1,4 +1,3 @@
-
  **********************************************
  **** Specfem 3-D Solver - MPI version f90 ****
  **********************************************
@@ -6,6 +5,8 @@
  Running Git package version of the code: 3.0.0
  which is Git undefined in the case of old tar ball builds
  dating undefined in the case of old tar ball builds
+
+
 
 
  There are            1  MPI processes
@@ -27,7 +28,18 @@
  velocity model:   default
 
  Reading mesh databases...
- done
+   reads binary mesh files: proc***_external_mesh.bin
+   from directory         : ./DATABASES_MPI
+
+   simulation w/ acoustic    domain:  T
+   simulation w/ elastic     domain:  T
+   simulation w/ poroelastic domain:  F
+
+   slice 0 has:
+   number of elements acoustic   :        1000
+   number of elements elastic    :        1000
+   number of elements poroelastic:           0
+   done
 
  total acoustic elements    :        1000
  total elastic elements     :        1000
@@ -57,10 +69,10 @@
 
 
  ********
- Model: P velocity min,max =    1520.00000       3499.99976
- Model: S velocity min,max =    0.00000000       2000.00000
+ Model: P   velocity min,max =    1520.00000       3500.00000
+ Model: S   velocity min,max =    0.00000000       2000.00000
 
- Model: Poisson's ratio min,max =   0.257575691      0.500000000
+ Model: Poisson's ratio min,max =   0.257575750      0.500000000
  ********
 
  *********************************************
@@ -80,18 +92,25 @@
  *** Max/min ratio =    1.00000000
 
  *** Minimum period resolved =    8.22368413E-02
- *** Maximum suggested time step =    2.46675778E-03
+ *** Maximum suggested time step =    2.46675755E-03
 
  *** for DT :    2.5000000000000001E-003
- *** Max stability for wave velocities =   0.506738007
+ *** Max stability for wave velocities =   0.506738067
 
- Elapsed time for checking mesh resolution in seconds =    2.1559999999999999E-003
+ Elapsed time for checking mesh resolution in seconds =    9.1200000000000005E-004
  saving VTK files for Courant number and minimum period
 
 
  ******************************************
  There is a total of            1  slices
  ******************************************
+
+ movie simulation:
+   volume movie
+
+ volume movies:
+   saving: particle velocities
+   number of steps between frames =          100
 
 
  kd-tree:
@@ -101,7 +120,7 @@
    actual        number of nodes:         3999
                 tree memory size:   0.122039795     MB
    maximum depth   :           13
-   creation timing :    6.62997365E-04 (s)
+   creation timing :    2.77996063E-04 (s)
 
 
  sources:           1
@@ -126,13 +145,13 @@
      gamma coordinate of source in that element:    1.0000000000000000
 
    source time function:
-     using Gaussian source time function
-     half duration:    8.0000000000000002E-002  seconds
+     using external source time function
+
      time shift:    0.0000000000000000       seconds
 
    magnitude of the source:
         scalar moment M0 =    1.6992242347612633E+021  dyne-cm
-     moment magnitude Mw =    3.4535006530429477
+     moment magnitude Mw =    3.4535006530429482
 
    original (requested) position of the source:
 
@@ -158,12 +177,15 @@
  maximum error in location of the sources:    0.00000000      m
 
 
- Elapsed time for detection of sources in seconds =    5.6300000000000100E-004
+ Elapsed time for detection of sources in seconds =    2.5400000000000075E-004
 
  End of source detection - done
 
 
  Each source is being convolved with HDUR_MOVIE =    0.0000000000000000
+
+ External STF:
+   simulation start time set to zero:    0.0000000000000000
 
 
  printing the source-time function
@@ -730,9 +752,11 @@
 
  maximum error in location of all the receivers:    0.00000000      m
 
- Elapsed time for receiver detection in seconds =    5.6509999999999963E-003
+ Elapsed time for receiver detection in seconds =    1.2869999999999999E-003
 
  End of receiver detection - done
+
+ found a total of           19  receivers in all the slices
 
  source arrays:
    number of sources is            1
@@ -741,15 +765,18 @@
 
  seismograms:
    seismograms written by all processes
+
+   Total number of simulation steps (NSTEP)                       =         1000
    writing out seismograms at every NTSTEP_BETWEEN_OUTPUT_SEISMOS =         1000
+   number of subsampling steps for seismograms                    =            1
+   Total number of samples for seismograms                        =         1000
+
    maximum number of local receivers is           19  in slice            0
    size of maximum seismogram array       =   0.217437744     MB
                                           =    2.12341547E-04 GB
 
 
  Total number of samples for seismograms =         1000
-
- found a total of           19  receivers in all the slices
 
 
  Simulation setup:
@@ -769,12 +796,26 @@
  preparing mass matrices
  preparing constants
  preparing wavefields
+ preparing fault simulation
    no dynamic faults
    no kinematic faults
+   no fault simulation
  preparing attenuation
+   The code uses a constant Q quality factor, but approximated
+   based on a series of Zener standard linear solids (SLS).
+   Approximation is performed in the following frequency band:
+
+   number of SLS bodies:            3
+
+   Reference frequency of anelastic model (Hz):    1.00000000
+                                    period (s):    1.00000000
+   Attenuation frequency band min/max (Hz):  0.218422994     /   12.2828283
+               period band    min/max (s) :   8.14144760E-02 /   4.57827234
+   Logarithmic center frequency (Hz):   1.63794148
+                      period     (s):  0.610522449
+
  preparing gravity
    no gravity simulation
-
  preparing CPML
    incorporating C-PML
 
@@ -794,16 +835,16 @@
    fused array done
    bandwidth test (STREAM TRIAD):
       memory accesses =    4.67471695     MB
-      timing  min/max =    2.28999997E-04 s /    2.69000011E-04 s
-      timing      avg =    2.46300013E-04 s
-      bandwidth       =    18.5349293     GB/s
+      timing  min/max =    5.40000001E-05 s /    5.50000004E-05 s
+      timing      avg =    5.45000003E-05 s
+      bandwidth       =    83.7642822     GB/s
       with force_vectorization:
-      timing  min/max =    1.90000006E-04 s /    2.16999993E-04 s
-      timing      avg =    2.01100003E-04 s
-      bandwidth       =    22.7009106     GB/s
+      timing  min/max =    4.99999987E-05 s /    5.09999991E-05 s
+      timing      avg =    5.03000010E-05 s
+      bandwidth       =    90.7585144     GB/s
 
 
- Elapsed time for preparing timerun in seconds =    1.2762600000000000
+ Elapsed time for preparing timerun in seconds =   0.75391600000000003
 
  ************
   time loop
@@ -813,198 +854,200 @@
             time step:    2.49999994E-03  s
  number of time steps:         1000
  total simulated time:    2.50000000      seconds
- start time: -0.159999996      seconds
+ start time:  -0.00000000      seconds
 
  All processes are synchronized before the time loop
 
  Starting time iteration loop...
 
  Time step #            5
- Time:  -0.150000006      seconds
- Elapsed time in seconds =   0.16678199999999999
+ Time:    9.99999978E-03  seconds
+ Elapsed time in seconds =    8.6716000000000015E-002
  Elapsed time in hh:mm:ss =      0 h 00 m 00 s
- Mean elapsed time per time step in seconds =    3.33563983E-02
- Max norm displacement vector U in all slices (m) =    8.25107418E-05
+ Mean elapsed time per time step in seconds =    1.73432007E-02
+ Max norm displacement vector U in all slices (m) =    8.25107563E-05
  Max norm pressure P in all slices (Pa) =    0.00000000
  Time steps done =            5  out of         1000
  Time steps remaining =          995
- Estimated remaining time in seconds =    33.1896172
- Estimated remaining time in hh:mm:ss =      0 h 00 m 33 s
- Estimated total run time in seconds =    33.3563995
- Estimated total run time in hh:mm:ss =      0 h 00 m 33 s
+ Estimated remaining time in seconds =    17.2564831
+ Estimated remaining time in hh:mm:ss =      0 h 00 m 17 s
+ Estimated total run time in seconds =    17.3432007
+ Estimated total run time in hh:mm:ss =      0 h 00 m 17 s
  We have done   0.500000000     % of that
- The run will finish approximately on (in local time): Thu Jul 11, 2019 22:54
+ The run will finish approximately on (in local time): Tue Dec 06, 2022 14:37
  ************************************************************
  **** BEWARE: the above time estimates are not very reliable
  **** because fewer than 100 iterations have been performed
  ************************************************************
 
  Time step #          100
- Time:    8.74999985E-02  seconds
- Elapsed time in seconds =    4.0413700000000006
- Elapsed time in hh:mm:ss =      0 h 00 m 04 s
- Mean elapsed time per time step in seconds =    4.04137000E-02
+ Time:   0.247500002      seconds
+ Elapsed time in seconds =    2.1233200000000001
+ Elapsed time in hh:mm:ss =      0 h 00 m 02 s
+ Mean elapsed time per time step in seconds =    2.12331992E-02
  Max norm displacement vector U in all slices (m) =    13.3839350
- Max norm pressure P in all slices (Pa) =    34273.6914
+ Max norm pressure P in all slices (Pa) =    34273.5039
  Time steps done =          100  out of         1000
  Time steps remaining =          900
- Estimated remaining time in seconds =    36.3723297
- Estimated remaining time in hh:mm:ss =      0 h 00 m 36 s
- Estimated total run time in seconds =    40.4137001
- Estimated total run time in hh:mm:ss =      0 h 00 m 40 s
+ Estimated remaining time in seconds =    19.1098804
+ Estimated remaining time in hh:mm:ss =      0 h 00 m 19 s
+ Estimated total run time in seconds =    21.2332001
+ Estimated total run time in hh:mm:ss =      0 h 00 m 21 s
  We have done    10.0000000     % of that
- The run will finish approximately on (in local time): Thu Jul 11, 2019 22:54
+ The run will finish approximately on (in local time): Tue Dec 06, 2022 14:37
 
  Time step #          200
- Time:   0.337500006      seconds
- Elapsed time in seconds =    8.1328490000000002
- Elapsed time in hh:mm:ss =      0 h 00 m 08 s
- Mean elapsed time per time step in seconds =    4.06642444E-02
- Max norm displacement vector U in all slices (m) =    13.6527729
- Max norm pressure P in all slices (Pa) =    248116.391
+ Time:   0.497500002      seconds
+ Elapsed time in seconds =    4.2804859999999998
+ Elapsed time in hh:mm:ss =      0 h 00 m 04 s
+ Mean elapsed time per time step in seconds =    2.14024298E-02
+ Max norm displacement vector U in all slices (m) =    13.6527739
+ Max norm pressure P in all slices (Pa) =    248104.781
  Time steps done =          200  out of         1000
  Time steps remaining =          800
- Estimated remaining time in seconds =    32.5313950
- Estimated remaining time in hh:mm:ss =      0 h 00 m 32 s
- Estimated total run time in seconds =    40.6642456
- Estimated total run time in hh:mm:ss =      0 h 00 m 40 s
+ Estimated remaining time in seconds =    17.1219444
+ Estimated remaining time in hh:mm:ss =      0 h 00 m 17 s
+ Estimated total run time in seconds =    21.4024296
+ Estimated total run time in hh:mm:ss =      0 h 00 m 21 s
  We have done    20.0000000     % of that
- The run will finish approximately on (in local time): Thu Jul 11, 2019 22:54
+ The run will finish approximately on (in local time): Tue Dec 06, 2022 14:37
 
  Time step #          300
- Time:   0.587499976      seconds
- Elapsed time in seconds =    12.203202000000001
- Elapsed time in hh:mm:ss =      0 h 00 m 12 s
- Mean elapsed time per time step in seconds =    4.06773388E-02
+ Time:   0.747500002      seconds
+ Elapsed time in seconds =    6.4644829999999995
+ Elapsed time in hh:mm:ss =      0 h 00 m 06 s
+ Mean elapsed time per time step in seconds =    2.15482768E-02
  Max norm displacement vector U in all slices (m) =    13.7153120
- Max norm pressure P in all slices (Pa) =    146521.375
+ Max norm pressure P in all slices (Pa) =    146520.203
  Time steps done =          300  out of         1000
  Time steps remaining =          700
- Estimated remaining time in seconds =    28.4741383
- Estimated remaining time in hh:mm:ss =      0 h 00 m 28 s
- Estimated total run time in seconds =    40.6773415
- Estimated total run time in hh:mm:ss =      0 h 00 m 40 s
+ Estimated remaining time in seconds =    15.0837936
+ Estimated remaining time in hh:mm:ss =      0 h 00 m 15 s
+ Estimated total run time in seconds =    21.5482769
+ Estimated total run time in hh:mm:ss =      0 h 00 m 21 s
  We have done    30.0000000     % of that
- The run will finish approximately on (in local time): Thu Jul 11, 2019 22:53
+ The run will finish approximately on (in local time): Tue Dec 06, 2022 14:37
 
  Time step #          400
- Time:   0.837499976      seconds
- Elapsed time in seconds =    16.247857000000000
- Elapsed time in hh:mm:ss =      0 h 00 m 16 s
- Mean elapsed time per time step in seconds =    4.06196415E-02
- Max norm displacement vector U in all slices (m) =    13.7554073
- Max norm pressure P in all slices (Pa) =    67509.3359
+ Time:   0.997500002      seconds
+ Elapsed time in seconds =    8.6227760000000000
+ Elapsed time in hh:mm:ss =      0 h 00 m 08 s
+ Mean elapsed time per time step in seconds =    2.15569399E-02
+ Max norm displacement vector U in all slices (m) =    13.7554064
+ Max norm pressure P in all slices (Pa) =    67511.0000
  Time steps done =          400  out of         1000
  Time steps remaining =          600
- Estimated remaining time in seconds =    24.3717861
- Estimated remaining time in hh:mm:ss =      0 h 00 m 24 s
- Estimated total run time in seconds =    40.6196442
- Estimated total run time in hh:mm:ss =      0 h 00 m 40 s
+ Estimated remaining time in seconds =    12.9341640
+ Estimated remaining time in hh:mm:ss =      0 h 00 m 12 s
+ Estimated total run time in seconds =    21.5569401
+ Estimated total run time in hh:mm:ss =      0 h 00 m 21 s
  We have done    40.0000000     % of that
- The run will finish approximately on (in local time): Thu Jul 11, 2019 22:53
+ The run will finish approximately on (in local time): Tue Dec 06, 2022 14:37
 
  Time step #          500
- Time:    1.08749998      seconds
- Elapsed time in seconds =    20.252223999999998
- Elapsed time in hh:mm:ss =      0 h 00 m 20 s
- Mean elapsed time per time step in seconds =    4.05044481E-02
+ Time:    1.24749994      seconds
+ Elapsed time in seconds =    10.773180999999999
+ Elapsed time in hh:mm:ss =      0 h 00 m 10 s
+ Mean elapsed time per time step in seconds =    2.15463620E-02
  Max norm displacement vector U in all slices (m) =    13.7837639
- Max norm pressure P in all slices (Pa) =    6991.15820
+ Max norm pressure P in all slices (Pa) =    6992.35742
  Time steps done =          500  out of         1000
  Time steps remaining =          500
- Estimated remaining time in seconds =    20.2522240
- Estimated remaining time in hh:mm:ss =      0 h 00 m 20 s
- Estimated total run time in seconds =    40.5044479
- Estimated total run time in hh:mm:ss =      0 h 00 m 40 s
+ Estimated remaining time in seconds =    10.7731810
+ Estimated remaining time in hh:mm:ss =      0 h 00 m 10 s
+ Estimated total run time in seconds =    21.5463619
+ Estimated total run time in hh:mm:ss =      0 h 00 m 21 s
  We have done    50.0000000     % of that
- The run will finish approximately on (in local time): Thu Jul 11, 2019 22:54
+ The run will finish approximately on (in local time): Tue Dec 06, 2022 14:37
 
  Time step #          600
- Time:    1.33749998      seconds
- Elapsed time in seconds =    24.241401000000000
- Elapsed time in hh:mm:ss =      0 h 00 m 24 s
- Mean elapsed time per time step in seconds =    4.04023342E-02
+ Time:    1.49749994      seconds
+ Elapsed time in seconds =    12.924892000000000
+ Elapsed time in hh:mm:ss =      0 h 00 m 12 s
+ Mean elapsed time per time step in seconds =    2.15414874E-02
  Max norm displacement vector U in all slices (m) =    13.8039837
- Max norm pressure P in all slices (Pa) =    2127.90820
+ Max norm pressure P in all slices (Pa) =    2128.00098
  Time steps done =          600  out of         1000
  Time steps remaining =          400
- Estimated remaining time in seconds =    16.1609344
- Estimated remaining time in hh:mm:ss =      0 h 00 m 16 s
- Estimated total run time in seconds =    40.4023361
- Estimated total run time in hh:mm:ss =      0 h 00 m 40 s
+ Estimated remaining time in seconds =    8.61659431
+ Estimated remaining time in hh:mm:ss =      0 h 00 m 08 s
+ Estimated total run time in seconds =    21.5414867
+ Estimated total run time in hh:mm:ss =      0 h 00 m 21 s
  We have done    60.0000000     % of that
- The run will finish approximately on (in local time): Thu Jul 11, 2019 22:54
+ The run will finish approximately on (in local time): Tue Dec 06, 2022 14:37
 
  Time step #          700
- Time:    1.58749998      seconds
- Elapsed time in seconds =    28.233600999999997
- Elapsed time in hh:mm:ss =      0 h 00 m 28 s
- Mean elapsed time per time step in seconds =    4.03337143E-02
- Max norm displacement vector U in all slices (m) =    13.8184214
- Max norm pressure P in all slices (Pa) =    660.727722
+ Time:    1.74749994      seconds
+ Elapsed time in seconds =    15.076749000000000
+ Elapsed time in hh:mm:ss =      0 h 00 m 15 s
+ Mean elapsed time per time step in seconds =    2.15382129E-02
+ Max norm displacement vector U in all slices (m) =    13.8184204
+ Max norm pressure P in all slices (Pa) =    652.034302
  Time steps done =          700  out of         1000
  Time steps remaining =          300
- Estimated remaining time in seconds =    12.1001148
- Estimated remaining time in hh:mm:ss =      0 h 00 m 12 s
- Estimated total run time in seconds =    40.3337173
- Estimated total run time in hh:mm:ss =      0 h 00 m 40 s
+ Estimated remaining time in seconds =    6.46146393
+ Estimated remaining time in hh:mm:ss =      0 h 00 m 06 s
+ Estimated total run time in seconds =    21.5382137
+ Estimated total run time in hh:mm:ss =      0 h 00 m 21 s
  We have done    70.0000000     % of that
- The run will finish approximately on (in local time): Thu Jul 11, 2019 22:54
+ The run will finish approximately on (in local time): Tue Dec 06, 2022 14:37
 
  Time step #          800
- Time:    1.83749998      seconds
- Elapsed time in seconds =    32.233860000000000
- Elapsed time in hh:mm:ss =      0 h 00 m 32 s
- Mean elapsed time per time step in seconds =    4.02923264E-02
+ Time:    1.99749994      seconds
+ Elapsed time in seconds =    17.238320999999999
+ Elapsed time in hh:mm:ss =      0 h 00 m 17 s
+ Mean elapsed time per time step in seconds =    2.15479005E-02
  Max norm displacement vector U in all slices (m) =    13.8287477
- Max norm pressure P in all slices (Pa) =    317.772461
+ Max norm pressure P in all slices (Pa) =    318.073334
  Time steps done =          800  out of         1000
  Time steps remaining =          200
- Estimated remaining time in seconds =    8.05846500
- Estimated remaining time in hh:mm:ss =      0 h 00 m 08 s
- Estimated total run time in seconds =    40.2923241
- Estimated total run time in hh:mm:ss =      0 h 00 m 40 s
+ Estimated remaining time in seconds =    4.30958033
+ Estimated remaining time in hh:mm:ss =      0 h 00 m 04 s
+ Estimated total run time in seconds =    21.5479012
+ Estimated total run time in hh:mm:ss =      0 h 00 m 21 s
  We have done    80.0000000     % of that
- The run will finish approximately on (in local time): Thu Jul 11, 2019 22:54
+ The run will finish approximately on (in local time): Tue Dec 06, 2022 14:37
 
  Time step #          900
- Time:    2.08750010      seconds
- Elapsed time in seconds =    36.201464000000001
- Elapsed time in hh:mm:ss =      0 h 00 m 36 s
- Mean elapsed time per time step in seconds =    4.02238481E-02
- Max norm displacement vector U in all slices (m) =    13.8361320
- Max norm pressure P in all slices (Pa) =    199.344620
+ Time:    2.24749994      seconds
+ Elapsed time in seconds =    19.398993000000001
+ Elapsed time in hh:mm:ss =      0 h 00 m 19 s
+ Mean elapsed time per time step in seconds =    2.15544365E-02
+ Max norm displacement vector U in all slices (m) =    13.8361311
+ Max norm pressure P in all slices (Pa) =    195.799194
  Time steps done =          900  out of         1000
  Time steps remaining =          100
- Estimated remaining time in seconds =    4.02238512
- Estimated remaining time in hh:mm:ss =      0 h 00 m 04 s
- Estimated total run time in seconds =    40.2238503
- Estimated total run time in hh:mm:ss =      0 h 00 m 40 s
+ Estimated remaining time in seconds =    2.15544367
+ Estimated remaining time in hh:mm:ss =      0 h 00 m 02 s
+ Estimated total run time in seconds =    21.5544357
+ Estimated total run time in hh:mm:ss =      0 h 00 m 21 s
  We have done    90.0000000     % of that
- The run will finish approximately on (in local time): Thu Jul 11, 2019 22:54
+ The run will finish approximately on (in local time): Tue Dec 06, 2022 14:37
 
  Time step #         1000
- Time:    2.33750010      seconds
- Elapsed time in seconds =    40.174351999999999
- Elapsed time in hh:mm:ss =      0 h 00 m 40 s
- Mean elapsed time per time step in seconds =    4.01743501E-02
+ Time:    2.49749994      seconds
+ Elapsed time in seconds =    21.558035000000000
+ Elapsed time in hh:mm:ss =      0 h 00 m 21 s
+ Mean elapsed time per time step in seconds =    2.15580352E-02
  Max norm displacement vector U in all slices (m) =    13.8414125
- Max norm pressure P in all slices (Pa) =    134.316147
+ Max norm pressure P in all slices (Pa) =    126.671562
  Time steps done =         1000  out of         1000
  Time steps remaining =            0
  Estimated remaining time in seconds =    0.00000000
  Estimated remaining time in hh:mm:ss =      0 h 00 m 00 s
- Estimated total run time in seconds =    40.1743507
- Estimated total run time in hh:mm:ss =      0 h 00 m 40 s
+ Estimated total run time in seconds =    21.5580349
+ Estimated total run time in hh:mm:ss =      0 h 00 m 21 s
  We have done    100.000000     % of that
 
 
- Total number of time steps written:         1000
- Writing the seismograms in parallel took    8.54630023E-02  seconds
+ Total number of time steps done:         1000
+ Writing the seismograms in parallel took    4.70519997E-02  seconds
 
  Time loop finished. Timing info:
- Total elapsed time in seconds =    40.319132000000003
- Total elapsed time in hh:mm:ss =      0 h 00 m 40 s
+ Total elapsed time in seconds =    21.637210000000000
+ Total elapsed time in hh:mm:ss =      0 h 00 m 21 s
+
+ finalizing simulation
 
  End of the simulation
 

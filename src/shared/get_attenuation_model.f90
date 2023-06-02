@@ -193,6 +193,10 @@
 
   use shared_parameters, only: MIN_ATTENUATION_PERIOD,MAX_ATTENUATION_PERIOD,COMPUTE_FREQ_BAND_AUTOMATIC,ATT_F_C_SOURCE
 
+  ! HDF5 file i/o
+  use shared_parameters, only: HDF5_ENABLED
+  use manager_hdf5, only: write_attenuation_file_hdf5
+
   implicit none
 
   double precision,intent(in) :: OLSEN_ATTENUATION_RATIO,ATTENUATION_f0_REFERENCE
@@ -422,23 +426,29 @@
   endif
 
   ! stores attenuation arrays into files
-  open(unit=27, file=prname(1:len_trim(prname))//'attenuation.bin', &
-        status='unknown',action='write',form='unformatted',iostat=ier)
-  if (ier /= 0) then
-    print *,'error: could not open ',prname(1:len_trim(prname))//'attenuation.bin'
-    call exit_mpi(myrank,'error opening attenuation.bin file')
+  if (HDF5_ENABLED) then
+    ! HDF5 file i/o
+    call write_attenuation_file_hdf5(factor_common,scale_factor,factor_common_kappa,scale_factor_kappa)
+  else
+    ! default output
+    open(unit=27, file=prname(1:len_trim(prname))//'attenuation.bin', &
+          status='unknown',action='write',form='unformatted',iostat=ier)
+    if (ier /= 0) then
+      print *,'error: could not open ',prname(1:len_trim(prname))//'attenuation.bin'
+      call exit_mpi(myrank,'error opening attenuation.bin file')
+    endif
+    write(27) nspec
+
+    ! shear attenuation
+    write(27) factor_common
+    write(27) scale_factor
+
+    ! bulk attenuation
+    write(27) factor_common_kappa
+    write(27) scale_factor_kappa
+
+    close(27)
   endif
-  write(27) nspec
-
-  ! shear attenuation
-  write(27) factor_common
-  write(27) scale_factor
-
-  ! bulk attenuation
-  write(27) factor_common_kappa
-  write(27) scale_factor_kappa
-
-  close(27)
 
   ! frees memory
   deallocate(factor_common,scale_factor)

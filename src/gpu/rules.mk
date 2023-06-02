@@ -142,6 +142,9 @@ ifeq ($(CUDA),yes)
   ifeq ($(CUDA11),yes)
     BUILD_VERSION_TXT += (v11)
   endif
+  ifeq ($(CUDA12),yes)
+    BUILD_VERSION_TXT += (v12)
+  endif
 endif
 
 ## HIP compilation

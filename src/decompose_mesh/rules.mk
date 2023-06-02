@@ -49,6 +49,7 @@ decompose_mesh_MODULES = \
 	$(FC_MODDIR)/decompose_mesh_par.$(FC_MODEXT) \
 	$(FC_MODDIR)/fault_scotch.$(FC_MODEXT) \
 	$(FC_MODDIR)/part_decompose_mesh.$(FC_MODEXT) \
+	$(FC_MODDIR)/part_decompose_mesh_hdf5.$(FC_MODEXT) \
 	$(FC_MODDIR)/module_qsort.$(FC_MODEXT) \
 	$(FC_MODDIR)/module_database.$(FC_MODEXT) \
 	$(FC_MODDIR)/module_mesh.$(FC_MODEXT) \
@@ -58,11 +59,15 @@ decompose_mesh_MODULES = \
 
 decompose_mesh_SHARED_OBJECTS = \
 	$O/shared_par.shared_module.o \
+	$O/count_number_of_sources.shared.o \
+	$O/heap_sort.shared.o \
+	$O/hdf5_manager.shared_hdf5_module.o \
 	$O/param_reader.cc.o \
 	$O/exit_mpi.shared.o \
 	$O/read_parameter_file.shared.o \
 	$O/read_value_parameters.shared.o \
 	$O/sort_array_coordinates.shared.o \
+	$O/search_kdtree.shared.o \
 	$O/write_VTK_data.shared.o \
 	$(EMPTY_MACRO)
 
@@ -117,6 +122,7 @@ xdecompose_mesh_OBJECTS = \
 	$O/lts_helper.dec.o \
 	$O/lts_setup_elements.dec.o \
 	$O/part_decompose_mesh.dec_module.o \
+	$O/part_decompose_mesh_hdf5.dec_module_hdf5.o \
 	$O/partition_scotch.dec.o \
 	$O/partition_metis.dec.o \
 	$O/partition_patoh.dec.o \
@@ -126,6 +132,7 @@ xdecompose_mesh_OBJECTS = \
 	$O/wrap_patoh.o \
 	$O/wrap_metis.o \
 	$O/write_mesh_databases.dec.o \
+	$O/write_mesh_databases_hdf5.dec_hdf5.o \
 	$(EMPTY_MACRO)
 
 # rules for the pure Fortran version
@@ -141,6 +148,7 @@ $E/xdecompose_mesh: ${SCOTCH_DIR}/include/scotchf.h $(decompose_mesh_SHARED_OBJE
 ## xdecompose_mesh_mpi
 ##
 xdecompose_mesh_mpi_OBJECTS = \
+	$O/decompose_mesh_par.dec_module.o \
 	$O/fault_scotch.dec_module.o \
 	$O/module_qsort.dec.o \
 	$O/module_database.dec.o \
@@ -178,8 +186,9 @@ $E/xdecompose_mesh_mpi: $(decompose_mesh_SHARED_OBJECTS) $(xdecompose_mesh_mpi_O
 # serial version
 $O/program_decompose_mesh.dec.o: $(COND_MPI_OBJECTS)
 
-$O/decompose_mesh.dec.o: $O/shared_par.shared_module.o $(COND_MPI_OBJECTS)
-$O/decompose_mesh_par.dec_module.o: $O/part_decompose_mesh.dec_module.o $O/fault_scotch.dec_module.o
+$O/decompose_mesh.dec.o: $O/shared_par.shared_module.o $O/fault_scotch.dec_module.o $(COND_MPI_OBJECTS)
+$O/decompose_mesh_par.dec_module.o: $O/part_decompose_mesh.dec_module.o
+$O/fault_scotch.dec_module.o: $O/decompose_mesh_par.dec_module.o $O/search_kdtree.shared.o
 
 # mpi version
 $O/program_decompose_mesh_mpi.mpidec.o: $O/shared_par.shared_module.o $O/module_mesh.dec.o $O/module_database.dec.o $O/module_partition.dec.o $(COND_MPI_OBJECTS)
@@ -200,10 +209,10 @@ $O/%.dec_module.o: $S/%.F90 $O/shared_par.shared_module.o
 $O/%.dec_module.o: $S/%.f90 $O/shared_par.shared_module.o
 	${FCCOMPILE_CHECK} ${FCFLAGS_f90} $(PART_FLAGS) -c -o $@ $<
 
-$O/%.dec.o: $S/%.f90 $O/shared_par.shared_module.o $O/part_decompose_mesh.dec_module.o $O/decompose_mesh_par.dec_module.o
+$O/%.dec.o: $S/%.f90 $O/shared_par.shared_module.o $O/part_decompose_mesh.dec_module.o $O/decompose_mesh_par.dec_module.o $O/fault_scotch.dec_module.o
 	${FCCOMPILE_CHECK} ${FCFLAGS_f90} $(PART_FLAGS) -c -o $@ $<
 
-$O/%.dec.o: $S/%.F90 $O/shared_par.shared_module.o $O/part_decompose_mesh.dec_module.o  $O/decompose_mesh_par.dec_module.o
+$O/%.dec.o: $S/%.F90 $O/shared_par.shared_module.o $O/part_decompose_mesh.dec_module.o  $O/decompose_mesh_par.dec_module.o $O/fault_scotch.dec_module.o
 	${FCCOMPILE_CHECK} ${FCFLAGS_f90} $(PART_FLAGS) -c -o $@ $<
 
 $O/%.mpidec.o: $S/%.f90 $O/shared_par.shared_module.o
@@ -215,3 +224,16 @@ $O/wrap_patoh.o: $S/wrap_patoh.cpp
 $O/wrap_metis.o: $S/wrap_metis.c
 	${CC} -c $(CFLAGS) -o $@ $< $(PART_FLAGS)
 
+## HDF5
+
+$O/%.dec_module_hdf5.o: $S/%.F90 $O/hdf5_manager.shared_hdf5_module.o
+	${FCCOMPILE_CHECK} ${FCFLAGS_f90} $(PART_FLAGS) -c -o $@ $<
+
+$O/%.dec_module_hdf5.o: $S/%.f90 $O/hdf5_manager.shared_hdf5_module.o
+	${FCCOMPILE_CHECK} ${FCFLAGS_f90} $(PART_FLAGS) -c -o $@ $<
+
+$O/%.dec_hdf5.o: $S/%.f90 $O/hdf5_manager.shared_hdf5_module.o $O/part_decompose_mesh_hdf5.dec_module_hdf5.o $O/part_decompose_mesh.dec_module.o $O/fault_scotch.dec_module.o $O/decompose_mesh_par.dec_module.o
+	${FCCOMPILE_CHECK} ${FCFLAGS_f90} $(PART_FLAGS) -c -o $@ $<
+
+$O/%.dec_hdf5.o: $S/%.F90 $O/hdf5_manager.shared_hdf5_module.o $O/part_decompose_mesh_hdf5.dec_module_hdf5.o $O/part_decompose_mesh.dec_module.o  $O/decompose_mesh_par.dec_module.o $O/fault_scotch.dec_module.o
+	${FCCOMPILE_CHECK} ${FCFLAGS_f90} $(PART_FLAGS) -c -o $@ $<

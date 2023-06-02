@@ -212,6 +212,9 @@ end program add_model
 
   use specfem_par, only: NSPEC_AB,NGLOB_AB,NPROC,ADIOS_ENABLED
 
+  ! HDF5 file i/o
+  use shared_parameters, only: HDF5_ENABLED
+
   implicit none
 
   logical :: BROADCAST_AFTER_READ
@@ -225,7 +228,9 @@ end program add_model
   BROADCAST_AFTER_READ = .true.
   call read_parameter_file(BROADCAST_AFTER_READ)
 
+  ! safety checks
   if (ADIOS_ENABLED) stop 'Flag ADIOS_ENABLED not supported yet for xadd_model, please rerun program...'
+  if (HDF5_ENABLED) stop 'Flag HDF5_ENABLED not supported yet, please rerun program...'
 
   ! check that the code is running with the requested nb of processes
   if (sizeprocs /= NPROC) then

@@ -54,6 +54,7 @@ generate_databases_OBJECTS = \
 	$O/get_model.gen.o \
 	$O/get_MPI.gen.o \
 	$O/get_perm_color.gen.o \
+	$O/lts_generate_databases.gen.o \
 	$O/model_1d_cascadia.gen.o \
 	$O/model_1d_prem.gen.o \
 	$O/model_1d_socal.gen.o \
@@ -69,7 +70,9 @@ generate_databases_OBJECTS = \
 	$O/pml_set_local_dampingcoeff.gen.o \
 	$O/read_parameters.gen.o \
 	$O/read_partition_files.gen.o \
+	$O/read_partition_files_hdf5.gen_hdf5.o \
 	$O/save_arrays_solver.gen.o \
+	$O/save_arrays_solver_hdf5.gen_hdf5.o \
 	$O/setup_color_perm.gen.o \
 	$O/setup_mesh.gen.o \
 	$O/memory_eval.gen.o \
@@ -81,6 +84,7 @@ generate_databases_MODULES = \
 	$(FC_MODDIR)/external_model.$(FC_MODEXT) \
 	$(FC_MODDIR)/fault_generate_databases.$(FC_MODEXT) \
 	$(FC_MODDIR)/generate_databases_par.$(FC_MODEXT) \
+	$(FC_MODDIR)/lts_generate_databases_par.$(FC_MODEXT) \
 	$(FC_MODDIR)/manager_adios.$(FC_MODEXT) \
 	$(FC_MODDIR)/model_coupled_par.$(FC_MODEXT) \
 	$(FC_MODDIR)/model_sep_mod.$(FC_MODEXT) \
@@ -94,8 +98,10 @@ generate_databases_SHARED_OBJECTS = \
 	$O/shared_par.shared_module.o \
 	$O/adios_manager.shared_adios_module.o \
 	$O/check_mesh_resolution.shared.o \
+	$O/count_number_of_sources.shared.o \
 	$O/create_name_database.shared.o \
 	$O/define_derivation_matrices.shared.o \
+	$O/define_mass_matrices.shared.o \
 	$O/detect_surface.shared.o \
 	$O/exit_mpi.shared.o \
 	$O/get_attenuation_model.shared.o \
@@ -105,6 +111,7 @@ generate_databases_SHARED_OBJECTS = \
 	$O/get_shape2D.shared.o \
 	$O/get_shape3D.shared.o \
 	$O/gll_library.shared.o \
+	$O/hdf5_manager.shared_hdf5_module.o \
 	$O/hex_nodes.shared.o \
 	$O/lagrange_poly.shared.o \
 	$O/netlib_specfun_erf.shared.o \
@@ -213,6 +220,9 @@ $O/create_regions_mesh.gen.o: $O/fault_generate_databases.gen.o
 ## adios
 $O/generate_databases.gen.o: $O/adios_manager.shared_adios_module.o
 
+## LTS
+$O/lts_generate_databases.gen.o: $O/fault_generate_databases.gen.o
+
 #######################################
 
 ####
@@ -253,3 +263,11 @@ $O/%.gen_noadios.o: $S/%.F90
 $O/%.gen_noadios.o: $S/%.f90
 	${FCCOMPILE_CHECK} ${FCFLAGS_f90} -c -o $@ $<
 
+
+## HDF5 file I/O
+
+$O/%.gen_hdf5.o: $S/%.F90 $O/shared_par.shared_module.o $O/generate_databases_par.gen_mod.o $O/hdf5_manager.shared_hdf5_module.o
+	${FCCOMPILE_CHECK} ${FCFLAGS_f90} -c -o $@ $<
+
+$O/%.gen_hdf5.o: $S/%.f90 $O/shared_par.shared_module.o $O/generate_databases_par.gen_mod.o $O/hdf5_manager.shared_hdf5_module.o
+	${FCCOMPILE_CHECK} ${FCFLAGS_f90} -c -o $@ $<

@@ -1,0 +1,12 @@
+# domain extension longitude, latitude
+10 5
+# domain center longitude, latitude, azimuth 
+1.5 42.5 0
+# depth
+240
+# number of elements  (original mesh: 25 50 12)
+10 20 12
+# background model 1D
+iasp91_dsm
+# the domain is burried ? 
+.false.

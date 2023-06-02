@@ -88,8 +88,11 @@
         call compute_seismograms()
       endif
 
-      ! strain "seismograms" (only for adjoint simulations)
-      if (SIMULATION_TYPE == 2) call compute_seismograms_strain_adjoint()
+      ! strain seismograms
+      if (SAVE_SEISMOGRAMS_STRAIN) call compute_seismograms_strain()
+
+      ! computes source moment derivatives (only for adjoint simulations)
+      if (SIMULATION_TYPE == 2) call compute_seismograms_moment_adjoint()
     endif
 
   endif ! NTSTEP_BETWEEN_OUTPUT_SAMPLE
@@ -99,13 +102,22 @@
 
     if (do_save_seismograms .and. .not. INVERSE_FWI_FULL_PROBLEM) then
 
+      ! user output
+      if (myrank == 0) then
+        write(IMAIN,*) 'Writing the seismograms'
+        call flush_IMAIN()
+      endif
+
       ! timing
       write_time_begin = wtime()
 
       ! checks if anything to do
       ! note: ASDF uses parallel hdf5 that defines the MPI communicator group that the solver is
       !       run with. this means every processor in the group is needed for write_seismograms
-      if (nrec_local > 0 .or. (WRITE_SEISMOGRAMS_BY_MAIN .and. myrank == 0) .or. ASDF_FORMAT) then
+      if (nrec_local > 0 &
+          .or. (WRITE_SEISMOGRAMS_BY_MAIN .and. myrank == 0) &
+          .or. ASDF_FORMAT &
+          .or. HDF5_FORMAT) then
 
         ! writes out seismogram files
         select case(SIMULATION_TYPE)
@@ -131,11 +143,10 @@
             call write_adj_seismograms_to_file(3)
           if (SAVE_SEISMOGRAMS_PRESSURE) &
             call write_adj_seismograms_to_file(4)
-          ! seismograms (strain)
-          if (it == it_end) call write_adj_seismograms2_to_file()
-          ! updates adjoint time counter
-          it_adj_written = it
         end select
+
+        ! strain
+        if (SAVE_SEISMOGRAMS_STRAIN) call write_seismograms_strain_to_file()
       endif
 
       ! synchronizes processes (waits for all processes to finish writing)
@@ -146,7 +157,6 @@
         ! timing
         write_time = wtime() - write_time_begin
         ! output
-        write(IMAIN,*)
         write(IMAIN,*) 'Total number of time steps done: ', it-it_begin+1
         if (WRITE_SEISMOGRAMS_BY_MAIN) then
           write(IMAIN,*) 'Writing the seismograms by main proc alone took ',sngl(write_time),' seconds'
@@ -178,10 +188,10 @@
 
   use specfem_par, only: myrank,number_receiver_global,NPROC, &
           nrec,nrec_local,islice_selected_rec, &
-          seismo_offset,seismo_current, &
+          seismo_offset,seismo_current,nlength_seismogram, &
           ASDF_FORMAT,SU_FORMAT, &
           WRITE_SEISMOGRAMS_BY_MAIN,SAVE_ALL_SEISMOS_IN_ONE_FILE,USE_BINARY_FOR_SEISMOGRAMS, &
-          nlength_seismogram
+          HDF5_FORMAT
 
   ! seismograms
   use specfem_par, only: seismograms_d,seismograms_v,seismograms_a,seismograms_p
@@ -225,79 +235,17 @@
     print *,'Please output pressure only, other components are not implemented yet...'
     stop 'Invalid seismogram output for NB_RUNS_ACOUSTIC_GPU > 1'
   endif
+
+  ! safety checks
   if (SU_FORMAT .and. ASDF_FORMAT) &
     stop 'Please choose either SU_FORMAT or ASDF_FORMAT, both outputs together are not implemented yet...'
+  if (HDF5_FORMAT .and. .not. WRITE_SEISMOGRAMS_BY_MAIN) &
+    stop 'HDF5_FORMAT must have WRITE_SEISMOGRAMS_BY_MAIN set to .true.'
 
-  ! allocates single trace array
-  allocate(one_seismogram(NDIM,nlength_seismogram),stat=ier)
-  if (ier /= 0) call exit_MPI_without_rank('error allocating array 2420')
-  if (ier /= 0) stop 'error while allocating one temporary seismogram'
-  one_seismogram(:,:) = 0._CUSTOM_REAL
-
-  ! writes out ASDF container to the file
-  if (ASDF_FORMAT) then
-    ! The writing of seismograms by the main proc is handled within write_asdf()
-    ! stores local seismograms
-    do irec_local = 1,nrec_local * NB_RUNS_ACOUSTIC_GPU
-      ! init trace
-      one_seismogram(:,:) = 0._CUSTOM_REAL
-
-      ! sets trace
-      select case (istore)
-      case (1)
-        ! displacement
-        do i = 1,seismo_current
-          one_seismogram(:,i) = seismograms_d(:,irec_local,i)
-        enddo
-      case (2)
-        ! velocity
-        do i = 1,seismo_current
-          one_seismogram(:,i) = seismograms_v(:,irec_local,i)
-        enddo
-      case (3)
-        ! acceleration
-        do i = 1,seismo_current
-          one_seismogram(:,i) = seismograms_a(:,irec_local,i)
-        enddo
-      case (4)
-        ! pressure
-        do i = 1,seismo_current
-          one_seismogram(1,i) = seismograms_p(1,irec_local,i) ! single component
-        enddo
-      end select
-
-      ! get global number of that receiver
-      if (NB_RUNS_ACOUSTIC_GPU == 1) then
-        irec = number_receiver_global(irec_local)
-      else
-        ! NB_RUNS_ACOUSTIC_GPU > 1
-        ! if irec_local is a multiple of nrec then mod(irec_local,nrec) == 0 and
-        ! the array access at number_receiver_global would be invalid;
-        ! for those cases we want irec associated to irec_local == nrec_store
-        if (mod(irec_local,nrec_local) == 0) then
-          irec = number_receiver_global(nrec_local)
-        else
-          irec = number_receiver_global(mod(irec_local,nrec_local))
-        endif
-      endif
-
-      ! stores this seismogram
-      ! note: ASDF data structure is given in module
-      !       stores all traces into ASDF container in case
-      call write_one_seismogram(one_seismogram,irec_local,irec,component,istore)
-    enddo
-
-    ! writes ASDF file output
-    call write_asdf()
-
-    call synchronize_all()
-
-    ! deallocate the container
-    call close_asdf_data()
-
-    ! nothing left to do (outputs only single ASDF seismogram file)
-    deallocate(one_seismogram)
-    return
+  ! user output
+  if (myrank == 0) then
+    write(IMAIN,*) 'Component: .sem'//component
+    call flush_IMAIN()
   endif
 
   ! set number of traces in full seismogram array
@@ -315,13 +263,19 @@
     nrec_store = nrec_local * NB_RUNS_ACOUSTIC_GPU
   endif
 
+  ! allocates single trace array
+  allocate(one_seismogram(NDIM,nlength_seismogram),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 2420')
+  if (ier /= 0) stop 'error while allocating one temporary seismogram'
+  one_seismogram(:,:) = 0._CUSTOM_REAL
+
   ! allocates array for all seismograms
   allocate(all_seismograms(NDIM,nlength_seismogram,nrec_store),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating all_seismograms array')
   if (ier /= 0) stop 'error while allocating all_seismograms array'
   all_seismograms(:,:,:) = 0._CUSTOM_REAL
 
-  ! main process writes out all
+  ! stores all seismograms in single array
   if (WRITE_SEISMOGRAMS_BY_MAIN) then
     ! only the main process does the writing of seismograms
     !
@@ -483,8 +437,8 @@
 
     ! user output
     if (myrank == 0) then
-      write(IMAIN,*) '  total number of receivers collected is ',total_seismos,' out of ',nrec * NB_RUNS_ACOUSTIC_GPU
-      write(IMAIN,*)
+      write(IMAIN,*) 'Total number of receivers collected is ',total_seismos,' out of ',nrec * NB_RUNS_ACOUSTIC_GPU
+      call flush_IMAIN()
       ! checks total
       if (total_seismos /= nrec * NB_RUNS_ACOUSTIC_GPU) call exit_MPI(myrank,'incorrect total number of receivers saved')
     endif
@@ -523,36 +477,40 @@
       ! stores this seismogram
       all_seismograms(:,:,irec_local) = one_seismogram(:,:)
     enddo
-  endif ! WRITE_SEISMOGRAMS_BY_MAIN
+  endif
+
+  ! ASDF format
+  if (ASDF_FORMAT) then
+    ! writes out seismograms
+    call write_output_ASDF(all_seismograms,nrec_store,istore)
+    ! nothing left to do (outputs only ASDF seismogram files)
+    deallocate(one_seismogram,all_seismograms)
+    ! all done
+    return
+  endif
 
   ! SU format
   if (SU_FORMAT) then
     ! writes out seismograms
-    if (.not. WRITE_SEISMOGRAMS_BY_MAIN) then
-      ! all processes write their local seismograms themselves
-      ! SU_format
-      ! write ONE binary file for all receivers (nrec_local) within one proc
-      ! SU format, with 240-byte-header for each trace
-      call write_output_SU(all_seismograms,nrec_store,istore)
-    else
-      ! main process writes all seismograms
-      !
-      ! only written out by main process - WRITE_SEISMOGRAMS_BY_MAIN
-      if (myrank == 0) then
-        ! SU_format
-        ! write ONE binary file for all receivers (nrec) within this main proc
-        ! SU format, with 240-byte-header for each trace
-        call write_output_SU(all_seismograms,nrec_store,istore)
-      endif
-    endif
-
+    call write_output_SU(all_seismograms,nrec_store,istore)
     ! nothing left to do (outputs only SU seismogram files)
-    deallocate(one_seismogram)
-    deallocate(all_seismograms)
+    deallocate(one_seismogram,all_seismograms)
+    ! all done
+    return
+  endif
+
+  ! HDF5 format for seismogram output
+  if (HDF5_FORMAT) then
+    ! writes out seismograms
+    call write_output_HDF5(all_seismograms,nrec_store,istore)
+    ! nothing left to do (outputs only HDF5 seismogram files)
+    deallocate(one_seismogram,all_seismograms)
+    ! all done
     return
   endif
 
   ! ASCII/Binary file output
+  !
   ! writes out seismograms
   if (.not. WRITE_SEISMOGRAMS_BY_MAIN) then
     ! all processes write their local seismograms themselves
@@ -566,19 +524,21 @@
       if (USE_BINARY_FOR_SEISMOGRAMS) then
         if (seismo_offset == 0) then
           open(unit=IOUT,file=trim(OUTPUT_FILES)//trim(sisname)//'.bin',status='unknown', &
-               form='unformatted',action='write')
+               form='unformatted',action='write',iostat=ier)
         else
           open(unit=IOUT,file=trim(OUTPUT_FILES)//trim(sisname)//'.bin',status='old',position='append', &
-               form='unformatted',action='write')
+               form='unformatted',action='write',iostat=ier)
         endif
+        if (ier /= 0) call exit_mpi(myrank,'Error opening file: '//trim(OUTPUT_FILES)//trim(sisname)//'.bin')
       else
         if (seismo_offset == 0) then
           open(unit=IOUT,file=trim(OUTPUT_FILES)//trim(sisname)//'.ascii',status='unknown', &
-               form='formatted',action='write')
+               form='formatted',action='write',iostat=ier)
         else
           open(unit=IOUT,file=trim(OUTPUT_FILES)//trim(sisname)//'.ascii',status='old',position='append', &
-               form='formatted',action='write')
+               form='formatted',action='write',iostat=ier)
         endif
+        if (ier /= 0) call exit_mpi(myrank,'Error opening file: '//trim(OUTPUT_FILES)//trim(sisname)//'.ascii')
       endif
     endif
 
@@ -620,19 +580,21 @@
         if (USE_BINARY_FOR_SEISMOGRAMS) then
           if (seismo_offset == 0) then
             open(unit=IOUT,file=trim(OUTPUT_FILES)//trim(sisname)//'.bin',status='unknown', &
-                 form='unformatted',action='write')
+                 form='unformatted',action='write',iostat=ier)
           else
             open(unit=IOUT,file=trim(OUTPUT_FILES)//trim(sisname)//'.bin',status='old',position='append', &
-                 form='unformatted',action='write')
+                 form='unformatted',action='write',iostat=ier)
           endif
+          if (ier /= 0) call exit_mpi(myrank,'Error opening file: '//trim(OUTPUT_FILES)//trim(sisname)//'.bin')
         else
           if (seismo_offset == 0) then
             open(unit=IOUT,file=trim(OUTPUT_FILES)//trim(sisname)//'.ascii',status='unknown', &
-                 form='formatted',action='write')
+                 form='formatted',action='write',iostat=ier)
           else
             open(unit=IOUT,file=trim(OUTPUT_FILES)//trim(sisname)//'.ascii',status='old',position='append', &
-                 form='formatted',action='write')
+                 form='formatted',action='write',iostat=ier)
           endif
+          if (ier /= 0) call exit_mpi(myrank,'Error opening file: '//trim(OUTPUT_FILES)//trim(sisname)//'.ascii')
         endif
       endif
 
@@ -658,15 +620,16 @@
         call write_one_seismogram(one_seismogram,irec_local,irec,component,istore)
       enddo
 
-      ! user output
-      write(IMAIN,*) 'Component: .sem'//component
-      write(IMAIN,*) '  total number of receivers saved is ',nrec
-      write(IMAIN,*)
-
       ! create one large file instead of one small file per station to avoid file system overload
       if (SAVE_ALL_SEISMOS_IN_ONE_FILE) close(IOUT)
     endif ! myrank
   endif ! WRITE_SEISMOGRAMS_BY_MAIN
+
+  ! user output
+  if (myrank == 0) then
+    write(IMAIN,*) 'Total number of receivers saved is ',nrec
+    call flush_IMAIN()
+  endif
 
   deallocate(one_seismogram)
   deallocate(all_seismograms)
@@ -680,7 +643,7 @@
   use constants, only: CUSTOM_REAL,NDIM,MAX_STRING_LEN,OUTPUT_FILES,NB_RUNS_ACOUSTIC_GPU
 
   use specfem_par, only: DT,t0,it, &
-    NSTEP,ASDF_FORMAT,WRITE_SEISMOGRAMS_BY_MAIN, &
+    NSTEP,WRITE_SEISMOGRAMS_BY_MAIN, &
     SIMULATION_TYPE,station_name,network_name, &
     nrec,nrec_local,nlength_seismogram
 
@@ -739,17 +702,11 @@
     ! directory to store seismograms
     final_LOCAL_PATH = OUTPUT_FILES(1:len_trim(OUTPUT_FILES)) // '/'
 
-    ! write/store seismogram
-    if (ASDF_FORMAT) then
-      ! ASDF storage
-      call store_asdf_data(one_seismogram,irec_local,irec,channel,iorientation)
-    else
-      ! ASCII output format
-      call write_output_ASCII_or_binary(one_seismogram, &
-                                        NSTEP,it,SIMULATION_TYPE,DT,t0, &
-                                        iorientation,sisname,final_LOCAL_PATH)
-    endif
-
+    ! write seismogram
+    ! ASCII output format
+    call write_output_ASCII_or_binary(one_seismogram, &
+                                      NSTEP,it,SIMULATION_TYPE,DT,t0, &
+                                      iorientation,sisname,final_LOCAL_PATH)
   enddo ! do iorientation
 
   end subroutine write_one_seismogram
@@ -765,7 +722,7 @@
   use specfem_par, only: myrank,number_receiver_global,nrec_local,DT, &
     WRITE_SEISMOGRAMS_BY_MAIN,SU_FORMAT,ASDF_FORMAT, &
     t0,seismo_offset,seismo_current, &
-    it_adj_written,NTSTEP_BETWEEN_OUTPUT_SAMPLE,nlength_seismogram
+    NTSTEP_BETWEEN_OUTPUT_SAMPLE,nlength_seismogram
 
   ! seismograms
   use specfem_par, only: seismograms_d,seismograms_v,seismograms_a,seismograms_p
@@ -777,8 +734,8 @@
 
   ! local parameters
   integer :: i,ier,irec,irec_local,nrec_store
-  integer :: iorientation,isample,number_of_components
-  double precision :: time
+  integer :: iorientation,isample,it_tmp,number_of_components
+  real(kind=CUSTOM_REAL) :: time_t
 
   character(len=3) :: channel
   character(len=1) :: component
@@ -883,11 +840,11 @@
         ! note: subsampling the seismograms can result in a loss of accuracy when one later convolves
         !       the results with the source time function - know what you are doing.
         if (seismo_offset == 0) then
-          !open new file
+          ! open new file
           open(unit=IOUT,file=OUTPUT_FILES(1:len_trim(OUTPUT_FILES))//sisname(1:len_trim(sisname)), &
                status='unknown',action='write')
         else
-          !append to existing file
+          ! append to existing file
           open(unit=IOUT,file=OUTPUT_FILES(1:len_trim(OUTPUT_FILES))//sisname(1:len_trim(sisname)), &
                status='old',position='append',action='write')
         endif
@@ -895,11 +852,14 @@
         ! make sure we never write more than the maximum number of time steps
         do isample = 1,seismo_current
           ! current time
+          ! current time increment
+          it_tmp = seismo_offset + isample
+
           ! subtract half duration of the source to make sure travel time is correct
-          time = dble(isample-1)*DT*NTSTEP_BETWEEN_OUTPUT_SAMPLE + dble(it_adj_written)*DT - t0
+          time_t = real(dble((it_tmp-1)*NTSTEP_BETWEEN_OUTPUT_SAMPLE) * DT - t0,kind=CUSTOM_REAL)
 
           ! distinguish between single and double precision for reals
-          write(IOUT,*) real(time,kind=CUSTOM_REAL),' ',all_seismograms(iorientation,isample,irec_local)
+          write(IOUT,*) time_t,all_seismograms(iorientation,isample,irec_local)
         enddo
 
         close(IOUT)
@@ -914,41 +874,46 @@
 
 !=====================================================================
 
-! write adjoint seismograms (strain) to text files
+! write strain seismograms to text files
 
-  subroutine write_adj_seismograms2_to_file()
+  subroutine write_seismograms_strain_to_file()
 
   use constants, only: myrank,CUSTOM_REAL,NDIM,MAX_STRING_LEN,IOUT,OUTPUT_FILES
 
-  use specfem_par, only: seismograms_eps, &
-    number_receiver_global,nrec_local,DT,NSTEP,t0, &
+  use specfem_par, only: number_receiver_global,nrec_local, &
+    network_name,station_name,DT,NSTEP,t0, &
     seismo_offset,seismo_current,NTSTEP_BETWEEN_OUTPUT_SAMPLE, &
-    SUPPRESS_UTM_PROJECTION
+    SUPPRESS_UTM_PROJECTION,WRITE_SEISMOGRAMS_BY_MAIN,SIMULATION_TYPE
+
+  ! strain seismo
+  use specfem_par, only: seismograms_eps
 
   implicit none
 
   ! local parameters
-  integer :: irec,irec_local,total_length
-  integer :: idimval,jdimval,isample
+  integer :: irec,irec_local
+  integer :: idimval,jdimval,isample,it_tmp,ier
   real(kind=CUSTOM_REAL) :: time_t
 
   character(len=4) :: chn
   character(len=1) :: component
   character(len=MAX_STRING_LEN) :: sisname
 
+! strain
+! for adjoint simulations, nrec_local is the number of "receivers" at which we store seismograms and the strain (epsilon)
+! field. "receiver" locations for adjoint simulations are determined by the CMTSOLUTIONs locations, i.e., original sources.
+! Thus, we flip this assignment for pure adjoint simulations, that is source locations becomes receiver locations,
+! and receiver locations become "adjoint source" locations.
+
+  ! safety check
+  if (WRITE_SEISMOGRAMS_BY_MAIN) &
+    call exit_MPI(myrank,'Error write_seismograms_strain_to_file() needs WRITE_SEISMOGRAMS_BY_MAIN turned off')
+
+  ! checks if anything to do
+  if (nrec_local <= 0 ) return
+
   ! using an ending .semd also for strain seismograms (since strain is derived from displacement)
   component = 'd'
-
-  ! full length of strain seismogram (routine will be called at the very end of the time stepping)
-  total_length = seismo_offset + seismo_current
-
-  ! this write routine here is called at the very end, thus seismo_offset should be equal to NSTEP/NTSTEP_BETWEEN_OUTPUT_SAMPLE
-  ! checks
-  if (total_length /= NSTEP/NTSTEP_BETWEEN_OUTPUT_SAMPLE) then
-    print *,'Error: writing strain seismograms has wrong index lengths ',total_length, &
-            'should be ',NSTEP/NTSTEP_BETWEEN_OUTPUT_SAMPLE
-    call exit_MPI(myrank,'Error writing strain seismograms, has wrong index length')
-  endif
 
   do irec_local = 1,nrec_local
 
@@ -1032,25 +997,48 @@
           endif
         endif
 
-        ! create the name of the seismogram file for each slice
-        ! file name includes the name of the station, the network and the component
-        write(sisname,"(a3,'.',a1,i6.6,'.',a3,'.sem',a1)") '/NT','S',irec,chn,component
+        ! name
+        if (SIMULATION_TYPE == 2) then
+          ! pure adjoint simulation
+          ! create the name of the seismogram file for each source
+          ! file name includes the name numbered by the source S0000*, channel and the component
+          ! for example: /NT.S000001.SNN.semd
+          write(sisname,"(a3,'.',a1,i6.6,'.',a3,'.sem',a1)") '/NT','S',irec,chn,component
+        else
+          ! strain seismograms will have channel-code S**
+          !
+          ! create the name of the strain seismogram file using the station name and network name
+          ! using format: **net**.**sta**.channel
+          ! for example: /IU.KONO.SNN.semd
+          write(sisname,"('/',a,'.',a,'.',a3,'.sem',a1)") trim(network_name(irec)),trim(station_name(irec)),chn,component
+        endif
 
-        ! save seismograms in text format (with no subsampling).
-        ! Because we do not subsample the output, this can result in large files
-        ! if the simulation uses many time steps. However, subsampling the output
-        ! here would result in a loss of accuracy when one later convolves
-        ! the results with the source time function
-        open(unit=IOUT,file=OUTPUT_FILES(1:len_trim(OUTPUT_FILES))//sisname(1:len_trim(sisname)),status='unknown')
+        ! save seismograms in text format
+        if (seismo_offset == 0) then
+          ! open new file
+          open(unit=IOUT,file=trim(OUTPUT_FILES)//sisname(1:len_trim(sisname)), &
+               status='unknown',action='write',iostat=ier)
+        else
+          ! for it > NTSTEP_BETWEEN_OUTPUT_SEISMOS
+          ! append to existing file
+          open(unit=IOUT,file=trim(OUTPUT_FILES)//sisname(1:len_trim(sisname)), &
+               status='old',position='append',action='write',iostat=ier)
+        endif
+        if (ier /= 0) call exit_mpi(myrank,'Error opening file: '//trim(OUTPUT_FILES)//trim(sisname))
 
         ! make sure we never write more than the maximum number of time steps
-        ! subtract half duration of the source to make sure travel time is correct
-        do isample = 1,total_length
-          ! time
-          ! distinguish between single and double precision for reals
-          time_t = real(dble(isample-1)*DT*NTSTEP_BETWEEN_OUTPUT_SAMPLE - t0,kind=CUSTOM_REAL)
+        do isample = 1,seismo_current
+          ! current time
+          it_tmp = seismo_offset + isample
+          ! subtract onset time to make sure travel time is correct
+          if (SIMULATION_TYPE == 3) then
+            time_t = real(dble((NSTEP-it_tmp)*NTSTEP_BETWEEN_OUTPUT_SAMPLE) * DT - t0,kind=CUSTOM_REAL)
+          else
+            time_t = real(dble((it_tmp-1)*NTSTEP_BETWEEN_OUTPUT_SAMPLE) * DT - t0,kind=CUSTOM_REAL)
+          endif
+
           ! output
-          write(IOUT,*) time_t,' ',seismograms_eps(jdimval,idimval,irec_local,isample)
+          write(IOUT,*) time_t,seismograms_eps(jdimval,idimval,irec_local,isample)
         enddo
 
         close(IOUT)
@@ -1059,7 +1047,7 @@
     enddo ! idimval
   enddo ! irec_local
 
-  end subroutine write_adj_seismograms2_to_file
+  end subroutine write_seismograms_strain_to_file
 
 !=====================================================================
 

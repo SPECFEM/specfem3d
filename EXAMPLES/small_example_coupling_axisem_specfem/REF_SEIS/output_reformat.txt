@@ -1,0 +1,42 @@
+ reformat output files
+
+ expand_2D_3D parameter inputs:
+   directory               : ../../../MESH
+   point file (geographic) : input_box.txt
+   point file (cartesian)  : input_box_sem_cart.txt
+
+ reformat parameter inputs:
+   frequency min  :    10.0000000
+   time min/max   :    300.000000     /   600.000000
+
+ opening .//Data/stress_Sg23_out
+  time step   0.100000001
+ READING OK         513       23000
+
+  dt           =    3.11999989
+  itmin        =         3001
+  itmax        =         6000
+  nb           =         3000
+  ntime_interp =                  3000
+
+ opening ../../../DATABASES_MPI/proc000000_absorb_dsm
+ reading          100  /          513
+ reading          200  /          513
+ reading          300  /          513
+ reading          400  /          513
+ reading          500  /          513
+ writing ../../../DATA/AxiSEM_tractions/1//proc000000_sol_axisem
+ time step   0.100000001            3000
+
+   writing time step    49.8998108             500        3000
+   writing time step    99.8990479            1000        3000
+   writing time step    149.899948            1500        3000
+   writing time step    199.903000            2000        3000
+   writing time step    249.906052            2500        3000
+   writing time step    299.909088            3000        3000
+
+ done rank           0  nbrec        4500                 3000
+ done rank           1  nbrec        7000                 3000
+ done rank           3  nbrec        4500                 3000
+ all done
+ done rank           2  nbrec        7000                 3000

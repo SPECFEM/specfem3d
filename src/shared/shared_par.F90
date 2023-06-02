@@ -36,6 +36,11 @@ module constants
   ! a negative initial value is a convention that indicates that groups (i.e. sub-communicators, one per run) are off by default
   integer :: mygroup = -1
 
+  ! MPI status size (will be set in init_mpi()
+  integer :: my_status_size   = 1
+  integer :: my_status_source = 1
+  integer :: my_status_tag    = 1
+
   ! create a copy of the original output file path, to which we may add a "run0001/", "run0002/", "run0003/" prefix later
   ! if NUMBER_OF_SIMULTANEOUS_RUNS > 1
   character(len=MAX_STRING_LEN) :: OUTPUT_FILES = OUTPUT_FILES_BASE
@@ -146,6 +151,7 @@ end module constants
   integer :: NTSTEP_BETWEEN_OUTPUT_SEISMOS,NTSTEP_BETWEEN_READ_ADJSRC
   integer :: NTSTEP_BETWEEN_OUTPUT_SAMPLE ! subsamp_seismos is deprecated and renamed to NTSTEP_BETWEEN_OUTPUT_SAMPLE
   logical :: SAVE_SEISMOGRAMS_DISPLACEMENT,SAVE_SEISMOGRAMS_VELOCITY,SAVE_SEISMOGRAMS_ACCELERATION,SAVE_SEISMOGRAMS_PRESSURE
+  logical :: SAVE_SEISMOGRAMS_STRAIN
   logical :: SAVE_SEISMOGRAMS_IN_ADJOINT_RUN
   logical :: WRITE_SEISMOGRAMS_BY_MAIN,SAVE_ALL_SEISMOS_IN_ONE_FILE,USE_BINARY_FOR_SEISMOGRAMS,SU_FORMAT
   logical :: ASDF_FORMAT, READ_ADJSRC_ASDF
@@ -169,6 +175,21 @@ end module constants
   ! adios file output
   logical :: ADIOS_ENABLED
   logical :: ADIOS_FOR_DATABASES, ADIOS_FOR_MESH, ADIOS_FOR_FORWARD_ARRAYS, ADIOS_FOR_KERNELS, ADIOS_FOR_UNDO_ATTENUATION
+
+  ! HDF5 file i/o
+  logical :: HDF5_ENABLED = .false.              ! for all databases i/o in hdf5
+  logical :: HDF5_FOR_MOVIES = .false.           ! for movies (shakemap, surface movies, volume movies)
+
+  ! HDF5 seismogram output
+  logical :: HDF5_FORMAT  = .false.           ! for seismograms output in hdf5
+
+  ! HDF5 IO server
+  ! number of io dedicated nodes
+  integer :: HDF5_IO_NODES = 0
+
+  ! flag for io-dedicated/compute node.
+  logical :: IO_storage_task = .false.
+  logical :: IO_compute_task = .true.
 
   ! external code coupling (DSM, AxiSEM)
   logical :: COUPLE_WITH_INJECTION_TECHNIQUE

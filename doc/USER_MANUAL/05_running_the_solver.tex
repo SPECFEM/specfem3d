@@ -47,8 +47,8 @@ the database generator \texttt{xgenerate\_databases} and the solver
 
 
 For any particular earthquake, the \texttt{CMTSOLUTION} file that
-represents the point source may be obtained directly from the Harvard
-Centroid-Moment Tensor (CMT) web page \urlwithparentheses{www.seismology.harvard.edu}.
+represents the point source may be obtained directly from the Global
+Centroid-Moment Tensor (CMT) \href{www.globalcmt.org}{web page}.
 It looks like the example shown in Fig. \ref{fig:CMTSOLUTION-file}.
 \begin{figure}[htp]
 \begin{centering}
@@ -56,7 +56,7 @@ It looks like the example shown in Fig. \ref{fig:CMTSOLUTION-file}.
 \par
 \end{centering}
 \caption{\texttt{CMTSOLUTION} file based on the
-format from the Harvard CMT catalog. \textbf{M} is the moment tensor,
+format from the Global CMT catalog. \textbf{M} is the moment tensor,
 $M_{0}${\small {} }is the seismic moment, and $M_{w}$ is the moment
 magnitude.}
 \label{fig:CMTSOLUTION-file}
@@ -65,30 +65,31 @@ magnitude.}
 The \texttt{CMTSOLUTION} file should be edited in the following way:
 \begin{itemize}
 \item Set the latitude or UTM $x$ coordinate, longitude or UTM $y$ coordinate, depth of the source (in km). Remark: In principle in the international CMTSOLUTION format in geophysics
-the depth is given in kilometers; however for users in other fields (non-destructive testing, medical imaging, near-surface studies...) who may prefer to give the position of the source (rather than its depth from the surface), or for people who use FORCESOLUTION to describe the source rather than CMTSOLUTION, we provide an option called USE\_SOURCES\_RECEIVERS\_Z in the \texttt{DATA/Par\_file}, and if so that position is read from CMTSOLUTION in meters rather than kilometers (and again, it is then the true position in the mesh, not the depth). When option USE\_SOURCES\_RECEIVERS\_Z in the \texttt{DATA/Par\_file} is on, this remark applies to the position of the receivers as well.
+the depth is given in kilometers; however for users in other fields (non-destructive testing, medical imaging, near-surface studies...) who may prefer to give the position of the source (rather than its depth from the surface), or for people who use \texttt{FORCESOLUTION} to describe the source rather than \texttt{CMTSOLUTION}, we provide an option called \texttt{USE\_SOURCES\_RECEIVERS\_Z} in the \texttt{DATA/Par\_file}, and if so that position is read from \texttt{CMTSOLUTION} in meters rather than kilometers (and again, it is then the true position in the mesh, not the depth). When option \texttt{USE\_SOURCES\_RECEIVERS\_Z} in the \texttt{DATA/Par\_file} is on, this remark applies to the position of the receivers as well.
 \item Set the \texttt{time shift} parameter equal to $0.0$ (the solver
 will not run otherwise.) The time shift parameter would simply apply
 an overall time shift to the synthetics, something that can be done
 in the post-processing (see Section \ref{sec:Process-data-and-syn}).
-\item For point-source simulations (see finite sources, page \pageref{To-simulate-a})
-we recommend setting the source half-duration parameter \texttt{half
-duration} equal to zero, which corresponds to simulating a step source-time
-function, i.e., a moment-rate function that is a delta function. If
-\texttt{half duration} is not set to zero, the code will use a Gaussian
+\item For point-source simulations (see finite sources, page \pageref{To-simulate-a}),
+setting the source half-duration parameter \texttt{half duration} equal to zero corresponds to simulating a step source-time
+function (Heaviside), i.e., to using a moment-rate function that is a delta function. If
+\texttt{half duration} is not set to zero, the code will use a smooth (pseudo) Heaviside source-time function
+with a corresponding Gaussian moment-rate function
 (i.e., a signal with a shape similar to a `smoothed triangle', as
 explained in \citet{KoTr02a} and shown in Fig~\ref{fig:gauss.vs.triangle})
-source-time function with half-width \texttt{half duration}. We prefer
-to run the solver with \texttt{half duration} set to zero and convolve
+with half-width \texttt{half duration}.
+
+Often, it is preferable to run the solver with \texttt{half duration} set to zero and convolve
 the resulting synthetic seismograms in post-processing after the run,
 because this way it is easy to use a variety of source-time functions
 (see Section \ref{sec:Process-data-and-syn}). \citet{KoTr02a} determined
 that the noise generated in the simulation by using a step source
 time function may be safely filtered out afterward based upon a convolution
-with the desired source time function and/or low-pass filtering. Use
+with the desired source-time function and/or low-pass filtering. Use
 the serial code \texttt{convolve\_source\_timefunction.f90} and the
-script \texttt{convolve\_source\_timefunction.csh} for this purpose,
-or alternatively use signal-processing software packages such as SAC
-\urlwithparentheses{www.llnl.gov/sac}. Type
+script \texttt{convolve\_source\_timefunction.csh} for this purpose
+(or alternatively use signal-processing software packages such as \href{https://seiscode.iris.washington.edu/projects/sac}{SAC}).
+Type
 {\small
 \begin{verbatim}
 make xconvolve_source_timefunction
@@ -99,9 +100,9 @@ to the desired half-duration.
 
 \item The zero time of the simulation corresponds to the center of the triangle/Gaussian,
 or the centroid time of the earthquake. The start time of the simulation
-is $t=-2.0*\texttt{half duration}$ (the 2.0 factor is to make sure the moment
-rate function is very close to zero when starting the simulation. This avoids spurious high-frequency oscillations.
-Also, for acoustic simulations using a Gaussian STF this is set to a factor 3.0, while Ricker source time functions use a factor 1.2).
+is $t=-2.0*\texttt{half duration}$ (the 2.0 factor is to make sure the moment-rate function is very close to zero
+when starting the simulation. This avoids spurious high-frequency oscillations.
+Also, for acoustic simulations using a Gaussian STF this is set to a factor 3.0, while Ricker source-time functions use a factor 1.2).
 To convert to absolute time $t_{\mathrm{abs}}$, set
 %
 \begin{lyxcode}
@@ -128,7 +129,7 @@ If you know the earthquake source in strike/dip/rake format rather
 than in \texttt{CMTSOLUTION} format, use the C code \texttt{SPECFEM3D\_GLOBE/utils/strike\_dip\_rake\_to\_CMTSOLUTION.c}
 to convert it. The conversion formulas are given for instance in \citet{AkRi80}.
 Note that the \citet{AkRi80} convention is slightly different from
-the Harvard \texttt{CMTSOLUTION} convention (the sign of some components
+the Global/Harvard \texttt{CMTSOLUTION} convention (the sign of some components
 is different). The C code outputs both.\newline
 
 
@@ -136,10 +137,10 @@ Centroid latitude and longitude should be provided in geographical
 coordinates. The code converts these coordinates to geocentric coordinates~\citep{DaTr98}.
 Of course you may provide your own source representations by designing
 your own \texttt{CMTSOLUTION} file. Just make sure that the resulting
-file adheres to the Harvard CMT conventions (see Appendix~\ref{cha:Coordinates}).
+file adheres to the Global/Harvard CMT conventions (see Appendix~\ref{cha:Coordinates}).
 Note that the first line in the \texttt{CMTSOLUTION} file is the Preliminary
 Determination of Earthquakes (PDE) solution performed by the USGS
-NEIC, which is used as a seed for the Harvard CMT inversion. The PDE
+NEIC, which is used as a seed for the Global/Harvard CMT inversion. The PDE
 solution is based upon P waves and often gives the hypocenter of the
 earthquake, i.e., the rupture initiation point, whereas the CMT solution
 gives the `centroid location', which is the location with dominant
@@ -177,24 +178,36 @@ by the finite fault model.\newline
 \noindent The \texttt{FORCESOLUTION} file should be edited in the
 following way:
 \begin{itemize}
-\item Set the \texttt{time shift} parameter equal to $0.0$ (the solver
-will not run otherwise.) The time shift parameter would simply apply
-an overall time shift to the synthetics, something that can be done
-in the post-processing (see Section \ref{sec:Process-data-and-syn}).
-\item Set the \texttt{f0} parameter (the dominant frequency) of the Ricker source time
-function (i.e., the second derivative of a Gaussian) when {\texttt{USE\_RICKER\_TIME\_FUNCTION}} is turned on
-in the main parameter file \texttt{DATA/Par\_file}. In case that the
-solver uses a (pseudo) Dirac delta source time function to represent
-a force point source, a very short duration of five time steps is automatically set by default.
+\item The first line is only the header for the force solution, which can
+be used as the identifier for the force source.
+\item \texttt{time shift:} For a single force source, set
+this  parameter equal to $0.0$ (The solver will not run otherwise!); the time
+shift parameter would simply apply an overall time shift to the synthetics,
+something that can be done in the post-processing (see Section \ref{sec:Process-data-and-syn}).
+\item \texttt{hdurorf0:} Set the half duration value (s) for step source-time
+function, or the dominant frequency (Hz) for Ricker source-time functions.
+In case that the source uses a (pseudo) Dirac delta source-time function (i.e., a Gaussian with a zero half duration) to represent
+a force point source, a very short half duration of five time steps is automatically set by default.
+For a Ricker source-time function, set the dominant frequency value (f0) in Hz.
+See the parameter \texttt{source time function:} below for source-time functions.
+\item \texttt{latorUTM:} Set the latitude or UTM $x$ coordinate.
+\item \texttt{longorUTM:} Set the longitude or UTM $y$ coordinate.
+\item \texttt{depth:} Set the depth of the source (in km).
+\item \texttt{source time function:} Set the type of source-time function: 0 = Gaussian function, 1 = Ricker function, 2 = Heaviside (step) function, 3 = monochromatic function, 4 = Gaussian function as defined in \citet{Meschede2011}.
+When {\texttt{USE\_RICKER\_TIME\_FUNCTION}} is turned on in the main parameter file \texttt{DATA/Par\_file},
+it will override this source time function type selection and always use a Ricker wavelet.
 Note that we use the standard definition of a Ricker, for a dominant frequency $f_0$:
 $\mathrm{Ricker}(t) = (1 - 2 a t^2) e^{-a t^2}$, with $a = \pi^2 f_0^2$,
 whose Fourier transform is thus:
 $\frac{1}{2} \frac{\sqrt{\pi}\omega^2}{a^{3/2}}e^{-\frac{\omega^2}{4 a}}$
 This gives the wavelet of Figure~\ref{fig:RickerWavelet}.
-\item Set the latitude or UTM $x$ coordinate, longitude or UTM $y$ coordinate, depth of the source (in km).
-\item Set the magnitude of the force source.
-\item Set the components of a (non-unitary) direction vector for the force
-source in the East/North/Vertical basis (see Appendix A for the orientation
+\item \texttt{factor force source:} Set the magnitude of the force source (units in Newton N).
+\item \texttt{component dir vect source E:} Set the East component of a direction vector for the force
+source. Direction vector is not necessarily a unit vector.
+\item \texttt{component dir vect source N:} Set the North component of a direction vector for the force
+source.
+\item \texttt{component dir vect source Z\_up:} Set the vertical component of a direction vector for the force
+source. Sign convention follows the positive upward direction (see Appendix A for the orientation
 of the reference frame).
 \end{itemize}
 \noindent Where necessary, set a \texttt{FORCESOLUTION} file in the
@@ -202,9 +215,9 @@ same way you configure a \texttt{CMTSOLUTION} file with $N_{\mathrm{sources}}$
 entries, one for each subevent (i.e., concatenate $N_{\mathrm{sources}}$
 \texttt{FORCESOLUTION} files to a single \texttt{FORCESOLUTION} file).
 At least one entry (not necessarily the first) must have a zero \texttt{time
-shift}, and all the other entries must have non-negative \texttt{time
-shift}. Each subevent can have its own latitude, longitude, depth,
-\texttt{half duration} and force parameters.
+shift}, and all the other entries must have non-negative \texttt{time shift}.
+Each subevent can have its own set of parameters \texttt{latitude}, \texttt{longitude}, \texttt{depth},
+\texttt{half duration} etc.\newline
 
 \begin{figure}[H]
 \begin{centering}
@@ -220,9 +233,9 @@ duration} would be hdur1, hdur2, hdur3 for the sources 1, 2, 3 respectively.}
 {\small \label{fig:source_timing} }
 \end{figure}
 
-In addition to inbuild source time function, the solver can also use an external source time function defined by the user. This option can be activated by setting \texttt{USE\_EXTERNAL\_SOURCE\_FILE} to true in \texttt{DATA/Par\_file} and by adding the name of the file containing the source time function at the end of \texttt{FORCESOLUTION} or \texttt{CMTSOLUTION} files.
-The source time function file must contain the value of the time step on its first line, and then a single column with the amplitude of the source time function for all the time steps. The time step must be exactly the same as that used for the simulation. Note  when the  \texttt{EXTERNAL\_SOURCE\_FILE} is set to false then the line with the external source time function file must not appear in the files  \texttt{FORCESOLUTION} and \texttt{CMTSOLUTION} otherwise the solver will exit with an error. When using an external source file, you can still set up the source location and directivity as in the default case.
-In the FORCESOLUTION file: you set "latorUTM", "longorUTM" and "depth" to define the position of your point source. Then if you want to define a directivity, then change the following lines: "component dir vect source E", "component dir vect source N" and "component dir vect source Z\_UP". What you are doing is simply that you define the source position and directivity the same way as in the default case, but in addition you are specifying the path to read in a non-default source time function from an external file.
+In addition to inbuild source-time functions, the solver can also use an external source-time function defined by the user. This option can be activated by setting \texttt{USE\_EXTERNAL\_SOURCE\_FILE} to \texttt{.true.} in \texttt{DATA/Par\_file} and by adding the name of the file containing the source-time function at the end of \texttt{FORCESOLUTION} or \texttt{CMTSOLUTION} files.
+The source-time function file must contain a single column with the amplitudes of the source-time function for all the time steps. The time step must be exactly the same as that used for the simulation. When the flag is set to \texttt{.false.}, then the line with the external source-time function file must not appear in the files \texttt{FORCESOLUTION} and \texttt{CMTSOLUTION}, otherwise the solver will exit with an error. When using an external source file, you can still set up the source location and directivity as in the default case.
+In the \texttt{FORCESOLUTION} file: you set "latorUTM", "longorUTM" and "depth" to define the position of your point source. Then if you want to define a directivity, change the following lines: "component dir vect source E", "component dir vect source N" and "component dir vect source Z\_UP". What you are doing is simply that you define the source position and directivity the same way as in the default case, but in addition you are specifying the path to read in a non-default source-time function from an external file.
 
 \vspace{1cm}
 
@@ -282,7 +295,7 @@ BONE  GR  y2  x2  0.00  -z2
 \item {\it Procedure 2:} useful for other application domains, in which using the absolute $Z$ position of the sources and receivers is more standard than using their depth from the surface
 \begin{enumerate}
 \item [-] In principle in the international CMTSOLUTION format in geophysics
-the depth is given in kilometers; however for users in other fields (non-destructive testing, medical imaging, near-surface studies...) who may prefer to give the position of the source (rather than its depth from the surface), or for people who use FORCESOLUTION to describe the source rather than CMTSOLUTION, we provide an option called USE\_SOURCES\_RECEIVERS\_Z in the \texttt{DATA/Par\_file}, and if so that position is read from CMTSOLUTION in meters rather than kilometers (and again, it is then the true position in the mesh, not the depth). When option USE\_SOURCES\_RECEIVERS\_Z in the \texttt{DATA/Par\_file} is on, this remark applies to the position of the receivers as well.\newline
+the depth is given in kilometers; however for users in other fields (non-destructive testing, medical imaging, near-surface studies...) who may prefer to give the position of the source (rather than its depth from the surface), or for people who use \texttt{FORCESOLUTION} to describe the source rather than \texttt{CMTSOLUTION}, we provide an option called \texttt{USE\_SOURCES\_RECEIVERS\_Z} in the \texttt{DATA/Par\_file}, and if so that position is read from \texttt{CMTSOLUTION} in meters rather than kilometers (and again, it is then the true position in the mesh, not the depth). When option \texttt{USE\_SOURCES\_RECEIVERS\_Z} in the \texttt{DATA/Par\_file} is on, this remark applies to the position of the receivers as well.\newline
 \item [-] Let's say you want to place two receivers at (x1,y1,z1) and
 (x2,y2,z2). Your STATIONS file should then look like:
 {\small \begin{verbatim}

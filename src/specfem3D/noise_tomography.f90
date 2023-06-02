@@ -709,9 +709,9 @@ end module user_noise_distribution
 ! step 1: calculate the "ensemble forward source"
 ! add noise spectrum to the location of main receiver
   subroutine add_source_main_rec_noise(nrec,NSTEP,accel,noise_sourcearray, &
-                                         ibool,islice_selected_rec,ispec_selected_rec, &
-                                         it,irec_main_noise, &
-                                         nspec,nglob)
+                                       ibool,islice_selected_rec,ispec_selected_rec, &
+                                       it,irec_main_noise, &
+                                       nspec,nglob)
 
   use constants, only: CUSTOM_REAL,NGLLX,NGLLY,NGLLZ,NDIM,myrank
 

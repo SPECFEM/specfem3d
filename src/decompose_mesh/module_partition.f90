@@ -109,10 +109,10 @@ contains
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 70')
     allocate(load_elmnts_1(nE_1), elmnts_center_1(3,nE_1), old_num_1(nE_1),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 71')
-    elmnts_center_1(:,:)=elmnts_center(:,:)
-    load_elmnts_1(:)=load_elmnts(:)
+    elmnts_center_1(:,:) = elmnts_center(:,:)
+    load_elmnts_1(:) = load_elmnts(:)
     do i = 1,nE
-      old_num_1(i)=i
+      old_num_1(i) = i
     enddo
 
     call compute_partition(ipart_1, nEipart_1, npart_1, sum_load_1, cri_load_1, &
@@ -133,10 +133,10 @@ contains
        if (ier /= 0) call exit_MPI_without_rank('error allocating array 74')
 
        call extract_partition(load_elmnts_2, elmnts_center_2, old_num_2, nE_2, &
-            ipart_1, load_elmnts_1, elmnts_center_1, old_num_1, kpart_2, nE_1)
+                              ipart_1, load_elmnts_1, elmnts_center_1, old_num_1, kpart_2, nE_1)
 
        call compute_partition(ipart_2, nEipart_2, npart_2, sum_load_2, cri_load_2, &
-            load_elmnts_2, elmnts_center_2, iperm_2, nE_2, ref_point, idir)
+                              load_elmnts_2, elmnts_center_2, iperm_2, nE_2, ref_point, idir)
 
        ! partition of all remained slice in direction 3
        do kpart_3 = 1, npart_2
@@ -151,10 +151,10 @@ contains
           if (ier /= 0) call exit_MPI_without_rank('error allocating array 77')
 
           call extract_partition(load_elmnts_3, elmnts_center_3, old_num_3, nE_3, &
-               ipart_2, load_elmnts_2, elmnts_center_2, old_num_2, kpart_3, nE_2)
+                                 ipart_2, load_elmnts_2, elmnts_center_2, old_num_2, kpart_3, nE_2)
 
           call compute_partition(ipart_3, nEipart_3, npart_3, sum_load_3, cri_load_3, &
-               load_elmnts_3, elmnts_center_3, iperm_3, nE_3, ref_point, idir)
+                                 load_elmnts_3, elmnts_center_3, iperm_3, nE_3, ref_point, idir)
 
           do iE=1, nE_3
              p1 = kpart_2

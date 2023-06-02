@@ -1,0 +1,186 @@
+# //////////////////////////////////////////////////////////////////////////////
+#
+# Inverse Problem for Model - Parameter file
+#
+# //////////////////////////////////////////////////////////////////////////////
+#
+# The following sections of parameters deal with the inversion workflow:
+#   * Iteration stopping criteria
+#   * L-BFGS
+#   * Model parameterization
+#   * Exploration filter stages
+#   * External model inputs
+#   * FWI preconditioning
+#   * Regularization
+#   * Visualization dumps
+#   * Data processing
+#
+# Omitting a parameter specification will resort back to its default value.
+# Parameters and default values are listed in the comment sections.
+#
+# ==============================================================================
+#
+# Iterations stopping criteria
+# ----------------------------
+#
+# Parameters:
+#
+#   Niter       : 100      # maximum number of iterations
+#   Niter_wolfe : 10       # maximum number of sub-iterations for Wolfe condition
+#   m1_wolfe    : 1.e-4    # constant m1 for Wolfe condition (Armijo)
+#   m2_wolfe    : 0.9      # constant m2 for Wolfe condition (curvature)
+#   relat_grad  : 1.e-3    # threshold for relative decrease of gradient norm
+#   relat_cost  : 1.e-1    # threshold for relative decrease of cost function
+#
+# ==============================================================================
+Niter       : 3
+Niter_wolfe : 3
+m1_wolfe    : 1.e-17
+m2_wolfe    : 0.9
+relat_grad  : 1.e-9
+relat_cost  : 1.e-5
+
+# ==============================================================================
+#
+# L-BFGS
+# ------
+#
+# Parameters:
+#
+#   max_history_bfgs : 10         # history length
+#   max_relative_pert: 0.05       # maximum perturbation for initial guess step length (0.05 = 5%)
+#
+# ==============================================================================
+max_history_bfgs : 3
+max_relative_pert: 0.01
+
+# ==============================================================================
+#
+# Model parameterization
+# ----------------------
+#
+# Parameters:
+#
+#   param_family     : ISO                  # parameterization (ISO/VTI)
+#   nb_inver         : 3                    # number of parameters to invert
+#   param_to_inv     : rho vp vs            # parameters (rho/vp/vs/ep/gm/de)
+#
+# possible selections for parameter family and parameter names are:
+#   ISO: rho vp vs
+#   VTI: rho vp vs ep gm de
+#
+# ==============================================================================
+param_family : ISO           
+nb_inver     : 1           
+param_to_inv : vp       
+
+# ==============================================================================
+#
+# Filter stages
+# -------------
+#
+# Parameters:
+#
+#   use_frequency_band_pass_filter: 1           # number of frequency bands
+#   fl                            : 0.0         # low-frequency limits  (fl_1 fl_2 ..)
+#   fh                            : 0.0         # high-frequency limits (fh_1 fh_2 ..)
+#
+# Turned off by default, only when explicitly specified it will be turned on.
+#
+# ==============================================================================
+use_frequency_band_pass_filter: 1
+fl                            : 1.0
+fh                            : 80.0
+
+# ==============================================================================
+#
+# External  models
+# ----------------
+#
+# Parameters:
+#
+#   input_sem_model: dummy        # external SEM model
+#   input_sem_prior: dummy        # external SEM prior model (not fully implemented yet)
+#   input_fd_model : dummy        # external FD grid model
+#   output_model   : dummy
+#
+# Turned off by default, only when explicitly specified it will be turned on.
+#
+# ==============================================================================
+
+# ==============================================================================
+#
+# FWI preconditioning
+# -------------------
+#
+# Parameters:
+#
+#   taper         : 250.0 750.0 250.0 750.0 0.0 -400.0 -200.0  # model box-taper (xmin/xmax/ymin/ymax/zmin/zmax)
+#   shin_precond  : .false.                                    # Shin preconditioner
+#   energy_precond: .false.                                    # energy preconditioner
+#   z2_precond    : .false.                                    # depth Z-squared preconditioner
+#   z_precond     : 3.0 -200.0 -400.0                          # depth Z preconditioner (a/z1/z2)
+#
+# Turned off by default, only when explicitly specified it will be turned on.
+#
+# ==============================================================================
+
+# ==============================================================================
+#
+# Regularization
+# --------------
+#
+# Parameters:
+#
+#   use_tk_regularization_weight        : 0.1                 # Tikhonov regularization weight
+#   use_tk_sem_regularization           : 10.0 10.0  5.0      # SEM smoothing (weight_1stpar/weight_2ndpar/weight_3rdpar)
+#   use_tk_sem_damping                  : 1.0   1.0  1.0      # damping weight (weight_1stpar/weight_2ndpar/weight_3rdpar)
+#   use_tk_sem_variable_damping_sources : 1.0  10.0  100.0    # variable damping around sources  (min/max/distance from source)
+#   use_tk_sem_variable_damping_stations: 1.0  10.0  100.0    # variable damping around stations (min/max/distance from station)
+#   use_tk_fd_regularization            : .false.             # applies FD Tikhonov regularization (not fully implemented yet)
+#
+# Turned off by default, only when explicitly specified it will be turned on.
+#
+# ==============================================================================
+#use_tk_regularization_weight        : 1.e4
+#use_tk_sem_variable_damping_sources : 0.0  20.0  100.0
+#use_tk_sem_variable_damping_stations: 0.0  20.0  100.0
+
+#use_tk_regularization_weight        : 1.e4
+#use_tk_sem_regularization           : 10.0 10.0  5.0
+
+# ==============================================================================
+#
+# Data processing
+# ---------------
+#
+# Parameters: 
+#
+#   data_to_invert_type            : d                      # data type: displacement, velocity, acceleration, pressure (d/v/a/p)
+#   data_to_invert_system          : xyz                    # data component system (xyz/enz/rtz)
+#   data_to_invert_is_component    : .true. .true. .true.   # data component for inversion
+#   prior_data_std                 : 1.0                    # data weight
+#   apply_src_weighting_to_gradient: .false.                # applies source weighting to gradient
+#   convolve_synth_with_wavelet    : .false.                # convolves synthetics with source wavelet   
+#
+# By default, the data type is assumed to be displacement and X/Y/Z traces are used for the inversion.
+#
+# ==============================================================================
+data_to_invert_type : p
+
+# ==============================================================================
+#
+# Visualization dumps
+# -------------------
+#
+# Parameters:
+#
+#   dump_model_at_each_iteration            : .true.    # dump model
+#   dump_gradient_at_each_iteration         : .true.    # dump gradient
+#   dump_descent_direction_at_each_iteration: .true.    # dump descent direction
+#   dump_image_at_each_iteration            : .true.    # dump cross-section image
+#
+# All visualization outputs are turned on by default.
+#
+# ==============================================================================
+

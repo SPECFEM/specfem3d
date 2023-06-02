@@ -29,10 +29,10 @@
 
  program inverse_problem
 
-! MPI initialization
+  ! MPI initialization
   call init_mpi()
 
-! run the main program
+  ! run the main program
   call inverse_problem_main()
 
   ! MPI finish

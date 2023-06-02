@@ -4,7 +4,7 @@ README
 
 This example creates a small mesh with regular elements and surrounded by a C-PML absorbing boundary.
 The model is split into two domains, the upper half is fluid (salt water) and the lower half viscoelastic (Marls-type rock).
-
+The simulation uses a CMT source with an external source time function, defined in file DATA/stf.dat
 
 To run this simulation, type:
 > ./run_this_example.sh

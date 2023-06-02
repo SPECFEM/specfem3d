@@ -154,6 +154,7 @@ MOVIE_SURFACE                   = .false.
 MOVIE_TYPE                      = 1
 MOVIE_VOLUME                    = .false.
 SAVE_DISPLACEMENT               = .false.
+MOVIE_VOLUME_STRESS             = .false.
 USE_HIGHRES_FOR_MOVIES          = .false.
 NTSTEP_BETWEEN_FRAMES           = 200
 HDUR_MOVIE                      = 0.0
@@ -205,6 +206,11 @@ USE_EXTERNAL_SOURCE_FILE        = .true.
 # print source time function
 PRINT_SOURCE_TIME_FUNCTION      = .false.
 
+# source encoding
+# (for acoustic simulations only for now) determines source encoding factor +/-1 depending on sign of moment tensor
+# (see e.g. Krebs et al., 2009. Fast full-wavefield seismic inversion using encoded sources, Geophysics, 74 (6), WCC177-WCC188.)
+USE_SOURCE_ENCODING             = .false.
+
 #-----------------------------------------------------------
 #
 # Seismograms
@@ -214,12 +220,20 @@ PRINT_SOURCE_TIME_FUNCTION      = .false.
 # interval in time steps for writing of seismograms
 NTSTEP_BETWEEN_OUTPUT_SEISMOS   = 10000
 
+# set to n to reduce the sampling rate of output seismograms by a factor of n
+# defaults to 1, which means no down-sampling
+NTSTEP_BETWEEN_OUTPUT_SAMPLE    = 1
+
 # decide if we save displacement, velocity, acceleration and/or pressure in forward runs (they can be set to true simultaneously)
 # currently pressure seismograms are implemented in acoustic (i.e. fluid) elements only
 SAVE_SEISMOGRAMS_DISPLACEMENT   = .false.
 SAVE_SEISMOGRAMS_VELOCITY       = .true.
 SAVE_SEISMOGRAMS_ACCELERATION   = .false.
 SAVE_SEISMOGRAMS_PRESSURE       = .true.   # currently implemented in acoustic (i.e. fluid) elements only
+
+# option to save strain seismograms
+# # this option is useful for strain Green's tensor
+SAVE_SEISMOGRAMS_STRAIN         = .false.
 
 # save seismograms also when running the adjoint runs for an inverse problem
 # (usually they are unused and not very meaningful, leave this off in almost all cases)
@@ -234,8 +248,8 @@ SU_FORMAT                       = .false.
 # output seismograms in ASDF (requires asdf-library)
 ASDF_FORMAT                     = .false.
 
-# decide if master process writes all the seismograms or if all processes do it in parallel
-WRITE_SEISMOGRAMS_BY_MASTER     = .false.
+# decide if main process writes all the seismograms or if all processes do it in parallel
+WRITE_SEISMOGRAMS_BY_MAIN       = .false.
 
 # save all seismograms in one large combined file instead of one file per seismogram
 # to avoid overloading shared non-local file systems such as LUSTRE or GPFS for instance
@@ -249,16 +263,6 @@ SAVE_ALL_SEISMOS_IN_ONE_FILE    = .false.
 # thus in fluid elements potential_dot_dot_acoustic() is accurate at zeroth order while potential_acoustic()
 # is accurate at second order and thus contains significantly less numerical noise.
 USE_TRICK_FOR_BETTER_PRESSURE   = .false.
-
-#-----------------------------------------------------------
-#
-# Source encoding
-#
-#-----------------------------------------------------------
-
-# (for acoustic simulations only for now) determines source encoding factor +/-1 depending on sign of moment tensor
-# (see e.g. Krebs et al., 2009. Fast full-wavefield seismic inversion using encoded sources, Geophysics, 74 (6), WCC177-WCC188.)
-USE_SOURCE_ENCODING             = .false.
 
 #-----------------------------------------------------------
 #
@@ -279,7 +283,7 @@ NTSTEP_BETWEEN_OUTPUT_ENERGY    = 10
 #-----------------------------------------------------------
 
 # interval in time steps for reading adjoint traces
-# 0 = read the whole adjoint sources at the same time
+# 0 = read the whole adjoint sources at start time
 NTSTEP_BETWEEN_READ_ADJSRC      = 0
 
 # read adjoint sources using ASDF (requires asdf-library)
@@ -376,9 +380,5 @@ ADIOS_FOR_DATABASES             = .false.
 ADIOS_FOR_MESH                  = .false.
 ADIOS_FOR_FORWARD_ARRAYS        = .false.
 ADIOS_FOR_KERNELS               = .false.
-
-NTSTEP_BETWEEN_OUTPUT_SAMPLE    = 1
-
-WRITE_SEISMOGRAMS_BY_MAIN     = .false.
-
 ADIOS_FOR_UNDO_ATTENUATION      = .false.
+

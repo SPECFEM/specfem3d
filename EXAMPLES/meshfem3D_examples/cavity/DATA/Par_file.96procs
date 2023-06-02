@@ -154,6 +154,7 @@ MOVIE_SURFACE                   = .true.
 MOVIE_TYPE                      = 1
 MOVIE_VOLUME                    = .false.
 SAVE_DISPLACEMENT               = .false.
+MOVIE_VOLUME_STRESS             = .false.
 USE_HIGHRES_FOR_MOVIES          = .false.
 NTSTEP_BETWEEN_FRAMES           = 100
 HDUR_MOVIE                      = 0.0
@@ -229,6 +230,10 @@ SAVE_SEISMOGRAMS_DISPLACEMENT   = .true.
 SAVE_SEISMOGRAMS_VELOCITY       = .true.
 SAVE_SEISMOGRAMS_ACCELERATION   = .false.
 SAVE_SEISMOGRAMS_PRESSURE       = .false.   # currently implemented in acoustic (i.e. fluid) elements only
+
+# option to save strain seismograms
+# # this option is useful for strain Green's tensor
+SAVE_SEISMOGRAMS_STRAIN         = .false.
 
 # save seismograms also when running the adjoint runs for an inverse problem
 # (usually they are unused and not very meaningful, leave this off in almost all cases)

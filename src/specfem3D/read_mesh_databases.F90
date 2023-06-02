@@ -32,13 +32,35 @@
 
   use constants, only: MAX_STRING_LEN,IIN,myrank,I_should_read_the_database
 
-  use specfem_par, only: prname,LOCAL_PATH, &
-    NSPEC_AB,NGLOB_AB,NSPEC_IRREGULAR
+  use specfem_par, only: prname, LOCAL_PATH, NSPEC_AB, NGLOB_AB, NSPEC_IRREGULAR
+
+  ! ADIOS
+  use shared_parameters, only: ADIOS_FOR_MESH
+
+  ! HDF5
+  use shared_parameters, only: HDF5_ENABLED
 
   implicit none
   ! Local variables
   integer :: ier
   character(len=MAX_STRING_LEN) :: database_name
+
+  ! selects routine for file i/o format
+  if (ADIOS_FOR_MESH) then
+    ! ADIOS
+    call read_mesh_for_init_ADIOS()
+    ! all done
+    return
+  else if (HDF5_ENABLED) then
+    ! HDF5
+    call read_mesh_for_init_hdf5()
+    ! all done
+    return
+  else
+    ! binary default
+    ! implemented here below, continue
+    continue
+  endif
 
   ! sets file name
   call create_name_database(prname,myrank,LOCAL_PATH)
@@ -50,18 +72,15 @@
       print *,'Error could not open database file: ',trim(database_name)
       call exit_mpi(myrank,'Error opening database file')
     endif
-  endif
-
-  if (I_should_read_the_database) then
     read(IIN) NSPEC_AB
     read(IIN) NGLOB_AB
     read(IIN) NSPEC_IRREGULAR
+    close(IIN)
   endif
+
   call bcast_all_i_for_database(NSPEC_AB, 1)
   call bcast_all_i_for_database(NGLOB_AB, 1)
   call bcast_all_i_for_database(NSPEC_IRREGULAR, 1)
-
-  if (I_should_read_the_database) close(IIN)
 
   end subroutine read_mesh_for_init
 
@@ -89,6 +108,30 @@
   integer :: i
   logical, parameter :: DEBUG_MPI_ARRAYS = .false.
 
+  ! checks if anything to do
+  if (.not. IO_compute_task) return
+
+  ! selects routine for file i/o format
+  if (ADIOS_FOR_MESH) then
+    ! ADIOS file format
+    call read_mesh_databases_adios()
+    ! outputs mesh domain stats
+    call print_mesh_databases_stats()
+    ! all done
+    return
+  else if (HDF5_ENABLED) then
+    ! HDF5 file i/o
+    call read_mesh_databases_hdf5()
+    ! outputs mesh domain stats
+    call print_mesh_databases_stats()
+    ! all done
+    return
+  else
+    ! binary file
+    ! implemented here below, continue
+    continue
+  endif
+
   ! user output
   if (myrank == 0) then
     write(IMAIN,*) "Reading mesh databases..."
@@ -102,18 +145,16 @@
   call create_name_database(prname,myrank,LOCAL_PATH)
   database_name = prname(1:len_trim(prname))//'external_mesh.bin'
 
-! start reading the databases
+  ! start reading the databases
 
-! info about external mesh simulation
+  ! info about external mesh simulation
   if (I_should_read_the_database) then
     open(unit=IIN,file=trim(database_name),status='old',action='read',form='unformatted',iostat=ier)
     if (ier /= 0) then
       print *,'Error could not open database file: ',trim(database_name)
       call exit_mpi(myrank,'Error opening database file')
     endif
-  endif
 
-  if (I_should_read_the_database) then
     read(IIN) NSPEC_AB
     read(IIN) NGLOB_AB
     read(IIN) NSPEC_IRREGULAR
@@ -145,10 +186,8 @@
     read(IIN) ispec_is_acoustic
     read(IIN) ispec_is_elastic
     read(IIN) ispec_is_poroelastic
-  endif
 
-  ! checks i/o so far
-  if (I_should_read_the_database) then
+    ! checks i/o so far
     read(IIN) itest
     if (itest /= 9999) stop 'Error database read at position 1'
   endif
@@ -1303,6 +1342,34 @@
     call flush_IMAIN()
   endif
 
+  ! outputs mesh domain stats
+  call print_mesh_databases_stats()
+
+contains
+
+  subroutine print_mesh_databases_stats()
+    implicit none
+    integer :: inum
+    ! outputs total element numbers
+    ! acoustic domain
+    call sum_all_i(count(ispec_is_acoustic(:)),inum)
+    if (myrank == 0) then
+      write(IMAIN,*) '  total acoustic elements    :',inum
+    endif
+    ! elastic domain
+    call sum_all_i(count(ispec_is_elastic(:)),inum)
+    if (myrank == 0) then
+      write(IMAIN,*) '  total elastic elements     :',inum
+    endif
+    ! poroelastic domain
+    call sum_all_i(count(ispec_is_poroelastic(:)),inum)
+    if (myrank == 0) then
+      write(IMAIN,*) '  total poroelastic elements :',inum
+      write(IMAIN,*)
+      call flush_IMAIN()
+    endif
+  end subroutine print_mesh_databases_stats
+
   end subroutine read_mesh_databases
 
 !
@@ -1310,6 +1377,8 @@
 !
 
   subroutine read_mesh_databases_moho()
+
+! reads in moho mesh
 
   use specfem_par
   use specfem_par_elastic
@@ -1320,14 +1389,48 @@
 
   integer :: ier
 
+  ! checks if anything to do
+  if (.not. IO_compute_task) return
+
+  ! selects routine for file i/o format
+  if (ADIOS_FOR_MESH) then
+    ! ADIOS file format
+    call read_mesh_databases_moho_adios()
+    ! outputs moho stats
+    call print_mesh_databases_moho_stats()
+    ! all done
+    return
+  else if (HDF5_ENABLED) then
+    ! HDF5
+    !#TODO: HDF5 support for moho database not implemented yet
+    !call read_mesh_databases_moho_hdf5()
+    ! outputs moho stats
+    !call print_mesh_databases_moho_stats()
+    ! fall back to binary reads
+    continue
+  else
+    ! binary file
+    ! implemented here below, continue
+    continue
+  endif
+
   ! always needed to be allocated for routine arguments
-  allocate( is_moho_top(NSPEC_BOUN),is_moho_bot(NSPEC_BOUN),stat=ier)
+  allocate(is_moho_top(NSPEC_BOUN),is_moho_bot(NSPEC_BOUN),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 1576')
   if (ier /= 0) stop 'Error allocating array is_moho_top etc.'
   is_moho_top(:) = .false.; is_moho_bot(:) = .false.
 
   ! checks if anything to do
   if (ELASTIC_SIMULATION .and. SAVE_MOHO_MESH .and. SIMULATION_TYPE == 3) then
+    ! user output
+    if (myrank == 0) then
+      write(IMAIN,*) "Reading moho databases..."
+      write(IMAIN,*) "  reads binary moho files: proc***_ibelm_moho.bin"
+      write(IMAIN,*) "  from directory         : ",trim(LOCAL_PATH)
+      write(IMAIN,*)
+      call flush_IMAIN()
+    endif
+
     ! boundary elements
     if (I_should_read_the_database) then
       open(unit=IIN,file=prname(1:len_trim(prname))//'ibelm_moho.bin',status='old', &
@@ -1407,6 +1510,13 @@
 
     if (I_should_read_the_database) close(IIN)
 
+    ! user output
+    if (myrank == 0) then
+      write(IMAIN,*) "  done"
+      write(IMAIN,*)
+      call flush_IMAIN()
+    endif
+
   else
     ! dummy
     NSPEC2D_MOHO = 1
@@ -1426,6 +1536,25 @@
     if (ier /= 0) stop 'Error allocating array dsdx_top etc.'
   endif
 
+  ! outputs moho stats
+  call print_mesh_databases_moho_stats()
+
+contains
+
+  subroutine print_mesh_databases_moho_stats()
+    implicit none
+    integer :: inum
+    ! outputs total moho surface element number
+    if (ELASTIC_SIMULATION .and. SAVE_MOHO_MESH .and. SIMULATION_TYPE == 3) then
+      ! acoustic domain
+      call sum_all_i(NSPEC2D_MOHO,inum)
+      if (myrank == 0) then
+        write(IMAIN,*) '  total number of moho surface elements    :',inum
+        write(IMAIN,*)
+      endif
+    endif
+  end subroutine print_mesh_databases_moho_stats
+
   end subroutine read_mesh_databases_moho
 
 
@@ -1435,7 +1564,7 @@
 
   subroutine read_mesh_databases_adjoint()
 
-! reads in Moho meshes
+! allocates adjoint arrays for SIMULATION_TYPE == 3 simulations
 
   use specfem_par
   use specfem_par_elastic
@@ -1446,6 +1575,11 @@
   implicit none
 
   integer :: ier
+
+  ! note: this routines has no file I/O, it (only) allocates necessary arrays for adjoint/kernel simulations
+
+  ! checks if anything to do
+  if (.not. IO_compute_task) return
 
   ! allocates adjoint arrays for elastic simulations
   if (ELASTIC_SIMULATION .and. SIMULATION_TYPE == 3) then

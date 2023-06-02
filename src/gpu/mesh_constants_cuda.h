@@ -99,6 +99,13 @@
 #undef USE_LAUNCH_BOUNDS
 #endif
 
+#ifdef GPU_DEVICE_Hopper
+// specifics see: https://docs.nvidia.com/cuda/hopper-tuning-guide/index.html
+// register file size 64k 32-bit registers per SM
+// shared memory size 228KB per SM (maximum shared memory, 227KB per thread block)
+// maximum registers 255 per thread
+#undef USE_LAUNCH_BOUNDS
+#endif
 
 /* ----------------------------------------------------------------------------------------------- */
 

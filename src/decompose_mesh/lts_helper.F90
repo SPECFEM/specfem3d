@@ -37,38 +37,18 @@
   integer,dimension(nspec),intent(inout) :: ispec_p_refine
 
   ! local parameters
-  integer :: ispec,iglob,i,p
+  integer :: ispec,iglob,i,p,icycle
+  ! number of cycles to add overlap by one element layer
+  integer, parameter :: NUMBER_OF_OVERLAP_CYCLES = 1
 
   ! user output
   print *,'  adding overlap region'
+  print *,'    number of overlap cycles = ', NUMBER_OF_OVERLAP_CYCLES
   print *
 
   ! adds overlap by one element
-  ! 1. overlap
-  do ispec = 1,NSPEC
-    ! sets refinement on all points
-    ! this enlarges the finer region by one element
-    p = ispec_p_refine(ispec)
-    do i = 1,NGNOD
-      iglob = elmnts(i,ispec)
-      if ( p > iglob_p_refine(iglob) ) iglob_p_refine(iglob) = p
-    enddo
-  enddo
-  ! re-sets p refinement for element due to overlap addition above
-  ! (adds also elements touching global points with higher refinement)
-  ispec_p_refine(:) = 0
-  do ispec = 1,NSPEC
-    do i = 1,NGNOD
-      iglob = elmnts(i,ispec)
-      p = iglob_p_refine(iglob)
-      if ( p > ispec_p_refine(ispec)) ispec_p_refine(ispec) = p
-    enddo
-  enddo
-  ! checks that all elements have a valid p-value assigned
-  if ( minval(ispec_p_refine(:)) == 0 ) stop 'error ispec_p_refine has zero entry'
-
-  ! 2. overlap
-  if ( .false. ) then
+  do icycle = 1,NUMBER_OF_OVERLAP_CYCLES
+    ! flags all shared nodes according to the highest element p-level
     do ispec = 1,NSPEC
       ! sets refinement on all points
       ! this enlarges the finer region by one element
@@ -90,7 +70,7 @@
     enddo
     ! checks that all elements have a valid p-value assigned
     if ( minval(ispec_p_refine(:)) == 0 ) stop 'error ispec_p_refine has zero entry'
-  endif
+  enddo
 
   end subroutine lts_add_overlap_elements
 

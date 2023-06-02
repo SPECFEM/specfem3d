@@ -779,6 +779,11 @@ void FC_FUNC_(transfer_b_fields_ac_from_device,
                                                 field* b_potential_dot_dot_acoustic,
                                                 long* Mesh_pointer) {}
 
+void FC_FUNC_(transfer_potential_ac_from_device,
+              TRANSFER_potentical_AC_FROM_DEVICE)(int* size,
+                                                  field* potential_acoustic,
+                                                  long* Mesh_pointer) {}
+
 void FC_FUNC_(transfer_b_potential_ac_from_device,
               TRANSFER_B_potentical_AC_FROM_DEVICE)(int* size,
                                                     field* b_potential_acoustic,
@@ -798,6 +803,9 @@ void FC_FUNC_(transfer_b_potential_dot_dot_ac_to_device,
               TRANSFER_B_potentical_DOT_DOT_AC_TO_DEVICE)(int* size,
                                                           field* b_potential_dot_dot_acoustic,
                                                           long* Mesh_pointer) {}
+
+void FC_FUNC_(transfer_dot_dot_to_device,
+              TRNASFER_DOT_DOT_TO_DEVICE)(int* size, field* potential_dot_dot_acoustic,long* Mesh_pointer) {}
 
 void FC_FUNC_(transfer_dot_dot_from_device,
               TRNASFER_DOT_DOT_FROM_DEVICE)(int* size, field* potential_dot_dot_acoustic,long* Mesh_pointer) {}

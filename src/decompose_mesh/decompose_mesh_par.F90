@@ -39,9 +39,6 @@ module decompose_mesh_par
     acoustic_elastic_poro_load,mesh2dual_ncommonnodes, &
     build_glob2loc_elmnts,build_glob2loc_nodes,build_interfaces,poro_elastic_repartitioning,moho_surface_repartitioning
 
-  use fault_scotch, only: ANY_FAULT,nodes_coords_open,read_fault_files,save_nodes_coords,close_faults, &
-    fault_repartition,write_fault_database
-
   implicit none
 
 ! note: the poroelastic repartitioning routine to parallelize the poroelastic-elastic interface
@@ -51,10 +48,10 @@ module decompose_mesh_par
 !       partition in order to compute proper coupling terms for now...
   logical, parameter :: PORO_INTERFACE_REPARTITIONING = .true.
 
-! number of partitions
+  ! number of partitions
   integer :: nparts
 
-! mesh arrays
+  ! mesh arrays
   integer :: nspec
   integer, dimension(:,:), allocatable  :: elmnts
   integer, dimension(:,:), allocatable  :: mat
@@ -110,7 +107,7 @@ module decompose_mesh_par
   integer :: count_def_mat,count_undef_mat,imat
   character(len=MAX_STRING_LEN), dimension(:,:), allocatable :: undef_mat_prop
 
-! default mesh file directory
+  ! default mesh file directory
   character(len=MAX_STRING_LEN) :: localpath_name
   character(len=MAX_STRING_LEN) :: outputpath_name
 

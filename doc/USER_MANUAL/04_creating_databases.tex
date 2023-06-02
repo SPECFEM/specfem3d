@@ -76,7 +76,7 @@ elements. If you use the internal mesher, the only option is 8-node
 bricks (27-node elements are not supported). \texttt{CUBIT} does not
 support HEX27 elements either (it can generate them, but they are
 flat, i.e. identical to HEX8). To generate HEX27 elements with curvature
-properly taken into account, you can use Gmsh \url{http://geuz.org/gmsh/}
+properly taken into account, you can use Gmsh \url{http://gmsh.info}
 \item [{\texttt{MODEL}}] Must be set to one of the following:
 
 \begin{description}
@@ -251,7 +251,7 @@ of the simulation is provided. Otherwise, it adds this half duration
 to the half duration specified in the source file \texttt{CMTSOLUTION},
 thus simulates longer periods to make the movie images look smoother.
 \item [{\texttt{SAVE\_MESH\_FILES}}] Set this flag to \texttt{.true.} to
-save ParaView \urlwithparentheses{www.paraview.org} mesh files for
+save \href{www.paraview.org}{ParaView} mesh files for
 subsequent viewing. Turning the flag on generates large (distributed)
 files in the \texttt{LOCAL\_PATH} directory. See Section~\ref{sec:Mesh-graphics}
 for a discussion of mesh viewing features.
@@ -296,13 +296,13 @@ thus refer to Appendix~\ref{cha:Coordinates} for the orientation
 of the reference frame. This vector is made unitary internally in
 the solver and thus only its direction matters here; its norm is ignored
 and the norm of the force used is the factor force source times the
-source time function.
+source-time function.
 
 When using this option, by default the code can locate the force source
 anywhere between mesh points in order to honor its exact location; this
 is more precise than using the closest GLL mesh point, but it is also a bit slower.
 \item [{\texttt{USE\_RICKER\_TIME\_FUNCTION}}] Turn this flag on to use
-a Ricker source time function, i.e., the second derivative of a Gaussian, instead of the source time functions
+a Ricker source-time function, i.e., the second derivative of a Gaussian, instead of the source-time functions
 set by default to represent a (tilted) \texttt{FORCESOLUTION} force
 point source or a \texttt{CMTSOLUTION} moment-tensor source.
 Note that we use the standard definition of a Ricker, for a dominant frequency $f_0$:
@@ -321,13 +321,13 @@ This gives the wavelet of Figure~\ref{fig:RickerWavelet}.
 Originally, if a \texttt{CMTSOLUTION} moment-tensor source is used, a (pseudo)
 Heaviside step function with a very short half duration is defined
 for elastic cases to represent the permanent slip on the fault while
-in the acoustic case a Gaussian source time function with a similarly
+in the acoustic case a Gaussian source-time function with a similarly
 short half duration is defined to physically describe actions within
 the fluid. Otherwise, if a \texttt{FORCESOLUTION} force source is
-used, a (pseudo) Dirac delta source time function is defined by default.
+used, a (pseudo) Dirac delta source-time function is defined by default.
 Any other source-time function may then be obtained by convolution.
 \item [{\texttt{PRINT\_SOURCE\_TIME\_FUNCTION}}] Turn this flag on to print
-information about the source time function in the file \texttt{OUTPUT\_FILES/plot\_source\_time\_function.txt}.
+information about the source-time function in the file \texttt{OUTPUT\_FILES/plot\_source\_time\_function.txt}.
 This feature is only relevant for the solver.
 %
 \end{description}

@@ -1,0 +1,93 @@
+
+ **********************
+ Serial mesh decomposer
+ **********************
+
+ reading mesh files in: MESH/
+
+   using NGNOD =            8
+   linear elements
+
+ total number of nodes:
+   nnodes =         3003
+ total number of spectral elements:
+   nspec =         2400
+ materials:
+   num_mat =            1
+   num_mat =            2
+   defined =            2 undefined =            0
+   no poroelastic material file found
+   defined materials  :            2
+   undefined materials:            2  (interfaces/tomography models/..)
+ absorbing boundaries:
+   nspec2D_xmin =          240
+   nspec2D_xmax =          240
+   nspec2D_ymin =          120
+   nspec2D_ymax =          120
+   nspec2D_bottom =          200
+   nspec2D_top =          200
+   no absorbing_cpml_file file found
+   no moho_surface_file file found
+
+ Par_file_faults not found: assuming that there are no faults
+
+ node valence:
+   min =            1  max =            8
+ neighbors:
+   nsize =            8
+   valence: sup_neighbor =           38 max_neighbor =           26
+
+ local time stepping: turned OFF
+
+ partitioning:
+   number of partitions requested =            4
+
+   array size xadj  :         2401  memory:    9.15908813E-03 MB
+   array size adjncy:        62400  memory:   0.238037109     MB
+   sup_neighbor     :           26
+
+   mesh2dual: max_neighbor =           26
+
+
+ partitioning type:            1
+   running SCOTCH partitioning
+
+ SCOTCH partitioning
+ finished partitioning
+
+   written file: ./DATABASES_MPI/part_array.vtk
+
+ element distribution:
+   partition            0        has          600  elements
+   partition            1        has          600  elements
+   partition            2        has          600  elements
+   partition            3        has          600  elements
+   elements per partition: min/max   =          600         600
+   elements per partition: imbalance =    0.00000000     %
+                           (0% being totally balanced, 100% being unbalanced)
+
+ load distribution:
+   element loads: min/max =           41          41
+
+   partition            0        has        24600  load units
+   partition            1        has        24600  load units
+   partition            2        has        24600  load units
+   partition            3        has        24600  load units
+   load per partition: min/max   =        24600       24600
+   load per partition: imbalance =    0.00000000     %
+                       (0% being totally balanced, 100% being unbalanced)
+
+ partitions:
+   num         =            4
+   ninterfaces =            6
+
+   partition            0 has number of MPI interfaces:            3 maximum size         784
+   partition            1 has number of MPI interfaces:            3 maximum size         784
+   partition            2 has number of MPI interfaces:            3 maximum size         784
+   partition            3 has number of MPI interfaces:            3 maximum size         784
+
+ Databases files in directory: DATABASES_MPI/
+
+
+ finished successfully
+

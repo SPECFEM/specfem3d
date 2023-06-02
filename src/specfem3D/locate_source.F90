@@ -37,17 +37,20 @@
       USE_EXTERNAL_SOURCE_FILE, &
       USE_TRICK_FOR_BETTER_PRESSURE,COUPLE_WITH_INJECTION_TECHNIQUE, &
       myrank,NSPEC_AB,NGLOB_AB,ibool,xstore,ystore,zstore,DT, &
-      NSOURCES
+      NSOURCES,HAS_FINITE_FAULT_SOURCE,LTS_MODE
 
   ! sources arrays
   use specfem_par, only: Mxx,Myy,Mzz,Mxy,Mxz,Myz,hdur, &
     tshift_src,utm_x_source,utm_y_source, &
-    factor_force_source,comp_dir_vect_source_E,comp_dir_vect_source_N,comp_dir_vect_source_Z_UP, &
+    force_stf,factor_force_source,comp_dir_vect_source_E,comp_dir_vect_source_N,comp_dir_vect_source_Z_UP, &
     xi_source,eta_source,gamma_source,nu_source, &
     ispec_selected_source,islice_selected_source
 
   ! PML
   use pml_par, only: is_CPML
+
+  ! LTS
+  use specfem_par_lts, only: p_elem,ispec_p_refine,p_lookup,num_p_level
 
   implicit none
 
@@ -93,11 +96,15 @@
   integer :: ispec,ier
   logical :: is_done_sources
 
+  ! LTS
+  integer :: p_spec,ilevel
+  integer, dimension(:), allocatable :: source_p_value,source_p_ilevel
+  integer, dimension(:,:), allocatable :: source_p_elem
+  integer, dimension(:), allocatable :: sendbufv,recvbufv
+
   ! timer MPI
   double precision :: tstart,tCPU
   double precision, external :: wtime
-
-  !-----------------------------------------------------------------------------------
 
   ! user output
   if (myrank == 0) then
@@ -106,6 +113,11 @@
     write(IMAIN,*) ' locating sources'
     write(IMAIN,*) '********************'
     write(IMAIN,*)
+    ! checks if sources need to be located
+    if (HAS_FINITE_FAULT_SOURCE) then
+      write(IMAIN,*) 'finite fault source'
+      write(IMAIN,*)
+    endif
     call flush_IMAIN()
   endif
 
@@ -305,6 +317,56 @@
   enddo
   call any_all_1Darray_l(is_CPML_source,is_CPML_source_all,NSOURCES)
 
+  ! LTS
+  if (LTS_MODE) then
+    allocate(source_p_value(NSOURCES),source_p_ilevel(NSOURCES), &
+             source_p_elem(num_p_level,NSOURCES), &
+             sendbufv(num_p_level),recvbufv(num_p_level), stat=ier)
+    if (ier /= 0) call exit_MPI(myrank,'Error allocating source_p arrays')
+    source_p_value(:) = 0
+    source_p_ilevel(:) = 0
+    source_p_elem(:,:) = 0
+    ! collects p-level info of source element
+    do isource = 1,NSOURCES
+      if (myrank == islice_selected_source(isource)) then
+        ispec = ispec_selected_source(isource)
+        ! p_value
+        p_spec = ispec_p_refine(ispec)
+        ilevel = p_lookup(p_spec)
+        source_p_value(isource) = p_spec
+        source_p_ilevel(isource) = ilevel
+        ! here use integer values for P-elem since the send routine sendrecv_all_i() is only implemented for integers
+        ! explicit if-case to avoid a ternary operator like: s = (p_elem == .true.)? 1:0
+        do ilevel = 1,num_p_level
+          if (p_elem(ispec,ilevel) .eqv. .true.) then
+            source_p_elem(ilevel,isource) = 1
+          else
+            source_p_elem(ilevel,isource) = 0
+          endif
+        enddo
+      endif
+      ! send to main process if needed
+      if (islice_selected_source(isource) /= 0) then
+        if (myrank == 0) then
+          ! main process gets p-value
+          call recv_singlei(source_p_value(isource),islice_selected_source(isource),itag)
+          ! ilevel-value
+          call recv_singlei(source_p_ilevel(isource),islice_selected_source(isource),itag)
+          ! p_elem as integer-value
+          call recv_i(recvbufv,num_p_level,islice_selected_source(isource),itag)
+          source_p_elem(:,isource) = recvbufv(:)
+        else if (myrank == islice_selected_source(isource)) then
+          ! slice with sources sents its values
+          call send_singlei(source_p_value(isource),0,itag)
+          ! ilevel-value
+          call send_singlei(source_p_ilevel(isource),0,itag)
+          ! p_elem as integer-value
+          sendbufv(:) = source_p_elem(:,isource)
+          call send_i(sendbufv,num_p_level,0,itag)
+        endif
+      endif
+    enddo
+  endif
 
   ! sets new utm coordinates for best locations
   utm_x_source(:) = x_found(:)
@@ -359,6 +421,13 @@
           write(IMAIN,*) '                 in unknown domain'
         endif
         write(IMAIN,*)
+        ! LTS info
+        if (LTS_MODE) then
+          write(IMAIN,*) '                 in LTS ilevel  : ',source_p_ilevel(isource)
+          write(IMAIN,*) '                        p-value : ',source_p_value(isource)
+          write(IMAIN,*) '                        p-elem  : ',source_p_elem(:,isource)
+          write(IMAIN,*)
+        endif
 
         ! source location (reference element)
         if (USE_FORCE_POINT_SOURCE) then
@@ -397,66 +466,86 @@
           ! STF details
           if (USE_FORCE_POINT_SOURCE) then
             ! force sources
-            if (USE_RICKER_TIME_FUNCTION) then
-              write(IMAIN,*) '    using Ricker source time function'
-            else
-              ! acoustic/elastic/.. domain by default uses a Gaussian STF
+            ! single point force
+            ! prints frequency content for point forces
+            select case(force_stf(isource))
+            case (0)
+              ! Gaussian
               write(IMAIN,*) '    using Gaussian source time function'
-            endif
+              write(IMAIN,*) '             half duration: ',hdur(isource),' seconds'
+              write(IMAIN,*) '    Gaussian half duration: ',hdur(isource)/SOURCE_DECAY_MIMIC_TRIANGLE,' seconds'
+            case (1)
+              ! Ricker
+              write(IMAIN,*) '    using Ricker source time function'
+              ! prints frequency content for point forces
+              f0 = hdur(isource)
+              t0_ricker = 1.2d0/f0
+              write(IMAIN,*)
+              write(IMAIN,*) '    using a source of dominant frequency ',f0
+              write(IMAIN,*) '    t0_ricker = ',t0_ricker,'tshift_src = ',tshift_src(isource)
+              write(IMAIN,*)
+              write(IMAIN,*) '    lambda_S at dominant frequency = ',3000./sqrt(3.)/f0
+              write(IMAIN,*) '    lambda_S at highest significant frequency = ',3000./sqrt(3.)/(2.5*f0)
+              write(IMAIN,*)
+              write(IMAIN,*) '    half duration in frequency: ',hdur(isource),' seconds**(-1)'
+            case (2)
+              ! Heaviside
+              write(IMAIN,*) '    using (quasi) Heaviside source time function'
+              write(IMAIN,*) '             half duration: ',hdur(isource),' seconds'
+            case (3)
+              ! Monochromatic
+              write(IMAIN,*) '    using monochromatic source time function'
+              ! prints frequency content for point forces
+              f0 = hdur(isource)
+              write(IMAIN,*)
+              write(IMAIN,*) '    using a source of period ',f0
+              write(IMAIN,*)
+              write(IMAIN,*) '    half duration in period: ',hdur(isource),' seconds'
+            case (4)
+              ! Gaussian by Meschede et al. (2011)
+              write(IMAIN,*) '    using Gaussian source time function by Meschede et al. (2011), eq.(2)'
+              write(IMAIN,*) '             tau: ',hdur(isource),' seconds'
+            case default
+              stop 'unsupported force_stf value!'
+            end select
           else
             ! CMT sources
             if (USE_RICKER_TIME_FUNCTION) then
               write(IMAIN,*) '    using Ricker source time function'
+              ! frequency/half-duration
+              f0 = hdur(isource)
+              write(IMAIN,*) '    using a source of dominant frequency ',f0
             else
               if (idomain(isource) == IDOMAIN_ACOUSTIC .or. idomain(isource) == IDOMAIN_POROELASTIC) then
                 ! acoustic/poroelastic domain by default uses a Gaussian STF
                 write(IMAIN,*) '    using Gaussian source time function'
+                ! frequency/half-duration
+                write(IMAIN,*) '             half duration: ',hdur(isource),' seconds'
+                ! add message if source is a Delta function
+                if (hdur(isource) <= 5.*DT) then
+                  write(IMAIN,*)
+                  write(IMAIN,*) '    Source time function is a Delta, convolve later'
+                endif
               else
                 ! elastic domain by default uses a Heaviside STF
-                write(IMAIN,*) '    using Heaviside source time function'
+                write(IMAIN,*) '    using (quasi) Heaviside source time function'
+                ! frequency/half-duration
+                write(IMAIN,*) '             half duration: ',hdur(isource),' seconds'
+                ! add message if source is a Heaviside
+                if (hdur(isource) <= 5.*DT) then
+                  write(IMAIN,*)
+                  write(IMAIN,*) '    Source time function is a Heaviside, convolve later'
+                endif
               endif
             endif
           endif
+          write(IMAIN,*)
+
           ! acoustic pressure trick
           if (idomain(isource) == IDOMAIN_ACOUSTIC) then
             if (USE_TRICK_FOR_BETTER_PRESSURE) then
               write(IMAIN,*) '    using trick for better pressure (second derivatives)'
-            endif
-          endif
-
-          ! frequency/half-duration
-          if (USE_FORCE_POINT_SOURCE) then
-            ! single point force
-            ! prints frequency content for point forces
-            f0 = hdur(isource)
-            if (USE_RICKER_TIME_FUNCTION) then
-              write(IMAIN,*) '    using a source of dominant frequency ',f0
-
-              t0_ricker = 1.2d0/f0
-              write(IMAIN,*) '    t0_ricker = ',t0_ricker
-              write(IMAIN,*) '    Ricker frequency: ',hdur(isource),' Hz'
-            else
-              if (idomain(isource) == IDOMAIN_ACOUSTIC) then
-                write(IMAIN,*) '    Gaussian half duration: ',5.d0*DT,' seconds'
-              else if (idomain(isource) == IDOMAIN_ELASTIC) then
-                write(IMAIN,*) '    Gaussian half duration: ',hdur(isource)/SOURCE_DECAY_MIMIC_TRIANGLE,' seconds'
-              else if (idomain(isource) == IDOMAIN_POROELASTIC) then
-                write(IMAIN,*) '    Gaussian half duration: ',5.d0*DT,' seconds'
-              endif
-            endif
-            write(IMAIN,*)
-          else
-            ! moment-tensor
-            if (USE_RICKER_TIME_FUNCTION) then
-              write(IMAIN,*) '    Ricker frequency: ',hdur(isource),' Hz'
-            else
-              ! add message if source is a Heaviside
-              if (hdur(isource) <= 5.*DT) then
-                write(IMAIN,*)
-                write(IMAIN,*) '    Source time function is a Heaviside, convolve later'
-                write(IMAIN,*)
-              endif
-              write(IMAIN,*) '    half duration: ',hdur(isource),' seconds'
+              write(IMAIN,*)
             endif
           endif
         endif
@@ -583,11 +672,12 @@
     endif
 
     ! display maximum error in location estimate
-    write(IMAIN,*)
-    write(IMAIN,*) 'maximum error in location of the sources: ',sngl(maxval(final_distance)),' m'
-    write(IMAIN,*)
-    call flush_IMAIN()
-
+    if (NSOURCES >= 1) then
+      write(IMAIN,*)
+      write(IMAIN,*) 'maximum error in location of the sources: ',sngl(maxval(final_distance)),' m'
+      write(IMAIN,*)
+      call flush_IMAIN()
+    endif
   endif     ! end of section executed by main process only
 
   ! elapsed time since beginning of source detection
@@ -606,6 +696,7 @@
   deallocate(x_found,y_found,z_found,elevation,final_distance)
   deallocate(x_target,y_target,z_target,idomain)
   deallocate(is_CPML_source,is_CPML_source_all)
+  if (LTS_MODE) deallocate(source_p_value,source_p_ilevel,source_p_elem,sendbufv,recvbufv)
 
   end subroutine locate_source
 
@@ -641,6 +732,15 @@
   min_tshift_src_original = 0.d0
   user_source_time_function(:,:) = 0.0_CUSTOM_REAL
 
+  yr_PDE = 0
+  jda_PDE = 0
+  ho_PDE = 0
+  mi_PDE = 0
+  sec_PDE = 0.d0
+
+  ! checks if anything to do, finite fault simulations ignore CMT and force sources
+  if (HAS_FINITE_FAULT_SOURCE) return
+
   ! determines source file name
   if (USE_FORCE_POINT_SOURCE) then
     SOURCE_FILE = IN_DATA_FILES(1:len_trim(IN_DATA_FILES))//'FORCESOLUTION'
@@ -674,11 +774,12 @@
       ! only main process reads in FORCESOLUTION file
       call get_force(filename,tshift_src,hdur, &
                      lat,lon,depth,NSOURCES, &
-                     min_tshift_src_original,factor_force_source, &
+                     min_tshift_src_original,force_stf,factor_force_source, &
                      comp_dir_vect_source_E,comp_dir_vect_source_N,comp_dir_vect_source_Z_UP, &
                      user_source_time_function)
     endif
     ! broadcasts specific point force infos
+    call bcast_all_i(force_stf,NSOURCES)
     call bcast_all_dp(factor_force_source,NSOURCES)
     call bcast_all_dp(comp_dir_vect_source_E,NSOURCES)
     call bcast_all_dp(comp_dir_vect_source_N,NSOURCES)

@@ -217,7 +217,7 @@ subroutine readin_parameters
    12x,'Add heterogeneous region?           ',l2,/                          &
    12x,'Perform extensive mesh tests?       ',l2,/                          &
    12x,'Output format (seism., wavefields): ',a6,/                          &
-   08x,' ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  == =')
+   08x,' ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  == =')
 
      if (verbose > 1) write(*,'(a/a)') &
            'Processor-specific output is written to: output_proc < PROC ID > .dat', &
@@ -846,7 +846,7 @@ subroutine compute_numerical_parameters
         deltat = deltat * 3.0
      end select
      if (lpr .and. verbose > 1) then
-        write(*,'(/,a)')'    Using time step precalculated by the mesher:',deltat
+        write(*,*)'    Using time step precalculated by the mesher:',deltat
      endif
   endif
 20 format('     Chosen/maximal time step [s]:',2(f7.3))

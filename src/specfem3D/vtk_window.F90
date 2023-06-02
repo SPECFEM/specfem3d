@@ -68,6 +68,9 @@ end module vtk_window_par
   ! local parameters
   integer :: ier
 
+  ! checks if anything to do
+  if (.not. IO_compute_task) return
+
   ! user output
   if (myrank == 0) then
     write(IMAIN,*)

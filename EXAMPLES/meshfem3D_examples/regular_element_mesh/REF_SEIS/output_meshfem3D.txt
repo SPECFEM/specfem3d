@@ -11,15 +11,32 @@
    visualization...
    CPML...
    domain materials...
+     material            1  elastic
+     material            2  acoustic
    domain regions...
-   done successfully
+     region            1  with material            1
+       nex_xi  begin/end =            1          10
+       nex_eta begin/end =            1          10
+       nz      begin/end =            1          10
+     region            2  with material            2
+       nex_xi  begin/end =            1          10
+       nex_eta begin/end =            1          10
+       nz      begin/end =           11          20
+
+   reading Mesh_Par_file done successfully
 
    checking mesh setup...
    all okay
 
 
  Reading interface data from file ./DATA/meshfem3D_files/interfaces.dat
- maximum interface points x/y =            2           2
+   maximum interface points x/y =            2           2
+   interfaces done
+
+ parameter setup:
+   total number of elements =         2000
+   total number of points   =        18081
+
 
  Creating global slice addressing
 
@@ -108,14 +125,22 @@
  Creating mesh in the model
  **************************
 
+ creating mesh:
+   NGLLX_M/NGLLY_M/NGLLZ_M =            3           3           3
+   NGNOD/NGNOD2D           =            8           4
+   NSPEC_AB                =         2000
+   NGLOB_AB                =        18081
+
  allocating mesh arrays
 
  number of subregions =            2
    defining subregion            1
+     has material            1
    defining subregion            2
+     has material            2
 
  number of mesh regions =            1
-   creating mesh region            1
+   creating mesh region            1  (regular mesh)
 
  mesh dimensions:
    Xmin and Xmax of the model =    0.00000000       1000.00000
@@ -164,22 +189,22 @@
  diagonal aspect ratio: 1. perfect,  above 1. gives stretching factor
  ------------
 
- minimum length of an edge in the whole mesh (m) =    99.999999999999829
+ minimum length of an edge in the whole mesh (m) =    99.999999999999773
 
- maximum length of an edge in the whole mesh (m) =    100.00000000000011
+ maximum length of an edge in the whole mesh (m) =    100.00000000000023
 
  ***
- *** max equiangle skewness =    0.0000000000000000       in element            1  of slice            0
+ *** max equiangle skewness =    1.4135798584282298E-015  in element            7  of slice            0
  ***
 
- max deviation angle from a right angle (90 degrees) is therefore =    0.0000000000000000
+ max deviation angle from a right angle (90 degrees) is therefore =    1.2722218725854067E-013
 
- worst angle in the mesh is therefore    90.000000000000000
- or    90.000000000000000       degrees
+ worst angle in the mesh is therefore    89.999999999999872
+ or    90.000000000000128       degrees
 
- max edge aspect ratio =    1.0000000000000018
+ max edge aspect ratio =    1.0000000000000022
 
- max diagonal aspect ratio =    1.0000000000000000
+ max diagonal aspect ratio =    1.0000000000000024
 
  ***
  *** Maximum suggested time step for simulation =    0.00232073
@@ -218,22 +243,27 @@
  plotting skewness to VTK-file: ./DATABASES_MPI/proc000000_skewness.vtk
 
 
+ mesh files:
+   saving files: proc***_Database
+   done mesh files
+
+
  Repartition of elements:
  -----------------------
 
  total number of elements in mesh slice 0:         2000
- total number of points in mesh slice 0:         2541
+ total number of points in mesh slice 0:        18081
 
  total number of elements in entire mesh:         2000
- approximate total number of points in entire mesh (with duplicates on MPI edges):    2541.0000000000000
- approximate total number of DOFs in entire mesh (with duplicates on MPI edges):    7623.0000000000000
+ approximate total number of points in entire mesh (with duplicates on MPI edges):                 18081
+ approximate total number of DOFs in entire mesh (with duplicates on MPI edges):                 54243
 
  using single precision for the calculations
 
  smallest and largest possible floating-point numbers are:    1.17549435E-38   3.40282347E+38
 
 
- Elapsed time for mesh generation and buffer creation in seconds =    6.8353999999999998E-002
+ Elapsed time for mesh generation and buffer creation in seconds =    7.8416000000000000E-002
  End of mesh generation
 
  done

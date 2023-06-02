@@ -20,7 +20,16 @@
 //
 
 #ifndef _CRAYC
-#include <xmmintrin.h>
+//#include <xmmintrin.h>
+#ifdef __GNUC__ // only use these features on gnu compiler
+#ifdef HAVE_XMMINTRIN
+  #define FORCE_FTZ
+  #include <xmmintrin.h>
+#elif HAVE_EMMINTRIN
+  #include <emmintrin.h>
+  #define FORCE_FTZ
+#endif
+#endif // __GNUC__
 #endif
 
 // A Fortran callable function to activate flush to zero for denormal float handling
@@ -33,7 +42,9 @@
 
 void set_ftz(){
 #ifndef _CRAYC
+#ifdef FORCE_FTZ
   _MM_SET_FLUSH_ZERO_MODE (_MM_FLUSH_ZERO_ON);
+#endif
 #endif
 }
 

@@ -97,7 +97,8 @@
 
   ! user output
   if (myrank == 0) then
-    write(IMAIN,*) 'reading model for coupling or mesh a chunk of the earth...'
+    write(IMAIN,*)
+    write(IMAIN,*) '    reading model for coupling or mesh a chunk of the earth...'
     write(IMAIN,*)
     call flush_IMAIN()
   endif

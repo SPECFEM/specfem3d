@@ -119,11 +119,17 @@ program model_update
     print *
     print *,'***********'
     print *,'program model_update: '
-    print *,'  NPROC: ',NPROC
+    print *,'  NPROC: ', NPROC
     print *,'  NSPEC: ', NSPEC
     print *,'  NGLOB: ', NGLOB
     print *
-    print *,'model update for vs & vp & rho'
+    print *,'  input kernel dir     : ',trim(INPUT_KERNELS_DIR)
+    print *,'  output model dir     : ',trim(OUTPUT_MODEL_DIR)
+    if (PRINT_STATISTICS_FILES) then
+      print *,'  output statistics dir: ',trim(OUTPUT_STATISTICS_DIR)
+    endif
+    print *
+    print *,'model update for (vs, vp, rho)'
     print *,'  step_fac = ',step_fac
     print *
     if (USE_ALPHA_BETA_RHO) then
@@ -571,6 +577,9 @@ subroutine initialize()
 
   use specfem_par, only: NSPEC_AB,NGLOB_AB,NPROC,myrank,ADIOS_ENABLED,ATTENUATION
 
+  ! HDF5 file i/o
+  use shared_parameters, only: HDF5_ENABLED
+
   implicit none
 
   logical :: BROADCAST_AFTER_READ
@@ -584,9 +593,10 @@ subroutine initialize()
   BROADCAST_AFTER_READ = .true.
   call read_parameter_file(BROADCAST_AFTER_READ)
 
+  ! safety checks
   if (ADIOS_ENABLED) stop 'Flag ADIOS_ENABLED set to .true. not supported yet for xmodel_update, please rerun program...'
+  if (HDF5_ENABLED) stop 'Flag HDF5_ENABLED not supported yet, please rerun program...'
 
-  ! security check
   if (ATTENUATION) then
     print *,'Sorry using ATTENUATION, this routine has qkappa not implemented yet...'
     stop 'Error ATTENUATION flag invalid'
@@ -810,13 +820,11 @@ subroutine save_new_databases()
   real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: rhostore_new
 
   integer :: i,j,k,ispec
+  integer :: nglob_xy
 
-  ! calculate rmass
-  real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: jacobian_new
-  double precision :: weight
-  real(kind=CUSTOM_REAL) :: jacobianl
   ! mass matrices
-  real(kind=CUSTOM_REAL), dimension(:), allocatable :: rmass_old, rmass_new
+  real(kind=CUSTOM_REAL), dimension(:), allocatable :: rmass_new
+  real(kind=CUSTOM_REAL), dimension(:), allocatable :: rmassx_new,rmassy_new,rmassz_new
   real(kind=CUSTOM_REAL), dimension(:), allocatable :: rmass_acoustic_new,rmass_solid_poroelastic_new,rmass_fluid_poroelastic_new
 
   ! user output
@@ -848,32 +856,22 @@ subroutine save_new_databases()
   rho_vp_new = 0._CUSTOM_REAL
   rho_vs_new = 0._CUSTOM_REAL
 
-  rhostore_new =  model_rho_new
+  rhostore_new = model_rho_new
+  rho_vp_new   = model_rho_new * model_vp_new
+  rho_vs_new   = model_rho_new * model_vs_new
+
   kappastore_new = model_rho_new * ( (model_vp_new**2) - FOUR_THIRDS * (model_vs_new**2) )
   mustore_new = model_rho_new * model_vs_new * model_vs_new
-  rho_vp_new = model_rho_new * model_vp_new
-  rho_vs_new = model_rho_new * model_vs_new
 
   ! jacobian from read_mesh_databases
   ! safety check
   if (NSPEC_IRREGULAR /= NSPEC_AB) stop 'Please check if model_update in save_new_databases() with NSPEC_AB /= NSPEC_IRREGULAR'
-
-  allocate(jacobian_new(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
-  if (ier /= 0) call exit_MPI_without_rank('error allocating array 956')
-  jacobian_new = 0._CUSTOM_REAL
-  jacobian_new = jacobianstore
 
   ! set up coordinates of the Gauss-Lobatto-Legendre points and calculate weights
   ! from constants.h GAUSSALPHA = 0.d0,GAUSSBETA = 0.d0
   call zwgljd(xigll,wxgll,NGLLX,GAUSSALPHA,GAUSSBETA)
   call zwgljd(yigll,wygll,NGLLY,GAUSSALPHA,GAUSSBETA)
   call zwgljd(zigll,wzgll,NGLLZ,GAUSSALPHA,GAUSSBETA)
-
-  ! rmass for the OLD model from read_mesh_databases
-  allocate(rmass_old(NGLOB_AB),stat=ier)
-  if (ier /= 0) call exit_MPI_without_rank('error allocating array 957')
-  rmass_old = 0._CUSTOM_REAL
-  rmass_old = rmass
 
   ! create mass matrix ONLY for the elastic case
   allocate(rmass_new(NGLOB_AB),stat=ier)
@@ -886,31 +884,38 @@ subroutine save_new_databases()
   endif
   call synchronize_all()
 
-  ! note: this does not update the absorbing boundary contributions to the mass matrix
   ! elastic mass matrix
-  do ispec=1,NSPEC_AB
-    if (ispec_is_elastic(ispec)) then
-      do k=1,NGLLZ
-        do j=1,NGLLY
-          do i=1,NGLLX
-            iglob = ibool(i,j,k,ispec)
+  call define_mass_matrices_elastic(NGLOB_AB,NSPEC_AB,nspec_irregular,ibool,rhostore_new, &
+                                    jacobianstore,irregular_element_number,jacobian_regular, &
+                                    wxgll,wygll,wzgll,ispec_is_elastic, &
+                                    rmass_new)
 
-            weight = wxgll(i)*wygll(j)*wzgll(k)
-            jacobianl = jacobian_new(i,j,k,ispec)
-
-            !debug
-            !if (myrank == 0) then
-            !  print *, 'weight', weight
-            !  print *, 'jacobianl', jacobianl
-            !endif
-
-            rmass_new(iglob) = rmass_new(iglob) + &
-                      real( dble(jacobianl) * weight * dble(rhostore_new(i,j,k,ispec)) ,kind=CUSTOM_REAL)
-          enddo
-        enddo
-      enddo
+  ! this does update the absorbing boundary contributions to the mass matrix
+  if (STACEY_ABSORBING_CONDITIONS) then
+    ! checks if anything to do
+    if (num_abs_boundary_faces > 0) then
+      nglob_xy = NGLOB_AB
+    else
+      nglob_xy = 1
     endif
-  enddo ! nspec
+
+    ! elastic domains
+    allocate( rmassx_new(nglob_xy), rmassy_new(nglob_xy), rmassz_new(nglob_xy), stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 666')
+    if (ier /= 0) stop 'error in allocate 21'
+    rmassx_new(:) = 0._CUSTOM_REAL
+    rmassy_new(:) = 0._CUSTOM_REAL
+    rmassz_new(:) = 0._CUSTOM_REAL
+
+    if (num_abs_boundary_faces > 0) then
+      call define_mass_matrices_Stacey_elastic(NGLOB_AB,NSPEC_AB,DT,ibool,rho_vp_new,rho_vs_new, &
+                                               num_abs_boundary_faces,abs_boundary_ispec,abs_boundary_ijk, &
+                                               abs_boundary_normal,abs_boundary_jacobian2Dw, &
+                                               ispec_is_elastic, &
+                                               rmassx_new, rmassy_new, rmassz_new)
+    endif
+  endif
+
   call synchronize_all()
 
   ! dummy allocations, arrays are not needed since the update here only works for elastic models
@@ -1066,26 +1071,27 @@ subroutine save_new_databases()
   call synchronize_all()
 
   call save_external_bin_m_up(NSPEC_AB,NGLOB_AB, &
-                        rho_vp_new,rho_vs_new,qmu_attenuation_store, &
-                        rhostore_new,kappastore_new,mustore_new, &
-                        rmass_new,rmass_acoustic_new,rmass_solid_poroelastic_new,rmass_fluid_poroelastic_new, &
-                        APPROXIMATE_OCEAN_LOAD,rmass_ocean_load,NGLOB_OCEAN,ibool,xstore,ystore,zstore, &
-                        abs_boundary_normal,abs_boundary_jacobian2Dw, &
-                        abs_boundary_ijk,abs_boundary_ispec,num_abs_boundary_faces, &
-                        free_surface_normal,free_surface_jacobian2Dw, &
-                        free_surface_ijk,free_surface_ispec,num_free_surface_faces, &
-                        num_interfaces_ext_mesh,my_neighbors_ext_mesh,nibool_interfaces_ext_mesh, &
-                        max_nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
-                        prname_new,SAVE_MESH_FILES,ANISOTROPY,NSPEC_ANISO, &
-                        c11store,c12store,c13store,c14store,c15store,c16store, &
-                        c22store,c23store,c24store,c25store,c26store,c33store, &
-                        c34store,c35store,c36store,c44store,c45store,c46store, &
-                        c55store,c56store,c66store, &
-                        ispec_is_acoustic,ispec_is_elastic,ispec_is_poroelastic)
+                              rho_vp_new,rho_vs_new,qmu_attenuation_store, &
+                              rhostore_new,kappastore_new,mustore_new, &
+                              rmass_new,rmass_acoustic_new,rmass_solid_poroelastic_new,rmass_fluid_poroelastic_new, &
+                              nglob_xy,rmassx_new,rmassy_new,rmassz_new, &
+                              APPROXIMATE_OCEAN_LOAD,rmass_ocean_load,NGLOB_OCEAN,ibool,xstore,ystore,zstore, &
+                              abs_boundary_normal,abs_boundary_jacobian2Dw, &
+                              abs_boundary_ijk,abs_boundary_ispec,num_abs_boundary_faces, &
+                              free_surface_normal,free_surface_jacobian2Dw, &
+                              free_surface_ijk,free_surface_ispec,num_free_surface_faces, &
+                              num_interfaces_ext_mesh,my_neighbors_ext_mesh,nibool_interfaces_ext_mesh, &
+                              max_nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
+                              prname_new,SAVE_MESH_FILES,ANISOTROPY,NSPEC_ANISO, &
+                              c11store,c12store,c13store,c14store,c15store,c16store, &
+                              c22store,c23store,c24store,c25store,c26store,c33store, &
+                              c34store,c35store,c36store,c44store,c45store,c46store, &
+                              c55store,c56store,c66store, &
+                              ispec_is_acoustic,ispec_is_elastic,ispec_is_poroelastic)
 
   deallocate(rhostore_new, kappastore_new, mustore_new, rho_vp_new, rho_vs_new)
-  deallocate(jacobian_new)
-  deallocate(rmass_old,rmass_new)
+  deallocate(rmass_new)
+  deallocate(rmassx_new,rmassy_new,rmassz_new)
   deallocate(rmass_acoustic_new,rmass_solid_poroelastic_new,rmass_fluid_poroelastic_new)
   deallocate(qmu_attenuation_store,qkappa_attenuation_store)
 

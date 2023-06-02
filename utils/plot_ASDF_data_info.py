@@ -81,6 +81,13 @@ def plot_ASDF_data_info(file,show_plot):
             st = sta.synthetic
             st.plot()
 
+    if show_plot:
+        # Wait for the user input to terminate the program
+        input("Press any key to terminate the program")
+
+    print("")
+    print("all done")
+    print("")
 
 def usage():
     print("usage: ./plot_ASDF_data_info.py filename[e.g. synthetic.h5] [show]")

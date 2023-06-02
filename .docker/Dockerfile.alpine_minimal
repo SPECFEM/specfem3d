@@ -1,0 +1,129 @@
+#########################################################
+## Docker
+#########################################################
+#
+# minimal container example
+# installs SPECFEM w/out additional support (ADIOS,ASDF,CUDA,..)
+#
+# building container:
+# > docker build -f .docker/Dockerfile.alpine_minimal -t specfem3d_minimal:latest .
+#
+# running container (interactive):
+# > docker run -it --rm specfem3d_minimal
+#
+# running container executable only:
+# > docker run -v $(pwd)/DATA:/home/myuser/DATA \
+#              -v $(pwd)/OUTPUT_FILES:/home/myuser/OUTPUT_FILES \
+#              --rm --entrypoint='mpirun' specfem3d_minimal -np 4 xspecfem3D
+#
+#
+#########################################################
+## build stage
+#########################################################
+# alpine - minimal linux distro
+# https://www.alpinelinux.org
+FROM alpine:latest AS mybuildstage
+
+#########################################################
+## Installation
+#########################################################
+# Install Deps
+# GNU compilers
+RUN apk update \
+    && apk add --no-cache \
+           bash \
+           build-base \
+           gfortran \
+           git \
+           openmpi \
+           openmpi-dev
+
+# changes default shell from ash to bash (for configuration to work properly)
+# re-directs /bin/sh to /bin/bash
+RUN sed -i -e "s/bin\/ash/bin\/bash/" /etc/passwd \
+    && cd /bin && mv sh sh.org && ln -s ./bash sh
+
+ENV LC_ALL=en_US.UTF-8
+ENV SHELL=/bin/bash
+
+# Installing software
+#########################################################
+## SPECFEM
+#########################################################
+RUN mkdir /app
+WORKDIR /app
+
+# setup w/ git (shallow clone)
+RUN git clone --depth=1 --recursive --branch devel https://github.com/SPECFEM/specfem3d.git
+
+#########################################################
+## configuration / compilation
+#########################################################
+# variables
+ARG CC=gcc
+ARG FC=gfortran
+ARG MPIFC=mpif90
+ARG FLAGS="-O3"
+
+WORKDIR /app/specfem3d
+
+# parallel
+RUN ./configure CC=${CC} FC=${FC} MPIFC=${MPIFC} FLAGS_CHECK="${FLAGS}" --with-mpi --enable-vectorization \
+    && make -j4 all
+
+# cleanup/removes .git folder (to minimize container size)
+RUN rm -rf .git \
+    && rm -rf external_libs/ doc/ lib/ m4/ obj/ \
+    && rm -rf src/inverse_problem_for_source/ \
+    && rm -rf utils/ADJOINT_TOMOGRAPHY_TOOLS/ utils/dynamic_rupture/ utils/unused_routines/ utils/Visualization/ \
+    && find ./EXAMPLES -mindepth 1 -maxdepth 1 -type d -not -name "homogeneous_halfspace_HEX8_elastic_absorbing_Stacey_5sides" | xargs rm -rf
+
+#########################################################
+## user stage
+#########################################################
+FROM alpine:latest
+
+# required libraries
+RUN apk update \
+    && apk add --no-cache \
+           bash \
+           libgfortran \
+           openmpi \
+           openssh-client-default \
+           vim
+
+# creates a default user
+ENV USER myuser
+ENV HOME /home/${USER}
+
+RUN adduser ${USER} --disabled-password --gecos ""
+
+# we use user from here on
+USER ${USER}
+WORKDIR ${HOME}
+
+# copies specfem w/ binaries
+COPY --from=mybuildstage --chown=${USER} /app/specfem3d ./specfem3d
+
+#########################################################
+## container default entry
+#########################################################
+# container setup
+# alias/bash
+RUN echo "alias ll='ls -lh'" > ${HOME}/.alias \
+    && echo ". ~/.alias" > ${HOME}/.bashrc \
+    && echo "ulimit -S -s unlimited" >> ${HOME}/.bashrc
+
+# puts specfem binaries in PATH
+ENV PATH=$PATH:${HOME}/specfem3d/bin
+
+# avoids OpenMPI runtime messages
+# when calling mpirun -np 4 ./bin/xspecfem3d, errors like appear:
+#  [e4cdf18d39c1:00068] Read -1, expected 18980, errno = 1
+#  ..
+# see: https://github.com/open-mpi/ompi/issues/4948
+ENV OMPI_MCA_btl_vader_single_copy_mechanism=none
+
+# default shell
+CMD ["/bin/bash"]
+

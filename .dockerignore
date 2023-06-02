@@ -1,0 +1,66 @@
+# Docker ignore folders/files
+
+## from .gitignore:
+# Configure time
+aclocal.m4
+autom4te.cache
+config.log
+config.status
+config.h
+/Makefile
+
+setup/config.fh
+setup/constants.h
+setup/constants_inverse_problem.h
+setup/constants_tomography.h
+setup/precision.h
+setup/version.fh
+
+external_libs/scotch_5.1.12b/src/libscotch/y.output
+
+# Build time
+bin/
+lib/
+obj/
+src/decompose_mesh/*.mod
+src/generate_databases/*.mod
+src/meshfem3D/*.mod
+src/specfem3D/*.mod
+*__genmod.f90
+
+# documentation
+manual_SPECFEM3D_Cartesian.aux
+manual_SPECFEM3D_Cartesian.bbl
+doc/USER_MANUAL/manual_SPECFEM3D_Cartesian.blg
+doc/USER_MANUAL/manual_SPECFEM3D_Cartesian.brf
+doc/USER_MANUAL/manual_SPECFEM3D_Cartesian.log
+doc/USER_MANUAL/manual_SPECFEM3D_Cartesian.out
+doc/USER_MANUAL/manual_SPECFEM3D_Cartesian.synctex.gz
+doc/USER_MANUAL/manual_SPECFEM3D_Cartesian.toc
+doc/USER_MANUAL/Schedule
+
+# Trash files
+.*swp
+.*swo
+.*swn
+*~
+
+# documentation
+wiki/
+gh-pages/
+
+# tests
+.azure-pipelines/
+.github/
+.travis/
+
+# git folder (to minimize image size)
+.git/branches
+.git/filter-repo
+.git/hooks
+.git/logs
+.git/modules
+.git/objects
+.git/refs
+
+

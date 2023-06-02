@@ -60,7 +60,7 @@ running example: Thu Feb 22 16:31:28 AST 2018
  initial number of points (with multiples) was         4608
 
  minimum amplitude in current snapshot =    1.1269215016304993E-018
- maximum amplitude in current snapshot =   0.28162890672683716     
+ maximum amplitude in current snapshot =   0.28162890672683716
 
 
  reading snapshot time step          400  out of         3000
@@ -71,7 +71,7 @@ running example: Thu Feb 22 16:31:28 AST 2018
  initial number of points (with multiples) was         4608
 
  minimum amplitude in current snapshot =    2.6149855257518936E-015
- maximum amplitude in current snapshot =    6.8768048286437988     
+ maximum amplitude in current snapshot =    6.8768048286437988
 
 
  reading snapshot time step          600  out of         3000
@@ -82,7 +82,7 @@ running example: Thu Feb 22 16:31:28 AST 2018
  initial number of points (with multiples) was         4608
 
  minimum amplitude in current snapshot =    5.0067973855413839E-013
- maximum amplitude in current snapshot =    8.9370355606079102     
+ maximum amplitude in current snapshot =    8.9370355606079102
 
 
  reading snapshot time step          800  out of         3000
@@ -93,7 +93,7 @@ running example: Thu Feb 22 16:31:28 AST 2018
  initial number of points (with multiples) was         4608
 
  minimum amplitude in current snapshot =    2.3943891574312870E-012
- maximum amplitude in current snapshot =    15.753723144531250     
+ maximum amplitude in current snapshot =    15.753723144531250
 
 
  reading snapshot time step         1000  out of         3000
@@ -104,7 +104,7 @@ running example: Thu Feb 22 16:31:28 AST 2018
  initial number of points (with multiples) was         4608
 
  minimum amplitude in current snapshot =    3.7323321516735675E-011
- maximum amplitude in current snapshot =    28.551166534423828     
+ maximum amplitude in current snapshot =    28.551166534423828
 
 
  reading snapshot time step         1200  out of         3000
@@ -115,7 +115,7 @@ running example: Thu Feb 22 16:31:28 AST 2018
  initial number of points (with multiples) was         4608
 
  minimum amplitude in current snapshot =    3.0886293522769392E-010
- maximum amplitude in current snapshot =    10.165297508239746     
+ maximum amplitude in current snapshot =    10.165297508239746
 
 
  reading snapshot time step         1400  out of         3000
@@ -126,7 +126,7 @@ running example: Thu Feb 22 16:31:28 AST 2018
  initial number of points (with multiples) was         4608
 
  minimum amplitude in current snapshot =    1.6996477558706147E-009
- maximum amplitude in current snapshot =    3.3394038677215576     
+ maximum amplitude in current snapshot =    3.3394038677215576
 
 
  reading snapshot time step         1600  out of         3000
@@ -137,7 +137,7 @@ running example: Thu Feb 22 16:31:28 AST 2018
  initial number of points (with multiples) was         4608
 
  minimum amplitude in current snapshot =    5.6540754300726803E-009
- maximum amplitude in current snapshot =    2.4887790679931641     
+ maximum amplitude in current snapshot =    2.4887790679931641
 
 
  reading snapshot time step         1800  out of         3000
@@ -148,7 +148,7 @@ running example: Thu Feb 22 16:31:28 AST 2018
  initial number of points (with multiples) was         4608
 
  minimum amplitude in current snapshot =    3.5155369459971553E-006
- maximum amplitude in current snapshot =    2.2744119167327881     
+ maximum amplitude in current snapshot =    2.2744119167327881
 
 
  reading snapshot time step         2000  out of         3000
@@ -159,7 +159,7 @@ running example: Thu Feb 22 16:31:28 AST 2018
  initial number of points (with multiples) was         4608
 
  minimum amplitude in current snapshot =    4.6945305075496435E-004
- maximum amplitude in current snapshot =    2.1429643630981445     
+ maximum amplitude in current snapshot =    2.1429643630981445
 
 
  reading snapshot time step         2200  out of         3000
@@ -170,7 +170,7 @@ running example: Thu Feb 22 16:31:28 AST 2018
  initial number of points (with multiples) was         4608
 
  minimum amplitude in current snapshot =    1.7067220760509372E-003
- maximum amplitude in current snapshot =    2.2309451103210449     
+ maximum amplitude in current snapshot =    2.2309451103210449
 
 
  reading snapshot time step         2400  out of         3000
@@ -181,7 +181,7 @@ running example: Thu Feb 22 16:31:28 AST 2018
  initial number of points (with multiples) was         4608
 
  minimum amplitude in current snapshot =    2.7591250836849213E-003
- maximum amplitude in current snapshot =    2.6922426223754883     
+ maximum amplitude in current snapshot =    2.6922426223754883
 
 
  reading snapshot time step         2600  out of         3000
@@ -192,7 +192,7 @@ running example: Thu Feb 22 16:31:28 AST 2018
  initial number of points (with multiples) was         4608
 
  minimum amplitude in current snapshot =    3.3995308913290501E-003
- maximum amplitude in current snapshot =    1.5973956584930420     
+ maximum amplitude in current snapshot =    1.5973956584930420
 
 
  reading snapshot time step         2800  out of         3000
@@ -203,7 +203,7 @@ running example: Thu Feb 22 16:31:28 AST 2018
  initial number of points (with multiples) was         4608
 
  minimum amplitude in current snapshot =    6.5291053615510464E-003
- maximum amplitude in current snapshot =    1.1033976078033447     
+ maximum amplitude in current snapshot =    1.1033976078033447
 
 
  reading snapshot time step         3000  out of         3000
@@ -214,7 +214,7 @@ running example: Thu Feb 22 16:31:28 AST 2018
  initial number of points (with multiples) was         4608
 
  minimum amplitude in current snapshot =    5.4092258214950562E-003
- maximum amplitude in current snapshot =   0.97126513719558716     
+ maximum amplitude in current snapshot =   0.97126513719558716
 
 
  done creating movie or shaking map

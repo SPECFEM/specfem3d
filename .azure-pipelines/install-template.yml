@@ -4,8 +4,10 @@
 # software setup on VM nodes
 # ubuntu-18.04:
 # https://github.com/actions/virtual-environments/blob/main/images/linux/Ubuntu1804-README.md
-# ubuntu-20.04 "ubuntu-latest":
+# ubuntu-20.04:
 # https://github.com/actions/virtual-environments/blob/main/images/linux/Ubuntu2004-README.md
+# ubuntu-22.04 "ubuntu-latest":
+# https://github.com/actions/runner-images/blob/main/images/linux/Ubuntu2204-Readme.md
 #
 parameters:
 - name: CUDA
@@ -20,10 +22,27 @@ steps:
     # fortran/openMPI compiler
     echo "CC: ${CC} CXX: ${CXX} FC: ${FC}"
     # updates repository
+    echo; echo `uname -a`; lsb_release -a; echo
     sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 6B05F25D762E3157
     sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 78BD65473CB3BD13
     sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 762E3157
-    if [ "${FC}" == "gfortran-10" ]; then
+    if [ "${FC}" == "gfortran-9" ]; then
+      echo "gfortran: gfortran-9 update"
+      # updating gfortran version
+      sudo add-apt-repository ppa:ubuntu-toolchain-r/test
+      sudo apt-get update
+      sudo apt-get install -y --reinstall gcc-9 g++-9 gfortran-9
+      # updates alternatives
+      echo
+      update-alternatives --query gfortran
+      echo
+      sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-9 100
+      sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-9 100
+      sudo update-alternatives --install /usr/bin/gfortran gfortran /usr/bin/gfortran-9 100
+      echo
+      update-alternatives --query gfortran
+      echo
+    elif [ "${FC}" == "gfortran-10" ]; then
       echo "gfortran: gfortran-10 update"
       # updating gfortran version
       sudo add-apt-repository ppa:ubuntu-toolchain-r/test
@@ -62,6 +81,8 @@ steps:
     echo
     echo "numpy version : "
     python -c "import numpy; print(numpy.__version__)"
+    # checks exit code
+    if [[ $? -ne 0 ]]; then exit 1; fi
     echo
 
     # version infos
@@ -92,9 +113,14 @@ steps:
       ## distribution xenial: from ubuntu 16.04
       #UBUNTU_VERSION=ubuntu1604
       ## distribution bionic: from ubuntu 18.04
-      UBUNTU_VERSION=ubuntu1804
+      #UBUNTU_VERSION=ubuntu1804
       ## distribution focal: from ubuntu 20.04
       #UBUNTU_VERSION=ubuntu2004
+      ## distribution jammy: from ubuntu 22.04
+      #UBUNTU_VERSION=ubuntu2204
+
+      # default
+      UBUNTU_VERSION=ubuntu2004
 
       # CUDA_VERSION - specifies CUDA toolkit version
       echo "CUDA version: $CUDA_V"
@@ -108,10 +134,20 @@ steps:
       elif [ "$CUDA_V" == "10.2" ]; then
         ## bionic
         CUDA_VERSION=10.2.89-1
-      else
-        # note: on azure VM nodes with ubuntu-latest, default gcc version is 9.3;
-        #       needs at least CUDA version 11.x
+      elif [ "$CUDA_V" == "11.4" ]; then
+        ## focal
         CUDA_VERSION=11.4.0-1
+      elif [ "$CUDA_V" == "12.1" ]; then
+        ## focal
+        CUDA_VERSION=12.1.1-1
+      else
+        # note: - on azure VM nodes with ubuntu 18.04, default gcc version is 9.3;
+        #       needs at least CUDA version 10.x
+        #       - on azure VM nodes with ubuntu 20.04, default gcc version is 10.3;
+        #       needs at least CUDA version 11.x
+        #       - on azure VM nodes with ubuntu-latest (22.04), default gcc version is 11.3;
+        #       needs at least CUDA version 11.7
+        CUDA_VERSION=12.1.1-1
       fi
       echo
 
@@ -149,7 +185,12 @@ steps:
       echo
 
       # gets repo
-      if [ "${CUDA_VERSION}" == "11.4.0-1" ]; then
+      if [ "${CUDA_VERSION}" == "10.2.89-1" ]; then
+        # gets packages
+        INSTALLER=cuda-repo-${UBUNTU_VERSION}_${CUDA_VERSION}_${CUDA_ARCH}.deb
+        wget http://developer.download.nvidia.com/compute/cuda/repos/${UBUNTU_VERSION}/${CUDA_OS}/${INSTALLER}
+        sudo dpkg -i ${INSTALLER}
+      elif [ "${CUDA_VERSION}" == "11.4.0-1" ]; then
         # new CUDA version 11.4 has no cuda-repo-** file, following instructions from website,
         # see: https://developer.nvidia.com/cuda-downloads?target_os=Linux&target_arch=x86_64&Distribution=Ubuntu&target_version=18.04&target_type=deb_network
         wget https://developer.download.nvidia.com/compute/cuda/repos/${UBUNTU_VERSION}/${CUDA_OS}/cuda-${UBUNTU_VERSION}.pin
@@ -158,10 +199,12 @@ steps:
         # adds repo
         sudo add-apt-repository "deb https://developer.download.nvidia.com/compute/cuda/repos/${UBUNTU_VERSION}/${CUDA_OS}/ /"
       else
-        # gets packages
-        INSTALLER=cuda-repo-${UBUNTU_VERSION}_${CUDA_VERSION}_${CUDA_ARCH}.deb
-        wget http://developer.download.nvidia.com/compute/cuda/repos/${UBUNTU_VERSION}/${CUDA_OS}/${INSTALLER}
-        sudo dpkg -i ${INSTALLER}
+        # new versions
+        wget https://developer.download.nvidia.com/compute/cuda/repos/${UBUNTU_VERSION}/${CUDA_OS}/cuda-${UBUNTU_VERSION}.pin
+        sudo mv cuda-${UBUNTU_VERSION}.pin /etc/apt/preferences.d/cuda-repository-pin-600
+        echo
+        # adds repo
+        sudo add-apt-repository "deb https://developer.download.nvidia.com/compute/cuda/repos/${UBUNTU_VERSION}/${CUDA_OS}/ /"
       fi
       #echo
 

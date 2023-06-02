@@ -35,13 +35,13 @@
 
   integer iproc
 
-! name of the database file
+  ! name of the database file
   character(len=MAX_STRING_LEN) :: prname,procname,LOCAL_PATH
 
-! create the name for the database of the current slide and region
+  ! create the name for the database of the current slide and region
   write(procname,"('/proc',i6.6,'_')") iproc
 
-! create full name with path
+  ! create full name with path
   prname = LOCAL_PATH(1:len_trim(LOCAL_PATH)) // procname
 
   end subroutine create_name_database

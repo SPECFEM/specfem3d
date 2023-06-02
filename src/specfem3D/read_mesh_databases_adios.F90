@@ -1827,7 +1827,10 @@
 
     ! user output
     if (myrank == 0) then
-      write(IMAIN,*) '  reading moho database file: ',trim(database_name)
+      write(IMAIN,*) 'Reading moho databases...'
+      write(IMAIN,*) '  from directory: ',trim(LOCAL_PATH)
+      write(IMAIN,*) '  database file : ',trim(database_name)
+
 #if defined(USE_ADIOS)
       write(IMAIN,*) '  using ADIOS1 file format'
 #elif defined(USE_ADIOS2)
@@ -1963,6 +1966,13 @@
     ! closes default file and finalizes read method
     call close_file_adios_read_and_finalize_method(myadios_file)
     call delete_adios_group(myadios_group,"SolverReaderMoho")
+
+    ! user output
+    if (myrank == 0) then
+      write(IMAIN,*) "  done"
+      write(IMAIN,*)
+      call flush_IMAIN()
+    endif
   else
     ! dummy
     NSPEC2D_MOHO = 1

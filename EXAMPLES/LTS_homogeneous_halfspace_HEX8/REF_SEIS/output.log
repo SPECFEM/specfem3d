@@ -1,4 +1,4 @@
-running example: Tue Jan  8 17:09:46 CET 2019
+running example: Thu May 25 22:32:26 CEST 2023
 
    setting up example...
 
@@ -10,7 +10,12 @@ running example: Tue Jan  8 17:09:46 CET 2019
  Serial mesh decomposer
  **********************
 
- total number of nodes: 
+ reading mesh files in: ./MESH-default
+
+   using NGNOD =            8
+   linear elements
+
+ total number of nodes:
    nnodes =         2516
  total number of spectral elements:
    nspec =         2212
@@ -29,29 +34,33 @@ running example: Tue Jan  8 17:09:46 CET 2019
    nspec2D_top =          297
    no absorbing_cpml_file file found
    no moho_surface_file file found
+
  Par_file_faults not found: assuming that there are no faults
+
  node valence:
    min =            1  max =           16
  neighbors:
    nsize =           16
    valence: sup_neighbor =          102 max_neighbor =           54
+
  local time stepping: turned ON
    setting up elements for local time stepping
    number of elements:        2212
    number of nodes   :        2516
-   estimated time step min   =    3.82575616E-02  seconds
-   estimated time step max   =   0.459091365      seconds
-   estimated time step ratio =    12.0000162    
 
-   suggested minimum DT time step =    3.82575616E-02
+   estimated time step min   =    3.7999999999999999E-002  seconds
+   estimated time step max   =   0.45500000000000002       seconds
+   estimated time step ratio =    11.973684210526317
 
-   suggested global coarsest time step       =   0.30606049299240112     
+   suggested minimum DT time step =    3.7999999999999999E-002
+   suggested global coarsest time step       =   0.30399999999999999
 
    p refinement of nodes   : min/max =            1           8
    p refinement of elements: min/max =            1           8
 
    level           1 :  fine/coarse p refinement =            8           4 relative =            1
    level           2 :  fine/coarse p refinement =            4           1 relative =            2
+
    number of p-levels        :            3
    p-level array             :            8           4           1
    p-level relative array    :            2           2           1
@@ -63,12 +72,13 @@ running example: Tue Jan  8 17:09:46 CET 2019
 
  partitioning:
    number of partitions requested =            4
- 
+
    array size xadj  :         2213  memory:    8.44192505E-03 MB
    array size adjncy:       119448  memory:   0.455657959     MB
    sup_neighbor     :           54
- 
+
    mesh2dual: max_neighbor =           54
+
 
  partitioning type:            1
    running SCOTCH partitioning
@@ -136,13 +146,20 @@ running example: Tue Jan  8 17:09:46 CET 2019
    p-level:            3  p =            1  communication load =          200
    total communication load:        49640
                 vs. edgecut:         8322
-                           : ratio =    5.96491241    
+                           : ratio =    5.96491241
                              ( > 1  being p-level refinement driven, 1 being default)
 
- partitions: 
-   num =            4
+ partitions:
+   num         =            4
+   ninterfaces =            6
+
+   partition            0 has number of MPI interfaces:            3 maximum size        1034
+   partition            1 has number of MPI interfaces:            3 maximum size        1034
+   partition            2 has number of MPI interfaces:            3 maximum size        1097
+   partition            3 has number of MPI interfaces:            3 maximum size        1097
 
  Databases files in directory: OUTPUT_FILES/DATABASES_MPI
+
 
  finished successfully
 
@@ -156,4 +173,4 @@ running example: Tue Jan  8 17:09:46 CET 2019
 see results in directory: OUTPUT_FILES/
 
 done
-Tue Jan 8 17:09:56 CET 2019
+Thu May 25 22:32:29 CEST 2023
