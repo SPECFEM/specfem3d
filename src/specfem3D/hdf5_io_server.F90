@@ -72,6 +72,8 @@ module io_server_hdf5
   public :: vd_pres, vd_divglob, vd_div, &
             vd_curlx, vd_curly, vd_curlz, &
             vd_velox, vd_veloy, vd_veloz
+  public :: vd_stressxx, vd_stressyy, vd_stresszz, &
+            vd_stressxy, vd_stressxz, vd_stressyz
 
   public :: nglob_offset
   public :: id_proc_loc2glob, id_proc_glob2loc
@@ -92,6 +94,8 @@ module io_server_hdf5
   public :: io_tag_vol_div, io_tag_vol_divglob
   public :: io_tag_vol_pres
   public :: io_tag_vol_velox, io_tag_vol_veloy, io_tag_vol_veloz
+  public :: io_tag_vol_stressxx, io_tag_vol_stressyy, io_tag_vol_stresszz, &
+            io_tag_vol_stressxy, io_tag_vol_stressxz, io_tag_vol_stressyz
 
   public :: io_tag_surface_coord_len
   public :: io_tag_surface_nfaces
@@ -166,6 +170,13 @@ module io_server_hdf5
   integer :: io_tag_num_recv          = 61
   integer :: io_tag_local_rec         = 62
 
+  integer :: io_tag_vol_stressxx      = 63
+  integer :: io_tag_vol_stressyy      = 64
+  integer :: io_tag_vol_stresszz      = 65
+  integer :: io_tag_vol_stressxy      = 66
+  integer :: io_tag_vol_stressxz      = 67
+  integer :: io_tag_vol_stressyz      = 68
+
   ! mpi_req dump
   integer :: n_req_surf = 0
   integer :: n_req_vol = 0
@@ -185,6 +196,9 @@ module io_server_hdf5
   type(vol_data_dump) :: vd_pres, vd_divglob, vd_div, &
                          vd_curlx, vd_curly, vd_curlz, &
                          vd_velox, vd_veloy, vd_veloz
+
+  type(vol_data_dump) :: vd_stressxx, vd_stressyy, vd_stresszz, &
+                         vd_stressxy, vd_stressxz, vd_stressyz
 
   logical :: NtoM = .true. ! if this option set .false. SPECFEM3D takes N-to-1 I/O strategy,
                            ! i.e., volume data will be out to one single .h5 file.
@@ -625,6 +639,7 @@ contains
 
   use shared_parameters, only: NPROC,DT,NSTEP,NTSTEP_BETWEEN_FRAMES, &
     MOVIE_SURFACE,MOVIE_VOLUME,USE_HIGHRES_FOR_MOVIES,CREATE_SHAKEMAP, &
+    MOVIE_VOLUME_STRESS, &
     NSTEP,NTSTEP_BETWEEN_OUTPUT_SEISMOS
 
   use specfem_par, only: nlength_seismogram
@@ -654,8 +669,8 @@ contains
   ! storing the number of elements and GLL nodes
   integer, dimension(0:NPROC-1)           :: nelm_par_proc, nglob_par_proc, nglob_par_proc_offset
   integer, dimension(0:HDF5_IO_NODES-1)  :: nglob_par_io_offset, nelm_par_io_offset
-  logical, dimension(5)                   :: val_type_mov ! true if movie file will be created,
-                                                          !  (pressure, div_glob, div, curlxyz, velocity_xyz)
+  logical, dimension(6)                   :: val_type_mov ! true if movie file will be created,
+                                                          !  (pressure, div_glob, div, curlxyz, velocity_xyz, stress)
   integer, dimension(1)                   :: tmp_1d_iarr
   double precision, dimension(1)          :: tmp_1d_darr
   integer :: tag, tag_src
@@ -813,6 +828,30 @@ contains
     vd_pres%d1darr(:) = 0.0; vd_divglob%d1darr(:) = 0.0; vd_div%d1darr(:) = 0.0
     vd_curlx%d1darr(:) = 0.0; vd_curly%d1darr(:) = 0.0; vd_curlz%d1darr(:) = 0.0
     vd_velox%d1darr(:) = 0.0; vd_veloy%d1darr(:) = 0.0; vd_veloz%d1darr(:) = 0.0
+
+    if (MOVIE_VOLUME_STRESS) then
+      ! allocate dumping arrays
+      allocate(vd_stressxx%req(0:nproc_io-1), vd_stressyy%req(0:nproc_io-1), vd_stresszz%req(0:nproc_io-1), &
+               vd_stressxy%req(0:nproc_io-1), vd_stressxz%req(0:nproc_io-1), vd_stressyz%req(0:nproc_io-1), stat=ier)
+      if (ier /= 0) stop 'Error allocating vd_stress%req arrays'
+      vd_stressxx%req(:) = VAL_NOT_ASSIGNED
+      vd_stressyy%req(:) = VAL_NOT_ASSIGNED
+      vd_stresszz%req(:) = VAL_NOT_ASSIGNED
+      vd_stressxy%req(:) = VAL_NOT_ASSIGNED
+      vd_stressxz%req(:) = VAL_NOT_ASSIGNED
+      vd_stressyz%req(:) = VAL_NOT_ASSIGNED
+
+      allocate(vd_stressxx%d1darr(nglob_par_io_offset(myrank)), &
+               vd_stressyy%d1darr(nglob_par_io_offset(myrank)), &
+               vd_stresszz%d1darr(nglob_par_io_offset(myrank)), &
+               vd_stressxy%d1darr(nglob_par_io_offset(myrank)), &
+               vd_stressxz%d1darr(nglob_par_io_offset(myrank)), &
+               vd_stressyz%d1darr(nglob_par_io_offset(myrank)),stat=ier)
+      if (ier /= 0) stop 'Error allocating vd_stress%d1darr arrays'
+      vd_stressxx%d1darr(:) = 0.0; vd_stressyy%d1darr(:) = 0.0; vd_stresszz%d1darr(:) = 0.0
+      vd_stressxy%d1darr(:) = 0.0; vd_stressxz%d1darr(:) = 0.0; vd_stressyz%d1darr(:) = 0.0
+    endif
+
   endif ! if MOVIE_VOLUME
 
   if (VERBOSE .and. myrank == 0) then
@@ -891,7 +930,14 @@ contains
           tag == io_tag_vol_curlz .or. &
           tag == io_tag_vol_velox .or. &
           tag == io_tag_vol_veloy .or. &
-          tag == io_tag_vol_veloz) then
+          tag == io_tag_vol_veloz .or. &
+          tag == io_tag_vol_stressxx .or. &
+          tag == io_tag_vol_stressyy .or. &
+          tag == io_tag_vol_stresszz .or. &
+          tag == io_tag_vol_stressxy .or. &
+          tag == io_tag_vol_stressxz .or. &
+          tag == io_tag_vol_stressyz &
+          ) then
         it_io = NTSTEP_BETWEEN_FRAMES*(vol_out_count+1)
         call recv_volume_data(status, val_type_mov, nglob_par_proc_offset)
         rec_count_vol = rec_count_vol+1
@@ -1012,7 +1058,7 @@ contains
   use constants, only: NGLLX,NGLLY,NGLLZ,myrank,NB_RUNS_ACOUSTIC_GPU
 
   use shared_parameters, only: NPROC,DT,NSTEP, &
-    MOVIE_SURFACE,MOVIE_VOLUME,CREATE_SHAKEMAP, &
+    MOVIE_SURFACE,MOVIE_VOLUME,CREATE_SHAKEMAP,MOVIE_VOLUME_STRESS, &
     ACOUSTIC_SIMULATION,ELASTIC_SIMULATION,POROELASTIC_SIMULATION, &
     WRITE_SEISMOGRAMS_BY_MAIN
 
@@ -1149,6 +1195,7 @@ contains
       if (ELASTIC_SIMULATION .or. POROELASTIC_SIMULATION) then
         if (ELASTIC_SIMULATION) n_msg_vol_each_proc = n_msg_vol_each_proc+1 ! div_glob
         n_msg_vol_each_proc = n_msg_vol_each_proc+4 ! div, curl_x, curl_y, curl_z
+        if (MOVIE_VOLUME_STRESS) n_msg_vol_each_proc = n_msg_vol_each_proc+6 ! stress_xx,..
       endif
       if (ACOUSTIC_SIMULATION .or. ELASTIC_SIMULATION .or. POROELASTIC_SIMULATION) then
         n_msg_vol_each_proc = n_msg_vol_each_proc+3 ! velocity_x,velocity_y,velocity_z
@@ -1232,7 +1279,7 @@ contains
   implicit none
 
   integer, intent(in)                  :: status(my_status_size)
-  logical, dimension(5), intent(inout) :: val_type_mov
+  logical, dimension(6), intent(inout) :: val_type_mov
   integer, dimension(0:nproc_io-1), intent(in) :: nglob_par_proc_offset ! offset intra io node info
 
   integer :: sender_glob, sender_loc, tag, msg_size, iglo_sta, iglo_end
@@ -1255,26 +1302,52 @@ contains
   if (tag == io_tag_vol_pres) then
     val_type_mov(1) = .true.
     call irecvv_cr_inter(vd_pres%d1darr(iglo_sta:iglo_end),msg_size,sender_glob,tag,vd_pres%req(sender_loc))
+  ! div
   else if (tag == io_tag_vol_divglob) then
     val_type_mov(2) = .true.
     call irecvv_cr_inter(vd_divglob%d1darr(iglo_sta:iglo_end),msg_size,sender_glob,tag,vd_divglob%req(sender_loc))
   else if (tag == io_tag_vol_div) then
     val_type_mov(3) = .true.
     call irecvv_cr_inter(vd_div%d1darr(iglo_sta:iglo_end),msg_size,sender_glob,tag,vd_div%req(sender_loc))
+  ! curl
   else if (tag == io_tag_vol_curlx) then
     val_type_mov(4) = .true.
     call irecvv_cr_inter(vd_curlx%d1darr(iglo_sta:iglo_end),msg_size,sender_glob,tag,vd_curlx%req(sender_loc))
   else if (tag == io_tag_vol_curly) then
+    val_type_mov(4) = .true.
     call irecvv_cr_inter(vd_curly%d1darr(iglo_sta:iglo_end),msg_size,sender_glob,tag,vd_curly%req(sender_loc))
   else if (tag == io_tag_vol_curlz) then
+    val_type_mov(4) = .true.
     call irecvv_cr_inter(vd_curlz%d1darr(iglo_sta:iglo_end),msg_size,sender_glob,tag,vd_curlz%req(sender_loc))
+  ! veloc
   else if (tag == io_tag_vol_velox) then
     val_type_mov(5) = .true.
     call irecvv_cr_inter(vd_velox%d1darr(iglo_sta:iglo_end),msg_size,sender_glob,tag,vd_velox%req(sender_loc))
   else if (tag == io_tag_vol_veloy) then
+    val_type_mov(5) = .true.
     call irecvv_cr_inter(vd_veloy%d1darr(iglo_sta:iglo_end),msg_size,sender_glob,tag,vd_veloy%req(sender_loc))
   else if (tag == io_tag_vol_veloz) then
+    val_type_mov(5) = .true.
     call irecvv_cr_inter(vd_veloz%d1darr(iglo_sta:iglo_end),msg_size,sender_glob,tag,vd_veloz%req(sender_loc))
+  ! stress
+  else if (tag == io_tag_vol_stressxx) then
+    val_type_mov(6) = .true.
+    call irecvv_cr_inter(vd_stressxx%d1darr(iglo_sta:iglo_end),msg_size,sender_glob,tag,vd_stressxx%req(sender_loc))
+  else if (tag == io_tag_vol_stressyy) then
+    val_type_mov(6) = .true.
+    call irecvv_cr_inter(vd_stressyy%d1darr(iglo_sta:iglo_end),msg_size,sender_glob,tag,vd_stressyy%req(sender_loc))
+  else if (tag == io_tag_vol_stresszz) then
+    val_type_mov(6) = .true.
+    call irecvv_cr_inter(vd_stresszz%d1darr(iglo_sta:iglo_end),msg_size,sender_glob,tag,vd_stresszz%req(sender_loc))
+  else if (tag == io_tag_vol_stressxy) then
+    val_type_mov(6) = .true.
+    call irecvv_cr_inter(vd_stressxy%d1darr(iglo_sta:iglo_end),msg_size,sender_glob,tag,vd_stressxy%req(sender_loc))
+  else if (tag == io_tag_vol_stressxz) then
+    val_type_mov(6) = .true.
+    call irecvv_cr_inter(vd_stressxz%d1darr(iglo_sta:iglo_end),msg_size,sender_glob,tag,vd_stressxz%req(sender_loc))
+  else if (tag == io_tag_vol_stressyz) then
+    val_type_mov(6) = .true.
+    call irecvv_cr_inter(vd_stressyz%d1darr(iglo_sta:iglo_end),msg_size,sender_glob,tag,vd_stressyz%req(sender_loc))
   endif
 
   end subroutine recv_volume_data
@@ -1378,6 +1451,12 @@ contains
     if (vd_velox%req(i) /= VAL_NOT_ASSIGNED) call wait_req(vd_velox%req(i))
     if (vd_veloy%req(i) /= VAL_NOT_ASSIGNED) call wait_req(vd_veloy%req(i))
     if (vd_veloz%req(i) /= VAL_NOT_ASSIGNED) call wait_req(vd_veloz%req(i))
+    if (vd_stressxx%req(i) /= VAL_NOT_ASSIGNED) call wait_req(vd_stressxx%req(i))
+    if (vd_stressyy%req(i) /= VAL_NOT_ASSIGNED) call wait_req(vd_stressyy%req(i))
+    if (vd_stresszz%req(i) /= VAL_NOT_ASSIGNED) call wait_req(vd_stresszz%req(i))
+    if (vd_stressxy%req(i) /= VAL_NOT_ASSIGNED) call wait_req(vd_stressxy%req(i))
+    if (vd_stressxz%req(i) /= VAL_NOT_ASSIGNED) call wait_req(vd_stressxz%req(i))
+    if (vd_stressyz%req(i) /= VAL_NOT_ASSIGNED) call wait_req(vd_stressyz%req(i))
   enddo
 
   end subroutine wait_volume_recv
@@ -1591,7 +1670,7 @@ contains
 
   subroutine deallocate_io_arrays()
 
-  use shared_parameters, only: MOVIE_VOLUME,USE_HIGHRES_FOR_MOVIES
+  use shared_parameters, only: MOVIE_VOLUME,USE_HIGHRES_FOR_MOVIES,MOVIE_VOLUME_STRESS
 
   implicit none
 
@@ -1626,7 +1705,12 @@ contains
                vd_div%d1darr, &
                vd_curlx%d1darr, vd_curly%d1darr, vd_curlz%d1darr, &
                vd_velox%d1darr, vd_veloy%d1darr, vd_veloz%d1darr)
-
+    if (MOVIE_VOLUME_STRESS) then
+      deallocate(vd_stressxx%req,vd_stressyy%req,vd_stresszz%req, &
+                 vd_stressxy%req,vd_stressxz%req,vd_stressyz%req)
+      deallocate(vd_stressxx%d1darr,vd_stressyy%d1darr,vd_stresszz%d1darr, &
+                 vd_stressxy%d1darr,vd_stressxz%d1darr,vd_stressyz%d1darr)
+    endif
     deallocate(id_proc_loc2glob, id_proc_glob2loc, dest_ioids)
   endif
 

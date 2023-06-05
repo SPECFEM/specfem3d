@@ -433,6 +433,10 @@
   if (filename(1:11) == 'pressure_it' ) then
     data_array_name = trim(filename(1:8)) ! "pressure"
   endif
+  if (filename(1:12) == 'stress_xx_it' .or. filename(1:12) == 'stress_yy_it' .or. filename(1:12) == 'stress_zz_it' .or. &
+      filename(1:12) == 'stress_xy_it' .or. filename(1:12) == 'stress_xz_it' .or. filename(1:12) == 'stress_yz_it') then
+    data_array_name = trim(filename(1:9)) ! "stress_xx",..
+  endif
 
 #ifdef USE_VTK_INSTEAD_OF_MESH
   ! default VTK

@@ -134,6 +134,23 @@
       curl_y(:,:,:,:) = 0._CUSTOM_REAL
       curl_z(:,:,:,:) = 0._CUSTOM_REAL
 
+      if (MOVIE_VOLUME_STRESS) then
+        allocate(stress_xx(NGLLX,NGLLY,NGLLZ,NSPEC_AB), &
+                 stress_yy(NGLLX,NGLLY,NGLLZ,NSPEC_AB), &
+                 stress_zz(NGLLX,NGLLY,NGLLZ,NSPEC_AB), &
+                 stress_xy(NGLLX,NGLLY,NGLLZ,NSPEC_AB), &
+                 stress_xz(NGLLX,NGLLY,NGLLZ,NSPEC_AB), &
+                 stress_yz(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
+        if (ier /= 0) call exit_MPI_without_rank('error allocating array 1738')
+        if (ier /= 0) stop 'error allocating array stress'
+        stress_xx(:,:,:,:) = 0._CUSTOM_REAL
+        stress_yy(:,:,:,:) = 0._CUSTOM_REAL
+        stress_zz(:,:,:,:) = 0._CUSTOM_REAL
+        stress_xy(:,:,:,:) = 0._CUSTOM_REAL
+        stress_xz(:,:,:,:) = 0._CUSTOM_REAL
+        stress_yz(:,:,:,:) = 0._CUSTOM_REAL
+      endif
+
       ! allocate array for global points
       allocate(div_glob(NGLOB_AB),stat=ier)
       if (ier /= 0) call exit_MPI_without_rank('error allocating array 2004')
