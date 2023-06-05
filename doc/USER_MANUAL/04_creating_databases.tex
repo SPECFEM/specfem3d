@@ -234,6 +234,11 @@ relevant for the solver.
 \item [{\texttt{SAVE\_DISPLACEMENT}}] Set this flag to \texttt{.true.}
 if you want to save the displacement instead of velocity for the movie
 frames.
+\item [{\texttt{MOVIE\_VOLUME\_STRESS}}] Set this flag to \texttt{.true.}
+if you want to save the stress tensor for the volume movie.
+To activate this option, \texttt{MOVIE\_VOLUME} must be \texttt{.true.}.
+Please note that this option will generate huge outputs, because it will save six independent stress tensor components in the entire volume.
+This option is currently implemented only for the viscoelastic simulations.
 \item [{\texttt{USE\_HIGHRES\_FOR\_MOVIES}}] Set this flag to \texttt{.true.}
 if you want to save the values at all the NGLL grid points for the
 movie frames.

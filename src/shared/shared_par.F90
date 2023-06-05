@@ -136,9 +136,14 @@ end module constants
   logical :: BROADCAST_SAME_MESH_AND_MODEL
 
   ! movies
-  logical :: CREATE_SHAKEMAP
-  logical :: MOVIE_SURFACE,MOVIE_VOLUME,SAVE_DISPLACEMENT,USE_HIGHRES_FOR_MOVIES
-  integer :: MOVIE_TYPE
+  logical :: CREATE_SHAKEMAP = .false.
+  logical :: MOVIE_SURFACE = .false.
+  logical :: MOVIE_VOLUME = .false.
+  logical :: SAVE_DISPLACEMENT = .false.
+  logical :: USE_HIGHRES_FOR_MOVIES = .false.
+  logical :: MOVIE_VOLUME_STRESS = .false.
+  integer :: MOVIE_TYPE = 1
+
   integer :: NTSTEP_BETWEEN_FRAMES
   double precision :: HDUR_MOVIE
 

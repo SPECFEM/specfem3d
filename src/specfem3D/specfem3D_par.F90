@@ -649,6 +649,9 @@ module specfem_par_movie
   real(kind=CUSTOM_REAL), dimension(:,:,:,:),allocatable:: wavefield_x,wavefield_y,wavefield_z
   real(kind=CUSTOM_REAL), dimension(:,:,:,:),allocatable:: wavefield_pressure
 
+  ! to save full 3D snapshot of stress tensor
+  real(kind=CUSTOM_REAL), dimension(:,:,:,:),allocatable:: stress_xx,stress_yy,stress_zz,stress_xy,stress_xz,stress_yz
+
   ! divergence and curl only in the global nodes
   real(kind=CUSTOM_REAL),dimension(:),allocatable:: div_glob
   integer,dimension(:),allocatable :: valence_glob

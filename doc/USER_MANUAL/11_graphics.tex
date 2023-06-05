@@ -47,9 +47,13 @@ large output files. \texttt{MOVIE\_VOLUME} files are saved in the
 \texttt{LOCAL\_PATH} directory, whereas \texttt{MOVIE\_SURFACE} output
 files are saved in the \texttt{OUTPUT\_FILES} directory. We save the
 displacement field if the parameter \texttt{SAVE\_DISPLACEMENT} is
-set, otherwise the velocity field is saved. The look of a movie is
-determined by the half-duration of the source. The half-duration should
-be large enough so that the movie does not contain frequencies that
+set, otherwise the velocity field is saved.
+Additionally, if the \texttt{MOVIE\_VOLUME\_STRESS} is set to \texttt{.true.},
+stress tensor components are saved in the entire volume.\newline
+
+
+The look of a movie is determined by the half-duration of the source.
+The half-duration should be large enough so that the movie does not contain frequencies that
 are not resolved by the mesh, i.e., it should not contain numerical
 noise. This can be accomplished by selecting a CMT \texttt{HALF\_DURATION}
 > 1.1 $\times$ smallest period (see figure \ref{fig:CMTSOLUTION-file}).

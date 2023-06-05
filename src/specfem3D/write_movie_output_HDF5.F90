@@ -34,7 +34,8 @@
 
   use constants, only: NGLLX,NGLLY,NGLLZ,CUSTOM_REAL,MAX_STRING_LEN,OUTPUT_FILES,myrank
 
-  use shared_parameters, only: NPROC,NSTEP,NTSTEP_BETWEEN_FRAMES,USE_HIGHRES_FOR_MOVIES, &
+  use shared_parameters, only: NPROC,NSTEP,NTSTEP_BETWEEN_FRAMES, &
+    USE_HIGHRES_FOR_MOVIES,MOVIE_VOLUME_STRESS, &
     ACOUSTIC_SIMULATION,ELASTIC_SIMULATION,POROELASTIC_SIMULATION
 
   use specfem_par, only: NSPEC_AB,NGLOB_AB,ibool,it,DT,t0,xstore,ystore,zstore
@@ -45,6 +46,8 @@
     shakemap_ux,shakemap_uy,shakemap_uz, &
     wavefield_x,wavefield_y,wavefield_z,wavefield_pressure, &
     div_glob,div,curl_x,curl_y,curl_z
+
+  use specfem_par_movie, only: stress_xx,stress_yy,stress_zz,stress_xy,stress_xz,stress_yz
 
   use manager_hdf5
 
@@ -78,6 +81,8 @@
   ! volume movie arrays
   real(kind=CUSTOM_REAL), dimension(:), allocatable :: div_on_node, curl_x_on_node, curl_y_on_node, curl_z_on_node
   real(kind=CUSTOM_REAL), dimension(:), allocatable :: velocity_x_on_node,velocity_y_on_node,velocity_z_on_node
+  real(kind=CUSTOM_REAL), dimension(:), allocatable :: stress_xx_on_node, stress_yy_on_node, stress_zz_on_node, &
+                                                       stress_xy_on_node, stress_xz_on_node, stress_yz_on_node
 
   ! arrays for hdf5 output
   integer, dimension(:), allocatable :: nelm_par_proc_nio, nglob_par_proc_nio
@@ -796,7 +801,7 @@ contains
   ! local parameters
   real(kind=CUSTOM_REAL),dimension(:), allocatable :: d_p
   integer :: ier
-  logical :: pressure_io, divglob_io, div_io, veloc_io, curl_io
+  logical :: pressure_io, divglob_io, div_io, veloc_io, curl_io, stress_io
   ! hdf5 i/o server
   integer :: req_count
 
@@ -806,6 +811,7 @@ contains
   div_io = .false.
   veloc_io = .false.
   curl_io = .false.
+  stress_io = .false.
 
   ! hdf5 i/o server request index
   req_count = 1
@@ -897,6 +903,59 @@ contains
       call write_vol_data_hdf5(curl_y_on_node,"curl_y")
       call write_vol_data_hdf5(curl_z_on_node,"curl_z")
     endif
+
+    if (MOVIE_VOLUME_STRESS) then
+      ! allocates div/curl arrays on global nodes
+      if (.not. allocated(stress_xx_on_node)) then
+        allocate(stress_xx_on_node(NGLOB_AB), &
+                 stress_yy_on_node(NGLOB_AB), &
+                 stress_zz_on_node(NGLOB_AB), &
+                 stress_xy_on_node(NGLOB_AB), &
+                 stress_xz_on_node(NGLOB_AB), &
+                 stress_yz_on_node(NGLOB_AB), stat=ier)
+        if (ier /= 0) call exit_MPI_without_rank('error allocating array 1738')
+        if (ier /= 0) stop 'error allocating array stress'
+        stress_xx_on_node(:) = 0._CUSTOM_REAL
+        stress_yy_on_node(:) = 0._CUSTOM_REAL
+        stress_zz_on_node(:) = 0._CUSTOM_REAL
+        stress_xy_on_node(:) = 0._CUSTOM_REAL
+        stress_xz_on_node(:) = 0._CUSTOM_REAL
+        stress_yz_on_node(:) = 0._CUSTOM_REAL
+      endif
+      ! stress elemental level
+      call elm2node_base(stress_xx,stress_xx_on_node)
+      call elm2node_base(stress_yy,stress_yy_on_node)
+      call elm2node_base(stress_zz,stress_zz_on_node)
+      call elm2node_base(stress_xy,stress_xy_on_node)
+      call elm2node_base(stress_xz,stress_xz_on_node)
+      call elm2node_base(stress_yz,stress_yz_on_node)
+      ! hdf5 i/o server
+      if (HDF5_IO_NODES > 0) then
+        ! writes out stress
+        call isend_cr_inter(stress_xx_on_node,NGLOB_AB,dest_ionod,io_tag_vol_stressxx,req_dump_vol(req_count))
+        req_count = req_count + 1
+        call isend_cr_inter(stress_yy_on_node,NGLOB_AB,dest_ionod,io_tag_vol_stressyy,req_dump_vol(req_count))
+        req_count = req_count + 1
+        call isend_cr_inter(stress_zz_on_node,NGLOB_AB,dest_ionod,io_tag_vol_stresszz,req_dump_vol(req_count))
+        req_count = req_count + 1
+        call isend_cr_inter(stress_xy_on_node,NGLOB_AB,dest_ionod,io_tag_vol_stressxy,req_dump_vol(req_count))
+        req_count = req_count + 1
+        call isend_cr_inter(stress_xz_on_node,NGLOB_AB,dest_ionod,io_tag_vol_stressxz,req_dump_vol(req_count))
+        req_count = req_count + 1
+        call isend_cr_inter(stress_yz_on_node,NGLOB_AB,dest_ionod,io_tag_vol_stressyz,req_dump_vol(req_count))
+        req_count = req_count + 1
+      else
+        ! direct io
+        stress_io = .true.
+        call write_vol_data_hdf5(stress_xx_on_node,"stress_xx")
+        call write_vol_data_hdf5(stress_yy_on_node,"stress_yy")
+        call write_vol_data_hdf5(stress_zz_on_node,"stress_zz")
+        call write_vol_data_hdf5(stress_xy_on_node,"stress_xy")
+        call write_vol_data_hdf5(stress_xz_on_node,"stress_xz")
+        call write_vol_data_hdf5(stress_yz_on_node,"stress_yz")
+      endif
+    endif
+
   endif ! elastic or poroelastic
 
   ! velocity
@@ -946,7 +1005,7 @@ contains
     if (HDF5_IO_NODES == 0) then
       ! direct io
       ! create xdmf header
-      call write_xdmf_vol_hdf5(pressure_io, divglob_io, div_io, veloc_io, curl_io)
+      call write_xdmf_vol_hdf5(pressure_io, divglob_io, div_io, veloc_io, curl_io, stress_io)
     endif
   endif
 
@@ -1144,13 +1203,13 @@ contains
 !
 #ifdef USE_HDF5
 
-  subroutine write_xdmf_vol_hdf5(pressure_io, divglob_io, div_io, veloc_io, curl_io)
+  subroutine write_xdmf_vol_hdf5(pressure_io, divglob_io, div_io, veloc_io, curl_io, stress_io)
 
   use specfem_par_movie_hdf5
 
   implicit none
 
-  logical, intent(in) :: pressure_io, divglob_io, div_io, veloc_io, curl_io
+  logical, intent(in) :: pressure_io, divglob_io, div_io, veloc_io, curl_io, stress_io
 
   ! local parameters
   integer :: i, ii
@@ -1278,6 +1337,47 @@ contains
       write(xdmf_vol,*) '<DataItem ItemType="Uniform" Format="HDF" NumberType="Float" Precision="'&
                                                      //trim(i2c(CUSTOM_REAL))//'" Dimensions="'//trim(nglo_str)//'">'
       write(xdmf_vol,*) '      '//trim(fname_h5_data_vol_xdmf)//':/it_'//trim(it_str)//'/curl_z'
+      write(xdmf_vol,*) '</DataItem>'
+      write(xdmf_vol,*) '</Attribute>'
+    endif
+
+    if (stress_io) then
+      write(xdmf_vol,*) '<Attribute Name="stress_xx" AttributeType="Scalar" Center="Node">'
+      write(xdmf_vol,*) '<DataItem ItemType="Uniform" Format="HDF" NumberType="Float" Precision="'&
+                                                     //trim(i2c(CUSTOM_REAL))//'" Dimensions="'//trim(nglo_str)//'">'
+      write(xdmf_vol,*) '      '//trim(fname_h5_data_vol_xdmf)//':/it_'//trim(it_str)//'/stress_xx'
+      write(xdmf_vol,*) '</DataItem>'
+      write(xdmf_vol,*) '</Attribute>'
+      write(xdmf_vol,*) '<Attribute Name="stress_yy" AttributeType="Scalar" Center="Node">'
+      write(xdmf_vol,*) '<DataItem ItemType="Uniform" Format="HDF" NumberType="Float" Precision="'&
+                                                     //trim(i2c(CUSTOM_REAL))//'" Dimensions="'//trim(nglo_str)//'">'
+      write(xdmf_vol,*) '      '//trim(fname_h5_data_vol_xdmf)//':/it_'//trim(it_str)//'/stress_yy'
+      write(xdmf_vol,*) '</DataItem>'
+      write(xdmf_vol,*) '</Attribute>'
+      write(xdmf_vol,*) '<Attribute Name="stress_zz" AttributeType="Scalar" Center="Node">'
+      write(xdmf_vol,*) '<DataItem ItemType="Uniform" Format="HDF" NumberType="Float" Precision="'&
+                                                     //trim(i2c(CUSTOM_REAL))//'" Dimensions="'//trim(nglo_str)//'">'
+      write(xdmf_vol,*) '      '//trim(fname_h5_data_vol_xdmf)//':/it_'//trim(it_str)//'/stress_zz'
+      write(xdmf_vol,*) '</DataItem>'
+      write(xdmf_vol,*) '</Attribute>'
+      write(xdmf_vol,*) '<Attribute Name="stress_xy" AttributeType="Scalar" Center="Node">'
+      write(xdmf_vol,*) '<DataItem ItemType="Uniform" Format="HDF" NumberType="Float" Precision="'&
+                                                     //trim(i2c(CUSTOM_REAL))//'" Dimensions="'//trim(nglo_str)//'">'
+      write(xdmf_vol,*) '      '//trim(fname_h5_data_vol_xdmf)//':/it_'//trim(it_str)//'/stress_xy'
+      write(xdmf_vol,*) '</DataItem>'
+      write(xdmf_vol,*) '</Attribute>'
+
+      write(xdmf_vol,*) '<Attribute Name="stress_xz" AttributeType="Scalar" Center="Node">'
+      write(xdmf_vol,*) '<DataItem ItemType="Uniform" Format="HDF" NumberType="Float" Precision="'&
+                                                     //trim(i2c(CUSTOM_REAL))//'" Dimensions="'//trim(nglo_str)//'">'
+      write(xdmf_vol,*) '      '//trim(fname_h5_data_vol_xdmf)//':/it_'//trim(it_str)//'/stress_xz'
+      write(xdmf_vol,*) '</DataItem>'
+      write(xdmf_vol,*) '</Attribute>'
+
+      write(xdmf_vol,*) '<Attribute Name="stress_yz" AttributeType="Scalar" Center="Node">'
+      write(xdmf_vol,*) '<DataItem ItemType="Uniform" Format="HDF" NumberType="Float" Precision="'&
+                                                     //trim(i2c(CUSTOM_REAL))//'" Dimensions="'//trim(nglo_str)//'">'
+      write(xdmf_vol,*) '      '//trim(fname_h5_data_vol_xdmf)//':/it_'//trim(it_str)//'/stress_yz'
       write(xdmf_vol,*) '</DataItem>'
       write(xdmf_vol,*) '</Attribute>'
     endif
@@ -1974,7 +2074,7 @@ contains
 !-------------------------------------------------------------------------------------------------
 !
 
-  subroutine write_vol_data_io_hdf5(it_io, val_type_mov,nglob_par_io_offset)
+  subroutine write_vol_data_io_hdf5(it_io, val_type_mov, nglob_par_io_offset)
 
 ! writes out volumetric wavefield snapshot
 
@@ -1983,10 +2083,10 @@ contains
   implicit none
 
   integer, intent(in) :: it_io
-  logical, dimension(5), intent(inout) :: val_type_mov
-  integer :: j
-  integer :: num_max_type=5
+  integer, parameter :: num_max_type = 6
+  logical, dimension(num_max_type), intent(inout) :: val_type_mov
   integer, dimension(0:HDF5_IO_NODES-1), intent(in) :: nglob_par_io_offset   ! offset inter io node info
+  integer :: j
   integer :: io_offset
   ! make output file
   character(len=10) :: tempstr
@@ -2029,7 +2129,7 @@ contains
     call h5_open_or_create_group(group_name)
 
     ! loop for each value type
-    do j=1, num_max_type
+    do j = 1,num_max_type
       if (val_type_mov(j) .eqv. .true.) then
         if (j == 1) then
           dset_name = "pressure"
@@ -2054,6 +2154,19 @@ contains
           call h5_create_dataset_gen_in_group(dset_name, (/nglob_this_io/), 1, CUSTOM_REAL)
           dset_name = "veloc_z"
           call h5_create_dataset_gen_in_group(dset_name, (/nglob_this_io/), 1, CUSTOM_REAL)
+        else if (j == 6) then
+          dset_name = "stress_xx"
+          call h5_create_dataset_gen_in_group(dset_name, (/nglob_this_io/), 1, CUSTOM_REAL)
+          dset_name = "stress_yy"
+          call h5_create_dataset_gen_in_group(dset_name, (/nglob_this_io/), 1, CUSTOM_REAL)
+          dset_name = "stress_zz"
+          call h5_create_dataset_gen_in_group(dset_name, (/nglob_this_io/), 1, CUSTOM_REAL)
+          dset_name = "stress_xy"
+          call h5_create_dataset_gen_in_group(dset_name, (/nglob_this_io/), 1, CUSTOM_REAL)
+          dset_name = "stress_xz"
+          call h5_create_dataset_gen_in_group(dset_name, (/nglob_this_io/), 1, CUSTOM_REAL)
+          dset_name = "stress_yz"
+          call h5_create_dataset_gen_in_group(dset_name, (/nglob_this_io/), 1, CUSTOM_REAL)
         endif
       endif
     enddo
@@ -2071,7 +2184,7 @@ contains
       call h5_open_or_create_group(group_name)
 
       ! loop for each value type
-      do j = 1, num_max_type
+      do j = 1,num_max_type
         if (val_type_mov(j) .eqv. .true.) then
           if (j == 1) then
             dset_name = "pressure"
@@ -2096,6 +2209,19 @@ contains
             call h5_create_dataset_gen_in_group(dset_name, (/nglob_all_server/), 1, CUSTOM_REAL)
             dset_name = "veloc_z"
             call h5_create_dataset_gen_in_group(dset_name, (/nglob_all_server/), 1, CUSTOM_REAL)
+          else if (j == 6) then
+            dset_name = "stress_xx"
+            call h5_create_dataset_gen_in_group(dset_name, (/nglob_all_server/), 1, CUSTOM_REAL)
+            dset_name = "stress_yy"
+            call h5_create_dataset_gen_in_group(dset_name, (/nglob_all_server/), 1, CUSTOM_REAL)
+            dset_name = "stress_zz"
+            call h5_create_dataset_gen_in_group(dset_name, (/nglob_all_server/), 1, CUSTOM_REAL)
+            dset_name = "stress_xy"
+            call h5_create_dataset_gen_in_group(dset_name, (/nglob_all_server/), 1, CUSTOM_REAL)
+            dset_name = "stress_xz"
+            call h5_create_dataset_gen_in_group(dset_name, (/nglob_all_server/), 1, CUSTOM_REAL)
+            dset_name = "stress_yz"
+            call h5_create_dataset_gen_in_group(dset_name, (/nglob_all_server/), 1, CUSTOM_REAL)
           endif
         endif
       enddo
@@ -2117,7 +2243,7 @@ contains
   call h5_open_group(group_name)
 
   ! loop for each value type
-  do j = 1, num_max_type
+  do j = 1,num_max_type
     if (val_type_mov(j) .eqv. .true.) then
       if (j == 1) then
         dset_name = "pressure"
@@ -2142,6 +2268,19 @@ contains
         call h5_write_dataset_collect_hyperslab_in_group(dset_name, vd_veloy%d1darr, (/io_offset/), if_collect_server)
         dset_name = "veloc_z"
         call h5_write_dataset_collect_hyperslab_in_group(dset_name, vd_veloz%d1darr, (/io_offset/), if_collect_server)
+      else if (j == 6) then
+        dset_name = "stress_xx"
+        call h5_write_dataset_collect_hyperslab_in_group(dset_name, vd_stressxx%d1darr, (/io_offset/), if_collect_server)
+        dset_name = "stress_yy"
+        call h5_write_dataset_collect_hyperslab_in_group(dset_name, vd_stressyy%d1darr, (/io_offset/), if_collect_server)
+        dset_name = "stress_zz"
+        call h5_write_dataset_collect_hyperslab_in_group(dset_name, vd_stresszz%d1darr, (/io_offset/), if_collect_server)
+        dset_name = "stress_xy"
+        call h5_write_dataset_collect_hyperslab_in_group(dset_name, vd_stressxy%d1darr, (/io_offset/), if_collect_server)
+        dset_name = "stress_xz"
+        call h5_write_dataset_collect_hyperslab_in_group(dset_name, vd_stressxz%d1darr, (/io_offset/), if_collect_server)
+        dset_name = "stress_yz"
+        call h5_write_dataset_collect_hyperslab_in_group(dset_name, vd_stressyz%d1darr, (/io_offset/), if_collect_server)
       endif
     endif
   enddo
@@ -2164,10 +2303,10 @@ contains
   use specfem_par_movie_hdf5
 
   implicit none
-  logical, dimension(5), intent(inout) :: val_type_mov
+  logical, dimension(6), intent(inout) :: val_type_mov
   ! local parameters
   integer                              :: i, ii
-  logical                              :: pressure_io, divglob_io, div_io, veloc_io, curl_io
+  logical                              :: pressure_io, divglob_io, div_io, veloc_io, curl_io, stress_io
   character(len=20)                    :: it_str, nelm_str, nglo_str
   character(len=MAX_STRING_LEN)        :: fname_xdmf_vol
   character(len=MAX_STRING_LEN)        :: fname_h5_data_vol_xdmf
@@ -2177,6 +2316,7 @@ contains
   div_io      = val_type_mov(3)
   curl_io     = val_type_mov(4)
   veloc_io    = val_type_mov(5)
+  stress_io   = val_type_mov(6)
 
   ! writeout xdmf file for volume movie
   fname_xdmf_vol = trim(OUTPUT_FILES) // "/movie_volume.xmf"
@@ -2296,6 +2436,45 @@ contains
       write(xdmf_vol,*) '</Attribute>'
     endif
 
+    if (stress_io) then
+      write(xdmf_vol,*) '<Attribute Name="stress_xx" AttributeType="Scalar" Center="Node">'
+      write(xdmf_vol,*) '<DataItem ItemType="Uniform" Format="HDF" NumberType="Float" Precision="'&
+                                                     //trim(i2c(CUSTOM_REAL))//'" Dimensions="'//trim(nglo_str)//'">'
+      write(xdmf_vol,*) '     '//trim(fname_h5_data_vol_xdmf)//':/it_'//trim(it_str)//'/stress_xx'
+      write(xdmf_vol,*) '</DataItem>'
+      write(xdmf_vol,*) '</Attribute>'
+      write(xdmf_vol,*) '<Attribute Name="stress_yy" AttributeType="Scalar" Center="Node">'
+      write(xdmf_vol,*) '<DataItem ItemType="Uniform" Format="HDF" NumberType="Float" Precision="'&
+                                                     //trim(i2c(CUSTOM_REAL))//'" Dimensions="'//trim(nglo_str)//'">'
+      write(xdmf_vol,*) '     '//trim(fname_h5_data_vol_xdmf)//':/it_'//trim(it_str)//'/stress_yy'
+      write(xdmf_vol,*) '</DataItem>'
+      write(xdmf_vol,*) '</Attribute>'
+      write(xdmf_vol,*) '<Attribute Name="stress_zz" AttributeType="Scalar" Center="Node">'
+      write(xdmf_vol,*) '<DataItem ItemType="Uniform" Format="HDF" NumberType="Float" Precision="'&
+                                                     //trim(i2c(CUSTOM_REAL))//'" Dimensions="'//trim(nglo_str)//'">'
+      write(xdmf_vol,*) '     '//trim(fname_h5_data_vol_xdmf)//':/it_'//trim(it_str)//'/stress_zz'
+      write(xdmf_vol,*) '</DataItem>'
+      write(xdmf_vol,*) '</Attribute>'
+      write(xdmf_vol,*) '<Attribute Name="stress_xy" AttributeType="Scalar" Center="Node">'
+      write(xdmf_vol,*) '<DataItem ItemType="Uniform" Format="HDF" NumberType="Float" Precision="'&
+                                                     //trim(i2c(CUSTOM_REAL))//'" Dimensions="'//trim(nglo_str)//'">'
+      write(xdmf_vol,*) '     '//trim(fname_h5_data_vol_xdmf)//':/it_'//trim(it_str)//'/stress_xy'
+      write(xdmf_vol,*) '</DataItem>'
+      write(xdmf_vol,*) '</Attribute>'
+      write(xdmf_vol,*) '<Attribute Name="stress_xz" AttributeType="Scalar" Center="Node">'
+      write(xdmf_vol,*) '<DataItem ItemType="Uniform" Format="HDF" NumberType="Float" Precision="'&
+                                                     //trim(i2c(CUSTOM_REAL))//'" Dimensions="'//trim(nglo_str)//'">'
+      write(xdmf_vol,*) '     '//trim(fname_h5_data_vol_xdmf)//':/it_'//trim(it_str)//'/stress_xz'
+      write(xdmf_vol,*) '</DataItem>'
+      write(xdmf_vol,*) '</Attribute>'
+      write(xdmf_vol,*) '<Attribute Name="stress_yz" AttributeType="Scalar" Center="Node">'
+      write(xdmf_vol,*) '<DataItem ItemType="Uniform" Format="HDF" NumberType="Float" Precision="'&
+                                                     //trim(i2c(CUSTOM_REAL))//'" Dimensions="'//trim(nglo_str)//'">'
+      write(xdmf_vol,*) '     '//trim(fname_h5_data_vol_xdmf)//':/it_'//trim(it_str)//'/stress_yz'
+      write(xdmf_vol,*) '</DataItem>'
+      write(xdmf_vol,*) '</Attribute>'
+    endif
+
     write(xdmf_vol,*) '</Grid>'
   enddo
 
@@ -2321,11 +2500,11 @@ contains
 
   implicit none
 
-  logical, dimension(5), intent(inout)               :: val_type_mov
+  logical, dimension(6), intent(inout)               :: val_type_mov
   integer, dimension(0:HDF5_IO_NODES-1), intent(in) :: nglob_par_io_offset, nelm_par_io_offset
   ! local parameters
   integer                                     :: i, ii, iproc
-  logical                                     :: pressure_io, divglob_io, div_io, veloc_io, curl_io
+  logical                                     :: pressure_io, divglob_io, div_io, veloc_io, curl_io, stress_io
   character(len=20)                           :: proc_str, it_str,nelm_str, nglo_str
   character(len=MAX_STRING_LEN)               :: fname_xdmf_vol
   character(len=MAX_STRING_LEN)               :: fname_h5_data_vol_xdmf
@@ -2335,6 +2514,7 @@ contains
   div_io      = val_type_mov(3)
   curl_io     = val_type_mov(4)
   veloc_io    = val_type_mov(5)
+  stress_io   = val_type_mov(6)
 
   ! writeout xdmf file for volume movie
   fname_xdmf_vol = trim(OUTPUT_FILES) // "/movie_volume.xmf"
@@ -2488,6 +2668,45 @@ contains
         write(xdmf_vol,*) '<DataItem ItemType="Uniform" Format="HDF" NumberType="Float" Precision="'&
                                                        //trim(i2c(CUSTOM_REAL))//'" Dimensions="'//trim(nglo_str)//'">'
         write(xdmf_vol,*) '      '//trim(fname_h5_data_vol_xdmf)//':/it_'//trim(it_str)//'/curl_z'
+        write(xdmf_vol,*) '</DataItem>'
+        write(xdmf_vol,*) '</Attribute>'
+      endif
+
+      if (stress_io) then
+        write(xdmf_vol,*) '<Attribute Name="stress_xx" AttributeType="Scalar" Center="Node">'
+        write(xdmf_vol,*) '<DataItem ItemType="Uniform" Format="HDF" NumberType="Float" Precision="'&
+                                                       //trim(i2c(CUSTOM_REAL))//'" Dimensions="'//trim(nglo_str)//'">'
+        write(xdmf_vol,*) '      '//trim(fname_h5_data_vol_xdmf)//':/it_'//trim(it_str)//'/stress_xx'
+        write(xdmf_vol,*) '</DataItem>'
+        write(xdmf_vol,*) '</Attribute>'
+        write(xdmf_vol,*) '<Attribute Name="stress_yy" AttributeType="Scalar" Center="Node">'
+        write(xdmf_vol,*) '<DataItem ItemType="Uniform" Format="HDF" NumberType="Float" Precision="'&
+                                                       //trim(i2c(CUSTOM_REAL))//'" Dimensions="'//trim(nglo_str)//'">'
+        write(xdmf_vol,*) '      '//trim(fname_h5_data_vol_xdmf)//':/it_'//trim(it_str)//'/stress_yy'
+        write(xdmf_vol,*) '</DataItem>'
+        write(xdmf_vol,*) '</Attribute>'
+        write(xdmf_vol,*) '<Attribute Name="stress_zz" AttributeType="Scalar" Center="Node">'
+        write(xdmf_vol,*) '<DataItem ItemType="Uniform" Format="HDF" NumberType="Float" Precision="'&
+                                                       //trim(i2c(CUSTOM_REAL))//'" Dimensions="'//trim(nglo_str)//'">'
+        write(xdmf_vol,*) '      '//trim(fname_h5_data_vol_xdmf)//':/it_'//trim(it_str)//'/stress_zz'
+        write(xdmf_vol,*) '</DataItem>'
+        write(xdmf_vol,*) '</Attribute>'
+        write(xdmf_vol,*) '<Attribute Name="stress_xy" AttributeType="Scalar" Center="Node">'
+        write(xdmf_vol,*) '<DataItem ItemType="Uniform" Format="HDF" NumberType="Float" Precision="'&
+                                                       //trim(i2c(CUSTOM_REAL))//'" Dimensions="'//trim(nglo_str)//'">'
+        write(xdmf_vol,*) '      '//trim(fname_h5_data_vol_xdmf)//':/it_'//trim(it_str)//'/stress_xy'
+        write(xdmf_vol,*) '</DataItem>'
+        write(xdmf_vol,*) '</Attribute>'
+        write(xdmf_vol,*) '<Attribute Name="stress_xz" AttributeType="Scalar" Center="Node">'
+        write(xdmf_vol,*) '<DataItem ItemType="Uniform" Format="HDF" NumberType="Float" Precision="'&
+                                                       //trim(i2c(CUSTOM_REAL))//'" Dimensions="'//trim(nglo_str)//'">'
+        write(xdmf_vol,*) '      '//trim(fname_h5_data_vol_xdmf)//':/it_'//trim(it_str)//'/stress_xz'
+        write(xdmf_vol,*) '</DataItem>'
+        write(xdmf_vol,*) '</Attribute>'
+        write(xdmf_vol,*) '<Attribute Name="stress_yz" AttributeType="Scalar" Center="Node">'
+        write(xdmf_vol,*) '<DataItem ItemType="Uniform" Format="HDF" NumberType="Float" Precision="'&
+                                                       //trim(i2c(CUSTOM_REAL))//'" Dimensions="'//trim(nglo_str)//'">'
+        write(xdmf_vol,*) '      '//trim(fname_h5_data_vol_xdmf)//':/it_'//trim(it_str)//'/stress_yz'
         write(xdmf_vol,*) '</DataItem>'
         write(xdmf_vol,*) '</Attribute>'
       endif

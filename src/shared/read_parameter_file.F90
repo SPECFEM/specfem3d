@@ -356,6 +356,9 @@
       write(*,*)
     endif
 
+    ! (optional) volume stress flag
+    call read_value_logical(MOVIE_VOLUME_STRESS, 'MOVIE_VOLUME_STRESS', ier); ier = 0
+
     call read_value_logical(SAVE_DISPLACEMENT, 'SAVE_DISPLACEMENT', ier)
     if (ier /= 0) then
       some_parameters_missing_from_Par_file = .true.
@@ -1047,6 +1050,13 @@
     print *
   endif
 
+  if (MOVIE_VOLUME_STRESS .and. .not. MOVIE_VOLUME) then
+    print *,'Warning: MOVIE_VOLUME must be .true. for MOVIE_VOLUME_STRESS = .true.!'
+    print *,'         Resetting MOVIE_VOLUME_STRESS = .false.'
+    print *
+    MOVIE_VOLUME_STRESS = .false.
+  endif
+
   end subroutine check_simulation_parameters
 
 !
@@ -1351,6 +1361,7 @@
   call bcast_all_singlei(MOVIE_TYPE)
   call bcast_all_singlel(MOVIE_VOLUME)
   call bcast_all_singlel(SAVE_DISPLACEMENT)
+  call bcast_all_singlel(MOVIE_VOLUME_STRESS)
   call bcast_all_singlel(USE_HIGHRES_FOR_MOVIES)
   call bcast_all_singlei(NTSTEP_BETWEEN_FRAMES)
   call bcast_all_singledp(HDUR_MOVIE)
