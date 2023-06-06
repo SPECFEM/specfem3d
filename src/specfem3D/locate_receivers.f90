@@ -82,7 +82,6 @@
   double precision :: x,y,z,x_new,y_new,z_new
   double precision :: xi,eta,gamma,final_distance_squared
   double precision, dimension(NDIM,NDIM) :: nu_found
-  double precision, dimension(NDIM) :: nu_tmp ! to avoid intel compiler warning about temporary array in i/o routine
 
   integer :: ispec_found,idomain_found
 
@@ -358,12 +357,9 @@
         write(IMAIN,*) '     gamma = ',gamma_receiver(irec)
 
         write(IMAIN,*) '     rotation matrix: '
-        nu_tmp(:) = nu_rec(1,:,irec)
-        write(IMAIN,*) '     nu1 = ',sngl(nu_tmp)
-        nu_tmp(:) = nu_rec(2,:,irec)
-        write(IMAIN,*) '     nu2 = ',sngl(nu_tmp)
-        nu_tmp(:) = nu_rec(3,:,irec)
-        write(IMAIN,*) '     nu3 = ',sngl(nu_tmp)
+        write(IMAIN,*) '     nu1 = ',sngl(nu_rec(1,1,irec)),sngl(nu_rec(1,2,irec)),sngl(nu_rec(1,3,irec))
+        write(IMAIN,*) '     nu2 = ',sngl(nu_rec(2,1,irec)),sngl(nu_rec(2,2,irec)),sngl(nu_rec(2,3,irec))
+        write(IMAIN,*) '     nu3 = ',sngl(nu_rec(3,1,irec)),sngl(nu_rec(3,2,irec)),sngl(nu_rec(3,3,irec))
 
         if (SUPPRESS_UTM_PROJECTION) then
           write(IMAIN,*) '     x: ',x_found(irec)
