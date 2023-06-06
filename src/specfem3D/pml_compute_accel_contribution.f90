@@ -42,7 +42,7 @@
 
   use pml_par, only: CPML_regions,d_store_x,d_store_y,d_store_z,K_store_x,K_store_y,K_store_z, &
                      alpha_store_x, alpha_store_y, alpha_store_z, &
-                     convolution_coef_acoustic_alpha, &
+                     pml_convolution_coef_alpha, &
                      NSPEC_CPML,PML_displ_old,PML_displ_new
 
   implicit none
@@ -92,19 +92,19 @@
 
         ! coefficients
         ! alpha_x
-        coef0_x = convolution_coef_acoustic_alpha(1,i,j,k,ispec_CPML)
-        coef1_x = convolution_coef_acoustic_alpha(2,i,j,k,ispec_CPML)
-        coef2_x = convolution_coef_acoustic_alpha(3,i,j,k,ispec_CPML)
+        coef0_x = pml_convolution_coef_alpha(1,i,j,k,ispec_CPML)
+        coef1_x = pml_convolution_coef_alpha(2,i,j,k,ispec_CPML)
+        coef2_x = pml_convolution_coef_alpha(3,i,j,k,ispec_CPML)
 
         ! alpha_y
-        coef0_y = convolution_coef_acoustic_alpha(4,i,j,k,ispec_CPML)
-        coef1_y = convolution_coef_acoustic_alpha(5,i,j,k,ispec_CPML)
-        coef2_y = convolution_coef_acoustic_alpha(6,i,j,k,ispec_CPML)
+        coef0_y = pml_convolution_coef_alpha(4,i,j,k,ispec_CPML)
+        coef1_y = pml_convolution_coef_alpha(5,i,j,k,ispec_CPML)
+        coef2_y = pml_convolution_coef_alpha(6,i,j,k,ispec_CPML)
 
         ! alpha_z
-        coef0_z = convolution_coef_acoustic_alpha(7,i,j,k,ispec_CPML)
-        coef1_z = convolution_coef_acoustic_alpha(8,i,j,k,ispec_CPML)
-        coef2_z = convolution_coef_acoustic_alpha(9,i,j,k,ispec_CPML)
+        coef0_z = pml_convolution_coef_alpha(7,i,j,k,ispec_CPML)
+        coef1_z = pml_convolution_coef_alpha(8,i,j,k,ispec_CPML)
+        coef2_z = pml_convolution_coef_alpha(9,i,j,k,ispec_CPML)
 
         ! updates memory variables
         rmemory_displ_elastic(1,i,j,k,ispec_CPML,1) = coef0_x * rmemory_displ_elastic(1,i,j,k,ispec_CPML,1) &
@@ -181,7 +181,7 @@
 
   use pml_par, only: CPML_regions,NSPEC_CPML,d_store_x,d_store_y,d_store_z,K_store_x,K_store_y,K_store_z, &
                      alpha_store_x, alpha_store_y, alpha_store_z, &
-                     convolution_coef_acoustic_alpha, &
+                     pml_convolution_coef_alpha, &
                      NSPEC_CPML, &
                      PML_potential_acoustic_old,PML_potential_acoustic_new
 
@@ -233,19 +233,19 @@
 
         ! coefficients
         ! alpha_x
-        coef0_x = convolution_coef_acoustic_alpha(1,i,j,k,ispec_CPML)
-        coef1_x = convolution_coef_acoustic_alpha(2,i,j,k,ispec_CPML)
-        coef2_x = convolution_coef_acoustic_alpha(3,i,j,k,ispec_CPML)
+        coef0_x = pml_convolution_coef_alpha(1,i,j,k,ispec_CPML)
+        coef1_x = pml_convolution_coef_alpha(2,i,j,k,ispec_CPML)
+        coef2_x = pml_convolution_coef_alpha(3,i,j,k,ispec_CPML)
 
         ! alpha_y
-        coef0_y = convolution_coef_acoustic_alpha(4,i,j,k,ispec_CPML)
-        coef1_y = convolution_coef_acoustic_alpha(5,i,j,k,ispec_CPML)
-        coef2_y = convolution_coef_acoustic_alpha(6,i,j,k,ispec_CPML)
+        coef0_y = pml_convolution_coef_alpha(4,i,j,k,ispec_CPML)
+        coef1_y = pml_convolution_coef_alpha(5,i,j,k,ispec_CPML)
+        coef2_y = pml_convolution_coef_alpha(6,i,j,k,ispec_CPML)
 
         ! alpha_z
-        coef0_z = convolution_coef_acoustic_alpha(7,i,j,k,ispec_CPML)
-        coef1_z = convolution_coef_acoustic_alpha(8,i,j,k,ispec_CPML)
-        coef2_z = convolution_coef_acoustic_alpha(9,i,j,k,ispec_CPML)
+        coef0_z = pml_convolution_coef_alpha(7,i,j,k,ispec_CPML)
+        coef1_z = pml_convolution_coef_alpha(8,i,j,k,ispec_CPML)
+        coef2_z = pml_convolution_coef_alpha(9,i,j,k,ispec_CPML)
 
         ! updates memory variables
         rmemory_potential_acoustic(1,i,j,k,ispec_CPML) = coef0_x * rmemory_potential_acoustic(1,i,j,k,ispec_CPML) &

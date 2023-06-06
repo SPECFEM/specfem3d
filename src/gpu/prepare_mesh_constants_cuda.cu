@@ -80,7 +80,7 @@ void FC_FUNC_(prepare_constants_device,
                                         int* h_nibool_interfaces_ext_mesh, int* h_ibool_interfaces_ext_mesh,
                                         realw* h_hprime_xx, realw* h_hprimewgll_xx,
                                         realw* h_wgllwgll_xy,realw* h_wgllwgll_xz,realw* h_wgllwgll_yz,
-                                        int* ABSORBING_CONDITIONS,
+                                        int* STACEY_ABSORBING_CONDITIONS,
                                         int* h_abs_boundary_ispec, int* h_abs_boundary_ijk,
                                         realw* h_abs_boundary_normal,
                                         realw* h_abs_boundary_jacobian2Dw,
@@ -106,7 +106,8 @@ void FC_FUNC_(prepare_constants_device,
                                         int* SAVE_SEISMOGRAMS_ACCELERATION,int* SAVE_SEISMOGRAMS_PRESSURE,
                                         int* h_NB_RUNS_ACOUSTIC_GPU,
                                         int* FAULT_SIMULATION,
-                                        int* UNDO_ATTENUATION_AND_OR_PML) {
+                                        int* UNDO_ATTENUATION_AND_OR_PML,
+                                        int* PML_CONDITIONS) {
 
   TRACE("prepare_constants_device");
 
@@ -130,8 +131,11 @@ void FC_FUNC_(prepare_constants_device,
 
   // simulation flags
   mp->simulation_type = *SIMULATION_TYPE;
-  mp->absorbing_conditions = *ABSORBING_CONDITIONS;  // STACEY_ABSORBING_CONDITIONS
   mp->save_forward = *SAVE_FORWARD;
+
+  mp->stacey_absorbing_conditions = *STACEY_ABSORBING_CONDITIONS;  // STACEY_ABSORBING_CONDITIONS
+  mp->pml_conditions = *PML_CONDITIONS;
+
   mp->undo_attenuation = *UNDO_ATTENUATION_AND_OR_PML;
 
   // checks setup
@@ -261,7 +265,7 @@ void FC_FUNC_(prepare_constants_device,
 
   // absorbing boundaries
   mp->d_num_abs_boundary_faces = *h_num_abs_boundary_faces;
-  if (mp->absorbing_conditions && mp->d_num_abs_boundary_faces > 0){
+  if (mp->stacey_absorbing_conditions && mp->d_num_abs_boundary_faces > 0){
     gpuCreateCopy_todevice_int((void**)&mp->d_abs_boundary_ispec,h_abs_boundary_ispec,mp->d_num_abs_boundary_faces);
     gpuCreateCopy_todevice_int((void**)&mp->d_abs_boundary_ijk,h_abs_boundary_ijk,3*NGLL2*(mp->d_num_abs_boundary_faces));
     gpuCreateCopy_todevice_realw((void**)&mp->d_abs_boundary_normal,h_abs_boundary_normal,NDIM*NGLL2*(mp->d_num_abs_boundary_faces));
@@ -522,7 +526,7 @@ void FC_FUNC_(prepare_fields_acoustic_device,
   }
 
   // absorbing boundaries
-  if (mp->absorbing_conditions && mp->d_num_abs_boundary_faces > 0){
+  if (mp->stacey_absorbing_conditions && mp->d_num_abs_boundary_faces > 0){
     // absorb_field array used for file i/o
     if (mp->simulation_type == 3 || ( mp->simulation_type == 1 && mp->save_forward )){
       // note: b_reclen_potential is record length in bytes ( CUSTOM_REAL * NGLLSQUARE * num_abs_boundary_faces )
@@ -781,7 +785,7 @@ void FC_FUNC_(prepare_fields_elastic_device,
   //synchronize_mpi();
 
   // absorbing conditions
-  if (mp->absorbing_conditions && mp->d_num_abs_boundary_faces > 0){
+  if (mp->stacey_absorbing_conditions && mp->d_num_abs_boundary_faces > 0){
 
     // debug
     //printf("prepare_fields_elastic_device: rank %d - absorbing boundary setup\n",mp->myrank);
@@ -1161,6 +1165,25 @@ void FC_FUNC_(prepare_fields_elastic_adj_dev,
 
 /* ----------------------------------------------------------------------------------------------- */
 
+extern EXTERN_LANG
+void FC_FUNC_(prepare_fields_elastic_pml,
+              PREPARE_FIELDS_ELASTIC_PML)(long* Mesh_pointer) {
+
+  TRACE("prepare_fields_elastic_pml");
+
+  Mesh* mp = (Mesh*)(*Mesh_pointer);
+
+  // checks if anything to do
+  if (! mp->pml_conditions) return;
+
+  //TODO: safety stop
+  exit_on_error("PML_CONDITIONS not implemented yet on GPU\n");
+
+  GPU_ERROR_CHECKING("prepare_fields_elastic_pml");
+}
+
+/* ----------------------------------------------------------------------------------------------- */
+
 // purely adjoint & kernel simulations
 
 /* ----------------------------------------------------------------------------------------------- */
@@ -1440,7 +1463,7 @@ TRACE("prepare_cleanup_device");
   gpuFree(mp->d_gammaz);
 
   // absorbing boundaries
-  if (mp->absorbing_conditions && mp->d_num_abs_boundary_faces > 0){
+  if (mp->stacey_absorbing_conditions && mp->d_num_abs_boundary_faces > 0){
     gpuFree(mp->d_abs_boundary_ispec);
     gpuFree(mp->d_abs_boundary_ijk);
     gpuFree(mp->d_abs_boundary_normal);
@@ -1497,7 +1520,7 @@ TRACE("prepare_cleanup_device");
       gpuFree(mp->d_free_surface_ispec);
       gpuFree(mp->d_free_surface_ijk);
     }
-    if (mp->absorbing_conditions) gpuFree(mp->d_b_absorb_potential);
+    if (mp->stacey_absorbing_conditions) gpuFree(mp->d_b_absorb_potential);
     if (mp->simulation_type == 3) {
       gpuFree(mp->d_b_potential_acoustic);
       gpuFree(mp->d_b_potential_dot_acoustic);
@@ -1523,7 +1546,7 @@ TRACE("prepare_cleanup_device");
     gpuFree(mp->d_rmassy);
     gpuFree(mp->d_rmassz);
     gpuFree(mp->d_phase_ispec_inner_elastic);
-    if (mp->absorbing_conditions && mp->d_num_abs_boundary_faces > 0){
+    if (mp->stacey_absorbing_conditions && mp->d_num_abs_boundary_faces > 0){
       gpuFree(mp->d_rho_vp);
       gpuFree(mp->d_rho_vs);
       if (mp->simulation_type == 3 || ( mp->simulation_type == 1 && mp->save_forward ))

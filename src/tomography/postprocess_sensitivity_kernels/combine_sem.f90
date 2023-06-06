@@ -226,6 +226,7 @@ subroutine combine_sem_array(kernel_name,kernel_paths,output_dir,npath)
     ! print array information
     norm = sum( array * array )
     call sum_all_dp(norm, norm_sum)
+
     if (myrank == 0) then
       print *,'  norm array: ',sqrt(norm_sum)
       print *

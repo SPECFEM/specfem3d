@@ -93,7 +93,8 @@
                                 SAVE_SEISMOGRAMS_ACCELERATION,SAVE_SEISMOGRAMS_PRESSURE, &
                                 NB_RUNS_ACOUSTIC_GPU, &
                                 FAULT_SIMULATION, &
-                                UNDO_ATTENUATION_AND_OR_PML)
+                                UNDO_ATTENUATION_AND_OR_PML, &
+                                PML_CONDITIONS)
 
 
   ! prepares fields on GPU for acoustic simulations
@@ -172,6 +173,19 @@
                                           b_alphaval,b_betaval,b_gammaval, &
                                           ANISOTROPIC_KL, &
                                           APPROXIMATE_HESS_KL)
+
+
+    ! PML
+    if (PML_CONDITIONS) then
+      ! user output
+      if (myrank == 0) then
+        write(IMAIN,*) "  loading elastic PML arrays"
+        call flush_IMAIN()
+      endif
+      call synchronize_all()
+
+      call prepare_fields_elastic_pml(Mesh_pointer)
+    endif
   endif
 
   ! prepares fields on GPU for poroelastic simulations

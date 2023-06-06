@@ -96,7 +96,7 @@
   backward_simulation = .false.
 
   ! saftey check
-  if (GPU_MODE .and. PML_CONDITIONS) call exit_MPI(myrank,'PML conditions not yet implemented on GPUs')
+  if (GPU_MODE .and. PML_CONDITIONS) call exit_MPI(myrank,'PML conditions for acoustic domains not yet implemented on GPUs')
 
   ! enforces free surface (zeroes potentials at free surface)
   call acoustic_enforce_free_surface(NGLOB_AB,potential_acoustic,potential_dot_acoustic,potential_dot_dot_acoustic, &
@@ -432,7 +432,7 @@
   backward_simulation = .true.
 
   ! saftey check
-  if (GPU_MODE .and. PML_CONDITIONS) call exit_MPI(myrank,'PML conditions not yet implemented on GPUs')
+  if (GPU_MODE .and. PML_CONDITIONS) call exit_MPI(myrank,'PML conditions for acoustic domains not yet implemented on GPUs')
 
   ! enforces free surface (zeroes potentials at free surface)
   call acoustic_enforce_free_surface(NGLOB_ADJOINT,b_potential_acoustic,b_potential_dot_acoustic,b_potential_dot_dot_acoustic, &
@@ -635,7 +635,7 @@
   ! safety check
   if (.not. GPU_MODE) return
   ! check
-  if (PML_CONDITIONS) call exit_MPI(myrank,'PML conditions not yet implemented on GPUs')
+  if (PML_CONDITIONS) call exit_MPI(myrank,'PML conditions for acoustic domains not yet implemented on GPUs')
 
   ! enforces free surface (zeroes potentials at free surface)
   call acoustic_enforce_free_surf_cuda(Mesh_pointer,STACEY_INSTEAD_OF_FREE_SURFACE,1)

@@ -593,7 +593,7 @@
 
   use constants, only: IMAIN,NGLLX,NGLLY,NGLLZ
 
-  use specfem_par, only: myrank,deltat,SIMULATION_TYPE,GPU_MODE, &
+  use specfem_par, only: myrank,deltat,SIMULATION_TYPE, &
     UNDO_ATTENUATION_AND_OR_PML,PML_CONDITIONS,SAVE_MESH_FILES
 
   use pml_par
@@ -623,8 +623,6 @@
   ! safety stops
   if (SIMULATION_TYPE /= 1 .and. .not. UNDO_ATTENUATION_AND_OR_PML) &
     stop 'Error: PMLs for adjoint runs require the flag UNDO_ATTENUATION_AND_OR_PML to be set'
-  if (GPU_MODE) &
-    stop 'Error: PMLs only supported in CPU mode for now'
 
   ! total number of PML elements
   call sum_all_i(NSPEC_CPML,NSPEC_CPML_GLOBAL)
@@ -696,13 +694,13 @@
   deltat_half = deltat * 0.5_CUSTOM_REAL
 
   ! arrays for coefficients
-  allocate(convolution_coef_acoustic_alpha(9,NGLLX,NGLLY,NGLLZ,NSPEC_CPML), &
-           convolution_coef_acoustic_beta(9,NGLLX,NGLLY,NGLLZ,NSPEC_CPML),stat=ier)
+  allocate(pml_convolution_coef_alpha(9,NGLLX,NGLLY,NGLLZ,NSPEC_CPML), &
+           pml_convolution_coef_beta(9,NGLLX,NGLLY,NGLLZ,NSPEC_CPML),stat=ier)
   if (ier /= 0) call exit_MPI(myrank,'Error allocating coef_acoustic array')
 
   ! initializes
-  convolution_coef_acoustic_alpha(:,:,:,:,:) = 0._CUSTOM_REAL
-  convolution_coef_acoustic_beta(:,:,:,:,:) = 0._CUSTOM_REAL
+  pml_convolution_coef_alpha(:,:,:,:,:) = 0._CUSTOM_REAL
+  pml_convolution_coef_beta(:,:,:,:,:) = 0._CUSTOM_REAL
 
   ! pre-computes convolution coefficients
   do ispec_CPML = 1,NSPEC_CPML
@@ -725,17 +723,17 @@
           call compute_convolution_coef(alpha_y, coef0_2, coef1_2, coef2_2)
           call compute_convolution_coef(alpha_z, coef0_3, coef1_3, coef2_3)
 
-          convolution_coef_acoustic_alpha(1,i,j,k,ispec_CPML) = coef0_1
-          convolution_coef_acoustic_alpha(2,i,j,k,ispec_CPML) = coef1_1
-          convolution_coef_acoustic_alpha(3,i,j,k,ispec_CPML) = coef2_1
+          pml_convolution_coef_alpha(1,i,j,k,ispec_CPML) = coef0_1
+          pml_convolution_coef_alpha(2,i,j,k,ispec_CPML) = coef1_1
+          pml_convolution_coef_alpha(3,i,j,k,ispec_CPML) = coef2_1
 
-          convolution_coef_acoustic_alpha(4,i,j,k,ispec_CPML) = coef0_2
-          convolution_coef_acoustic_alpha(5,i,j,k,ispec_CPML) = coef1_2
-          convolution_coef_acoustic_alpha(6,i,j,k,ispec_CPML) = coef2_2
+          pml_convolution_coef_alpha(4,i,j,k,ispec_CPML) = coef0_2
+          pml_convolution_coef_alpha(5,i,j,k,ispec_CPML) = coef1_2
+          pml_convolution_coef_alpha(6,i,j,k,ispec_CPML) = coef2_2
 
-          convolution_coef_acoustic_alpha(7,i,j,k,ispec_CPML) = coef0_3
-          convolution_coef_acoustic_alpha(8,i,j,k,ispec_CPML) = coef1_3
-          convolution_coef_acoustic_alpha(9,i,j,k,ispec_CPML) = coef2_3
+          pml_convolution_coef_alpha(7,i,j,k,ispec_CPML) = coef0_3
+          pml_convolution_coef_alpha(8,i,j,k,ispec_CPML) = coef1_3
+          pml_convolution_coef_alpha(9,i,j,k,ispec_CPML) = coef2_3
 
           ! gets recursive convolution coefficients
           ! beta coefficients
@@ -747,17 +745,17 @@
           call compute_convolution_coef(beta_y, coef0_2, coef1_2, coef2_2)
           call compute_convolution_coef(beta_z, coef0_3, coef1_3, coef2_3)
 
-          convolution_coef_acoustic_beta(1,i,j,k,ispec_CPML) = coef0_1
-          convolution_coef_acoustic_beta(2,i,j,k,ispec_CPML) = coef1_1
-          convolution_coef_acoustic_beta(3,i,j,k,ispec_CPML) = coef2_1
+          pml_convolution_coef_beta(1,i,j,k,ispec_CPML) = coef0_1
+          pml_convolution_coef_beta(2,i,j,k,ispec_CPML) = coef1_1
+          pml_convolution_coef_beta(3,i,j,k,ispec_CPML) = coef2_1
 
-          convolution_coef_acoustic_beta(4,i,j,k,ispec_CPML) = coef0_2
-          convolution_coef_acoustic_beta(5,i,j,k,ispec_CPML) = coef1_2
-          convolution_coef_acoustic_beta(6,i,j,k,ispec_CPML) = coef2_2
+          pml_convolution_coef_beta(4,i,j,k,ispec_CPML) = coef0_2
+          pml_convolution_coef_beta(5,i,j,k,ispec_CPML) = coef1_2
+          pml_convolution_coef_beta(6,i,j,k,ispec_CPML) = coef2_2
 
-          convolution_coef_acoustic_beta(7,i,j,k,ispec_CPML) = coef0_3
-          convolution_coef_acoustic_beta(8,i,j,k,ispec_CPML) = coef1_3
-          convolution_coef_acoustic_beta(9,i,j,k,ispec_CPML) = coef2_3
+          pml_convolution_coef_beta(7,i,j,k,ispec_CPML) = coef0_3
+          pml_convolution_coef_beta(8,i,j,k,ispec_CPML) = coef1_3
+          pml_convolution_coef_beta(9,i,j,k,ispec_CPML) = coef2_3
         enddo
       enddo
     enddo

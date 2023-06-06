@@ -426,7 +426,9 @@ typedef struct mesh_ {
   int simulation_type;
   int save_forward;
 
-  int absorbing_conditions;
+  int stacey_absorbing_conditions;
+  int pml_conditions;
+
   int gravity;
   int approximate_ocean_load;
   int attenuation;
@@ -675,8 +677,16 @@ typedef struct mesh_ {
   realw* d_free_surface_normal;
   int* d_updated_dof_ocean_load;
 
-  // JC JC here we will need to add GPU support for the new C-PML routines
-
+  // C-PML
+  int* d_is_cpml;
+  realw* d_pml_displ_old, *d_pml_displ_new;
+  realw* d_accel_elastic_cpml;
+  realw* d_k_store_x, *d_k_store_y, *d_k_store_z;
+  realw* d_d_store_x, *d_d_store_y, *d_d_store_z;
+  realw* d_alpha_store_x, *alpha_store_y, *alpha_store_z;
+  realw* d_pml_convolution_coef_alpha;
+  realw* d_rmemory_displ_elastic;
+  
   // ------------------------------------------------------------------ //
   // acoustic wavefield
   // ------------------------------------------------------------------ //

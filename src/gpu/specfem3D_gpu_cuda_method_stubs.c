@@ -483,7 +483,7 @@ void FC_FUNC_(prepare_constants_device,
                                         int* h_nibool_interfaces_ext_mesh, int* h_ibool_interfaces_ext_mesh,
                                         realw* h_hprime_xx, realw* h_hprimewgll_xx,
                                         realw* h_wgllwgll_xy,realw* h_wgllwgll_xz,realw* h_wgllwgll_yz,
-                                        int* ABSORBING_CONDITIONS,
+                                        int* STACEY_ABSORBING_CONDITIONS,
                                         int* h_abs_boundary_ispec, int* h_abs_boundary_ijk,
                                         realw* h_abs_boundary_normal,
                                         realw* h_abs_boundary_jacobian2Dw,
@@ -509,7 +509,8 @@ void FC_FUNC_(prepare_constants_device,
                                         int* SAVE_SEISMOGRAMS_ACCELERATION,int* SAVE_SEISMOGRAMS_PRESSURE,
                                         int* h_NB_RUNS_ACOUSTIC_GPU,
                                         int* FAULT_SIMULATION,
-                                        int* UNDO_ATTENUATION_AND_OR_PML) {}
+                                        int* UNDO_ATTENUATION_AND_OR_PML,
+                                        int* PML_CONDITIONS) {}
 
 void FC_FUNC_(prepare_fields_acoustic_device,
               PREPARE_FIELDS_ACOUSTIC_DEVICE)(long* Mesh_pointer,
@@ -585,6 +586,9 @@ void FC_FUNC_(prepare_fields_elastic_adj_dev,
                                              realw* b_alphaval,realw* b_betaval,realw* b_gammaval,
                                              int* ANISOTROPIC_KL,
                                              int* APPROXIMATE_HESS_KL){}
+
+void FC_FUNC_(prepare_fields_elastic_pml,
+              PREPARE_FIELDS_ELASTIC_PML)(long* Mesh_pointer) {}
 
 void FC_FUNC_(prepare_sim2_or_3_const_device,
               PREPARE_SIM2_OR_3_CONST_DEVICE)(long* Mesh_pointer,int *nadj_rec_local, int* NTSTEP_BETWEEN_READ_ADJSRC,
