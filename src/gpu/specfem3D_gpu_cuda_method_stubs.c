@@ -467,6 +467,24 @@ void FC_FUNC_(noise_read_add_surface_movie_cu,
 
 
 //
+// src/gpu/pml_compute_accel_cuda.cu
+//
+
+void FC_FUNC_(compute_forces_viscoelastic_pml_cuda,
+              COMPUTE_FORCES_VISCOELASTIC_PML_CUDA)(long* Mesh_pointer,
+                                                    int* iphase,
+                                                    realw* deltat,
+                                                    int* nspec_outer_elastic,
+                                                    int* nspec_inner_elastic,
+                                                    int* COMPUTE_AND_STORE_STRAIN,
+                                                    int* ATTENUATION,
+                                                    int* FORWARD_OR_ADJOINT_f) {}
+
+void FC_FUNC_(pml_impose_boundary_condition_elastic_cuda,
+              PML_IMPOSE_BOUNDARY_CONDITION_ELASTIC_CUDA)(long* Mesh_pointer) {}
+
+
+//
 // src/gpu/prepare_mesh_constants_cuda.cu
 //
 

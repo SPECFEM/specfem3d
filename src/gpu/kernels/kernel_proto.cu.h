@@ -111,6 +111,8 @@ Kernel_2_noatt_iso_impl(const int nb_blocks_to_compute,
                         realw_const_p d_wgllwgll_xy,realw_const_p d_wgllwgll_xz,realw_const_p d_wgllwgll_yz,
                         realw_const_p d_kappav,
                         realw_const_p d_muv,
+                        const int pml_conditions,
+                        const int* d_is_CPML,
                         const int FORWARD_OR_ADJOINT);
 
 __global__ void
@@ -134,6 +136,8 @@ Kernel_2_noatt_iso_strain_impl(int nb_blocks_to_compute,
                               realw_p epsilondev_xz,realw_p epsilondev_yz,
                               realw_p epsilon_trace_over_3,
                               const int SIMULATION_TYPE,
+                              const int pml_conditions,
+                              const int* d_is_CPML,
                               const int FORWARD_OR_ADJOINT);
 
 __global__ void
@@ -156,6 +160,8 @@ Kernel_2_noatt_iso_col_impl(int nb_blocks_to_compute,
                         realw_p epsilondev_xz,realw_p epsilondev_yz,
                         realw_p epsilon_trace_over_3,
                         const int SIMULATION_TYPE,
+                        const int pml_conditions,
+                        const int* d_is_CPML,
                         const int FORWARD_OR_ADJOINT);
 
 __global__ void
@@ -185,6 +191,8 @@ Kernel_2_noatt_iso_grav_impl(int nb_blocks_to_compute,
                              realw_const_p d_minus_deriv_gravity,
                              realw_const_p d_rhostore,
                              realw_const_p wgll_cube,
+                             const int pml_conditions,
+                             const int* d_is_CPML,
                              const int FORWARD_OR_ADJOINT);
 
 __global__ void
@@ -222,6 +230,8 @@ Kernel_2_noatt_ani_impl(int nb_blocks_to_compute,
                         realw_const_p d_minus_deriv_gravity,
                         realw_const_p d_rhostore,
                         realw_const_p wgll_cube,
+                        const int pml_conditions,
+                        const int* d_is_CPML,
                         const int FORWARD_OR_ADJOINT);
 
 __global__ void
@@ -267,6 +277,8 @@ Kernel_2_att_impl(int nb_blocks_to_compute,
                   realw_const_p d_minus_deriv_gravity,
                   realw_const_p d_rhostore,
                   realw_const_p wgll_cube,
+                  const int pml_conditions,
+                  const int* d_is_CPML,
                   const int FORWARD_OR_ADJOINT);
 
 __global__ void
@@ -288,6 +300,8 @@ Kernel_2_noatt_iso_kelvinvoigt_impl(const int nb_blocks_to_compute,
                                     realw_const_p d_wgllwgll_xy,realw_const_p d_wgllwgll_xz,realw_const_p d_wgllwgll_yz,
                                     realw_const_p d_kappav,
                                     realw_const_p d_muv,
+                                    const int pml_conditions,
+                                    const int* d_is_CPML,
                                     const int FORWARD_OR_ADJOINT);
 
 
@@ -298,10 +312,21 @@ Kernel_2_noatt_iso_kelvinvoigt_impl(const int nb_blocks_to_compute,
 __global__ void UpdateDispVeloc_kernel(realw* displ,
                                        realw* veloc,
                                        realw* accel,
-                                       int size,
-                                       realw deltat,
-                                       realw deltatsqover2,
-                                       realw deltatover2) ;
+                                       const int size,
+                                       const realw deltat,
+                                       const realw deltatsqover2,
+                                       const realw deltatover2) ;
+
+__global__ void UpdateDispVeloc_PML_kernel(realw* displ,
+                                           realw* veloc,
+                                           realw* accel,
+                                           realw* PML_displ,
+                                           const int NSPEC_CPML,
+                                           const int* d_CPML_to_spec,
+                                           const int* d_ibool,
+                                           const realw deltat,
+                                           const realw deltatsqover2,
+                                           const realw deltatover2) ;
 
 
 //
@@ -773,7 +798,6 @@ __global__ void compute_stacey_acoustic_kernel(field* potential_dot_acoustic,
                                                int SIMULATION_TYPE,
                                                int SAVE_FORWARD,
                                                int num_abs_boundary_faces,
-                                               field* b_potential_dot_acoustic,
                                                field* b_potential_dot_dot_acoustic,
                                                field* b_absorb_potential,
                                                int gravity) ;
@@ -950,7 +974,8 @@ __global__ void kernel_3_veloc_cuda_device(realw_p veloc,
 // src/gpu/kernels/noise_read_add_surface_movie_cuda_kernel.cu
 //
 
-__global__ void noise_read_add_surface_movie_cuda_kernel(realw* accel, int* d_ibool,
+__global__ void noise_read_add_surface_movie_cuda_kernel(realw* accel,
+                                                         int* d_ibool,
                                                          int* free_surface_ispec,
                                                          int* free_surface_ijk,
                                                          int num_free_surface_faces,
@@ -965,6 +990,24 @@ __global__ void noise_read_add_surface_movie_cuda_kernel(realw* accel, int* d_ib
     // 4 ========= at 0x00000cd8 in
     // compute_add_sources_cuda.cu:260:noise_read_add_surface_movie_cuda_kernel
     // ========= by thread (0,0,0) in block (3443,0) ========= Address;
+
+
+//
+// src/gpu/kernels/pml_impose_boundary_condition_cuda_kernel.cu
+//
+
+__global__ void pml_impose_boundary_condition_cuda_kernel(realw* accel,
+                                                          realw* veloc,
+                                                          realw* displ,
+                                                          realw* PML_displ_old,
+                                                          realw* PML_displ_new,
+                                                          int* abs_boundary_ispec,
+                                                          int* abs_boundary_ijk,
+                                                          int num_abs_boundary_faces,
+                                                          int* d_ibool,
+                                                          int* ispec_is_elastic,
+                                                          int* is_CPML,
+                                                          int* spec_to_CPML) ;
 
 
 //

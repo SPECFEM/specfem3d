@@ -43,8 +43,11 @@
 
   implicit none
 
+  ! local parameters
+  integer :: iglob
+  ! iphase: iphase = 1 is for computing outer elements (on MPI interface),
+  !         iphase = 2 is for computing inner elements
   integer :: iphase
-  integer :: iface,ispec,igll,i,j,k,iglob,ispec_CPML
   logical :: backward_simulation
 
   ! debug timing
@@ -389,29 +392,7 @@
   ! PML
   ! impose Dirichlet conditions on the outer edges of the C-PML layers
   if (PML_CONDITIONS) then
-    do iface = 1,num_abs_boundary_faces
-      ispec = abs_boundary_ispec(iface)
-!!! It is better to move this into do iphase=1,2 loop
-      if (ispec_is_elastic(ispec) .and. is_CPML(ispec)) then
-        ! reference GLL points on boundary face
-        ispec_CPML = spec_to_CPML(ispec)
-        do igll = 1,NGLLSQUARE
-          ! gets local indices for GLL point
-          i = abs_boundary_ijk(1,igll,iface)
-          j = abs_boundary_ijk(2,igll,iface)
-          k = abs_boundary_ijk(3,igll,iface)
-
-          iglob = ibool(i,j,k,ispec)
-
-          accel(:,iglob) = 0._CUSTOM_REAL
-          veloc(:,iglob) = 0._CUSTOM_REAL
-          displ(:,iglob) = 0._CUSTOM_REAL
-          PML_displ_old(:,i,j,k,ispec_CPML) = 0._CUSTOM_REAL
-          PML_displ_new(:,i,j,k,ispec_CPML) = 0._CUSTOM_REAL
-        enddo
-      endif ! ispec_is_elastic
-!!!        endif
-    enddo
+    call pml_impose_boundary_condition_elastic()
   endif
 
 ! updates velocities
@@ -494,9 +475,6 @@
 
   ! backward fields
   backward_simulation = .true.
-
-  ! saftey check
-  if (GPU_MODE .and. PML_CONDITIONS) call exit_MPI(myrank,'PML conditions not yet implemented on GPUs')
 
   ! check
   if (FAULT_SIMULATION) then

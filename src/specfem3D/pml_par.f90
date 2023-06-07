@@ -71,7 +71,8 @@ module pml_par
   ! for second order convolution scheme
   ! where displ, veloc, accel are defined at n-1 time step
   real(kind=CUSTOM_REAL), dimension(:,:,:,:,:), allocatable :: PML_displ_old
-  real(kind=CUSTOM_REAL), parameter :: theta = 1.0_CUSTOM_REAL/8.0_CUSTOM_REAL
+
+  real(kind=CUSTOM_REAL), parameter :: THETA = 1.0_CUSTOM_REAL/8.0_CUSTOM_REAL
 
   ! store the field of displ + (1-2 * \theta)/2*deltat * veloc for second order convolution scheme
   ! where displ is defined at n time step, while veloc is predicted veloc at "n" time step

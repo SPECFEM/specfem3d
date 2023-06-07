@@ -282,8 +282,9 @@
   subroutine save_field_on_pml_interface(displ,veloc,accel,nglob_interface_PML_elastic, &
                                          b_PML_field,b_reclen_PML_field)
 
-  use specfem_par, only: NGLOB_AB,it
   use constants, only: CUSTOM_REAL,NDIM
+  use specfem_par, only: NGLOB_AB,it
+  use specfem_par, only: GPU_MODE,Mesh_pointer
   use pml_par, only: points_interface_PML_elastic
   implicit none
 
@@ -292,6 +293,11 @@
   real(kind=CUSTOM_REAL), dimension(9,nglob_interface_PML_elastic) :: b_PML_field
 
   integer :: iglob_pml,iglob
+
+  if (GPU_MODE) then
+    ! needs to transfer forward displ,veloc,accel fields onto CPU for storing
+    call transfer_fields_el_from_device(NDIM*NGLOB_AB,displ,veloc,accel,Mesh_pointer)
+  endif
 
   do iglob_pml = 1, nglob_interface_PML_elastic
     iglob = points_interface_PML_elastic(iglob_pml)
@@ -317,9 +323,10 @@
   subroutine read_field_on_pml_interface(b_accel,b_veloc,b_displ,nglob_interface_PML_elastic, &
                                          b_PML_field,b_reclen_PML_field)
 
-  use specfem_par, only: NGLOB_AB,NSTEP,it,UNDO_ATTENUATION_AND_OR_PML ! ibool
-  use pml_par, only: points_interface_PML_elastic ! NSPEC_CPML,CPML_to_spec
   use constants, only: CUSTOM_REAL,NDIM
+  use specfem_par, only: NGLOB_AB,NSTEP,it,UNDO_ATTENUATION_AND_OR_PML ! ibool
+  use specfem_par, only: GPU_MODE,Mesh_pointer
+  use pml_par, only: points_interface_PML_elastic ! NSPEC_CPML,CPML_to_spec
   implicit none
 
   integer, intent(in) :: nglob_interface_PML_elastic,b_reclen_PML_field
@@ -353,6 +360,14 @@
 
   call read_abs(0,b_PML_field,b_reclen_PML_field,it_temp)
 
+  ! GPU routine
+  ! not fully implemented yet, will need to transfer wavefields onto CPU and back again
+  if (GPU_MODE) then
+    ! transfers backward fields onto CPU for updating
+    call transfer_b_fields_from_device(NDIM*NGLOB_AB,b_displ,b_veloc,b_accel,Mesh_pointer)
+  endif
+
+  ! adds PML contribution to backward/reconstructed fields
   do iglob_pml = 1, nglob_interface_PML_elastic
     iglob = points_interface_PML_elastic(iglob_pml)
     b_displ(1,iglob) = b_PML_field(1,iglob_pml)
@@ -367,6 +382,11 @@
     b_accel(2,iglob) = b_PML_field(8,iglob_pml)
     b_accel(3,iglob) = b_PML_field(9,iglob_pml)
   enddo
+
+  if (GPU_MODE) then
+    ! transfers backward fields to GPU
+    call transfer_b_fields_to_device(NDIM*NGLOB_AB,b_displ,b_veloc,b_accel,Mesh_pointer)
+  endif
 
   end subroutine read_field_on_pml_interface
 !
@@ -603,3 +623,103 @@
 
   end subroutine l_parameter_computation
 
+!
+!=====================================================================
+!
+
+  subroutine pml_impose_boundary_condition_acoustic()
+
+! impose Dirichlet conditions for the potential (i.e. Neumann for displacement) on the outer edges of the C-PML layers
+
+  use specfem_par
+  use specfem_par_acoustic
+  use pml_par
+
+  implicit none
+
+  ! local parameters
+  integer :: iface,ispec_CPML,ispec,igll,i,j,k,iglob
+
+  if (.not. GPU_MODE) then
+    ! on CPU
+    do iface = 1,num_abs_boundary_faces
+      ispec = abs_boundary_ispec(iface)
+    !!! It is better to move this into do iphase=1,2 loop
+        if (ispec_is_acoustic(ispec) .and. is_CPML(ispec)) then
+          ! reference GLL points on boundary face
+          ispec_CPML = spec_to_CPML(ispec)
+          do igll = 1,NGLLSQUARE
+            ! gets local indices for GLL point
+            i = abs_boundary_ijk(1,igll,iface)
+            j = abs_boundary_ijk(2,igll,iface)
+            k = abs_boundary_ijk(3,igll,iface)
+
+            iglob=ibool(i,j,k,ispec)
+
+            potential_dot_dot_acoustic(iglob) = 0._CUSTOM_REAL
+            potential_dot_acoustic(iglob) = 0._CUSTOM_REAL
+            potential_acoustic(iglob) = 0._CUSTOM_REAL
+            if (ELASTIC_SIMULATION) then
+              PML_potential_acoustic_old(i,j,k,ispec_CPML) = 0._CUSTOM_REAL
+              PML_potential_acoustic_new(i,j,k,ispec_CPML) = 0._CUSTOM_REAL
+            endif
+          enddo
+        endif ! ispec_is_acoustic
+    !!!   endif
+    enddo
+  else
+    ! on GPU
+    stop 'GPU_MODE for routine pml_impose_boundary_condition_acoustic() not implemented yet'
+  endif
+
+  end subroutine pml_impose_boundary_condition_acoustic
+
+!
+!=====================================================================
+!
+
+  subroutine pml_impose_boundary_condition_elastic()
+
+! impose Dirichlet conditions on the outer edges of the C-PML layers
+
+  use specfem_par
+  use specfem_par_elastic
+  use pml_par
+
+  implicit none
+
+  ! local parameters
+  integer :: iface,ispec_CPML,ispec,igll,i,j,k,iglob
+
+  if (.not. GPU_MODE) then
+    ! on CPU
+    do iface = 1,num_abs_boundary_faces
+      ispec = abs_boundary_ispec(iface)
+      !!! It is better to move this into do iphase=1,2 loop
+      if (ispec_is_elastic(ispec) .and. is_CPML(ispec)) then
+        ! reference GLL points on boundary face
+        ispec_CPML = spec_to_CPML(ispec)
+        do igll = 1,NGLLSQUARE
+          ! gets local indices for GLL point
+          i = abs_boundary_ijk(1,igll,iface)
+          j = abs_boundary_ijk(2,igll,iface)
+          k = abs_boundary_ijk(3,igll,iface)
+
+          iglob = ibool(i,j,k,ispec)
+
+          accel(:,iglob) = 0._CUSTOM_REAL
+          veloc(:,iglob) = 0._CUSTOM_REAL
+          displ(:,iglob) = 0._CUSTOM_REAL
+
+          PML_displ_old(:,i,j,k,ispec_CPML) = 0._CUSTOM_REAL
+          PML_displ_new(:,i,j,k,ispec_CPML) = 0._CUSTOM_REAL
+        enddo
+      endif ! ispec_is_elastic
+      !!!        endif
+    enddo
+  else
+    ! on GPU
+    call pml_impose_boundary_condition_elastic_cuda(Mesh_pointer)
+  endif
+
+  end subroutine pml_impose_boundary_condition_elastic

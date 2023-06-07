@@ -134,7 +134,9 @@ void FC_FUNC_(prepare_constants_device,
   mp->save_forward = *SAVE_FORWARD;
 
   mp->stacey_absorbing_conditions = *STACEY_ABSORBING_CONDITIONS;  // STACEY_ABSORBING_CONDITIONS
+
   mp->pml_conditions = *PML_CONDITIONS;
+  mp->NSPEC_CPML = 0;
 
   mp->undo_attenuation = *UNDO_ATTENUATION_AND_OR_PML;
 
@@ -1178,6 +1180,10 @@ void FC_FUNC_(prepare_fields_elastic_pml,
 
   //TODO: safety stop
   exit_on_error("PML_CONDITIONS not implemented yet on GPU\n");
+
+  //gpuCreateCopy_todevice_realw((void**)&mp->d_PML_displ_old,h_PML_displ_old,NDIM*NGLL3*NSPEC_CPML);
+  //gpuCreateCopy_todevice_realw((void**)&mp->d_PML_displ_new,h_PML_displ_new,NDIM*NGLL3*NSPEC_CPML);
+
 
   GPU_ERROR_CHECKING("prepare_fields_elastic_pml");
 }

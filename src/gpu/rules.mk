@@ -54,6 +54,7 @@ gpu_specfem3D_OBJECTS = \
 	$O/helper_functions.o \
 	$O/initialize_gpu.o \
 	$O/noise_tomography_cuda.o \
+	$O/pml_compute_accel_cuda.o \
 	$O/prepare_mesh_constants_cuda.o \
 	$O/save_and_compare_cpu_vs_gpu.o \
 	$O/smooth_cuda.o \

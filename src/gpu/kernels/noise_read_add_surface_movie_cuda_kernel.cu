@@ -28,7 +28,8 @@
 */
 
 
-__global__ void noise_read_add_surface_movie_cuda_kernel(realw* accel, int* d_ibool,
+__global__ void noise_read_add_surface_movie_cuda_kernel(realw* accel,
+                                                         int* d_ibool,
                                                          int* free_surface_ispec,
                                                          int* free_surface_ijk,
                                                          int num_free_surface_faces,

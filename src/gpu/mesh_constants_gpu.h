@@ -678,9 +678,13 @@ typedef struct mesh_ {
   int* d_updated_dof_ocean_load;
 
   // C-PML
-  int* d_is_cpml;
-  realw* d_pml_displ_old, *d_pml_displ_new;
-  realw* d_accel_elastic_cpml;
+  int NSPEC_CPML;
+  int* d_is_CPML;
+  int* d_spec_to_CPML;
+  int* d_CPML_to_spec;
+  realw* d_PML_displ_old; realw* d_PML_displ_new;
+
+  realw* d_accel_elastic_CPML;
   realw* d_k_store_x, *d_k_store_y, *d_k_store_z;
   realw* d_d_store_x, *d_d_store_y, *d_d_store_z;
   realw* d_alpha_store_x, *alpha_store_y, *alpha_store_z;

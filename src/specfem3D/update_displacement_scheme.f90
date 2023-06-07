@@ -239,7 +239,7 @@
 
   use specfem_par, only: NGLLX,NGLLY,NGLLZ,CUSTOM_REAL,ibool,NGLOB_AB,PML_CONDITIONS
   !use specfem_par_acoustic
-  use pml_par, only: NSPEC_CPML,CPML_to_spec,theta
+  use pml_par, only: NSPEC_CPML,CPML_to_spec,THETA
 
   implicit none
 
@@ -262,8 +262,8 @@
           do k = 1, NGLLZ
              iglob = ibool(i,j,k,ispec)
              PML_potential_acoustic(i,j,k,ispec_cpml) = potential_acoustic(iglob) &
-                                  + deltatover2 * (1._CUSTOM_REAL - 2.0_CUSTOM_REAL*theta) * potential_dot_acoustic(iglob) &
-                                  + deltatsqover2 * (1._CUSTOM_REAL - theta) * potential_dot_dot_acoustic(iglob)
+                                  + deltatover2 * (1._CUSTOM_REAL - 2.0_CUSTOM_REAL * THETA) * potential_dot_acoustic(iglob) &
+                                  + deltatsqover2 * (1._CUSTOM_REAL - THETA) * potential_dot_dot_acoustic(iglob)
           enddo
        enddo
     enddo
@@ -296,6 +296,7 @@
     if (PML_CONDITIONS) call update_displ_elastic_PML(PML_displ_old,displ,veloc,accel,deltatover2,deltatsqover2)
 
     ! coupling with adjoint wavefields
+    !#TODO: accel_adj_coupling check if needed - not used any further so far...
     if (SIMULATION_TYPE /= 1) accel_adj_coupling(:,:) = accel(:,:)
 
     call update_displ_elastic(displ,veloc,accel,deltat,deltatover2,deltatsqover2)
@@ -327,29 +328,22 @@
   ! checks
   if (SIMULATION_TYPE /= 3) return
 
+  ! elastic backward fields
+  if (PML_CONDITIONS .and. NSPEC_CPML > 0) then
+    ! adds PML boundary contribution to backward fields
+    if (nglob_interface_PML_elastic > 0) then
+      call read_field_on_pml_interface(b_accel,b_veloc,b_displ,nglob_interface_PML_elastic, &
+                                       b_PML_field,b_reclen_PML_field)
+    endif
+  endif
+
   ! Newmark time marching
   if (.not. GPU_MODE) then
     ! wavefields on CPU
-
-    ! updates elastic displacement and velocity
-    ! elastic backward fields
-    if (PML_CONDITIONS .and. NSPEC_CPML > 0) then
-      if (nglob_interface_PML_elastic > 0) then
-        call read_field_on_pml_interface(b_accel,b_veloc,b_displ,nglob_interface_PML_elastic, &
-                                         b_PML_field,b_reclen_PML_field)
-      endif
-    endif
-
-    ! adjoint simulations
+    ! updates elastic backward displacement and velocity
     call update_displ_elastic(b_displ,b_veloc,b_accel,b_deltat,b_deltatover2,b_deltatsqover2)
   else
     ! wavefields on GPU
-    if (PML_CONDITIONS) then
-      if (nglob_interface_PML_elastic > 0) then
-        call exit_MPI(myrank,'elastic time marching scheme with PML_CONDITIONS on GPU not implemented yet...')
-      endif
-    endif
-
     ! updates elastic backward displacement and velocity
     call update_displacement_cuda(Mesh_pointer,b_deltat,b_deltatover2,b_deltatsqover2,3) ! 3 == backward
   endif ! GPU_MODE
@@ -427,7 +421,7 @@
   use constants, only: NDIM,NGLLX,NGLLY,NGLLZ,CUSTOM_REAL
   use specfem_par, only: ibool,NGLOB_AB,PML_CONDITIONS
   !use specfem_par_acoustic
-  use pml_par, only: NSPEC_CPML,CPML_to_spec,theta
+  use pml_par, only: NSPEC_CPML,CPML_to_spec,THETA
 
   implicit none
 
@@ -451,8 +445,8 @@
         do i = 1, NGLLX
           iglob = ibool(i,j,k,ispec)
           PML_displ(:,i,j,k,ispec_cpml) = displ(:,iglob) &
-                                        + deltatover2 * (1._CUSTOM_REAL - 2._CUSTOM_REAL*theta) * veloc(:,iglob) &
-                                        + deltatsqover2 * (1._CUSTOM_REAL - theta) * accel(:,iglob)
+                                        + deltatover2 * (1._CUSTOM_REAL - 2._CUSTOM_REAL * THETA) * veloc(:,iglob) &
+                                        + deltatsqover2 * (1._CUSTOM_REAL - THETA) * accel(:,iglob)
         enddo
       enddo
     enddo
