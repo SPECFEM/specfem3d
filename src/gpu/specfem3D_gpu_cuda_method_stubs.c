@@ -606,7 +606,13 @@ void FC_FUNC_(prepare_fields_elastic_adj_dev,
                                              int* APPROXIMATE_HESS_KL){}
 
 void FC_FUNC_(prepare_fields_elastic_pml,
-              PREPARE_FIELDS_ELASTIC_PML)(long* Mesh_pointer) {}
+              PREPARE_FIELDS_ELASTIC_PML)(long* Mesh_pointer,
+                                          int* NSPEC_CPML,
+                                          int* is_CPML,
+                                          int* CPML_to_spec,
+                                          int* spec_to_CPML,
+                                          realw* PML_displ_old,
+                                          realw* PML_displ_new) {}
 
 void FC_FUNC_(prepare_sim2_or_3_const_device,
               PREPARE_SIM2_OR_3_CONST_DEVICE)(long* Mesh_pointer,int *nadj_rec_local, int* NTSTEP_BETWEEN_READ_ADJSRC,
@@ -732,6 +738,12 @@ void FC_FUNC_(transfer_displ_from_device,
 
 void FC_FUNC_(transfer_displ_to_device,
               TRANSFER_DISPL_TO_DEVICE)(int* size, realw* displ, long* Mesh_pointer) {}
+
+void FC_FUNC_(transfer_pml_displ_from_device,
+              TRANSFER_PML_DISPL_FROM_DEVICE)(int* size, realw* PML_displ_old, realw* PML_displ_new, long* Mesh_pointer) {}
+
+void FC_FUNC_(transfer_pml_displ_to_device,
+              TRANSFER_PML_DISPL_TO_DEVICE)(int* size, realw* PML_displ_old, realw* PML_displ_new, long* Mesh_pointer) {}
 
 void FC_FUNC_(transfer_b_rmemory_to_device,
               TRANSFER_B_RMEMORY_TO_DEVICE)(long* Mesh_pointer,

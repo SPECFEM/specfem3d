@@ -92,7 +92,7 @@ void FC_FUNC_(update_displacement_cuda,
   dim3 grid2,threads2;
 
   if (mp->pml_conditions){
-    if (*FORWARD_OR_ADJOINT == 1 && mp->NSPEC_CPML != 0){
+    if (*FORWARD_OR_ADJOINT == 1 && mp->NSPEC_CPML > 0){
 
       blocksize2 = NGLL3; // NGLLX*NGLLY*NGLLZ
       size2 = mp->NSPEC_CPML;
@@ -144,7 +144,7 @@ void FC_FUNC_(update_displacement_cuda,
 
   // PML
   if (mp->pml_conditions){
-    if (*FORWARD_OR_ADJOINT == 1 && mp->NSPEC_CPML != 0){
+    if (*FORWARD_OR_ADJOINT == 1 && mp->NSPEC_CPML > 0){
       // stores updated wavefields as new
 #ifdef USE_CUDA
       if (run_cuda){

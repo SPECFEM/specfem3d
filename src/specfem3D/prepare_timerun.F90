@@ -591,10 +591,12 @@
 
   subroutine prepare_timerun_pml()
 
-  use constants, only: IMAIN,NGLLX,NGLLY,NGLLZ
+  use constants, only: IMAIN,NGLLX,NGLLY,NGLLZ,NDIM
 
   use specfem_par, only: myrank,deltat,SIMULATION_TYPE, &
+    ELASTIC_SIMULATION,ACOUSTIC_SIMULATION, &
     UNDO_ATTENUATION_AND_OR_PML,PML_CONDITIONS,SAVE_MESH_FILES
+  use specfem_par_acoustic, only: num_coupling_ac_el_faces
 
   use pml_par
 
@@ -602,6 +604,7 @@
 
   ! local parameters
   integer :: ispec,ispec_CPML,NSPEC_CPML_GLOBAL
+  integer :: CPML_region_local
   integer :: i,j,k,ier
   real(kind=CUSTOM_REAL) :: deltatpow2,deltatpow3,deltatpow4,deltat_half
   real(kind=CUSTOM_REAL) :: coef0_1,coef1_1,coef2_1, &
@@ -611,6 +614,14 @@
                             kappa_y,d_y,alpha_y, &
                             kappa_z,d_z,alpha_z
   real(kind=CUSTOM_REAL) :: beta_x,beta_y,beta_z
+  real(kind=CUSTOM_REAL) :: A_0,A_1,A_2,A_3,A_4,A_5
+  real(kind=CUSTOM_REAL) :: A_6,A_7,A_8,A_9      ! L231
+  real(kind=CUSTOM_REAL) :: A_10,A_11,A_12,A_13  ! L132
+  real(kind=CUSTOM_REAL) :: A_14,A_15,A_16,A_17  ! L123
+  real(kind=CUSTOM_REAL) :: A_18,A_19 ! L1
+  real(kind=CUSTOM_REAL) :: A_20,A_21 ! L2
+  real(kind=CUSTOM_REAL) :: A_22,A_23 ! L3
+  double precision :: memory_size,memory_size_glob
 
   ! checks if anything to do
   if (.not. PML_CONDITIONS) return
@@ -646,6 +657,55 @@
 ! if (NGNOD /= NGNOD_EIGHT_CORNERS) &
 !   stop 'error: the C-PML code works for 8-node bricks only; should be made more general'
 
+
+  ! memory estimate
+  memory_size = 0.d0
+  if (ELASTIC_SIMULATION) then
+    ! PML_displ_old,new
+    memory_size = memory_size + 2.d0 * NDIM * NGLLX * NGLLY * NGLLZ * dble(NSPEC_CPML) * dble(CUSTOM_REAL)
+    ! rmemory_dux_dxl_x(NGLLX,NGLLY,NGLLZ,NSPEC_CPML,3),..
+    memory_size = memory_size + 9.d0 * 3.d0 * NGLLX * NGLLY * NGLLZ * dble(NSPEC_CPML) * dble(CUSTOM_REAL)
+    ! rmemory_duy_dxl_x(NGLLX,NGLLY,NGLLZ,NSPEC_CPML),..
+    memory_size = memory_size + 12.d0 * NGLLX * NGLLY * NGLLZ * dble(NSPEC_CPML) * dble(CUSTOM_REAL)
+    ! rmemory_displ_elastic(NDIM,NGLLX,NGLLY,NGLLZ,NSPEC_CPML,3)
+    memory_size = memory_size + 3.d0 * NDIM * NGLLX * NGLLY * NGLLZ * dble(NSPEC_CPML) * dble(CUSTOM_REAL)
+  endif
+  if (ACOUSTIC_SIMULATION) then
+    ! PML_potential_acoustic_old,new
+    memory_size = memory_size + 2.d0 * NGLLX * NGLLY * NGLLZ * dble(NSPEC_CPML) * dble(CUSTOM_REAL)
+    ! rmemory_dpotential_dxl(3,NGLLX,NGLLY,NGLLZ,NSPEC_CPML),..
+    memory_size = memory_size + 4.d0 * 3.d0 * NGLLX * NGLLY * NGLLZ * dble(NSPEC_CPML) * dble(CUSTOM_REAL)
+  endif
+  if (ACOUSTIC_SIMULATION .and. ELASTIC_SIMULATION) then
+    ! rmemory_coupling_ac_el_displ(3,NGLLX,NGLLY,NGLLZ,num_coupling_ac_el_faces,2)
+    memory_size = memory_size + 2.d0 * 3.d0 * 2.d0 * NGLLX * NGLLY * NGLLZ * dble(num_coupling_ac_el_faces) * dble(CUSTOM_REAL)
+    if (SIMULATION_TYPE == 3) then
+      ! rmemory_coupling_el_ac_potential(3,NGLLX,NGLLY,NGLLZ,num_coupling_ac_el_faces,2)
+      memory_size = memory_size + 3.d0 * 2.d0 * NGLLX * NGLLY * NGLLZ * dble(num_coupling_ac_el_faces) * dble(CUSTOM_REAL)
+    endif
+  endif
+  ! maximum of all processes (may vary e.g. due to different NSPEC_CPML, ..)
+  call max_all_dp(memory_size,memory_size_glob)
+  if (myrank == 0) then
+    write(IMAIN,*) '  minimum convolution memory requested: ',memory_size_glob / 1024. / 1024.,'MB per process'
+    call flush_IMAIN()
+  endif
+
+  ! coefficients
+  ! pml_convolution_coef_alpha(9,NGLLX,NGLLY,NGLLZ,NSPEC_CPML),beta
+  memory_size = 2.d0 * 9.d0 * NGLLX * NGLLY * NGLLZ * dble(NSPEC_CPML) * dble(CUSTOM_REAL)
+  ! pml_convolution_coef_abar
+  memory_size = memory_size + 5.d0 * NGLLX * NGLLY * NGLLZ * dble(NSPEC_CPML) * dble(CUSTOM_REAL)
+  ! pml_convolution_coef_strain
+  memory_size = memory_size + 18.d0 * NGLLX * NGLLY * NGLLZ * dble(NSPEC_CPML) * dble(CUSTOM_REAL)
+  ! maximum of all processes (may vary e.g. due to different NSPEC_CPML, ..)
+  call max_all_dp(memory_size,memory_size_glob)
+  if (myrank == 0) then
+    write(IMAIN,*) '  minimum coefficient memory requested: ',memory_size_glob / 1024. / 1024.,'MB per process'
+    write(IMAIN,*)
+    call flush_IMAIN()
+  endif
+
   ! allocates and initializes C-PML arrays
   call pml_allocate_arrays()
 
@@ -657,32 +717,35 @@
 
   ! defines C-PML element type array: 1 = face, 2 = edge, 3 = corner
   do ispec_CPML = 1,NSPEC_CPML
+    ! PML element region
+    CPML_region_local = CPML_regions(ispec_CPML)
+
     ! X_surface C-PML
-    if (CPML_regions(ispec_CPML) == 1) then
+    if (CPML_region_local == 1) then
       CPML_type(ispec_CPML) = 1
 
     ! Y_surface C-PML
-    else if (CPML_regions(ispec_CPML) == 2) then
+    else if (CPML_region_local == 2) then
       CPML_type(ispec_CPML) = 1
 
     ! Z_surface C-PML
-    else if (CPML_regions(ispec_CPML) == 3) then
+    else if (CPML_region_local == 3) then
       CPML_type(ispec_CPML) = 1
 
     ! XY_edge C-PML
-    else if (CPML_regions(ispec_CPML) == 4) then
+    else if (CPML_region_local == 4) then
       CPML_type(ispec_CPML) = 2
 
     ! XZ_edge C-PML
-    else if (CPML_regions(ispec_CPML) == 5) then
+    else if (CPML_region_local == 5) then
       CPML_type(ispec_CPML) = 2
 
     ! YZ_edge C-PML
-    else if (CPML_regions(ispec_CPML) == 6) then
+    else if (CPML_region_local == 6) then
       CPML_type(ispec_CPML) = 2
 
     ! XYZ_corner C-PML
-    else if (CPML_regions(ispec_CPML) == 7) then
+    else if (CPML_region_local == 7) then
       CPML_type(ispec_CPML) = 3
     endif
   enddo
@@ -696,23 +759,34 @@
   ! arrays for coefficients
   allocate(pml_convolution_coef_alpha(9,NGLLX,NGLLY,NGLLZ,NSPEC_CPML), &
            pml_convolution_coef_beta(9,NGLLX,NGLLY,NGLLZ,NSPEC_CPML),stat=ier)
-  if (ier /= 0) call exit_MPI(myrank,'Error allocating coef_acoustic array')
-
-  ! initializes
+  if (ier /= 0) call exit_MPI(myrank,'Error allocating coef alpha,beta array')
   pml_convolution_coef_alpha(:,:,:,:,:) = 0._CUSTOM_REAL
   pml_convolution_coef_beta(:,:,:,:,:) = 0._CUSTOM_REAL
 
+  allocate(pml_convolution_coef_abar(5,NGLLX,NGLLY,NGLLZ,NSPEC_CPML),stat=ier)
+  if (ier /= 0) call exit_MPI(myrank,'Error allocating coef abar array')
+  pml_convolution_coef_abar(:,:,:,:,:) = 0._CUSTOM_REAL
+
+  allocate(pml_convolution_coef_strain(18,NGLLX,NGLLY,NGLLZ,NSPEC_CPML),stat=ier)
+  if (ier /= 0) call exit_MPI(myrank,'Error allocating coef strain array')
+  pml_convolution_coef_strain(:,:,:,:,:) = 0._CUSTOM_REAL
+
   ! pre-computes convolution coefficients
   do ispec_CPML = 1,NSPEC_CPML
+    ! PML element region
+    CPML_region_local = CPML_regions(ispec_CPML)
+
     do k = 1,NGLLZ
       do j = 1,NGLLY
         do i = 1,NGLLX
           kappa_x = k_store_x(i,j,k,ispec_CPML)
           kappa_y = k_store_y(i,j,k,ispec_CPML)
           kappa_z = k_store_z(i,j,k,ispec_CPML)
+
           d_x = d_store_x(i,j,k,ispec_CPML)
           d_y = d_store_y(i,j,k,ispec_CPML)
           d_z = d_store_z(i,j,k,ispec_CPML)
+
           alpha_x = alpha_store_x(i,j,k,ispec_CPML)
           alpha_y = alpha_store_y(i,j,k,ispec_CPML)
           alpha_z = alpha_store_z(i,j,k,ispec_CPML)
@@ -756,6 +830,69 @@
           pml_convolution_coef_beta(7,i,j,k,ispec_CPML) = coef0_3
           pml_convolution_coef_beta(8,i,j,k,ispec_CPML) = coef1_3
           pml_convolution_coef_beta(9,i,j,k,ispec_CPML) = coef2_3
+
+          ! coefficients A_bar for accel updates
+          call l_parameter_computation(kappa_x, d_x, alpha_x, &
+                                       kappa_y, d_y, alpha_y, &
+                                       kappa_z, d_z, alpha_z, &
+                                       CPML_region_local, &
+                                       A_0, A_1, A_2, A_3, A_4, A_5)
+
+          ! stores coefficients for pml_compute_accel_contribution_*** routines
+          ! A_0 not needed any further
+          pml_convolution_coef_abar(1,i,j,k,ispec_CPML) = A_1
+          pml_convolution_coef_abar(2,i,j,k,ispec_CPML) = A_2
+          pml_convolution_coef_abar(3,i,j,k,ispec_CPML) = A_3
+          pml_convolution_coef_abar(4,i,j,k,ispec_CPML) = A_4
+          pml_convolution_coef_abar(5,i,j,k,ispec_CPML) = A_5
+
+          ! coefficients for strain computations
+          ! stores coefficients for pml_compute_memory_variables_*** routines
+          !---------------------- A6, A7, A8, A9 --------------------------
+          call lijk_parameter_computation(kappa_z,d_z,alpha_z,kappa_y,d_y,alpha_y,kappa_x,d_x,alpha_x, &
+                                          CPML_region_local,231, &
+                                          A_6,A_7,A_8,A_9)
+          pml_convolution_coef_strain(1,i,j,k,ispec_CPML) = A_6
+          pml_convolution_coef_strain(2,i,j,k,ispec_CPML) = A_7
+          pml_convolution_coef_strain(3,i,j,k,ispec_CPML) = A_8
+          pml_convolution_coef_strain(4,i,j,k,ispec_CPML) = A_9
+
+          !---------------------- A10,A11,A12,A13 --------------------------
+          call lijk_parameter_computation(kappa_x,d_x,alpha_x,kappa_z,d_z,alpha_z,kappa_y,d_y,alpha_y, &
+                                          CPML_region_local,132, &
+                                          A_10,A_11,A_12,A_13)
+          pml_convolution_coef_strain(5,i,j,k,ispec_CPML) = A_10
+          pml_convolution_coef_strain(6,i,j,k,ispec_CPML) = A_11
+          pml_convolution_coef_strain(7,i,j,k,ispec_CPML) = A_12
+          pml_convolution_coef_strain(8,i,j,k,ispec_CPML) = A_13
+
+          !---------------------- A14,A15,A16,A17 --------------------------
+          call lijk_parameter_computation(kappa_x,d_x,alpha_x,kappa_y,d_y,alpha_y,kappa_z,d_z,alpha_z, &
+                                          CPML_region_local,123, &
+                                          A_14,A_15,A_16,A_17)
+          pml_convolution_coef_strain(9,i,j,k,ispec_CPML)  = A_14
+          pml_convolution_coef_strain(10,i,j,k,ispec_CPML) = A_15
+          pml_convolution_coef_strain(11,i,j,k,ispec_CPML) = A_16
+          pml_convolution_coef_strain(12,i,j,k,ispec_CPML) = A_17
+
+          !---------------------- A18 and A19 --------------------------
+          call lx_parameter_computation(kappa_x,d_x,alpha_x, &
+                                        CPML_region_local,A_18,A_19)
+          pml_convolution_coef_strain(13,i,j,k,ispec_CPML)  = A_18
+          pml_convolution_coef_strain(14,i,j,k,ispec_CPML)  = A_19
+
+          !---------------------- A20 and A21 --------------------------
+          call ly_parameter_computation(kappa_y,d_y,alpha_y, &
+                                        CPML_region_local,A_20,A_21)
+          pml_convolution_coef_strain(15,i,j,k,ispec_CPML)  = A_20
+          pml_convolution_coef_strain(16,i,j,k,ispec_CPML)  = A_21
+
+          !---------------------- A22 and A23 --------------------------
+          call lz_parameter_computation(kappa_z,d_z,alpha_z, &
+                                        CPML_region_local,A_22,A_23)
+          pml_convolution_coef_strain(17,i,j,k,ispec_CPML)  = A_22
+          pml_convolution_coef_strain(18,i,j,k,ispec_CPML)  = A_23
+
         enddo
       enddo
     enddo

@@ -60,9 +60,9 @@
                          kappastore,mustore,irregular_element_number, &
                          jacobian_regular,xix_regular
 
-  use pml_par, only: NSPEC_CPML,CPML_regions,k_store_x,k_store_y,k_store_z, &
-                     d_store_x,d_store_y,d_store_z,alpha_store_x,alpha_store_y,alpha_store_z, &
-                     pml_convolution_coef_alpha,pml_convolution_coef_beta
+  use pml_par, only: NSPEC_CPML, &
+                     pml_convolution_coef_alpha,pml_convolution_coef_beta, &
+                     pml_convolution_coef_strain
 
   implicit none
 
@@ -107,10 +107,6 @@
   real(kind=CUSTOM_REAL) :: A20,A21 ! L2
   real(kind=CUSTOM_REAL) :: A22,A23 ! L3
   real(kind=CUSTOM_REAL) :: coef0_1,coef1_1,coef2_1,coef0_2,coef1_2,coef2_2,coef0_3,coef1_3,coef2_3
-  integer :: CPML_region_local
-  real(kind=CUSTOM_REAL) :: kappa_x,kappa_y,kappa_z,d_x,d_y,d_z,alpha_x,alpha_y,alpha_z
-
-  CPML_region_local = CPML_regions(ispec_CPML)
 
   ispec_irreg = irregular_element_number(ispec)
   if (ispec_irreg == 0) jacobianl = jacobian_regular
@@ -118,21 +114,32 @@
   do k=1,NGLLZ
     do j=1,NGLLY
       do i=1,NGLLX
-        kappa_x = k_store_x(i,j,k,ispec_CPML)
-        kappa_y = k_store_y(i,j,k,ispec_CPML)
-        kappa_z = k_store_z(i,j,k,ispec_CPML)
-        d_x = d_store_x(i,j,k,ispec_CPML)
-        d_y = d_store_y(i,j,k,ispec_CPML)
-        d_z = d_store_z(i,j,k,ispec_CPML)
-        alpha_x = alpha_store_x(i,j,k,ispec_CPML)
-        alpha_y = alpha_store_y(i,j,k,ispec_CPML)
-        alpha_z = alpha_store_z(i,j,k,ispec_CPML)
+        ! PML convolution coefficients
+        A6 = pml_convolution_coef_strain(1,i,j,k,ispec_CPML)
+        A7 = pml_convolution_coef_strain(2,i,j,k,ispec_CPML)
+        A8 = pml_convolution_coef_strain(3,i,j,k,ispec_CPML)
+        A9 = pml_convolution_coef_strain(4,i,j,k,ispec_CPML)
+
+        A10 = pml_convolution_coef_strain(5,i,j,k,ispec_CPML)
+        A11 = pml_convolution_coef_strain(6,i,j,k,ispec_CPML)
+        A12 = pml_convolution_coef_strain(7,i,j,k,ispec_CPML)
+        A13 = pml_convolution_coef_strain(8,i,j,k,ispec_CPML)
+
+        A14 = pml_convolution_coef_strain(9,i,j,k,ispec_CPML)
+        A15 = pml_convolution_coef_strain(10,i,j,k,ispec_CPML)
+        A16 = pml_convolution_coef_strain(11,i,j,k,ispec_CPML)
+        A17 = pml_convolution_coef_strain(12,i,j,k,ispec_CPML)
+
+        A18 = pml_convolution_coef_strain(13,i,j,k,ispec_CPML)
+        A19 = pml_convolution_coef_strain(14,i,j,k,ispec_CPML)
+
+        A20 = pml_convolution_coef_strain(15,i,j,k,ispec_CPML)
+        A21 = pml_convolution_coef_strain(16,i,j,k,ispec_CPML)
+
+        A22 = pml_convolution_coef_strain(17,i,j,k,ispec_CPML)
+        A23 = pml_convolution_coef_strain(18,i,j,k,ispec_CPML)
 
         !---------------------- A6, A7, A8, A9 --------------------------
-        call lijk_parameter_computation(kappa_z,d_z,alpha_z,kappa_y,d_y,alpha_y,kappa_x,d_x,alpha_x, &
-                                        CPML_region_local,231, &
-                                        A6,A7,A8,A9)
-
         ! coefficients
         ! alpha_z
         coef0_1 = pml_convolution_coef_alpha(7,i,j,k,ispec_CPML)
@@ -172,10 +179,6 @@
 
 
         !---------------------- A10,A11,A12,A13 --------------------------
-        call lijk_parameter_computation(kappa_x,d_x,alpha_x,kappa_z,d_z,alpha_z,kappa_y,d_y,alpha_y, &
-                                        CPML_region_local,132, &
-                                        A10,A11,A12,A13)
-
         ! coefficients
         ! alpha_x
         coef0_1 = pml_convolution_coef_alpha(1,i,j,k,ispec_CPML)
@@ -214,10 +217,6 @@
                + PML_duz_dyl_new(i,j,k) * coef1_3 + PML_duz_dyl_old(i,j,k) * coef2_3
 
         !---------------------- A14,A15,A16,A17 --------------------------
-        call lijk_parameter_computation(kappa_x,d_x,alpha_x,kappa_y,d_y,alpha_y,kappa_z,d_z,alpha_z, &
-                                        CPML_region_local,123, &
-                                        A14,A15,A16,A17)
-
         ! coefficients
         ! alpha_x
         coef0_1 = pml_convolution_coef_alpha(1,i,j,k,ispec_CPML)
@@ -256,9 +255,6 @@
                + PML_duz_dzl_new(i,j,k) * coef1_3 + PML_duz_dzl_old(i,j,k) * coef2_3
 
         !---------------------- A18 and A19 --------------------------
-        call lx_parameter_computation(kappa_x,d_x,alpha_x, &
-                                      CPML_region_local,A18,A19)
-
         ! coefficients
         ! alpha_x
         coef0_1 = pml_convolution_coef_alpha(1,i,j,k,ispec_CPML)
@@ -278,9 +274,6 @@
                + PML_duy_dyl_new(i,j,k) * coef1_1 + PML_duy_dyl_old(i,j,k) * coef2_1
 
         !---------------------- A20 and A21 --------------------------
-        call ly_parameter_computation(kappa_y,d_y,alpha_y, &
-                                      CPML_region_local,A20,A21)
-
         ! coefficients
         ! alpha_y
         coef0_1 = pml_convolution_coef_alpha(4,i,j,k,ispec_CPML)
@@ -300,9 +293,6 @@
                + PML_dux_dxl_new(i,j,k) * coef1_1 + PML_dux_dxl_old(i,j,k) * coef2_1
 
         !---------------------- A22 and A23 --------------------------
-        call lz_parameter_computation(kappa_z,d_z,alpha_z, &
-                                      CPML_region_local,A22,A23)
-
         ! coefficients
         ! alpha_z
         coef0_1 = pml_convolution_coef_alpha(7,i,j,k,ispec_CPML)
@@ -450,10 +440,9 @@
                          rhostore,irregular_element_number, &
                          jacobian_regular,xix_regular
 
-  use pml_par, only: NSPEC_CPML,CPML_regions,k_store_x,k_store_y,k_store_z, &
-                     d_store_x,d_store_y,d_store_z, &
-                     alpha_store_x,alpha_store_y,alpha_store_z, &
-                     pml_convolution_coef_alpha,pml_convolution_coef_beta
+  use pml_par, only: NSPEC_CPML, &
+                     pml_convolution_coef_alpha,pml_convolution_coef_beta, &
+                     pml_convolution_coef_strain
 
   implicit none
 
@@ -486,32 +475,28 @@
   real(kind=CUSTOM_REAL) :: A10,A11,A12,A13  ! L132
   real(kind=CUSTOM_REAL) :: A14,A15,A16,A17  ! L123
   real(kind=CUSTOM_REAL) :: coef0_1,coef1_1,coef2_1,coef0_2,coef1_2,coef2_2,coef0_3,coef1_3,coef2_3
-  integer :: CPML_region_local
   integer :: i,j,k,ispec_irreg
-
-  real(kind=CUSTOM_REAL) :: kappa_x,kappa_y,kappa_z
-  real(kind=CUSTOM_REAL) :: d_x,d_y,d_z,alpha_x,alpha_y,alpha_z
-
-  CPML_region_local = CPML_regions(ispec_CPML)
 
   do k=1,NGLLZ
     do j=1,NGLLY
       do i=1,NGLLX
-        kappa_x = k_store_x(i,j,k,ispec_CPML)
-        kappa_y = k_store_y(i,j,k,ispec_CPML)
-        kappa_z = k_store_z(i,j,k,ispec_CPML)
-        d_x = d_store_x(i,j,k,ispec_CPML)
-        d_y = d_store_y(i,j,k,ispec_CPML)
-        d_z = d_store_z(i,j,k,ispec_CPML)
-        alpha_x = alpha_store_x(i,j,k,ispec_CPML)
-        alpha_y = alpha_store_y(i,j,k,ispec_CPML)
-        alpha_z = alpha_store_z(i,j,k,ispec_CPML)
+        ! PML convolution coefficients
+        A6 = pml_convolution_coef_strain(1,i,j,k,ispec_CPML)
+        A7 = pml_convolution_coef_strain(2,i,j,k,ispec_CPML)
+        A8 = pml_convolution_coef_strain(3,i,j,k,ispec_CPML)
+        A9 = pml_convolution_coef_strain(4,i,j,k,ispec_CPML)
+
+        A10 = pml_convolution_coef_strain(5,i,j,k,ispec_CPML)
+        A11 = pml_convolution_coef_strain(6,i,j,k,ispec_CPML)
+        A12 = pml_convolution_coef_strain(7,i,j,k,ispec_CPML)
+        A13 = pml_convolution_coef_strain(8,i,j,k,ispec_CPML)
+
+        A14 = pml_convolution_coef_strain(9,i,j,k,ispec_CPML)
+        A15 = pml_convolution_coef_strain(10,i,j,k,ispec_CPML)
+        A16 = pml_convolution_coef_strain(11,i,j,k,ispec_CPML)
+        A17 = pml_convolution_coef_strain(12,i,j,k,ispec_CPML)
 
         !---------------------- A6, A7, A8, A9 --------------------------
-        call lijk_parameter_computation(kappa_z,d_z,alpha_z,kappa_y,d_y,alpha_y,kappa_x,d_x,alpha_x, &
-                                        CPML_region_local,231, &
-                                        A6,A7,A8,A9)
-
         ! coefficients
         ! alpha_z
         coef0_1 = pml_convolution_coef_alpha(7,i,j,k,ispec_CPML)
@@ -538,10 +523,6 @@
                 coef1_3 * PML_dpotential_dxl_new(i,j,k) + coef2_3 * PML_dpotential_dxl_old(i,j,k)
 
         !---------------------- A10,A11,A12,A13 --------------------------
-        call lijk_parameter_computation(kappa_x,d_x,alpha_x,kappa_z,d_z,alpha_z,kappa_y,d_y,alpha_y, &
-                                        CPML_region_local,132, &
-                                        A10,A11,A12,A13)
-
         ! coefficients
         ! alpha_x
         coef0_1 = pml_convolution_coef_alpha(1,i,j,k,ispec_CPML)
@@ -568,10 +549,6 @@
                 coef1_3 * PML_dpotential_dyl_new(i,j,k) + coef2_3 * PML_dpotential_dyl_old(i,j,k)
 
         !---------------------- A14,A15,A16,A17 --------------------------
-        call lijk_parameter_computation(kappa_x,d_x,alpha_x,kappa_y,d_y,alpha_y,kappa_z,d_z,alpha_z, &
-                                        CPML_region_local,123, &
-                                        A14,A15,A16,A17)
-
         ! coefficients
         ! alpha_x
         coef0_1 = pml_convolution_coef_alpha(1,i,j,k,ispec_CPML)
@@ -698,16 +675,18 @@ subroutine pml_compute_memory_variables_acoustic_elastic(ispec_CPML,iface,iglob,
   real(kind=CUSTOM_REAL) :: kappa_x,kappa_y,kappa_z,d_x,d_y,d_z,alpha_x,alpha_y,alpha_z
 
   CPML_region_local = CPML_regions(ispec_CPML)
+
   kappa_x = k_store_x(i,j,k,ispec_CPML)
   kappa_y = k_store_y(i,j,k,ispec_CPML)
   kappa_z = k_store_z(i,j,k,ispec_CPML)
+
   d_x = d_store_x(i,j,k,ispec_CPML)
   d_y = d_store_y(i,j,k,ispec_CPML)
   d_z = d_store_z(i,j,k,ispec_CPML)
+
   alpha_x = alpha_store_x(i,j,k,ispec_CPML)
   alpha_y = alpha_store_y(i,j,k,ispec_CPML)
   alpha_z = alpha_store_z(i,j,k,ispec_CPML)
-
 
   call lxy_interface_parameter_computation(kappa_y,d_y,alpha_y,kappa_z,d_z,alpha_z, &
                                            CPML_region_local,23, &
@@ -833,12 +812,15 @@ subroutine pml_compute_memory_variables_acoustic_elastic(ispec_CPML,iface,iglob,
   real(kind=CUSTOM_REAL) :: kappa_x,kappa_y,kappa_z,d_x,d_y,d_z,alpha_x,alpha_y,alpha_z
 
   CPML_region_local = CPML_regions(ispec_CPML)
+
   kappa_x = k_store_x(i,j,k,ispec_CPML)
   kappa_y = k_store_y(i,j,k,ispec_CPML)
   kappa_z = k_store_z(i,j,k,ispec_CPML)
+
   d_x = d_store_x(i,j,k,ispec_CPML)
   d_y = d_store_y(i,j,k,ispec_CPML)
   d_z = d_store_z(i,j,k,ispec_CPML)
+
   alpha_x = alpha_store_x(i,j,k,ispec_CPML)
   alpha_y = alpha_store_y(i,j,k,ispec_CPML)
   alpha_z = alpha_store_z(i,j,k,ispec_CPML)
@@ -1514,7 +1496,7 @@ subroutine pml_compute_memory_variables_acoustic_elastic(ispec_CPML,iface,iglob,
       bar_A_4 = bar_A_0 * alpha_y**2 &
               * (beta_x - alpha_y) * (beta_y - alpha_y) / (alpha_x - alpha_y)
     else
-      stop 'Error occured in l_parameter_computation in CPML_XYZ region'
+      stop 'Error occured in l_interface_parameter_computation in CPML_XYZ region'
     endif
 
   else if (CPML_region_local == CPML_XY_ONLY_TEMP) then
@@ -1529,7 +1511,7 @@ subroutine pml_compute_memory_variables_acoustic_elastic(ispec_CPML,iface,iglob,
       bar_A_4 = bar_A_0 * alpha_y**2 &
               * (beta_x - alpha_y) * (beta_y - alpha_y) / (alpha_x - alpha_y)
     else
-      stop 'Error occured in l_parameter_computation in CPML_XY_ONLY region'
+      stop 'Error occured in l_interface_parameter_computation in CPML_XY_ONLY region'
     endif
 
   else if (CPML_region_local == CPML_XZ_ONLY_TEMP) then

@@ -72,9 +72,6 @@
   ! forward fields
   backward_simulation = .false.
 
-  ! saftey check
-  if (GPU_MODE .and. PML_CONDITIONS) call exit_MPI(myrank,'PML conditions not yet implemented on GPUs')
-
   ! kbai added the following two synchronizations to ensure that the displacement and velocity values
   ! at nodes on MPI interfaces stay equal on all processors that share the node.
   ! Do this only for dynamic rupture simulations
@@ -132,6 +129,28 @@
                                             nspec_outer_elastic, &
                                             nspec_inner_elastic, &
                                             COMPUTE_AND_STORE_STRAIN,ATTENUATION,1) ! 1 == forward
+
+      ! adds contributions for PML elements
+      if (NSPEC_CPML > 0 .and. .not. backward_simulation) then
+        ! GPU
+        ! note: the compute forces for PML is not implemented yet on GPUs
+        !       thus, we need to transfer the fields onto the CPU and back when done
+        ! needs to transfer displ,veloc,accel
+        call transfer_fields_el_from_device(NDIM*NGLOB_AB,displ,veloc,accel,Mesh_pointer)
+        ! PML_displ_old,new
+        call transfer_pml_displ_from_device(NDIM*NGLLCUBE*NSPEC_CPML,PML_displ_old,PML_displ_new,Mesh_pointer)
+        ! computes PML element contributions
+        call compute_forces_viscoelastic_PML(iphase, &
+                                             displ,veloc,accel, &
+                                             epsilondev_xx,epsilondev_yy,epsilondev_xy, &
+                                             epsilondev_xz,epsilondev_yz,epsilon_trace_over_3, &
+                                             backward_simulation)
+        ! needs to transfer displ,veloc,accel
+        call transfer_fields_el_to_device(NDIM*NGLOB_AB,displ,veloc,accel,Mesh_pointer)
+        ! PML_displ_old,new
+        call transfer_pml_displ_to_device(NDIM*NGLLCUBE*NSPEC_CPML,PML_displ_old,PML_displ_new,Mesh_pointer)
+      endif
+
     endif
 
     ! debug timing
@@ -710,8 +729,9 @@
 
   integer:: iphase
 
-  ! check
-  if (PML_CONDITIONS) call exit_MPI(myrank,'PML conditions not yet implemented on GPUs')
+  ! safety check
+  if (SIMULATION_TYPE /= 3) &
+    call exit_MPI(myrank,'routine compute_forces_viscoelastic_GPU_calling() works only for SIMULATION_TYPE == 3')
 
   ! distinguishes two runs: for elements in contact with MPI interfaces, and elements within the partitions
   do iphase = 1,2

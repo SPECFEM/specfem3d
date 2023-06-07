@@ -186,7 +186,9 @@ void FC_FUNC_(pml_impose_boundary_condition_elastic_cuda,
 
   // checks if anything to do
   if (! mp->pml_conditions) return;
+
   if (mp->d_num_abs_boundary_faces == 0) return;
+  if (mp->NSPEC_CPML == 0) return;
 
   int num_blocks_x, num_blocks_y;
   get_blocks_xy(mp->d_num_abs_boundary_faces,&num_blocks_x,&num_blocks_y);

@@ -40,10 +40,10 @@
 
   use specfem_par, only: NGLOB_AB,wgll_cube,jacobianstore,ibool,rhostore,irregular_element_number,jacobian_regular
 
-  use pml_par, only: CPML_regions,d_store_x,d_store_y,d_store_z,K_store_x,K_store_y,K_store_z, &
-                     alpha_store_x, alpha_store_y, alpha_store_z, &
-                     pml_convolution_coef_alpha, &
-                     NSPEC_CPML,PML_displ_old,PML_displ_new
+  use pml_par, only: pml_convolution_coef_alpha, &
+                     pml_convolution_coef_abar, &
+                     NSPEC_CPML, &
+                     PML_displ_old,PML_displ_new
 
   implicit none
 
@@ -55,15 +55,11 @@
   real(kind=CUSTOM_REAL), dimension(NDIM,NGLLX,NGLLY,NGLLZ,NSPEC_CPML,3),intent(inout) :: rmemory_displ_elastic
 
   ! local parameters
-  integer :: i,j,k,iglob,CPML_region_local,ispec_irreg
+  integer :: i,j,k,iglob,ispec_irreg
 
   real(kind=CUSTOM_REAL) :: wgllcube,rhol,jacobianl
-  real(kind=CUSTOM_REAL) :: alpha_x,alpha_y,alpha_z,d_x,d_y,d_z,kappa_x,kappa_y,kappa_z
   real(kind=CUSTOM_REAL) :: coef0_x,coef1_x,coef2_x,coef0_y,coef1_y,coef2_y,coef0_z,coef1_z,coef2_z
-  real(kind=CUSTOM_REAL) :: A_0,A_1,A_2,A_3,A_4,A_5
-
-  ! PML element region
-  CPML_region_local = CPML_regions(ispec_CPML)
+  real(kind=CUSTOM_REAL) :: A_1,A_2,A_3,A_4,A_5
 
   ispec_irreg = irregular_element_number(ispec)
   if (ispec_irreg == 0) jacobianl = jacobian_regular
@@ -72,23 +68,11 @@
     do j=1,NGLLY
       do i=1,NGLLX
         ! PML coefficient values
-        kappa_x = k_store_x(i,j,k,ispec_CPML)
-        kappa_y = k_store_y(i,j,k,ispec_CPML)
-        kappa_z = k_store_z(i,j,k,ispec_CPML)
-
-        d_x = d_store_x(i,j,k,ispec_CPML)
-        d_y = d_store_y(i,j,k,ispec_CPML)
-        d_z = d_store_z(i,j,k,ispec_CPML)
-
-        alpha_x = alpha_store_x(i,j,k,ispec_CPML)
-        alpha_y = alpha_store_y(i,j,k,ispec_CPML)
-        alpha_z = alpha_store_z(i,j,k,ispec_CPML)
-
-        call l_parameter_computation(kappa_x, d_x, alpha_x, &
-                                     kappa_y, d_y, alpha_y, &
-                                     kappa_z, d_z, alpha_z, &
-                                     CPML_region_local, &
-                                     A_0, A_1, A_2, A_3, A_4, A_5)
+        A_1 = pml_convolution_coef_abar(1,i,j,k,ispec_CPML)
+        A_2 = pml_convolution_coef_abar(2,i,j,k,ispec_CPML)
+        A_3 = pml_convolution_coef_abar(3,i,j,k,ispec_CPML)
+        A_4 = pml_convolution_coef_abar(4,i,j,k,ispec_CPML)
+        A_5 = pml_convolution_coef_abar(5,i,j,k,ispec_CPML)
 
         ! coefficients
         ! alpha_x
@@ -129,6 +113,7 @@
                 + PML_displ_new(3,i,j,k,ispec_CPML) * coef1_z + PML_displ_old(3,i,j,k,ispec_CPML) * coef2_z
 
         iglob = ibool(i,j,k,ispec)
+
         rhol = rhostore(i,j,k,ispec)
         if (ispec_irreg /= 0) jacobianl = jacobianstore(i,j,k,ispec_irreg)
         wgllcube = wgll_cube(i,j,k)
@@ -179,9 +164,8 @@
 
   use specfem_par, only: NGLOB_AB,wgll_cube,jacobianstore,ibool,kappastore,irregular_element_number,jacobian_regular
 
-  use pml_par, only: CPML_regions,NSPEC_CPML,d_store_x,d_store_y,d_store_z,K_store_x,K_store_y,K_store_z, &
-                     alpha_store_x, alpha_store_y, alpha_store_z, &
-                     pml_convolution_coef_alpha, &
+  use pml_par, only: pml_convolution_coef_alpha, &
+                     pml_convolution_coef_abar, &
                      NSPEC_CPML, &
                      PML_potential_acoustic_old,PML_potential_acoustic_new
 
@@ -195,15 +179,11 @@
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ), intent(out) :: potential_dot_dot_acoustic_CPML
 
   ! local parameters
-  integer :: i,j,k,iglob,CPML_region_local,ispec_irreg
+  integer :: i,j,k,iglob,ispec_irreg
 
   real(kind=CUSTOM_REAL) :: wgllcube,kappal_inv,jacobianl
-  real(kind=CUSTOM_REAL) :: alpha_x,alpha_y,alpha_z,d_x,d_y,d_z,kappa_x,kappa_y,kappa_z
   real(kind=CUSTOM_REAL) :: coef0_x,coef1_x,coef2_x,coef0_y,coef1_y,coef2_y,coef0_z,coef1_z,coef2_z
-  real(kind=CUSTOM_REAL) :: A_0,A_1,A_2,A_3,A_4,A_5
-
-  ! PML element region
-  CPML_region_local = CPML_regions(ispec_CPML)
+  real(kind=CUSTOM_REAL) :: A_1,A_2,A_3,A_4,A_5
 
   ! irregular element index
   ispec_irreg = irregular_element_number(ispec)
@@ -213,23 +193,11 @@
     do j=1,NGLLY
       do i=1,NGLLX
         ! PML coefficient values
-        kappa_x = k_store_x(i,j,k,ispec_CPML)
-        kappa_y = k_store_y(i,j,k,ispec_CPML)
-        kappa_z = k_store_z(i,j,k,ispec_CPML)
-
-        d_x = d_store_x(i,j,k,ispec_CPML)
-        d_y = d_store_y(i,j,k,ispec_CPML)
-        d_z = d_store_z(i,j,k,ispec_CPML)
-
-        alpha_x = alpha_store_x(i,j,k,ispec_CPML)
-        alpha_y = alpha_store_y(i,j,k,ispec_CPML)
-        alpha_z = alpha_store_z(i,j,k,ispec_CPML)
-
-        call l_parameter_computation(kappa_x, d_x, alpha_x, &
-                                     kappa_y, d_y, alpha_y, &
-                                     kappa_z, d_z, alpha_z, &
-                                     CPML_region_local, &
-                                     A_0, A_1, A_2, A_3, A_4, A_5)
+        A_1 = pml_convolution_coef_abar(1,i,j,k,ispec_CPML)
+        A_2 = pml_convolution_coef_abar(2,i,j,k,ispec_CPML)
+        A_3 = pml_convolution_coef_abar(3,i,j,k,ispec_CPML)
+        A_4 = pml_convolution_coef_abar(4,i,j,k,ispec_CPML)
+        A_5 = pml_convolution_coef_abar(5,i,j,k,ispec_CPML)
 
         ! coefficients
         ! alpha_x
@@ -479,6 +447,9 @@
                                      CPML_region_local, &
                                      A_0, A_1, A_2, A_3, A_4, A_5)
 
+! computes convolution coefficients
+! see: Xie et al. 2014, appendix A1
+
   use constants, only: CUSTOM_REAL, CPML_XYZ, &
                        CPML_X_ONLY,CPML_Y_ONLY,CPML_Z_ONLY, &
                        CPML_XY_ONLY,CPML_XZ_ONLY,CPML_YZ_ONLY
@@ -486,15 +457,16 @@
 
   implicit none
 
-  real(kind=CUSTOM_REAL) :: kappa_x,d_x,alpha_x,beta_x, &
-                            kappa_y,d_y,alpha_y,beta_y, &
-                            kappa_z,d_z,alpha_z,beta_z
+  real(kind=CUSTOM_REAL), intent(in) :: kappa_x,d_x,alpha_x, &
+                                        kappa_y,d_y,alpha_y, &
+                                        kappa_z,d_z,alpha_z
   integer, intent(in) :: CPML_region_local
 
   real(kind=CUSTOM_REAL), intent(out) :: A_0, A_1, A_2, A_3, A_4, A_5
 
   !local variable
   real(kind=CUSTOM_REAL) :: bar_A_0, bar_A_1, bar_A_2, bar_A_3, bar_A_4, bar_A_5
+  real(kind=CUSTOM_REAL) :: beta_x,beta_y,beta_z
 
   beta_x = alpha_x + d_x / kappa_x
   beta_y = alpha_y + d_y / kappa_y

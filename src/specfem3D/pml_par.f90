@@ -63,6 +63,8 @@ module pml_par
   real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: alpha_store_x,alpha_store_y,alpha_store_z
 
   real(kind=CUSTOM_REAL), dimension(:,:,:,:,:), allocatable :: pml_convolution_coef_alpha,pml_convolution_coef_beta
+  real(kind=CUSTOM_REAL), dimension(:,:,:,:,:), allocatable :: pml_convolution_coef_abar
+  real(kind=CUSTOM_REAL), dimension(:,:,:,:,:), allocatable :: pml_convolution_coef_strain
 
   ! minimum distance between parameters of CPML to avoid the singularities
   real(kind=CUSTOM_REAL) :: min_distance_between_CPML_parameter

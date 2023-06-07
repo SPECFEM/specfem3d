@@ -39,6 +39,8 @@
   use fault_solver_dynamic, only: SIMULATION_TYPE_DYN,fault_transfer_data_GPU,fault_rsf_swf_init_GPU
   use fault_solver_kinematic, only: SIMULATION_TYPE_KIN
 
+  use pml_par, only: NSPEC_CPML,is_CPML,spec_to_CPML,CPML_to_spec,PML_displ_old,PML_displ_new
+
   implicit none
 
   ! local parameters
@@ -184,7 +186,8 @@
       endif
       call synchronize_all()
 
-      call prepare_fields_elastic_pml(Mesh_pointer)
+      call prepare_fields_elastic_pml(Mesh_pointer,NSPEC_CPML,is_CPML,CPML_to_spec,spec_to_CPML, &
+                                      PML_displ_old,PML_displ_new)
     endif
   endif
 
@@ -358,6 +361,8 @@
   use fault_solver_common, only: USE_KELVIN_VOIGT_DAMPING
   use fault_solver_dynamic, only: SIMULATION_TYPE_DYN
 
+  use pml_par
+
   use specfem_par_lts, only: num_p_level,max_nibool_interfaces_boundary
 
   implicit none
@@ -386,7 +391,8 @@
   ! d_ispec_is_elastic
   memory_size = memory_size + NSPEC_AB * dble(SIZE_INTEGER)
 
-  if (STACEY_ABSORBING_CONDITIONS) then
+  ! absorbing boundary (for both Stacey and PML needed)
+  if (num_abs_boundary_faces > 0) then
     ! d_abs_boundary_ispec
     memory_size = memory_size + num_abs_boundary_faces * dble(SIZE_INTEGER)
     ! d_abs_boundary_ijk
@@ -456,9 +462,17 @@
     ! d_phase_ispec_inner_elastic
     memory_size = memory_size + 2.d0 * num_phase_ispec_elastic * dble(SIZE_INTEGER)
 
-    if (STACEY_ABSORBING_CONDITIONS .or. PML_CONDITIONS) then
+    if (STACEY_ABSORBING_CONDITIONS) then
       ! d_rho_vp,..
       memory_size = memory_size + 2.d0 * NGLL3 * NSPEC_AB * dble(CUSTOM_REAL)
+    endif
+    if (PML_CONDITIONS) then
+      ! d_is_CPML,d_spec_to_CPML
+      memory_size = memory_size + 2.d0 * NSPEC_AB * dble(SIZE_INTEGER)
+      ! d_CPML_to_spec
+      memory_size = memory_size + NSPEC_CPML * dble(SIZE_INTEGER)
+      ! d_PML_displ_old,new
+      memory_size = memory_size + 2.d0 * NDIM * NGLL3 * NSPEC_CPML * dble(CUSTOM_REAL)
     endif
 
     ! padded kappav,muv

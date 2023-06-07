@@ -267,7 +267,7 @@ void FC_FUNC_(prepare_constants_device,
 
   // absorbing boundaries
   mp->d_num_abs_boundary_faces = *h_num_abs_boundary_faces;
-  if (mp->stacey_absorbing_conditions && mp->d_num_abs_boundary_faces > 0){
+  if (mp->d_num_abs_boundary_faces > 0){
     gpuCreateCopy_todevice_int((void**)&mp->d_abs_boundary_ispec,h_abs_boundary_ispec,mp->d_num_abs_boundary_faces);
     gpuCreateCopy_todevice_int((void**)&mp->d_abs_boundary_ijk,h_abs_boundary_ijk,3*NGLL2*(mp->d_num_abs_boundary_faces));
     gpuCreateCopy_todevice_realw((void**)&mp->d_abs_boundary_normal,h_abs_boundary_normal,NDIM*NGLL2*(mp->d_num_abs_boundary_faces));
@@ -1169,7 +1169,13 @@ void FC_FUNC_(prepare_fields_elastic_adj_dev,
 
 extern EXTERN_LANG
 void FC_FUNC_(prepare_fields_elastic_pml,
-              PREPARE_FIELDS_ELASTIC_PML)(long* Mesh_pointer) {
+              PREPARE_FIELDS_ELASTIC_PML)(long* Mesh_pointer,
+                                          int* NSPEC_CPML,
+                                          int* is_CPML,
+                                          int* CPML_to_spec,
+                                          int* spec_to_CPML,
+                                          realw* PML_displ_old,
+                                          realw* PML_displ_new) {
 
   TRACE("prepare_fields_elastic_pml");
 
@@ -1178,12 +1184,21 @@ void FC_FUNC_(prepare_fields_elastic_pml,
   // checks if anything to do
   if (! mp->pml_conditions) return;
 
+  mp->NSPEC_CPML = *NSPEC_CPML;
+
+  gpuCreateCopy_todevice_int((void**)&mp->d_is_CPML,is_CPML,mp->NSPEC_AB);
+  gpuCreateCopy_todevice_int((void**)&mp->d_spec_to_CPML,spec_to_CPML,mp->NSPEC_AB);
+
+  if (mp->NSPEC_CPML > 0){
+    gpuCreateCopy_todevice_int((void**)&mp->d_CPML_to_spec,CPML_to_spec,mp->NSPEC_CPML);
+
+    int size = NDIM * NGLL3 * mp->NSPEC_CPML;
+    gpuCreateCopy_todevice_realw((void**)&mp->d_PML_displ_old,PML_displ_old,size);
+    gpuCreateCopy_todevice_realw((void**)&mp->d_PML_displ_new,PML_displ_new,size);
+  }
+
   //TODO: safety stop
-  exit_on_error("PML_CONDITIONS not implemented yet on GPU\n");
-
-  //gpuCreateCopy_todevice_realw((void**)&mp->d_PML_displ_old,h_PML_displ_old,NDIM*NGLL3*NSPEC_CPML);
-  //gpuCreateCopy_todevice_realw((void**)&mp->d_PML_displ_new,h_PML_displ_new,NDIM*NGLL3*NSPEC_CPML);
-
+  //exit_on_error("PML_CONDITIONS not implemented yet on GPU\n");
 
   GPU_ERROR_CHECKING("prepare_fields_elastic_pml");
 }
@@ -1469,7 +1484,7 @@ TRACE("prepare_cleanup_device");
   gpuFree(mp->d_gammaz);
 
   // absorbing boundaries
-  if (mp->stacey_absorbing_conditions && mp->d_num_abs_boundary_faces > 0){
+  if (mp->d_num_abs_boundary_faces > 0){
     gpuFree(mp->d_abs_boundary_ispec);
     gpuFree(mp->d_abs_boundary_ijk);
     gpuFree(mp->d_abs_boundary_normal);
