@@ -420,8 +420,6 @@ void FC_FUNC_(prepare_constants_device,
   // Kelvin_voigt initialization
   mp->use_Kelvin_Voigt_damping = 0;
 
-  // JC JC here we will need to add GPU support for the new C-PML routines
-
   GPU_ERROR_CHECKING("prepare_constants_device");
 }
 
