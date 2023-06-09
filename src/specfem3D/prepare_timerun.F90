@@ -593,10 +593,13 @@
 
   use constants, only: IMAIN,NGLLX,NGLLY,NGLLZ,NDIM
 
-  use specfem_par, only: myrank,deltat,SIMULATION_TYPE, &
+  use specfem_par, only: myrank,deltat,NSPEC_AB,SIMULATION_TYPE, &
     ELASTIC_SIMULATION,ACOUSTIC_SIMULATION, &
     UNDO_ATTENUATION_AND_OR_PML,PML_CONDITIONS,SAVE_MESH_FILES
+
   use specfem_par_acoustic, only: num_coupling_ac_el_faces
+
+  use fault_solver_common, only: Kelvin_Voigt_eta,USE_KELVIN_VOIGT_DAMPING
 
   use pml_par
 
@@ -621,6 +624,9 @@
   real(kind=CUSTOM_REAL) :: A_18,A_19 ! L1
   real(kind=CUSTOM_REAL) :: A_20,A_21 ! L2
   real(kind=CUSTOM_REAL) :: A_22,A_23 ! L3
+  ! faults
+  real(kind=CUSTOM_REAL) :: eta
+
   double precision :: memory_size,memory_size_glob
 
   ! checks if anything to do
@@ -687,7 +693,7 @@
   ! maximum of all processes (may vary e.g. due to different NSPEC_CPML, ..)
   call max_all_dp(memory_size,memory_size_glob)
   if (myrank == 0) then
-    write(IMAIN,*) '  minimum convolution memory requested: ',memory_size_glob / 1024. / 1024.,'MB per process'
+    write(IMAIN,*) '  minimum convolution memory requested: ',sngl(memory_size_glob / 1024.d0 / 1024.d0),'MB per process'
     call flush_IMAIN()
   endif
 
@@ -701,7 +707,7 @@
   ! maximum of all processes (may vary e.g. due to different NSPEC_CPML, ..)
   call max_all_dp(memory_size,memory_size_glob)
   if (myrank == 0) then
-    write(IMAIN,*) '  minimum coefficient memory requested: ',memory_size_glob / 1024. / 1024.,'MB per process'
+    write(IMAIN,*) '  minimum coefficient memory requested: ',sngl(memory_size_glob / 1024.d0 / 1024.d0),'MB per process'
     write(IMAIN,*)
     call flush_IMAIN()
   endif
@@ -900,6 +906,17 @@
 
   ! outputs informations about C-PML elements in VTK-file format
   if (SAVE_MESH_FILES) call pml_output_VTKs()
+
+  ! checks with fault elements
+  if (USE_KELVIN_VOIGT_DAMPING) then
+    do ispec = 1,NSPEC_AB
+      if (is_CPML(ispec)) then
+        ! Kelvin Voigt damping: artificial viscosity around dynamic faults
+        eta = Kelvin_Voigt_eta(ispec)
+        if (eta /= 0._CUSTOM_REAL) stop 'Error: you cannot put a fault inside a PML layer'
+      endif
+    enddo
+  endif
 
   ! synchonizes
   call synchronize_all()

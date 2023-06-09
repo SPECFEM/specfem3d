@@ -114,31 +114,6 @@
   do k=1,NGLLZ
     do j=1,NGLLY
       do i=1,NGLLX
-        ! PML convolution coefficients
-        A6 = pml_convolution_coef_strain(1,i,j,k,ispec_CPML)
-        A7 = pml_convolution_coef_strain(2,i,j,k,ispec_CPML)
-        A8 = pml_convolution_coef_strain(3,i,j,k,ispec_CPML)
-        A9 = pml_convolution_coef_strain(4,i,j,k,ispec_CPML)
-
-        A10 = pml_convolution_coef_strain(5,i,j,k,ispec_CPML)
-        A11 = pml_convolution_coef_strain(6,i,j,k,ispec_CPML)
-        A12 = pml_convolution_coef_strain(7,i,j,k,ispec_CPML)
-        A13 = pml_convolution_coef_strain(8,i,j,k,ispec_CPML)
-
-        A14 = pml_convolution_coef_strain(9,i,j,k,ispec_CPML)
-        A15 = pml_convolution_coef_strain(10,i,j,k,ispec_CPML)
-        A16 = pml_convolution_coef_strain(11,i,j,k,ispec_CPML)
-        A17 = pml_convolution_coef_strain(12,i,j,k,ispec_CPML)
-
-        A18 = pml_convolution_coef_strain(13,i,j,k,ispec_CPML)
-        A19 = pml_convolution_coef_strain(14,i,j,k,ispec_CPML)
-
-        A20 = pml_convolution_coef_strain(15,i,j,k,ispec_CPML)
-        A21 = pml_convolution_coef_strain(16,i,j,k,ispec_CPML)
-
-        A22 = pml_convolution_coef_strain(17,i,j,k,ispec_CPML)
-        A23 = pml_convolution_coef_strain(18,i,j,k,ispec_CPML)
-
         !---------------------- A6, A7, A8, A9 --------------------------
         ! coefficients
         ! alpha_z
@@ -310,6 +285,31 @@
 
         rmemory_dux_dxl_y(i,j,k,ispec_CPML) = coef0_1 * rmemory_dux_dxl_y(i,j,k,ispec_CPML) &
                + PML_dux_dxl_new(i,j,k) * coef1_1 + PML_dux_dxl_old(i,j,k) * coef2_1
+
+        ! PML convolution coefficients
+        A6 = pml_convolution_coef_strain(1,i,j,k,ispec_CPML)
+        A7 = pml_convolution_coef_strain(2,i,j,k,ispec_CPML)
+        A8 = pml_convolution_coef_strain(3,i,j,k,ispec_CPML)
+        A9 = pml_convolution_coef_strain(4,i,j,k,ispec_CPML)
+
+        A10 = pml_convolution_coef_strain(5,i,j,k,ispec_CPML)
+        A11 = pml_convolution_coef_strain(6,i,j,k,ispec_CPML)
+        A12 = pml_convolution_coef_strain(7,i,j,k,ispec_CPML)
+        A13 = pml_convolution_coef_strain(8,i,j,k,ispec_CPML)
+
+        A14 = pml_convolution_coef_strain(9,i,j,k,ispec_CPML)
+        A15 = pml_convolution_coef_strain(10,i,j,k,ispec_CPML)
+        A16 = pml_convolution_coef_strain(11,i,j,k,ispec_CPML)
+        A17 = pml_convolution_coef_strain(12,i,j,k,ispec_CPML)
+
+        A18 = pml_convolution_coef_strain(13,i,j,k,ispec_CPML)
+        A19 = pml_convolution_coef_strain(14,i,j,k,ispec_CPML)
+
+        A20 = pml_convolution_coef_strain(15,i,j,k,ispec_CPML)
+        A21 = pml_convolution_coef_strain(16,i,j,k,ispec_CPML)
+
+        A22 = pml_convolution_coef_strain(17,i,j,k,ispec_CPML)
+        A23 = pml_convolution_coef_strain(18,i,j,k,ispec_CPML)
 
         ! derivatives
         duxdxl_x = A6 * PML_dux_dxl(i,j,k) + A7 * rmemory_dux_dxl_x(i,j,k,ispec_CPML,1) &

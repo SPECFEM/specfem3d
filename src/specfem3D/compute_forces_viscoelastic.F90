@@ -278,7 +278,10 @@
     if (USE_KELVIN_VOIGT_DAMPING) then
       ! Kelvin Voigt damping: artificial viscosity around dynamic faults
       eta = Kelvin_Voigt_eta(ispec)
-      if (is_CPML(ispec) .and. eta /= 0._CUSTOM_REAL) stop 'you cannot put a fault inside a PML layer'
+
+      ! checks w/ PML (done in prepare_timerun_pml())
+      !if (is_CPML(ispec) .and. eta /= 0._CUSTOM_REAL) stop 'you cannot put a fault inside a PML layer'
+
       ! note: this loop will not fully vectorize because it contains a dependency
       !       (through indirect addressing with array ibool())
       !       thus, instead of DO_LOOP_IJK we use do k=..;do j=..;do i=..,
@@ -971,8 +974,6 @@
 
   use constants, only: CUSTOM_REAL,NGLLX,NGLLY,NGLLZ,NDIM,ONE_THIRD,m1,m2
 
-  use fault_solver_common, only: Kelvin_Voigt_eta,USE_KELVIN_VOIGT_DAMPING
-
   use specfem_par, only: xixstore,xiystore,xizstore,etaxstore,etaystore,etazstore,gammaxstore,gammaystore,gammazstore, &
                          NGLOB_AB, &
                          hprime_xx,hprime_xxT, &
@@ -1033,9 +1034,6 @@
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ) :: newtempx1,newtempx2,newtempx3
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ) :: newtempy1,newtempy2,newtempy3
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ) :: newtempz1,newtempz2,newtempz3
-
-  ! faults
-  real(kind=CUSTOM_REAL) :: eta
 
   ! local C-PML absorbing boundary conditions parameters
   integer :: ispec_CPML
@@ -1119,7 +1117,6 @@
 !$OMP displ,veloc,accel, &
 !$OMP is_CPML,backward_simulation, &
 !$OMP xixstore,xiystore,xizstore,etaxstore,etaystore,etazstore,gammaxstore,gammaystore,gammazstore, &
-!$OMP Kelvin_Voigt_eta,USE_KELVIN_VOIGT_DAMPING, &
 !$OMP COMPUTE_AND_STORE_STRAIN,SIMULATION_TYPE, &
 !$OMP epsilondev_xx,epsilondev_yy,epsilondev_xy,epsilondev_xz,epsilondev_yz,epsilon_trace_over_3, &
 !$OMP spec_to_CPML,PML_displ_old,PML_displ_new, &
@@ -1136,7 +1133,7 @@
 #ifdef FORCE_VECTORIZATION
 !$OMP ijk, &
 #endif
-!$OMP xixl,xiyl,xizl,etaxl,etayl,etazl,gammaxl,gammayl,gammazl,eta, &
+!$OMP xixl,xiyl,xizl,etaxl,etayl,etazl,gammaxl,gammayl,gammazl, &
 !$OMP duxdxl,duxdyl,duxdzl,duydxl,duydyl,duydzl,duzdxl,duzdyl,duzdzl, &
 !$OMP hp1,hp2,hp3,fac1,fac2,fac3, &
 !$OMP dummyx_loc,dummyy_loc,dummyz_loc, &
@@ -1189,12 +1186,12 @@
 
     ! stores displacement values in local array
 
-    ! checks
-    if (USE_KELVIN_VOIGT_DAMPING) then
-      ! Kelvin Voigt damping: artificial viscosity around dynamic faults
-      eta = Kelvin_Voigt_eta(ispec)
-      if (is_CPML(ispec) .and. eta /= 0._CUSTOM_REAL) stop 'Error: you cannot put a fault inside a PML layer'
-    endif
+    ! checks w/ PML (done in prepare_timerun_pml())
+    !if (USE_KELVIN_VOIGT_DAMPING) then
+    !  ! Kelvin Voigt damping: artificial viscosity around dynamic faults
+    !  eta = Kelvin_Voigt_eta(ispec)
+    !  if (is_CPML(ispec) .and. eta /= 0._CUSTOM_REAL) stop 'Error: you cannot put a fault inside a PML layer'
+    !endif
 
     ! displacement only (without damping)
     ! note: this loop will not fully vectorize because it contains a dependency
@@ -1474,7 +1471,7 @@
     !endif
 
     ! computes deviatoric strain for kernel calculations
-    ! (maybe not really needed, but will keep for now based on a "pure" acoustic element contribution)
+    ! (maybe not really needed, but will keep for now based on a "pure" elastic element contribution)
     if (COMPUTE_AND_STORE_STRAIN) then
       ! non-attenuation case
       DO_LOOP_IJK

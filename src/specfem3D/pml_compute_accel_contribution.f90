@@ -67,13 +67,6 @@
   do k=1,NGLLZ
     do j=1,NGLLY
       do i=1,NGLLX
-        ! PML coefficient values
-        A_1 = pml_convolution_coef_abar(1,i,j,k,ispec_CPML)
-        A_2 = pml_convolution_coef_abar(2,i,j,k,ispec_CPML)
-        A_3 = pml_convolution_coef_abar(3,i,j,k,ispec_CPML)
-        A_4 = pml_convolution_coef_abar(4,i,j,k,ispec_CPML)
-        A_5 = pml_convolution_coef_abar(5,i,j,k,ispec_CPML)
-
         ! coefficients
         ! alpha_x
         coef0_x = pml_convolution_coef_alpha(1,i,j,k,ispec_CPML)
@@ -117,6 +110,13 @@
         rhol = rhostore(i,j,k,ispec)
         if (ispec_irreg /= 0) jacobianl = jacobianstore(i,j,k,ispec_irreg)
         wgllcube = wgll_cube(i,j,k)
+
+        ! PML coefficient values
+        A_1 = pml_convolution_coef_abar(1,i,j,k,ispec_CPML)
+        A_2 = pml_convolution_coef_abar(2,i,j,k,ispec_CPML)
+        A_3 = pml_convolution_coef_abar(3,i,j,k,ispec_CPML)
+        A_4 = pml_convolution_coef_abar(4,i,j,k,ispec_CPML)
+        A_5 = pml_convolution_coef_abar(5,i,j,k,ispec_CPML)
 
         ! updates PML acceleration
         accel_elastic_CPML(1,i,j,k) =  wgllcube * rhol * jacobianl * &
