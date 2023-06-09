@@ -90,7 +90,7 @@
 
   ! element node connectivity for movie output
   ! the node ids are stored after dividing one NGLL*-th order spectral element into NGLLX*NGLLY*NGLLZ elements
-  integer, dimension(9,nspec_ab*(NGLLX-1)*(NGLLY-1)*(NGLLZ-1)) :: spec_elm_conn_xdmf
+  integer, dimension(:,:),allocatable :: spec_elm_conn_xdmf
 
   ! dummy arrays
   integer, dimension(1,1), parameter                    :: i2d_dummy = reshape((/0/),(/1,1/))
@@ -153,9 +153,17 @@
   allocate(ibool_interfaces_ext_mesh_dummy(max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 650')
   if (ier /= 0) stop 'error allocating array'
+  ibool_interfaces_ext_mesh_dummy(:,:) = 0
   do i = 1, num_interfaces_ext_mesh
     ibool_interfaces_ext_mesh_dummy(:,i) = ibool_interfaces_ext_mesh(1:max_nibool_interfaces_ext_mesh,i)
   enddo
+
+  ! connectivity
+  allocate(spec_elm_conn_xdmf(9,NSPEC_AB*(NGLLX-1)*(NGLLY-1)*(NGLLZ-1)),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 651')
+  if (ier /= 0) stop 'error allocating spec_elm_conn_xdm array'
+  spec_elm_conn_xdmf(:,:) = 0
+
   call synchronize_all()
 
   ! get MPI parameters
@@ -1433,10 +1441,8 @@
   call synchronize_all()
 
   ! cleanup
-  if (allocated(ibool_interfaces_ext_mesh_dummy)) then
-    deallocate(ibool_interfaces_ext_mesh_dummy,stat=ier)
-    if (ier /= 0) stop 'error deallocating array ibool_interfaces_ext_mesh_dummy'
-  endif
+  deallocate(ibool_interfaces_ext_mesh_dummy)
+  deallocate(spec_elm_conn_xdmf)
 
   ! user output
   if (myrank == 0) then
