@@ -136,22 +136,22 @@ void FC_FUNC_(transfer_fault_data_to_device,
   if (Flt->allow_opening){ exit_on_error("Fault opening not implemented yet on GPU\n"); }
 
   // copies data to GPU
-  if (*NGLOB_FLT > 0){
-    gpuCreateCopy_todevice_realw((void **)&(Flt->B),B,*NGLOB_FLT);
-    gpuCreateCopy_todevice_realw((void **)&(Flt->R),R,(*NGLOB_FLT)*9);
-    gpuCreateCopy_todevice_realw((void **)&(Flt->Z),Z,(*NGLOB_FLT));
+  if (Flt->NGLOB_FLT > 0){
+    gpuCreateCopy_todevice_realw((void **)&(Flt->B),B,Flt->NGLOB_FLT);
+    gpuCreateCopy_todevice_realw((void **)&(Flt->R),R,(Flt->NGLOB_FLT)*9);
+    gpuCreateCopy_todevice_realw((void **)&(Flt->Z),Z,(Flt->NGLOB_FLT));
 
-    gpuCreateCopy_todevice_realw((void **)&(Flt->D),D,(*NGLOB_FLT)*3);
-    gpuCreateCopy_todevice_realw((void **)&(Flt->V),V0,(*NGLOB_FLT)*3);
+    gpuCreateCopy_todevice_realw((void **)&(Flt->D),D,(Flt->NGLOB_FLT)*3);
+    gpuCreateCopy_todevice_realw((void **)&(Flt->V),V0,(Flt->NGLOB_FLT)*3);
 
-    gpuCreateCopy_todevice_realw((void **)&(Flt->T0),T0,(*NGLOB_FLT)*3);
-    gpuCreateCopy_todevice_realw((void **)&(Flt->T),T,(*NGLOB_FLT)*3);
+    gpuCreateCopy_todevice_realw((void **)&(Flt->T0),T0,(Flt->NGLOB_FLT)*3);
+    gpuCreateCopy_todevice_realw((void **)&(Flt->T),T,(Flt->NGLOB_FLT)*3);
 
-    gpuCreateCopy_todevice_realw((void **)&(Flt->invM1),invM1,*NGLOB_FLT);
-    gpuCreateCopy_todevice_realw((void **)&(Flt->invM2),invM2,*NGLOB_FLT);
+    gpuCreateCopy_todevice_realw((void **)&(Flt->invM1),invM1,Flt->NGLOB_FLT);
+    gpuCreateCopy_todevice_realw((void **)&(Flt->invM2),invM2,Flt->NGLOB_FLT);
 
-    gpuCreateCopy_todevice_int((void **)&(Flt->ibulk1),ibulk1,(*NGLOB_FLT));
-    gpuCreateCopy_todevice_int((void **)&(Flt->ibulk2),ibulk2,(*NGLOB_FLT));
+    gpuCreateCopy_todevice_int((void **)&(Flt->ibulk1),ibulk1,(Flt->NGLOB_FLT));
+    gpuCreateCopy_todevice_int((void **)&(Flt->ibulk2),ibulk2,(Flt->NGLOB_FLT));
   }
 
   GPU_ERROR_CHECKING("transfer_fault_data_to_device");

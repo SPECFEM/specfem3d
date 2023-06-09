@@ -274,6 +274,7 @@ subroutine sum_kernel_pre(kernel_name,kernel_list,nker)
     ! outputs norm of kernel
     norm = sum( kernel * kernel )
     call sum_all_dp(norm, norm_sum)
+
     if (myrank == 0) then
       print *,'  norm kernel        : ',sqrt(norm_sum)
     endif
@@ -295,6 +296,7 @@ subroutine sum_kernel_pre(kernel_name,kernel_list,nker)
     ! outputs norm of preconditioner
     norm = sum( hess * hess )
     call sum_all_dp(norm, norm_sum)
+
     if (myrank == 0) then
       print *,'  norm preconditioner: ',sqrt(norm_sum)
     endif

@@ -31,10 +31,10 @@
 __global__ void UpdateDispVeloc_kernel(realw* displ,
                                        realw* veloc,
                                        realw* accel,
-                                       int size,
-                                       realw deltat,
-                                       realw deltatsqover2,
-                                       realw deltatover2) {
+                                       const int size,
+                                       const realw deltat,
+                                       const realw deltatsqover2,
+                                       const realw deltatover2) {
 
   // two dimensional array of blocks on grid where each block has one dimensional array of threads
   int id = threadIdx.x + (blockIdx.x + blockIdx.y*gridDim.x)*blockDim.x;
@@ -45,8 +45,8 @@ __global__ void UpdateDispVeloc_kernel(realw* displ,
     realw acc = accel[id];
     realw vel = veloc[id];
 
-    displ[id] = displ[id] + deltat*vel + deltatsqover2*acc;
-    veloc[id] = vel + deltatover2*acc;
+    displ[id] = displ[id] + deltat * vel + deltatsqover2 * acc;
+    veloc[id] = vel + deltatover2 * acc;
     accel[id] = 0.0f; // can do this using memset...not sure if faster,probably not
   }
 
@@ -60,4 +60,49 @@ __global__ void UpdateDispVeloc_kernel(realw* displ,
 // nvprof: 24599250 flops for 4099875 threads -> 6 FLOP per thread
 }
 
+/* ----------------------------------------------------------------------------------------------- */
 
+
+__global__ void UpdateDispVeloc_PML_kernel(realw* displ,
+                                           realw* veloc,
+                                           realw* accel,
+                                           realw* PML_displ,
+                                           const int NSPEC_CPML,
+                                           const int* d_CPML_to_spec,
+                                           const int* d_ibool,
+                                           const realw deltat,
+                                           const realw deltatsqover2,
+                                           const realw deltatover2) {
+
+  int ispec_cpml = blockIdx.x + blockIdx.y*gridDim.x;
+  int ijk = threadIdx.x;
+
+  // because of block and grid sizing problems, there is a small
+  // amount of buffer at the end of the calculation
+  if (ispec_cpml < NSPEC_CPML) {
+
+    int ispec = d_CPML_to_spec[ispec_cpml] - 1;
+
+    // local and global indices
+    int K = ijk/NGLL2;
+    int J = (ijk - K*NGLL2)/NGLLX;
+    int I = ijk - K*NGLL2 - J*NGLLX;
+
+    int iglob = d_ibool[ijk + NGLL3_PADDED*ispec] - 1;
+
+    const realw theta = 0.125f; // theta = 1.0 / 8.0;
+
+    // updates PML displacement
+    PML_displ[INDEX5(NDIM,NGLLX,NGLLX,NGLLX,0,I,J,K,ispec_cpml)] = displ[3*iglob]
+                                                                   + deltatover2 * (1.0f - 2.0f * theta) * veloc[3*iglob]
+                                                                   + deltatsqover2 * (1.0f - theta) * accel[3*iglob];
+
+    PML_displ[INDEX5(NDIM,NGLLX,NGLLX,NGLLX,1,I,J,K,ispec_cpml)] = displ[3*iglob+1]
+                                                                   + deltatover2 * (1.0f - 2.0f * theta) * veloc[3*iglob+1]
+                                                                   + deltatsqover2 * (1.0f - theta) * accel[3*iglob+1];
+
+    PML_displ[INDEX5(NDIM,NGLLX,NGLLX,NGLLX,2,I,J,K,ispec_cpml)] = displ[3*iglob+2]
+                                                                   + deltatover2 * (1.0f - 2.0f * theta) * veloc[3*iglob+2]
+                                                                   + deltatsqover2 * (1.0f - theta) * accel[3*iglob+2];
+  }
+}

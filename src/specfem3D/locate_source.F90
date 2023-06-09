@@ -442,9 +442,9 @@
           write(IMAIN,*) '    component of direction vector in North direction: ',sngl(comp_dir_vect_source_N(isource))
           write(IMAIN,*) '    component of direction vector in Vertical direction: ',sngl(comp_dir_vect_source_Z_UP(isource))
           write(IMAIN,*)
-          write(IMAIN,*) '    nu1 = ',nu_source(1,:,isource)
-          write(IMAIN,*) '    nu2 = ',nu_source(2,:,isource)
-          write(IMAIN,*) '    nu3 = ',nu_source(3,:,isource)
+          write(IMAIN,*) '    nu1 = ',sngl(nu_source(1,1,isource)),sngl(nu_source(1,2,isource)),sngl(nu_source(1,3,isource))
+          write(IMAIN,*) '    nu2 = ',sngl(nu_source(2,1,isource)),sngl(nu_source(2,2,isource)),sngl(nu_source(2,3,isource))
+          write(IMAIN,*) '    nu3 = ',sngl(nu_source(3,1,isource)),sngl(nu_source(3,2,isource)),sngl(nu_source(3,3,isource))
           write(IMAIN,*)
           write(IMAIN,*) '    at (x,y,z) coordinates = ',x_found(isource),y_found(isource),z_found(isource)
         else

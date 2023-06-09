@@ -85,6 +85,44 @@ void FC_FUNC_(update_displacement_cuda,
   //max_v = get_device_array_maximum_value(mp->d_veloc, size);
   //max_a = get_device_array_maximum_value(mp->d_accel, size);
   //printf("rank %d - max displ: %f veloc: %f accel: %f\n",mp->myrank,max_d,max_v,max_a);
+  //max_d = get_device_array_maximum_value(mp->d_PML_displ_old, mp->NSPEC_CPML * NGLL3 * NDIM);
+  //max_v = get_device_array_maximum_value(mp->d_PML_displ_new, mp->NSPEC_CPML * NGLL3 * NDIM);
+  //printf("rank %d - max PML displ new: %e displ old: %e\n",mp->myrank,max_d,max_v);
+
+  // PML
+  int num_blocks_x2,num_blocks_y2;
+  dim3 grid2,threads2;
+
+  if (mp->pml_conditions){
+    if (*FORWARD_OR_ADJOINT == 1 && mp->NSPEC_CPML > 0){
+
+      get_blocks_xy(mp->NSPEC_CPML,&num_blocks_x2,&num_blocks_y2);
+
+      grid2 = dim3(num_blocks_x2,num_blocks_y2);
+      threads2 = dim3(NGLL3,1,1);
+
+      // stores wavefields as old
+#ifdef USE_CUDA
+      if (run_cuda){
+        UpdateDispVeloc_PML_kernel<<<grid2,threads2,0,mp->compute_stream>>>(displ,veloc,accel,
+                                                                            mp->d_PML_displ_old,
+                                                                            mp->NSPEC_CPML,mp->d_CPML_to_spec,
+                                                                            mp->d_ibool,
+                                                                            deltat,deltatsqover2,deltatover2);
+      }
+#endif
+#ifdef USE_HIP
+      if (run_hip){
+        hipLaunchKernelGGL(UpdateDispVeloc_PML_kernel, dim3(grid2), dim3(threads2), 0, mp->compute_stream,
+                                                                          displ,veloc,accel,
+                                                                          mp->d_PML_displ_old,
+                                                                          mp->NSPEC_CPML,mp->d_CPML_to_spec,
+                                                                          mp->d_ibool,
+                                                                          deltat,deltatsqover2,deltatover2);
+      }
+#endif
+    }
+  }
 
   //launch kernel
 #ifdef USE_CUDA
@@ -100,6 +138,33 @@ void FC_FUNC_(update_displacement_cuda,
                                                size,deltat,deltatsqover2,deltatover2);
   }
 #endif
+
+  // PML
+  if (mp->pml_conditions){
+    if (*FORWARD_OR_ADJOINT == 1 && mp->NSPEC_CPML > 0){
+      // stores updated wavefields as new
+#ifdef USE_CUDA
+      if (run_cuda){
+        UpdateDispVeloc_PML_kernel<<<grid2,threads2,0,mp->compute_stream>>>(displ,veloc,accel,
+                                                                            mp->d_PML_displ_new,
+                                                                            mp->NSPEC_CPML,mp->d_CPML_to_spec,
+                                                                            mp->d_ibool,
+                                                                            deltat,deltatsqover2,deltatover2);
+      }
+#endif
+#ifdef USE_HIP
+      if (run_hip){
+        hipLaunchKernelGGL(UpdateDispVeloc_PML_kernel, dim3(grid2), dim3(threads2), 0, mp->compute_stream,
+                                                                          displ,veloc,accel,
+                                                                          mp->d_PML_displ_new,
+                                                                          mp->NSPEC_CPML,mp->d_CPML_to_spec,
+                                                                          mp->d_ibool,
+                                                                          deltat,deltatsqover2,deltatover2);
+      }
+#endif
+
+    }
+  }
 
   // Cuda timing
   if (CUDA_TIMING_UPDATE ){

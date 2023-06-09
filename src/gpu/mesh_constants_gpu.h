@@ -426,7 +426,9 @@ typedef struct mesh_ {
   int simulation_type;
   int save_forward;
 
-  int absorbing_conditions;
+  int stacey_absorbing_conditions;
+  int pml_conditions;
+
   int gravity;
   int approximate_ocean_load;
   int attenuation;
@@ -675,7 +677,41 @@ typedef struct mesh_ {
   realw* d_free_surface_normal;
   int* d_updated_dof_ocean_load;
 
-  // JC JC here we will need to add GPU support for the new C-PML routines
+  // C-PML
+  int NSPEC_CPML;
+  int* d_is_CPML;
+  int* d_spec_to_CPML;
+  int* d_CPML_to_spec;
+
+  realw* d_PML_displ_old; realw* d_PML_displ_new;
+
+  realw* d_rmemory_displ_elastic;
+  realw* d_rmemory_dux_dxl_x;
+  realw* d_rmemory_duy_dxl_y;
+  realw* d_rmemory_duz_dxl_z;
+  realw* d_rmemory_dux_dyl_x;
+  realw* d_rmemory_duy_dyl_y;
+  realw* d_rmemory_duz_dyl_z;
+  realw* d_rmemory_dux_dzl_x;
+  realw* d_rmemory_duy_dzl_y;
+  realw* d_rmemory_duz_dzl_z;
+  realw* d_rmemory_dux_dxl_y;
+  realw* d_rmemory_dux_dxl_z;
+  realw* d_rmemory_duy_dxl_x;
+  realw* d_rmemory_duz_dxl_x;
+  realw* d_rmemory_dux_dyl_y;
+  realw* d_rmemory_duy_dyl_x;
+  realw* d_rmemory_duy_dyl_z;
+  realw* d_rmemory_duz_dyl_y;
+  realw* d_rmemory_dux_dzl_z;
+  realw* d_rmemory_duy_dzl_z;
+  realw* d_rmemory_duz_dzl_x;
+  realw* d_rmemory_duz_dzl_y;
+
+  realw* d_pml_convolution_coef_alpha;
+  realw* d_pml_convolution_coef_beta;
+  realw* d_pml_convolution_coef_strain;
+  realw* d_pml_convolution_coef_abar;
 
   // ------------------------------------------------------------------ //
   // acoustic wavefield
@@ -767,6 +803,8 @@ void start_timing_gpu(gpu_event* start,gpu_event* stop);
 void stop_timing_gpu(gpu_event* start,gpu_event* stop, const char* info_str);
 void stop_timing_gpu(gpu_event* start,gpu_event* stop, const char* info_str,realw* t);
 
+// PML defined in pml_compute_accel_cuda.cu
+void (compute_forces_viscoelastic_pml_cuda)(long*,int*,int*,int*,int*,int*);
 
 /* ----------------------------------------------------------------------------------------------- */
 

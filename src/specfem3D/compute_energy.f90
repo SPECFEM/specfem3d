@@ -55,7 +55,7 @@
 
   implicit none
 
-! local variables
+  ! local variables
   integer :: i,j,k,l,ispec,iglob,ispec_irreg
 
   ! note: declaring arrays in this subroutine here will allocate them generally on the stack
@@ -87,7 +87,7 @@
   double precision :: kinetic_energy,potential_energy
   double precision :: kinetic_energy_glob,potential_energy_glob,total_energy_glob
 
-! local parameters
+  ! local parameters
   integer :: i_SLS
 
   ! local anisotropy parameters
@@ -97,21 +97,21 @@
   ! local attenuation parameters
   real(kind=CUSTOM_REAL) :: R_xx_val,R_yy_val
 
-! that trick (USE_TRICK_FOR_BETTER_PRESSURE) is not implemented for the calculation
-! of displacement, velocity nor acceleration vectors in acoustic elements yet;
-! to do so we would need to recompute them using the second integral in time of the
-! current formulas in that case. And to compute kinetic energy, we need the velocity vector...
+  ! that trick (USE_TRICK_FOR_BETTER_PRESSURE) is not implemented for the calculation
+  ! of displacement, velocity nor acceleration vectors in acoustic elements yet;
+  ! to do so we would need to recompute them using the second integral in time of the
+  ! current formulas in that case. And to compute kinetic energy, we need the velocity vector...
   if (USE_TRICK_FOR_BETTER_PRESSURE) &
     call exit_mpi(myrank,'USE_TRICK_FOR_BETTER_PRESSURE not implemented for OUTPUT_ENERGY, please turn one of them off')
 
   kinetic_energy = 0.d0
   potential_energy = 0.d0
 
-! loop over spectral elements
+  ! loop over spectral elements
   do ispec = 1,NSPEC_AB
 
-! if element is a CPML then do not compute energy in it, since it is non physical;
-! thus, we compute energy in the main domain only, without absorbing elements
+    ! if element is a CPML then do not compute energy in it, since it is non physical;
+    ! thus, we compute energy in the main domain only, without absorbing elements
     if (is_CPML(ispec)) cycle
 
     ispec_irreg = irregular_element_number(ispec)
@@ -298,7 +298,7 @@
               enddo
             endif
 
-            integration_weight = wxgll(i)*wygll(j)*wzgll(k)*jacobianl
+            integration_weight = wxgll(i) * wygll(j) * wzgll(k) * jacobianl
 
             ! velocity
             vx = veloc(1,iglob)
@@ -307,7 +307,7 @@
 
             ! compute kinetic energy  1/2 rho ||v||^2
             ! we will divide the total sum by 2 only once, at the end of this routine, to reduce compute time
-            kinetic_energy = kinetic_energy + integration_weight * rhol*(vx**2 + vy**2 + vz**2)
+            kinetic_energy = kinetic_energy + integration_weight * rhol * (vx**2 + vy**2 + vz**2)
 
             ! compute potential energy 1/2 sigma_ij epsilon_ij
             ! we will divide the total sum by 2 only once, at the end of this routine, to reduce compute time
@@ -420,11 +420,11 @@
             ! pressure is p = - Chi_dot_dot  (Chi_dot_dot being the time second derivative of Chi)
             pressure = - potential_dot_dot_acoustic(iglob)
 
-            integration_weight = wxgll(i)*wygll(j)*wzgll(k)*jacobianl
+            integration_weight = wxgll(i) * wygll(j) * wzgll(k) * jacobianl
 
             ! compute kinetic energy  1/2 rho ||v||^2
             ! we will divide the total sum by 2 only once, at the end of this routine, to reduce compute time
-            kinetic_energy = kinetic_energy + integration_weight * rhol*(vx**2 + vy**2 + vz**2)
+            kinetic_energy = kinetic_energy + integration_weight * rhol * (vx**2 + vy**2 + vz**2)
 
             ! compute potential energy 1/2 sigma_ij epsilon_ij
             ! we will divide the total sum by 2 only once, at the end of this routine, to reduce compute time
@@ -442,17 +442,19 @@
 
   enddo
 
-! divide the total sum by 2 here because we have purposely not done it above in order to reduce compute time
+  ! divide the total sum by 2 here because we have purposely not done it above in order to reduce compute time
   kinetic_energy = 0.5d0 * kinetic_energy
   potential_energy = 0.5d0 * potential_energy
 
-! compute the total using a reduction between all the processors
+  ! compute the total using a reduction between all the processors
   call sum_all_dp(kinetic_energy,kinetic_energy_glob)
   call sum_all_dp(potential_energy,potential_energy_glob)
-  total_energy_glob = kinetic_energy_glob + potential_energy_glob
 
-! write the total to disk from the main
-  if (myrank == 0) write(IOUT_ENERGY,*) it,sngl(kinetic_energy_glob),sngl(potential_energy_glob),sngl(total_energy_glob)
+  ! write the total to disk from the main
+  if (myrank == 0) then
+    total_energy_glob = kinetic_energy_glob + potential_energy_glob
+    write(IOUT_ENERGY,*) it,sngl(kinetic_energy_glob),sngl(potential_energy_glob),sngl(total_energy_glob)
+  endif
 
   end subroutine compute_energy_generic_slow
 
@@ -473,7 +475,7 @@
 
   implicit none
 
-! local variables
+  ! local variables
   integer :: i,j,k,ispec,iglob,ispec_irreg
 
   ! note: declaring arrays in this subroutine here will allocate them generally on the stack
@@ -503,7 +505,7 @@
   double precision :: kinetic_energy,potential_energy
   double precision :: kinetic_energy_glob,potential_energy_glob,total_energy_glob
 
-! local parameters
+  ! local parameters
   integer :: i_SLS
 
   ! local anisotropy parameters
@@ -513,21 +515,35 @@
   ! local attenuation parameters
   real(kind=CUSTOM_REAL) :: R_xx_val,R_yy_val
 
-! that trick (USE_TRICK_FOR_BETTER_PRESSURE) is not implemented for the calculation
-! of displacement, velocity nor acceleration vectors in acoustic elements yet;
-! to do so we would need to recompute them using the second integral in time of the
-! current formulas in that case. And to compute kinetic energy, we need the velocity vector...
+  ! that trick (USE_TRICK_FOR_BETTER_PRESSURE) is not implemented for the calculation
+  ! of displacement, velocity nor acceleration vectors in acoustic elements yet;
+  ! to do so we would need to recompute them using the second integral in time of the
+  ! current formulas in that case. And to compute kinetic energy, we need the velocity vector...
   if (USE_TRICK_FOR_BETTER_PRESSURE) &
     call exit_mpi(myrank,'USE_TRICK_FOR_BETTER_PRESSURE not implemented for OUTPUT_ENERGY, please turn one of them off')
+
+  ! GPU simulations
+  if (GPU_MODE) then
+    ! we need to transfer fields for computing energies in this routine
+    if (ELASTIC_SIMULATION) then
+      call transfer_displ_from_device(NDIM*NGLOB_AB,displ,Mesh_pointer)
+      call transfer_veloc_from_device(NDIM*NGLOB_AB,veloc,Mesh_pointer)
+    endif
+    if (ACOUSTIC_SIMULATION) then
+      call transfer_fields_ac_from_device(NGLOB_AB,potential_acoustic, &
+                                          potential_dot_acoustic, potential_dot_dot_acoustic, &
+                                          Mesh_pointer)
+    endif
+  endif
 
   kinetic_energy = 0.d0
   potential_energy = 0.d0
 
-! loop over spectral elements
+  ! loop over spectral elements
   do ispec = 1,NSPEC_AB
 
-! if element is a CPML then do not compute energy in it, since it is non physical;
-! thus, we compute energy in the main domain only, without absorbing elements
+    ! if element is a CPML then do not compute energy in it, since it is non physical;
+    ! thus, we compute energy in the main domain only, without absorbing elements
     if (is_CPML(ispec)) cycle
 
     ispec_irreg = irregular_element_number(ispec)
@@ -548,23 +564,22 @@
         enddo
       enddo
 
-    ! subroutines adapted from Deville, Fischer and Mund, High-order methods
-    ! for incompressible fluid flow, Cambridge University Press (2002),
-    ! pages 386 and 389 and Figure 8.3.1
-
-  if (NGLLX == 5) then
-    call mxm5_single_three_arrays_at_a_time_BC(hprime_xx,m1,dummyx_loc,tempx1,m2,dummyy_loc,tempy1,dummyz_loc,tempz1)
-    call mxm5_3dmat_single_three_arrays_at_a_time(dummyx_loc,m1,hprime_xxT,m1,tempx2,NGLLX,dummyy_loc,tempy2,dummyz_loc,tempz2)
-    call mxm5_single_three_arrays_at_a_time_AC(dummyx_loc,m2,hprime_xxT,tempx3,m1,dummyy_loc,tempy3,dummyz_loc,tempz3)
-  else if (NGLLX == 6) then
-    call mxm6_single_three_arrays_at_a_time_BC(hprime_xx,m1,dummyx_loc,tempx1,m2,dummyy_loc,tempy1,dummyz_loc,tempz1)
-    call mxm6_3dmat_single_three_arrays_at_a_time(dummyx_loc,m1,hprime_xxT,m1,tempx2,NGLLX,dummyy_loc,tempy2,dummyz_loc,tempz2)
-    call mxm6_single_three_arrays_at_a_time_AC(dummyx_loc,m2,hprime_xxT,tempx3,m1,dummyy_loc,tempy3,dummyz_loc,tempz3)
-  else if (NGLLX == 7) then
-    call mxm7_single_three_arrays_at_a_time_BC(hprime_xx,m1,dummyx_loc,tempx1,m2,dummyy_loc,tempy1,dummyz_loc,tempz1)
-    call mxm7_3dmat_single_three_arrays_at_a_time(dummyx_loc,m1,hprime_xxT,m1,tempx2,NGLLX,dummyy_loc,tempy2,dummyz_loc,tempz2)
-    call mxm7_single_three_arrays_at_a_time_AC(dummyx_loc,m2,hprime_xxT,tempx3,m1,dummyy_loc,tempy3,dummyz_loc,tempz3)
-  endif
+      ! subroutines adapted from Deville, Fischer and Mund, High-order methods
+      ! for incompressible fluid flow, Cambridge University Press (2002),
+      ! pages 386 and 389 and Figure 8.3.1
+      if (NGLLX == 5) then
+        call mxm5_single_three_arrays_at_a_time_BC(hprime_xx,m1,dummyx_loc,tempx1,m2,dummyy_loc,tempy1,dummyz_loc,tempz1)
+        call mxm5_3dmat_single_three_arrays_at_a_time(dummyx_loc,m1,hprime_xxT,m1,tempx2,NGLLX,dummyy_loc,tempy2,dummyz_loc,tempz2)
+        call mxm5_single_three_arrays_at_a_time_AC(dummyx_loc,m2,hprime_xxT,tempx3,m1,dummyy_loc,tempy3,dummyz_loc,tempz3)
+      else if (NGLLX == 6) then
+        call mxm6_single_three_arrays_at_a_time_BC(hprime_xx,m1,dummyx_loc,tempx1,m2,dummyy_loc,tempy1,dummyz_loc,tempz1)
+        call mxm6_3dmat_single_three_arrays_at_a_time(dummyx_loc,m1,hprime_xxT,m1,tempx2,NGLLX,dummyy_loc,tempy2,dummyz_loc,tempz2)
+        call mxm6_single_three_arrays_at_a_time_AC(dummyx_loc,m2,hprime_xxT,tempx3,m1,dummyy_loc,tempy3,dummyz_loc,tempz3)
+      else if (NGLLX == 7) then
+        call mxm7_single_three_arrays_at_a_time_BC(hprime_xx,m1,dummyx_loc,tempx1,m2,dummyy_loc,tempy1,dummyz_loc,tempz1)
+        call mxm7_3dmat_single_three_arrays_at_a_time(dummyx_loc,m1,hprime_xxT,m1,tempx2,NGLLX,dummyy_loc,tempy2,dummyz_loc,tempz2)
+        call mxm7_single_three_arrays_at_a_time_AC(dummyx_loc,m2,hprime_xxT,tempx3,m1,dummyy_loc,tempy3,dummyz_loc,tempz3)
+      endif
 
       do k=1,NGLLZ
         do j=1,NGLLY
@@ -702,7 +717,7 @@
               enddo
             endif
 
-            integration_weight = wxgll(i)*wygll(j)*wzgll(k)*jacobianl
+            integration_weight = wxgll(i) * wygll(j) * wzgll(k) * jacobianl
 
             ! velocity
             vx = veloc(1,iglob)
@@ -711,7 +726,7 @@
 
             ! compute kinetic energy  1/2 rho ||v||^2
             ! we will divide the total sum by 2 only once, at the end of this routine, to reduce compute time
-            kinetic_energy = kinetic_energy + integration_weight * rhol*(vx**2 + vy**2 + vz**2)
+            kinetic_energy = kinetic_energy + integration_weight * rhol * (vx**2 + vy**2 + vz**2)
 
             ! compute potential energy 1/2 sigma_ij epsilon_ij
             ! we will divide the total sum by 2 only once, at the end of this routine, to reduce compute time
@@ -748,23 +763,22 @@
         enddo
       enddo
 
-    ! subroutines adapted from Deville, Fischer and Mund, High-order methods
-    ! for incompressible fluid flow, Cambridge University Press (2002),
-    ! pages 386 and 389 and Figure 8.3.1
-
-  if (NGLLX == 5) then
-    call mxm5_single(hprime_xx,m1,dummyx_loc,tempx1,m2)
-    call mxm5_3dmat_single(dummyx_loc,m1,hprime_xxT,m1,tempx2,NGLLX)
-    call mxm5_single(dummyx_loc,m2,hprime_xxT,tempx3,m1)
-  else if (NGLLX == 6) then
-    call mxm6_single(hprime_xx,m1,dummyx_loc,tempx1,m2)
-    call mxm6_3dmat_single(dummyx_loc,m1,hprime_xxT,m1,tempx2,NGLLX)
-    call mxm6_single(dummyx_loc,m2,hprime_xxT,tempx3,m1)
-  else if (NGLLX == 7) then
-    call mxm7_single(hprime_xx,m1,dummyx_loc,tempx1,m2)
-    call mxm7_3dmat_single(dummyx_loc,m1,hprime_xxT,m1,tempx2,NGLLX)
-    call mxm7_single(dummyx_loc,m2,hprime_xxT,tempx3,m1)
-  endif
+      ! subroutines adapted from Deville, Fischer and Mund, High-order methods
+      ! for incompressible fluid flow, Cambridge University Press (2002),
+      ! pages 386 and 389 and Figure 8.3.1
+      if (NGLLX == 5) then
+        call mxm5_single(hprime_xx,m1,dummyx_loc,tempx1,m2)
+        call mxm5_3dmat_single(dummyx_loc,m1,hprime_xxT,m1,tempx2,NGLLX)
+        call mxm5_single(dummyx_loc,m2,hprime_xxT,tempx3,m1)
+      else if (NGLLX == 6) then
+        call mxm6_single(hprime_xx,m1,dummyx_loc,tempx1,m2)
+        call mxm6_3dmat_single(dummyx_loc,m1,hprime_xxT,m1,tempx2,NGLLX)
+        call mxm6_single(dummyx_loc,m2,hprime_xxT,tempx3,m1)
+      else if (NGLLX == 7) then
+        call mxm7_single(hprime_xx,m1,dummyx_loc,tempx1,m2)
+        call mxm7_3dmat_single(dummyx_loc,m1,hprime_xxT,m1,tempx2,NGLLX)
+        call mxm7_single(dummyx_loc,m2,hprime_xxT,tempx3,m1)
+      endif
 
       do k=1,NGLLZ
         do j=1,NGLLY
@@ -826,11 +840,11 @@
             ! pressure is p = - Chi_dot_dot  (Chi_dot_dot being the time second derivative of Chi)
             pressure = - potential_dot_dot_acoustic(iglob)
 
-            integration_weight = wxgll(i)*wygll(j)*wzgll(k)*jacobianl
+            integration_weight = wxgll(i) * wygll(j) * wzgll(k) * jacobianl
 
             ! compute kinetic energy  1/2 rho ||v||^2
             ! we will divide the total sum by 2 only once, at the end of this routine, to reduce compute time
-            kinetic_energy = kinetic_energy + integration_weight * rhol*(vx**2 + vy**2 + vz**2)
+            kinetic_energy = kinetic_energy + integration_weight * rhol * (vx**2 + vy**2 + vz**2)
 
             ! compute potential energy 1/2 sigma_ij epsilon_ij
             ! we will divide the total sum by 2 only once, at the end of this routine, to reduce compute time
@@ -848,17 +862,19 @@
 
   enddo
 
-! divide the total sum by 2 here because we have purposely not done it above in order to reduce compute time
+  ! divide the total sum by 2 here because we have purposely not done it above in order to reduce compute time
   kinetic_energy = 0.5d0 * kinetic_energy
   potential_energy = 0.5d0 * potential_energy
 
-! compute the total using a reduction between all the processors
+  ! compute the total using a reduction between all the processors
   call sum_all_dp(kinetic_energy,kinetic_energy_glob)
   call sum_all_dp(potential_energy,potential_energy_glob)
-  total_energy_glob = kinetic_energy_glob + potential_energy_glob
 
-! write the total to disk from the main
-  if (myrank == 0) write(IOUT_ENERGY,*) it,sngl(kinetic_energy_glob),sngl(potential_energy_glob),sngl(total_energy_glob)
+  ! write the total to disk from the main
+  if (myrank == 0) then
+    total_energy_glob = kinetic_energy_glob + potential_energy_glob
+    write(IOUT_ENERGY,*) it,sngl(kinetic_energy_glob),sngl(potential_energy_glob),sngl(total_energy_glob)
+  endif
 
   contains
 

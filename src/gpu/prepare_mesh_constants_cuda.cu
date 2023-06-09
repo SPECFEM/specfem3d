@@ -80,7 +80,7 @@ void FC_FUNC_(prepare_constants_device,
                                         int* h_nibool_interfaces_ext_mesh, int* h_ibool_interfaces_ext_mesh,
                                         realw* h_hprime_xx, realw* h_hprimewgll_xx,
                                         realw* h_wgllwgll_xy,realw* h_wgllwgll_xz,realw* h_wgllwgll_yz,
-                                        int* ABSORBING_CONDITIONS,
+                                        int* STACEY_ABSORBING_CONDITIONS,
                                         int* h_abs_boundary_ispec, int* h_abs_boundary_ijk,
                                         realw* h_abs_boundary_normal,
                                         realw* h_abs_boundary_jacobian2Dw,
@@ -106,7 +106,8 @@ void FC_FUNC_(prepare_constants_device,
                                         int* SAVE_SEISMOGRAMS_ACCELERATION,int* SAVE_SEISMOGRAMS_PRESSURE,
                                         int* h_NB_RUNS_ACOUSTIC_GPU,
                                         int* FAULT_SIMULATION,
-                                        int* UNDO_ATTENUATION_AND_OR_PML) {
+                                        int* UNDO_ATTENUATION_AND_OR_PML,
+                                        int* PML_CONDITIONS) {
 
   TRACE("prepare_constants_device");
 
@@ -130,8 +131,13 @@ void FC_FUNC_(prepare_constants_device,
 
   // simulation flags
   mp->simulation_type = *SIMULATION_TYPE;
-  mp->absorbing_conditions = *ABSORBING_CONDITIONS;  // STACEY_ABSORBING_CONDITIONS
   mp->save_forward = *SAVE_FORWARD;
+
+  mp->stacey_absorbing_conditions = *STACEY_ABSORBING_CONDITIONS;  // STACEY_ABSORBING_CONDITIONS
+
+  mp->pml_conditions = *PML_CONDITIONS;
+  mp->NSPEC_CPML = 0;
+
   mp->undo_attenuation = *UNDO_ATTENUATION_AND_OR_PML;
 
   // checks setup
@@ -261,7 +267,7 @@ void FC_FUNC_(prepare_constants_device,
 
   // absorbing boundaries
   mp->d_num_abs_boundary_faces = *h_num_abs_boundary_faces;
-  if (mp->absorbing_conditions && mp->d_num_abs_boundary_faces > 0){
+  if (mp->d_num_abs_boundary_faces > 0){
     gpuCreateCopy_todevice_int((void**)&mp->d_abs_boundary_ispec,h_abs_boundary_ispec,mp->d_num_abs_boundary_faces);
     gpuCreateCopy_todevice_int((void**)&mp->d_abs_boundary_ijk,h_abs_boundary_ijk,3*NGLL2*(mp->d_num_abs_boundary_faces));
     gpuCreateCopy_todevice_realw((void**)&mp->d_abs_boundary_normal,h_abs_boundary_normal,NDIM*NGLL2*(mp->d_num_abs_boundary_faces));
@@ -402,6 +408,13 @@ void FC_FUNC_(prepare_constants_device,
   // gravity flag initialization
   mp->gravity = 0;
 
+  // initializes rhostore and wgll_cube pointers
+  // for example, rhostore is used by acoustic simulations, gravity and PML,
+  // and can be allocated in different routines.
+  // we will thus check the pointer to decide if it still needs to be done.
+  mp->d_rhostore = NULL;
+  mp->d_wgll_cube = NULL;
+
   // fault simulation
   mp->fault_simulation = *FAULT_SIMULATION;
   // Kelvin_voigt initialization
@@ -489,19 +502,21 @@ void FC_FUNC_(prepare_fields_acoustic_device,
   gpuCreateCopy_todevice_realw((void**)&mp->d_rmass_acoustic,rmass_acoustic,mp->NGLOB_AB);
 
   // density
-  // padded array
-  // Assuming NGLLX==5. Padded is then 128 (5^3+3)
-  int size_padded = NGLL3_PADDED * mp->NSPEC_AB;
-  gpuMalloc_realw((void**)&(mp->d_rhostore),size_padded);
-  // transfer constant element data with padding
-  /*
-  // way 1: slow...
-  for(int i=0; i < mp->NSPEC_AB; i++) {
-    gpuMemcpy_todevice_realw(mp->d_rhostore+i*NGLL3_PADDED, &rhostore[i*NGLL3],NGLL3);
+  if (mp->d_rhostore == NULL){
+    // padded array
+    // Assuming NGLLX==5. Padded is then 128 (5^3+3)
+    int size_padded = NGLL3_PADDED * mp->NSPEC_AB;
+    gpuMalloc_realw((void**)&(mp->d_rhostore),size_padded);
+    // transfer constant element data with padding
+    /*
+    // way 1: slow...
+    for(int i=0; i < mp->NSPEC_AB; i++) {
+      gpuMemcpy_todevice_realw(mp->d_rhostore+i*NGLL3_PADDED, &rhostore[i*NGLL3],NGLL3);
+    }
+    */
+    // way 2: faster ...
+    gpuMemcpy2D_todevice_realw(mp->d_rhostore, NGLL3_PADDED, rhostore, NGLL3, NGLL3, mp->NSPEC_AB);
   }
-  */
-  // way 2: faster ...
-  gpuMemcpy2D_todevice_realw(mp->d_rhostore, NGLL3_PADDED, rhostore, NGLL3, NGLL3, mp->NSPEC_AB);
 
   // non-padded array
   gpuCreateCopy_todevice_realw((void**)&mp->d_kappastore,kappastore,NGLL3*mp->NSPEC_AB);
@@ -522,7 +537,7 @@ void FC_FUNC_(prepare_fields_acoustic_device,
   }
 
   // absorbing boundaries
-  if (mp->absorbing_conditions && mp->d_num_abs_boundary_faces > 0){
+  if (mp->stacey_absorbing_conditions && mp->d_num_abs_boundary_faces > 0){
     // absorb_field array used for file i/o
     if (mp->simulation_type == 3 || ( mp->simulation_type == 1 && mp->save_forward )){
       // note: b_reclen_potential is record length in bytes ( CUSTOM_REAL * NGLLSQUARE * num_abs_boundary_faces )
@@ -781,7 +796,7 @@ void FC_FUNC_(prepare_fields_elastic_device,
   //synchronize_mpi();
 
   // absorbing conditions
-  if (mp->absorbing_conditions && mp->d_num_abs_boundary_faces > 0){
+  if (mp->stacey_absorbing_conditions && mp->d_num_abs_boundary_faces > 0){
 
     // debug
     //printf("prepare_fields_elastic_device: rank %d - absorbing boundary setup\n",mp->myrank);
@@ -973,8 +988,6 @@ void FC_FUNC_(prepare_fields_elastic_device,
     mp->h_num_elem_colors_elastic = (int*) num_elem_colors_elastic;
   }
 
-  // JC JC here we will need to add GPU support for the new C-PML routines
-
   // debug
   //printf("prepare_fields_elastic_device: rank %d - done\n",mp->myrank);
   //synchronize_mpi();
@@ -1161,6 +1174,132 @@ void FC_FUNC_(prepare_fields_elastic_adj_dev,
 
 /* ----------------------------------------------------------------------------------------------- */
 
+extern EXTERN_LANG
+void FC_FUNC_(prepare_fields_elastic_pml,
+              PREPARE_FIELDS_ELASTIC_PML)(long* Mesh_pointer,
+                                          int* NSPEC_CPML,
+                                          int* is_CPML,
+                                          int* CPML_to_spec,
+                                          int* spec_to_CPML,
+                                          realw* pml_convolution_coef_alpha,
+                                          realw* pml_convolution_coef_beta,
+                                          realw* pml_convolution_coef_abar,
+                                          realw* pml_convolution_coef_strain,
+                                          realw* h_wgll_cube,
+                                          realw* rhostore) {
+
+  TRACE("prepare_fields_elastic_pml");
+  int size;
+
+  Mesh* mp = (Mesh*)(*Mesh_pointer);
+
+  // checks if anything to do
+  if (! mp->pml_conditions) return;
+
+  mp->NSPEC_CPML = *NSPEC_CPML;
+
+  gpuCreateCopy_todevice_int((void**)&mp->d_is_CPML,is_CPML,mp->NSPEC_AB);
+
+  if (mp->NSPEC_CPML > 0){
+    gpuCreateCopy_todevice_int((void**)&mp->d_spec_to_CPML,spec_to_CPML,mp->NSPEC_AB);
+    gpuCreateCopy_todevice_int((void**)&mp->d_CPML_to_spec,CPML_to_spec,mp->NSPEC_CPML);
+
+    // coefficients
+    size = 9 * NGLL3 * mp->NSPEC_CPML;
+    gpuCreateCopy_todevice_realw((void**)&mp->d_pml_convolution_coef_alpha,pml_convolution_coef_alpha,size);
+    gpuCreateCopy_todevice_realw((void**)&mp->d_pml_convolution_coef_beta,pml_convolution_coef_beta,size);
+
+    size = 5 * NGLL3 * mp->NSPEC_CPML;
+    gpuCreateCopy_todevice_realw((void**)&mp->d_pml_convolution_coef_abar,pml_convolution_coef_abar,size);
+
+    size = 18 * NGLL3 * mp->NSPEC_CPML;
+    gpuCreateCopy_todevice_realw((void**)&mp->d_pml_convolution_coef_strain,pml_convolution_coef_strain,size);
+
+    // wavefields
+    size = NDIM * NGLL3 * mp->NSPEC_CPML;
+    gpuMalloc_realw((void**)&(mp->d_PML_displ_old),size);
+    gpuMalloc_realw((void**)&(mp->d_PML_displ_new),size);
+    // initializes values to zero
+    gpuMemset_realw(mp->d_PML_displ_old,size,0);
+    gpuMemset_realw(mp->d_PML_displ_new,size,0);
+
+    // convolution memory variables
+    size = NDIM * NGLL3 * mp->NSPEC_CPML * 3;  // rmemory_displ_elastic(NDIM,NGLLX,NGLLY,NGLLZ,NSPEC_CPML,3)
+    gpuMalloc_realw((void**)&(mp->d_rmemory_displ_elastic),size);
+    gpuMemset_realw(mp->d_rmemory_displ_elastic,size,0);
+
+    size = NGLL3 * mp->NSPEC_CPML * 3;  // rmemory_dux_dxl_x(NGLLX,NGLLY,NGLLZ,NSPEC_CPML,3),..
+    gpuMalloc_realw((void**)&(mp->d_rmemory_dux_dxl_x),size);
+    gpuMemset_realw(mp->d_rmemory_dux_dxl_x,size,0);
+    gpuMalloc_realw((void**)&(mp->d_rmemory_dux_dyl_x),size);
+    gpuMemset_realw(mp->d_rmemory_dux_dyl_x,size,0);
+    gpuMalloc_realw((void**)&(mp->d_rmemory_dux_dzl_x),size);
+    gpuMemset_realw(mp->d_rmemory_dux_dzl_x,size,0);
+    gpuMalloc_realw((void**)&(mp->d_rmemory_duy_dxl_y),size);
+    gpuMemset_realw(mp->d_rmemory_duy_dxl_y,size,0);
+    gpuMalloc_realw((void**)&(mp->d_rmemory_duy_dyl_y),size);
+    gpuMemset_realw(mp->d_rmemory_duy_dyl_y,size,0);
+    gpuMalloc_realw((void**)&(mp->d_rmemory_duy_dzl_y),size);
+    gpuMemset_realw(mp->d_rmemory_duy_dzl_y,size,0);
+    gpuMalloc_realw((void**)&(mp->d_rmemory_duz_dxl_z),size);
+    gpuMemset_realw(mp->d_rmemory_duz_dxl_z,size,0);
+    gpuMalloc_realw((void**)&(mp->d_rmemory_duz_dyl_z),size);
+    gpuMemset_realw(mp->d_rmemory_duz_dyl_z,size,0);
+    gpuMalloc_realw((void**)&(mp->d_rmemory_duz_dzl_z),size);
+    gpuMemset_realw(mp->d_rmemory_duz_dzl_z,size,0);
+
+    size = NGLL3 * mp->NSPEC_CPML;  // rmemory_duy_dxl_x(NGLLX,NGLLY,NGLLZ,NSPEC_CPML),..
+    gpuMalloc_realw((void**)&(mp->d_rmemory_duy_dxl_x),size);
+    gpuMemset_realw(mp->d_rmemory_duy_dxl_x,size,0);
+    gpuMalloc_realw((void**)&(mp->d_rmemory_duy_dyl_x),size);
+    gpuMemset_realw(mp->d_rmemory_duy_dyl_x,size,0);
+    gpuMalloc_realw((void**)&(mp->d_rmemory_duz_dxl_x),size);
+    gpuMemset_realw(mp->d_rmemory_duz_dxl_x,size,0);
+    gpuMalloc_realw((void**)&(mp->d_rmemory_duz_dzl_x),size);
+    gpuMemset_realw(mp->d_rmemory_duz_dzl_x,size,0);
+    gpuMalloc_realw((void**)&(mp->d_rmemory_dux_dxl_y),size);
+    gpuMemset_realw(mp->d_rmemory_dux_dxl_y,size,0);
+    gpuMalloc_realw((void**)&(mp->d_rmemory_dux_dyl_y),size);
+    gpuMemset_realw(mp->d_rmemory_dux_dyl_y,size,0);
+    gpuMalloc_realw((void**)&(mp->d_rmemory_duz_dyl_y),size);
+    gpuMemset_realw(mp->d_rmemory_duz_dyl_y,size,0);
+    gpuMalloc_realw((void**)&(mp->d_rmemory_duz_dzl_y),size);
+    gpuMemset_realw(mp->d_rmemory_duz_dzl_y,size,0);
+    gpuMalloc_realw((void**)&(mp->d_rmemory_dux_dxl_z),size);
+    gpuMemset_realw(mp->d_rmemory_dux_dxl_z,size,0);
+    gpuMalloc_realw((void**)&(mp->d_rmemory_dux_dzl_z),size);
+    gpuMemset_realw(mp->d_rmemory_dux_dzl_z,size,0);
+    gpuMalloc_realw((void**)&(mp->d_rmemory_duy_dyl_z),size);
+    gpuMemset_realw(mp->d_rmemory_duy_dyl_z,size,0);
+    gpuMalloc_realw((void**)&(mp->d_rmemory_duy_dzl_z),size);
+    gpuMemset_realw(mp->d_rmemory_duy_dzl_z,size,0);
+
+    // GLL weights
+    if (mp->d_wgll_cube == NULL) setConst_wgll_cube(h_wgll_cube,mp);
+
+    // density
+    if (mp->d_rhostore == NULL){
+      // padded array
+      // Assuming NGLLX==5. Padded is then 128 (5^3+3)
+      int size_padded = NGLL3_PADDED * mp->NSPEC_AB;
+      gpuMalloc_realw((void**)&(mp->d_rhostore),size_padded);
+      // transfer constant element data with padding
+      /*
+      // way 1: slow...
+      for(int i=0; i < mp->NSPEC_AB; i++) {
+        gpuMemcpy_todevice_realw(mp->d_rhostore+i*NGLL3_PADDED, &rhostore[i*NGLL3],NGLL3);
+      }
+      */
+      // way 2: faster ...
+      gpuMemcpy2D_todevice_realw(mp->d_rhostore, NGLL3_PADDED, rhostore, NGLL3, NGLL3, mp->NSPEC_AB);
+    }
+  }
+
+  GPU_ERROR_CHECKING("prepare_fields_elastic_pml");
+}
+
+/* ----------------------------------------------------------------------------------------------- */
+
 // purely adjoint & kernel simulations
 
 /* ----------------------------------------------------------------------------------------------- */
@@ -1301,14 +1440,11 @@ void FC_FUNC_(prepare_fields_gravity_device,
                                              realw* minus_deriv_gravity,
                                              realw* minus_g,
                                              realw* h_wgll_cube,
-                                             int* ACOUSTIC_SIMULATION,
                                              realw* rhostore) {
 
   TRACE("prepare_fields_gravity_device");
 
   Mesh* mp = (Mesh*)(*Mesh_pointer);
-
-  setConst_wgll_cube(h_wgll_cube,mp);
 
   mp->gravity = *GRAVITY;
   if (mp->gravity ){
@@ -1316,23 +1452,24 @@ void FC_FUNC_(prepare_fields_gravity_device,
     gpuCreateCopy_todevice_realw((void**)&mp->d_minus_deriv_gravity,minus_deriv_gravity,mp->NGLOB_AB);
     gpuCreateCopy_todevice_realw((void**)&mp->d_minus_g,minus_g,mp->NGLOB_AB);
 
-    if (*ACOUSTIC_SIMULATION == 0){
-      // density
-      // rhostore not allocated yet
-      int size_padded = NGLL3_PADDED * (mp->NSPEC_AB);
+    // density
+    if (mp->d_rhostore == NULL){
       // padded array
+      // Assuming NGLLX==5. Padded is then 128 (5^3+3)
+      int size_padded = NGLL3_PADDED * mp->NSPEC_AB;
       gpuMalloc_realw((void**)&(mp->d_rhostore),size_padded);
       // transfer constant element data with padding
       /*
-      // way 1: slower ...
+      // way 1: slow...
       for(int i=0; i < mp->NSPEC_AB; i++) {
         gpuMemcpy_todevice_realw(mp->d_rhostore+i*NGLL3_PADDED, &rhostore[i*NGLL3],NGLL3);
       }
       */
-      // way 2: faster...
+      // way 2: faster ...
       gpuMemcpy2D_todevice_realw(mp->d_rhostore, NGLL3_PADDED, rhostore, NGLL3, NGLL3, mp->NSPEC_AB);
     }
   }
+  if (mp->d_wgll_cube == NULL) setConst_wgll_cube(h_wgll_cube,mp);
 
   GPU_ERROR_CHECKING("prepare_fields_gravity_device");
 }
@@ -1440,7 +1577,7 @@ TRACE("prepare_cleanup_device");
   gpuFree(mp->d_gammaz);
 
   // absorbing boundaries
-  if (mp->absorbing_conditions && mp->d_num_abs_boundary_faces > 0){
+  if (mp->d_num_abs_boundary_faces > 0){
     gpuFree(mp->d_abs_boundary_ispec);
     gpuFree(mp->d_abs_boundary_ijk);
     gpuFree(mp->d_abs_boundary_normal);
@@ -1490,14 +1627,13 @@ TRACE("prepare_cleanup_device");
     gpuFree(mp->d_potential_dot_dot_acoustic);
     gpuFree(mp->d_send_potential_dot_dot_buffer);
     gpuFree(mp->d_rmass_acoustic);
-    gpuFree(mp->d_rhostore);
     gpuFree(mp->d_kappastore);
     gpuFree(mp->d_phase_ispec_inner_acoustic);
     if (*NOISE_TOMOGRAPHY == 0){
       gpuFree(mp->d_free_surface_ispec);
       gpuFree(mp->d_free_surface_ijk);
     }
-    if (mp->absorbing_conditions) gpuFree(mp->d_b_absorb_potential);
+    if (mp->stacey_absorbing_conditions) gpuFree(mp->d_b_absorb_potential);
     if (mp->simulation_type == 3) {
       gpuFree(mp->d_b_potential_acoustic);
       gpuFree(mp->d_b_potential_dot_acoustic);
@@ -1523,11 +1659,42 @@ TRACE("prepare_cleanup_device");
     gpuFree(mp->d_rmassy);
     gpuFree(mp->d_rmassz);
     gpuFree(mp->d_phase_ispec_inner_elastic);
-    if (mp->absorbing_conditions && mp->d_num_abs_boundary_faces > 0){
+    if (mp->stacey_absorbing_conditions && mp->d_num_abs_boundary_faces > 0){
       gpuFree(mp->d_rho_vp);
       gpuFree(mp->d_rho_vs);
       if (mp->simulation_type == 3 || ( mp->simulation_type == 1 && mp->save_forward ))
           gpuFree(mp->d_b_absorb_field);
+    }
+    if (mp->pml_conditions && mp->NSPEC_CPML > 0){
+      gpuFree(mp->d_CPML_to_spec);
+      gpuFree(mp->d_PML_displ_old);
+      gpuFree(mp->d_PML_displ_new);
+      gpuFree(mp->d_pml_convolution_coef_alpha);
+      gpuFree(mp->d_pml_convolution_coef_beta);
+      gpuFree(mp->d_pml_convolution_coef_strain);
+      gpuFree(mp->d_pml_convolution_coef_abar);
+      gpuFree(mp->d_rmemory_displ_elastic);
+      gpuFree(mp->d_rmemory_dux_dxl_x);
+      gpuFree(mp->d_rmemory_duy_dxl_y);
+      gpuFree(mp->d_rmemory_duz_dxl_z);
+      gpuFree(mp->d_rmemory_dux_dyl_x);
+      gpuFree(mp->d_rmemory_duy_dyl_y);
+      gpuFree(mp->d_rmemory_duz_dyl_z);
+      gpuFree(mp->d_rmemory_dux_dzl_x);
+      gpuFree(mp->d_rmemory_duy_dzl_y);
+      gpuFree(mp->d_rmemory_duz_dzl_z);
+      gpuFree(mp->d_rmemory_dux_dxl_y);
+      gpuFree(mp->d_rmemory_dux_dxl_z);
+      gpuFree(mp->d_rmemory_duy_dxl_x);
+      gpuFree(mp->d_rmemory_duz_dxl_x);
+      gpuFree(mp->d_rmemory_dux_dyl_y);
+      gpuFree(mp->d_rmemory_duy_dyl_x);
+      gpuFree(mp->d_rmemory_duy_dyl_z);
+      gpuFree(mp->d_rmemory_duz_dyl_y);
+      gpuFree(mp->d_rmemory_dux_dzl_z);
+      gpuFree(mp->d_rmemory_duy_dzl_z);
+      gpuFree(mp->d_rmemory_duz_dzl_x);
+      gpuFree(mp->d_rmemory_duz_dzl_y);
     }
     gpuFree(mp->d_kappav);
     gpuFree(mp->d_muv);
@@ -1626,6 +1793,8 @@ TRACE("prepare_cleanup_device");
       }
     }
   } // ELASTIC_SIMULATION
+
+  if (mp->d_rhostore != NULL) gpuFree(mp->d_rhostore);
 
   // purely adjoint & kernel array
   if (mp->simulation_type == 2 || mp->simulation_type == 3){

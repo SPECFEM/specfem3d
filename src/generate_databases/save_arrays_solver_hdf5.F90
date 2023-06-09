@@ -83,7 +83,7 @@
   integer :: info, comm
 
   ! if collective write
-  logical :: if_col= .true.
+  logical, parameter :: if_col = .true.
 
   ! hdf5 valiables
   character(len=64) :: dset_name, tempstr
@@ -92,12 +92,11 @@
   ! the node ids are stored after dividing one NGLL*-th order spectral element into NGLLX*NGLLY*NGLLZ elements
   integer, dimension(9,nspec_ab*(NGLLX-1)*(NGLLY-1)*(NGLLZ-1)) :: spec_elm_conn_xdmf
 
-  ! dump dataset size
-  !integer, dimension(NPROC,4)                :: dsize_dump
-  integer, dimension(1,1)                    :: i2d_dummy = reshape((/0/),(/1,1/))
-  integer, dimension(1,1,1)                  :: i3d_dummy = reshape((/0/),(/1,1,1/))
-  real(kind=CUSTOM_REAL), dimension(1,1)     :: r2d_dummy = reshape((/0.0/),(/1,1/))
-  real(kind=CUSTOM_REAL), dimension(1,1,1)   :: r3d_dummy = reshape((/0.0/),(/1,1,1/))
+  ! dummy arrays
+  integer, dimension(1,1), parameter                    :: i2d_dummy = reshape((/0/),(/1,1/))
+  integer, dimension(1,1,1), parameter                  :: i3d_dummy = reshape((/0/),(/1,1,1/))
+  real(kind=CUSTOM_REAL), dimension(1,1), parameter     :: r2d_dummy = reshape((/0.0/),(/1,1/))
+  real(kind=CUSTOM_REAL), dimension(1,1,1), parameter   :: r3d_dummy = reshape((/0.0/),(/1,1,1/))
 
   ! offset arrays
   integer, dimension(0:NPROC-1) :: offset_nglob
@@ -143,6 +142,7 @@
     write(IMAIN,*)
     call flush_IMAIN()
   endif
+  call synchronize_all()
 
   !---------------------------.
   ! Setup the values to write |

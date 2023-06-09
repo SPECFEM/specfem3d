@@ -556,7 +556,6 @@ __device__  __forceinline__ void sum_hprimewgll_gamma(int I, int J, int K,
 
 // computes the spatial derivatives
 
-
 __device__  __forceinline__ void get_spatial_derivatives(realw* xixl,realw* xiyl,realw* xizl,
                                                          realw* etaxl,realw* etayl,realw* etazl,
                                                          realw* gammaxl,realw* gammayl,realw* gammazl,
@@ -582,7 +581,7 @@ __device__  __forceinline__ void get_spatial_derivatives(realw* xixl,realw* xiyl
     // local padded index
     int offset = ispec_irreg*NGLL3_PADDED + tx;
 
-    *xixl = get_global_cr( &d_xix[offset]);
+    *xixl = get_global_cr(&d_xix[offset]);
     *xiyl = get_global_cr(&d_xiy[offset]);
     *xizl = get_global_cr(&d_xiz[offset]);
     *etaxl = get_global_cr(&d_etax[offset]);
@@ -739,6 +738,8 @@ Kernel_2_noatt_iso_impl(const int nb_blocks_to_compute,
                         realw_const_p d_wgllwgll_xy,realw_const_p d_wgllwgll_xz,realw_const_p d_wgllwgll_yz,
                         realw_const_p d_kappav,
                         realw_const_p d_muv,
+                        const int pml_conditions,
+                        const int* d_is_CPML,
                         const int FORWARD_OR_ADJOINT){
 
 // elastic compute kernel without attenuation for isotropic elements
@@ -820,6 +821,13 @@ Kernel_2_noatt_iso_impl(const int nb_blocks_to_compute,
   // spectral-element id
   // iphase-1 and working_element-1 for Fortran->C array conventions
   working_element = d_phase_ispec_inner_elastic[bx + num_phase_ispec_elastic*(d_iphase-1)] - 1;
+
+  // PML
+  if (pml_conditions){
+    // PML elements will be computed later
+    if(d_is_CPML[working_element]) return;
+  }
+
   ispec_irreg = d_irregular_element_number[working_element] - 1;
 
   // local padded index
@@ -1042,6 +1050,8 @@ Kernel_2_noatt_iso_strain_impl(int nb_blocks_to_compute,
                               realw_p epsilondev_xz,realw_p epsilondev_yz,
                               realw_p epsilon_trace_over_3,
                               const int SIMULATION_TYPE,
+                              const int pml_conditions,
+                              const int* d_is_CPML,
                               const int FORWARD_OR_ADJOINT){
 
 // elastic compute kernel without attenuation for isotropic elements
@@ -1107,6 +1117,13 @@ Kernel_2_noatt_iso_strain_impl(int nb_blocks_to_compute,
   // spectral-element id
   // iphase-1 and working_element-1 for Fortran->C array conventions
   working_element = d_phase_ispec_inner_elastic[bx + num_phase_ispec_elastic*(d_iphase-1)] - 1;
+
+  // PML
+  if (pml_conditions){
+    // PML elements will be computed later
+    if(d_is_CPML[working_element]) return;
+  }
+
   ispec_irreg = d_irregular_element_number[working_element] - 1;
 
   // local padded index
@@ -1253,6 +1270,8 @@ Kernel_2_noatt_iso_col_impl(int nb_blocks_to_compute,
                         realw_p epsilondev_xz,realw_p epsilondev_yz,
                         realw_p epsilon_trace_over_3,
                         const int SIMULATION_TYPE,
+                        const int pml_conditions,
+                        const int* d_is_CPML,
                         const int FORWARD_OR_ADJOINT){
 
 // elastic compute kernel without attenuation for isotropic elements
@@ -1327,6 +1346,13 @@ Kernel_2_noatt_iso_col_impl(int nb_blocks_to_compute,
     working_element = d_phase_ispec_inner_elastic[bx + num_phase_ispec_elastic*(d_iphase-1)] - 1;
   }
 #endif
+
+  // PML
+  if (pml_conditions){
+    // PML elements will be computed later
+    if(d_is_CPML[working_element]) return;
+  }
+
   // local padded index
   offset = working_element*NGLL3_PADDED + tx;
 
@@ -1572,6 +1598,8 @@ Kernel_2_noatt_iso_grav_impl(int nb_blocks_to_compute,
                              realw_const_p d_minus_deriv_gravity,
                              realw_const_p d_rhostore,
                              realw_const_p wgll_cube,
+                             const int pml_conditions,
+                             const int* d_is_CPML,
                              const int FORWARD_OR_ADJOINT){
 
 // elastic compute kernel without attenuation for isotropic elements
@@ -1652,6 +1680,13 @@ Kernel_2_noatt_iso_grav_impl(int nb_blocks_to_compute,
     working_element = d_phase_ispec_inner_elastic[bx + num_phase_ispec_elastic*(d_iphase-1)] - 1;
   }
 #endif
+
+  // PML
+  if (pml_conditions){
+    // PML elements will be computed later
+    if(d_is_CPML[working_element]) return;
+  }
+
   ispec_irreg = d_irregular_element_number[working_element] - 1;
 
   // local padded index
@@ -1881,6 +1916,8 @@ Kernel_2_noatt_ani_impl(int nb_blocks_to_compute,
                         realw_const_p d_minus_deriv_gravity,
                         realw_const_p d_rhostore,
                         realw_const_p wgll_cube,
+                        const int pml_conditions,
+                        const int* d_is_CPML,
                         const int FORWARD_OR_ADJOINT){
 
 // elastic compute kernel without attenuation for anisotropic elements
@@ -1959,6 +1996,13 @@ Kernel_2_noatt_ani_impl(int nb_blocks_to_compute,
     working_element = d_phase_ispec_inner_elastic[bx + num_phase_ispec_elastic*(d_iphase-1)] - 1;
   }
 #endif
+
+  // PML
+  if (pml_conditions){
+    // PML elements will be computed later
+    if(d_is_CPML[working_element]) return;
+  }
+
   ispec_irreg = d_irregular_element_number[working_element] - 1;
 
   // local padded index
@@ -2240,6 +2284,8 @@ Kernel_2_att_impl(int nb_blocks_to_compute,
                   realw_const_p d_minus_deriv_gravity,
                   realw_const_p d_rhostore,
                   realw_const_p wgll_cube,
+                  const int pml_conditions,
+                  const int* d_is_CPML,
                   const int FORWARD_OR_ADJOINT){
 
 
@@ -2322,6 +2368,13 @@ Kernel_2_att_impl(int nb_blocks_to_compute,
     working_element = d_phase_ispec_inner_elastic[bx + num_phase_ispec_elastic*(d_iphase-1)]-1;
   }
 #endif
+
+  // PML
+  if (pml_conditions){
+    // PML elements will be computed later
+    if(d_is_CPML[working_element]) return;
+  }
+
   ispec_irreg = d_irregular_element_number[working_element] - 1;
 
   // local padded index
@@ -2485,7 +2538,7 @@ Kernel_2_att_impl(int nb_blocks_to_compute,
   sigma_zx = sigma_xz;
   sigma_zy = sigma_yz;
 
-  if (gravity ){
+  if (gravity){
     //  computes non-symmetric terms for gravity
     compute_element_gravity(tx,working_element,&iglob,d_minus_g,d_minus_deriv_gravity,
                             d_rhostore,wgll_cube,jacobianl,
@@ -2524,7 +2577,7 @@ Kernel_2_att_impl(int nb_blocks_to_compute,
   sum_terms3 = - (fac1*tempz1l + fac2*tempz2l + fac3*tempz3l);
 
   // adds gravity term
-  if (gravity ){
+  if (gravity){
     sum_terms1 += rho_s_H1;
     sum_terms2 += rho_s_H2;
     sum_terms3 += rho_s_H3;
@@ -2557,7 +2610,7 @@ Kernel_2_att_impl(int nb_blocks_to_compute,
 #else // MESH_COLORING
 
     //mesh coloring
-    if (use_mesh_coloring_gpu ){
+    if (use_mesh_coloring_gpu){
 
       // no atomic operation needed, colors don't share global points between elements
 #ifdef USE_TEXTURES_FIELDS
@@ -3351,6 +3404,8 @@ Kernel_2_noatt_iso_kelvinvoigt_impl(const int nb_blocks_to_compute,
                                     realw_const_p d_wgllwgll_xy,realw_const_p d_wgllwgll_xz,realw_const_p d_wgllwgll_yz,
                                     realw_const_p d_kappav,
                                     realw_const_p d_muv,
+                                    const int pml_conditions,
+                                    const int* d_is_CPML,
                                     const int FORWARD_OR_ADJOINT){
 
 // elastic compute kernel without attenuation for isotropic elements with kelvin voigt damping aroung the fault
@@ -3410,6 +3465,13 @@ Kernel_2_noatt_iso_kelvinvoigt_impl(const int nb_blocks_to_compute,
   // spectral-element id
   // iphase-1 and working_element-1 for Fortran->C array conventions
   working_element = d_phase_ispec_inner_elastic[bx + num_phase_ispec_elastic*(d_iphase-1)] - 1;
+
+  // PML
+  if (pml_conditions){
+    // PML elements will be computed later
+    if(d_is_CPML[working_element]) return;
+  }
+
   ispec_irreg = d_irregular_element_number[working_element] - 1;
 
   // local padded index

@@ -62,7 +62,9 @@ module pml_par
   real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: K_store_x, K_store_y, K_store_z
   real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: alpha_store_x,alpha_store_y,alpha_store_z
 
-  real(kind=CUSTOM_REAL), dimension(:,:,:,:,:), allocatable :: convolution_coef_acoustic_alpha,convolution_coef_acoustic_beta
+  real(kind=CUSTOM_REAL), dimension(:,:,:,:,:), allocatable :: pml_convolution_coef_alpha,pml_convolution_coef_beta
+  real(kind=CUSTOM_REAL), dimension(:,:,:,:,:), allocatable :: pml_convolution_coef_abar
+  real(kind=CUSTOM_REAL), dimension(:,:,:,:,:), allocatable :: pml_convolution_coef_strain
 
   ! minimum distance between parameters of CPML to avoid the singularities
   real(kind=CUSTOM_REAL) :: min_distance_between_CPML_parameter
@@ -71,7 +73,8 @@ module pml_par
   ! for second order convolution scheme
   ! where displ, veloc, accel are defined at n-1 time step
   real(kind=CUSTOM_REAL), dimension(:,:,:,:,:), allocatable :: PML_displ_old
-  real(kind=CUSTOM_REAL), parameter :: theta = 1.0_CUSTOM_REAL/8.0_CUSTOM_REAL
+
+  real(kind=CUSTOM_REAL), parameter :: THETA = 1.0_CUSTOM_REAL/8.0_CUSTOM_REAL
 
   ! store the field of displ + (1-2 * \theta)/2*deltat * veloc for second order convolution scheme
   ! where displ is defined at n time step, while veloc is predicted veloc at "n" time step
@@ -102,7 +105,7 @@ module pml_par
   real(kind=CUSTOM_REAL), dimension(:,:,:,:,:), allocatable :: rmemory_duz_dxl_z,rmemory_duz_dyl_z,rmemory_duz_dzl_z
 
   !store the field accel at time step n-1 for second order convolution scheme
-!  real(kind=CUSTOM_REAL), dimension(:), allocatable :: potential_dot_dot_acoustic_old
+  !real(kind=CUSTOM_REAL), dimension(:), allocatable :: potential_dot_dot_acoustic_old
 
   real(kind=CUSTOM_REAL), dimension(:,:,:,:,:), allocatable :: rmemory_dpotential_dxl
   real(kind=CUSTOM_REAL), dimension(:,:,:,:,:), allocatable :: rmemory_dpotential_dyl

@@ -467,6 +467,14 @@ void FC_FUNC_(noise_read_add_surface_movie_cu,
 
 
 //
+// src/gpu/pml_compute_accel_cuda.cu
+//
+
+void FC_FUNC_(pml_impose_boundary_condition_elastic_cuda,
+              PML_IMPOSE_BOUNDARY_CONDITION_ELASTIC_CUDA)(long* Mesh_pointer) {}
+
+
+//
 // src/gpu/prepare_mesh_constants_cuda.cu
 //
 
@@ -483,7 +491,7 @@ void FC_FUNC_(prepare_constants_device,
                                         int* h_nibool_interfaces_ext_mesh, int* h_ibool_interfaces_ext_mesh,
                                         realw* h_hprime_xx, realw* h_hprimewgll_xx,
                                         realw* h_wgllwgll_xy,realw* h_wgllwgll_xz,realw* h_wgllwgll_yz,
-                                        int* ABSORBING_CONDITIONS,
+                                        int* STACEY_ABSORBING_CONDITIONS,
                                         int* h_abs_boundary_ispec, int* h_abs_boundary_ijk,
                                         realw* h_abs_boundary_normal,
                                         realw* h_abs_boundary_jacobian2Dw,
@@ -509,7 +517,8 @@ void FC_FUNC_(prepare_constants_device,
                                         int* SAVE_SEISMOGRAMS_ACCELERATION,int* SAVE_SEISMOGRAMS_PRESSURE,
                                         int* h_NB_RUNS_ACOUSTIC_GPU,
                                         int* FAULT_SIMULATION,
-                                        int* UNDO_ATTENUATION_AND_OR_PML) {}
+                                        int* UNDO_ATTENUATION_AND_OR_PML,
+                                        int* PML_CONDITIONS) {}
 
 void FC_FUNC_(prepare_fields_acoustic_device,
               PREPARE_FIELDS_ACOUSTIC_DEVICE)(long* Mesh_pointer,
@@ -586,6 +595,19 @@ void FC_FUNC_(prepare_fields_elastic_adj_dev,
                                              int* ANISOTROPIC_KL,
                                              int* APPROXIMATE_HESS_KL){}
 
+void FC_FUNC_(prepare_fields_elastic_pml,
+              PREPARE_FIELDS_ELASTIC_PML)(long* Mesh_pointer,
+                                          int* NSPEC_CPML,
+                                          int* is_CPML,
+                                          int* CPML_to_spec,
+                                          int* spec_to_CPML,
+                                          realw* pml_convolution_coef_alpha,
+                                          realw* pml_convolution_coef_beta,
+                                          realw* pml_convolution_coef_abar,
+                                          realw* pml_convolution_coef_strain,
+                                          realw* h_wgll_cube,
+                                          realw* rhostore) {}
+
 void FC_FUNC_(prepare_sim2_or_3_const_device,
               PREPARE_SIM2_OR_3_CONST_DEVICE)(long* Mesh_pointer,int *nadj_rec_local, int* NTSTEP_BETWEEN_READ_ADJSRC,
                                               realw* hxir_adjstore, realw* hetar_adjstore, realw* hgammar_adjstore,
@@ -610,7 +632,6 @@ void FC_FUNC_(prepare_fields_gravity_device,
                                              realw* minus_deriv_gravity,
                                              realw* minus_g,
                                              realw* h_wgll_cube,
-                                             int* ACOUSTIC_SIMULATION,
                                              realw* rhostore) {}
 
 void FC_FUNC_(prepare_fault_device,
@@ -710,6 +731,12 @@ void FC_FUNC_(transfer_displ_from_device,
 
 void FC_FUNC_(transfer_displ_to_device,
               TRANSFER_DISPL_TO_DEVICE)(int* size, realw* displ, long* Mesh_pointer) {}
+
+void FC_FUNC_(transfer_pml_displ_from_device,
+              TRANSFER_PML_DISPL_FROM_DEVICE)(int* size, realw* PML_displ_old, realw* PML_displ_new, long* Mesh_pointer) {}
+
+void FC_FUNC_(transfer_pml_displ_to_device,
+              TRANSFER_PML_DISPL_TO_DEVICE)(int* size, realw* PML_displ_old, realw* PML_displ_new, long* Mesh_pointer) {}
 
 void FC_FUNC_(transfer_b_rmemory_to_device,
               TRANSFER_B_RMEMORY_TO_DEVICE)(long* Mesh_pointer,

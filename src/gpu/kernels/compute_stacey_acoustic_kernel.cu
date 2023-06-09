@@ -40,7 +40,6 @@ __global__ void compute_stacey_acoustic_kernel(field* potential_dot_acoustic,
                                                int SIMULATION_TYPE,
                                                int SAVE_FORWARD,
                                                int num_abs_boundary_faces,
-                                               field* b_potential_dot_acoustic,
                                                field* b_potential_dot_dot_acoustic,
                                                field* b_absorb_potential,
                                                int gravity) {

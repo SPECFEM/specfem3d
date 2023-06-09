@@ -288,6 +288,36 @@ void FC_FUNC_(transfer_displ_to_device,
 
 /* ----------------------------------------------------------------------------------------------- */
 
+extern EXTERN_LANG
+void FC_FUNC_(transfer_pml_displ_from_device,
+              TRANSFER_PML_DISPL_FROM_DEVICE)(int* size, realw* PML_displ_old, realw* PML_displ_new, long* Mesh_pointer) {
+
+  TRACE("transfer_displ_from_device");
+
+  Mesh* mp = (Mesh*)(*Mesh_pointer); //get mesh pointer out of fortran integer container
+
+  gpuMemcpy_tohost_realw(PML_displ_old,mp->d_PML_displ_old,(*size));
+  gpuMemcpy_tohost_realw(PML_displ_new,mp->d_PML_displ_new,(*size));
+
+}
+
+/* ----------------------------------------------------------------------------------------------- */
+
+extern EXTERN_LANG
+void FC_FUNC_(transfer_pml_displ_to_device,
+              TRANSFER_PML_DISPL_TO_DEVICE)(int* size, realw* PML_displ_old, realw* PML_displ_new, long* Mesh_pointer) {
+
+  TRACE("transfer_displ_to_device");
+
+  Mesh* mp = (Mesh*)(*Mesh_pointer); //get mesh pointer out of fortran integer container
+
+  gpuMemcpy_todevice_realw(mp->d_PML_displ_old,PML_displ_old,(*size));
+  gpuMemcpy_todevice_realw(mp->d_PML_displ_new,PML_displ_new,(*size));
+
+}
+
+/* ----------------------------------------------------------------------------------------------- */
+
 // attenuation fields
 
 /* ----------------------------------------------------------------------------------------------- */

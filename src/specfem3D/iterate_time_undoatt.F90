@@ -520,7 +520,7 @@
 
         ! transfers wavefields from CPU to GPU
         if (GPU_MODE) then
-          ! daniel debug: check if these transfers could be made async to overlap
+          !#TODO: check if these transfers could be made async to overlap
           if (ACOUSTIC_SIMULATION) then
             call transfer_b_potential_ac_to_device(NGLOB_AB,b_potential_acoustic,Mesh_pointer)
             call transfer_b_potential_dot_dot_ac_to_device(NGLOB_AB,b_potential_dot_dot_acoustic,Mesh_pointer)

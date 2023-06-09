@@ -26,25 +26,25 @@
 !=====================================================================
 
 
-subroutine pml_compute_memory_variables_elastic(ispec,ispec_CPML, &
-                                                tempx1,tempy1,tempz1, &
-                                                tempx2,tempy2,tempz2, &
-                                                tempx3,tempy3,tempz3, &
-                                                PML_dux_dxl, PML_dux_dyl, PML_dux_dzl, &
-                                                PML_duy_dxl, PML_duy_dyl, PML_duy_dzl, &
-                                                PML_duz_dxl, PML_duz_dyl, PML_duz_dzl, &
-                                                PML_dux_dxl_old, PML_dux_dyl_old, PML_dux_dzl_old, &
-                                                PML_duy_dxl_old, PML_duy_dyl_old, PML_duy_dzl_old, &
-                                                PML_duz_dxl_old, PML_duz_dyl_old, PML_duz_dzl_old, &
-                                                PML_dux_dxl_new, PML_dux_dyl_new, PML_dux_dzl_new, &
-                                                PML_duy_dxl_new, PML_duy_dyl_new, PML_duy_dzl_new, &
-                                                PML_duz_dxl_new, PML_duz_dyl_new, PML_duz_dzl_new, &
-                                                rmemory_dux_dxl_x, rmemory_duy_dyl_x, rmemory_duz_dzl_x, &
-                                                rmemory_dux_dyl_x, rmemory_dux_dzl_x, rmemory_duz_dxl_x, rmemory_duy_dxl_x, &
-                                                rmemory_dux_dxl_y, rmemory_duz_dzl_y, rmemory_duy_dyl_y, &
-                                                rmemory_duy_dxl_y, rmemory_duy_dzl_y, rmemory_duz_dyl_y, rmemory_dux_dyl_y, &
-                                                rmemory_dux_dxl_z, rmemory_duy_dyl_z, rmemory_duz_dzl_z, &
-                                                rmemory_duz_dxl_z, rmemory_duz_dyl_z, rmemory_duy_dzl_z, rmemory_dux_dzl_z)
+  subroutine pml_compute_memory_variables_elastic(ispec,ispec_CPML, &
+                                                  tempx1,tempy1,tempz1, &
+                                                  tempx2,tempy2,tempz2, &
+                                                  tempx3,tempy3,tempz3, &
+                                                  PML_dux_dxl, PML_dux_dyl, PML_dux_dzl, &
+                                                  PML_duy_dxl, PML_duy_dyl, PML_duy_dzl, &
+                                                  PML_duz_dxl, PML_duz_dyl, PML_duz_dzl, &
+                                                  PML_dux_dxl_old, PML_dux_dyl_old, PML_dux_dzl_old, &
+                                                  PML_duy_dxl_old, PML_duy_dyl_old, PML_duy_dzl_old, &
+                                                  PML_duz_dxl_old, PML_duz_dyl_old, PML_duz_dzl_old, &
+                                                  PML_dux_dxl_new, PML_dux_dyl_new, PML_dux_dzl_new, &
+                                                  PML_duy_dxl_new, PML_duy_dyl_new, PML_duy_dzl_new, &
+                                                  PML_duz_dxl_new, PML_duz_dyl_new, PML_duz_dzl_new, &
+                                                  rmemory_dux_dxl_x, rmemory_duy_dyl_x, rmemory_duz_dzl_x, &
+                                                  rmemory_dux_dyl_x, rmemory_dux_dzl_x, rmemory_duz_dxl_x, rmemory_duy_dxl_x, &
+                                                  rmemory_dux_dxl_y, rmemory_duz_dzl_y, rmemory_duy_dyl_y, &
+                                                  rmemory_duy_dxl_y, rmemory_duy_dzl_y, rmemory_duz_dyl_y, rmemory_dux_dyl_y, &
+                                                  rmemory_dux_dxl_z, rmemory_duy_dyl_z, rmemory_duz_dzl_z, &
+                                                  rmemory_duz_dxl_z, rmemory_duz_dyl_z, rmemory_duy_dzl_z, rmemory_dux_dzl_z)
 
 ! calculates C-PML elastic memory variables and computes stress sigma
 
@@ -60,9 +60,9 @@ subroutine pml_compute_memory_variables_elastic(ispec,ispec_CPML, &
                          kappastore,mustore,irregular_element_number, &
                          jacobian_regular,xix_regular
 
-  use pml_par, only: NSPEC_CPML,CPML_regions,k_store_x,k_store_y,k_store_z, &
-                     d_store_x,d_store_y,d_store_z,alpha_store_x,alpha_store_y,alpha_store_z, &
-                     convolution_coef_acoustic_alpha,convolution_coef_acoustic_beta
+  use pml_par, only: NSPEC_CPML, &
+                     pml_convolution_coef_alpha,pml_convolution_coef_beta, &
+                     pml_convolution_coef_strain
 
   implicit none
 
@@ -107,10 +107,6 @@ subroutine pml_compute_memory_variables_elastic(ispec,ispec_CPML, &
   real(kind=CUSTOM_REAL) :: A20,A21 ! L2
   real(kind=CUSTOM_REAL) :: A22,A23 ! L3
   real(kind=CUSTOM_REAL) :: coef0_1,coef1_1,coef2_1,coef0_2,coef1_2,coef2_2,coef0_3,coef1_3,coef2_3
-  integer :: CPML_region_local
-  real(kind=CUSTOM_REAL) :: kappa_x,kappa_y,kappa_z,d_x,d_y,d_z,alpha_x,alpha_y,alpha_z
-
-  CPML_region_local = CPML_regions(ispec_CPML)
 
   ispec_irreg = irregular_element_number(ispec)
   if (ispec_irreg == 0) jacobianl = jacobian_regular
@@ -118,36 +114,22 @@ subroutine pml_compute_memory_variables_elastic(ispec,ispec_CPML, &
   do k=1,NGLLZ
     do j=1,NGLLY
       do i=1,NGLLX
-        kappa_x = k_store_x(i,j,k,ispec_CPML)
-        kappa_y = k_store_y(i,j,k,ispec_CPML)
-        kappa_z = k_store_z(i,j,k,ispec_CPML)
-        d_x = d_store_x(i,j,k,ispec_CPML)
-        d_y = d_store_y(i,j,k,ispec_CPML)
-        d_z = d_store_z(i,j,k,ispec_CPML)
-        alpha_x = alpha_store_x(i,j,k,ispec_CPML)
-        alpha_y = alpha_store_y(i,j,k,ispec_CPML)
-        alpha_z = alpha_store_z(i,j,k,ispec_CPML)
-
         !---------------------- A6, A7, A8, A9 --------------------------
-        call lijk_parameter_computation(kappa_z,d_z,alpha_z,kappa_y,d_y,alpha_y,kappa_x,d_x,alpha_x, &
-                                        CPML_region_local,231, &
-                                        A6,A7,A8,A9)
-
         ! coefficients
         ! alpha_z
-        coef0_1 = convolution_coef_acoustic_alpha(7,i,j,k,ispec_CPML)
-        coef1_1 = convolution_coef_acoustic_alpha(8,i,j,k,ispec_CPML)
-        coef2_1 = convolution_coef_acoustic_alpha(9,i,j,k,ispec_CPML)
+        coef0_1 = pml_convolution_coef_alpha(7,i,j,k,ispec_CPML)
+        coef1_1 = pml_convolution_coef_alpha(8,i,j,k,ispec_CPML)
+        coef2_1 = pml_convolution_coef_alpha(9,i,j,k,ispec_CPML)
 
         ! alpha_y
-        coef0_2 = convolution_coef_acoustic_alpha(4,i,j,k,ispec_CPML)
-        coef1_2 = convolution_coef_acoustic_alpha(5,i,j,k,ispec_CPML)
-        coef2_2 = convolution_coef_acoustic_alpha(6,i,j,k,ispec_CPML)
+        coef0_2 = pml_convolution_coef_alpha(4,i,j,k,ispec_CPML)
+        coef1_2 = pml_convolution_coef_alpha(5,i,j,k,ispec_CPML)
+        coef2_2 = pml_convolution_coef_alpha(6,i,j,k,ispec_CPML)
 
         ! beta_x = alpha_x + d_x / kappa_x
-        coef0_3 = convolution_coef_acoustic_beta(1,i,j,k,ispec_CPML)
-        coef1_3 = convolution_coef_acoustic_beta(2,i,j,k,ispec_CPML)
-        coef2_3 = convolution_coef_acoustic_beta(3,i,j,k,ispec_CPML)
+        coef0_3 = pml_convolution_coef_beta(1,i,j,k,ispec_CPML)
+        coef1_3 = pml_convolution_coef_beta(2,i,j,k,ispec_CPML)
+        coef2_3 = pml_convolution_coef_beta(3,i,j,k,ispec_CPML)
 
         rmemory_dux_dxl_x(i,j,k,ispec_CPML,1) = coef0_1 * rmemory_dux_dxl_x(i,j,k,ispec_CPML,1) &
                + PML_dux_dxl_new(i,j,k) * coef1_1 + PML_dux_dxl_old(i,j,k) * coef2_1
@@ -170,27 +152,22 @@ subroutine pml_compute_memory_variables_elastic(ispec,ispec_CPML, &
         rmemory_duz_dxl_z(i,j,k,ispec_CPML,3) = coef0_3 * rmemory_duz_dxl_z(i,j,k,ispec_CPML,3) &
                + PML_duz_dxl_new(i,j,k) * coef1_3 + PML_duz_dxl_old(i,j,k) * coef2_3
 
-
         !---------------------- A10,A11,A12,A13 --------------------------
-        call lijk_parameter_computation(kappa_x,d_x,alpha_x,kappa_z,d_z,alpha_z,kappa_y,d_y,alpha_y, &
-                                        CPML_region_local,132, &
-                                        A10,A11,A12,A13)
-
         ! coefficients
         ! alpha_x
-        coef0_1 = convolution_coef_acoustic_alpha(1,i,j,k,ispec_CPML)
-        coef1_1 = convolution_coef_acoustic_alpha(2,i,j,k,ispec_CPML)
-        coef2_1 = convolution_coef_acoustic_alpha(3,i,j,k,ispec_CPML)
+        coef0_1 = pml_convolution_coef_alpha(1,i,j,k,ispec_CPML)
+        coef1_1 = pml_convolution_coef_alpha(2,i,j,k,ispec_CPML)
+        coef2_1 = pml_convolution_coef_alpha(3,i,j,k,ispec_CPML)
 
         ! alpha_z
-        coef0_2 = convolution_coef_acoustic_alpha(7,i,j,k,ispec_CPML)
-        coef1_2 = convolution_coef_acoustic_alpha(8,i,j,k,ispec_CPML)
-        coef2_2 = convolution_coef_acoustic_alpha(9,i,j,k,ispec_CPML)
+        coef0_2 = pml_convolution_coef_alpha(7,i,j,k,ispec_CPML)
+        coef1_2 = pml_convolution_coef_alpha(8,i,j,k,ispec_CPML)
+        coef2_2 = pml_convolution_coef_alpha(9,i,j,k,ispec_CPML)
 
         ! beta_y = alpha_y + d_y / kappa_y
-        coef0_3 = convolution_coef_acoustic_beta(4,i,j,k,ispec_CPML)
-        coef1_3 = convolution_coef_acoustic_beta(5,i,j,k,ispec_CPML)
-        coef2_3 = convolution_coef_acoustic_beta(6,i,j,k,ispec_CPML)
+        coef0_3 = pml_convolution_coef_beta(4,i,j,k,ispec_CPML)
+        coef1_3 = pml_convolution_coef_beta(5,i,j,k,ispec_CPML)
+        coef2_3 = pml_convolution_coef_beta(6,i,j,k,ispec_CPML)
 
         rmemory_dux_dyl_x(i,j,k,ispec_CPML,1) = coef0_1 * rmemory_dux_dyl_x(i,j,k,ispec_CPML,1) &
                + PML_dux_dyl_new(i,j,k) * coef1_1 + PML_dux_dyl_old(i,j,k) * coef2_1
@@ -214,25 +191,21 @@ subroutine pml_compute_memory_variables_elastic(ispec,ispec_CPML, &
                + PML_duz_dyl_new(i,j,k) * coef1_3 + PML_duz_dyl_old(i,j,k) * coef2_3
 
         !---------------------- A14,A15,A16,A17 --------------------------
-        call lijk_parameter_computation(kappa_x,d_x,alpha_x,kappa_y,d_y,alpha_y,kappa_z,d_z,alpha_z, &
-                                        CPML_region_local,123, &
-                                        A14,A15,A16,A17)
-
         ! coefficients
         ! alpha_x
-        coef0_1 = convolution_coef_acoustic_alpha(1,i,j,k,ispec_CPML)
-        coef1_1 = convolution_coef_acoustic_alpha(2,i,j,k,ispec_CPML)
-        coef2_1 = convolution_coef_acoustic_alpha(3,i,j,k,ispec_CPML)
+        coef0_1 = pml_convolution_coef_alpha(1,i,j,k,ispec_CPML)
+        coef1_1 = pml_convolution_coef_alpha(2,i,j,k,ispec_CPML)
+        coef2_1 = pml_convolution_coef_alpha(3,i,j,k,ispec_CPML)
 
         ! alpha_y
-        coef0_2 = convolution_coef_acoustic_alpha(4,i,j,k,ispec_CPML)
-        coef1_2 = convolution_coef_acoustic_alpha(5,i,j,k,ispec_CPML)
-        coef2_2 = convolution_coef_acoustic_alpha(6,i,j,k,ispec_CPML)
+        coef0_2 = pml_convolution_coef_alpha(4,i,j,k,ispec_CPML)
+        coef1_2 = pml_convolution_coef_alpha(5,i,j,k,ispec_CPML)
+        coef2_2 = pml_convolution_coef_alpha(6,i,j,k,ispec_CPML)
 
         ! beta_z = alpha_z + d_z / kappa_z
-        coef0_3 = convolution_coef_acoustic_beta(7,i,j,k,ispec_CPML)
-        coef1_3 = convolution_coef_acoustic_beta(8,i,j,k,ispec_CPML)
-        coef2_3 = convolution_coef_acoustic_beta(9,i,j,k,ispec_CPML)
+        coef0_3 = pml_convolution_coef_beta(7,i,j,k,ispec_CPML)
+        coef1_3 = pml_convolution_coef_beta(8,i,j,k,ispec_CPML)
+        coef2_3 = pml_convolution_coef_beta(9,i,j,k,ispec_CPML)
 
         rmemory_dux_dzl_x(i,j,k,ispec_CPML,1) = coef0_1 * rmemory_dux_dzl_x(i,j,k,ispec_CPML,1) &
                + PML_dux_dzl_new(i,j,k) * coef1_1 + PML_dux_dzl_old(i,j,k) * coef2_1
@@ -256,14 +229,11 @@ subroutine pml_compute_memory_variables_elastic(ispec,ispec_CPML, &
                + PML_duz_dzl_new(i,j,k) * coef1_3 + PML_duz_dzl_old(i,j,k) * coef2_3
 
         !---------------------- A18 and A19 --------------------------
-        call lx_parameter_computation(kappa_x,d_x,alpha_x, &
-                                      CPML_region_local,A18,A19)
-
         ! coefficients
         ! alpha_x
-        coef0_1 = convolution_coef_acoustic_alpha(1,i,j,k,ispec_CPML)
-        coef1_1 = convolution_coef_acoustic_alpha(2,i,j,k,ispec_CPML)
-        coef2_1 = convolution_coef_acoustic_alpha(3,i,j,k,ispec_CPML)
+        coef0_1 = pml_convolution_coef_alpha(1,i,j,k,ispec_CPML)
+        coef1_1 = pml_convolution_coef_alpha(2,i,j,k,ispec_CPML)
+        coef2_1 = pml_convolution_coef_alpha(3,i,j,k,ispec_CPML)
 
         rmemory_duz_dzl_y(i,j,k,ispec_CPML) = coef0_1 * rmemory_duz_dzl_y(i,j,k,ispec_CPML) &
                + PML_duz_dzl_new(i,j,k) * coef1_1 + PML_duz_dzl_old(i,j,k) * coef2_1
@@ -278,14 +248,11 @@ subroutine pml_compute_memory_variables_elastic(ispec,ispec_CPML, &
                + PML_duy_dyl_new(i,j,k) * coef1_1 + PML_duy_dyl_old(i,j,k) * coef2_1
 
         !---------------------- A20 and A21 --------------------------
-        call ly_parameter_computation(kappa_y,d_y,alpha_y, &
-                                      CPML_region_local,A20,A21)
-
         ! coefficients
         ! alpha_y
-        coef0_1 = convolution_coef_acoustic_alpha(4,i,j,k,ispec_CPML)
-        coef1_1 = convolution_coef_acoustic_alpha(5,i,j,k,ispec_CPML)
-        coef2_1 = convolution_coef_acoustic_alpha(6,i,j,k,ispec_CPML)
+        coef0_1 = pml_convolution_coef_alpha(4,i,j,k,ispec_CPML)
+        coef1_1 = pml_convolution_coef_alpha(5,i,j,k,ispec_CPML)
+        coef2_1 = pml_convolution_coef_alpha(6,i,j,k,ispec_CPML)
 
         rmemory_duz_dzl_x(i,j,k,ispec_CPML) = coef0_1 * rmemory_duz_dzl_x(i,j,k,ispec_CPML) &
                + PML_duz_dzl_new(i,j,k) * coef1_1 + PML_duz_dzl_old(i,j,k) * coef2_1
@@ -300,14 +267,11 @@ subroutine pml_compute_memory_variables_elastic(ispec,ispec_CPML, &
                + PML_dux_dxl_new(i,j,k) * coef1_1 + PML_dux_dxl_old(i,j,k) * coef2_1
 
         !---------------------- A22 and A23 --------------------------
-        call lz_parameter_computation(kappa_z,d_z,alpha_z, &
-                                      CPML_region_local,A22,A23)
-
         ! coefficients
         ! alpha_z
-        coef0_1 = convolution_coef_acoustic_alpha(7,i,j,k,ispec_CPML)
-        coef1_1 = convolution_coef_acoustic_alpha(8,i,j,k,ispec_CPML)
-        coef2_1 = convolution_coef_acoustic_alpha(9,i,j,k,ispec_CPML)
+        coef0_1 = pml_convolution_coef_alpha(7,i,j,k,ispec_CPML)
+        coef1_1 = pml_convolution_coef_alpha(8,i,j,k,ispec_CPML)
+        coef2_1 = pml_convolution_coef_alpha(9,i,j,k,ispec_CPML)
 
         rmemory_duy_dyl_x(i,j,k,ispec_CPML) = coef0_1 * rmemory_duy_dyl_x(i,j,k,ispec_CPML) &
                + PML_duy_dyl_new(i,j,k) * coef1_1 + PML_duy_dyl_old(i,j,k) * coef2_1
@@ -320,6 +284,31 @@ subroutine pml_compute_memory_variables_elastic(ispec,ispec_CPML, &
 
         rmemory_dux_dxl_y(i,j,k,ispec_CPML) = coef0_1 * rmemory_dux_dxl_y(i,j,k,ispec_CPML) &
                + PML_dux_dxl_new(i,j,k) * coef1_1 + PML_dux_dxl_old(i,j,k) * coef2_1
+
+        ! PML convolution coefficients
+        A6 = pml_convolution_coef_strain(1,i,j,k,ispec_CPML)
+        A7 = pml_convolution_coef_strain(2,i,j,k,ispec_CPML)
+        A8 = pml_convolution_coef_strain(3,i,j,k,ispec_CPML)
+        A9 = pml_convolution_coef_strain(4,i,j,k,ispec_CPML)
+
+        A10 = pml_convolution_coef_strain(5,i,j,k,ispec_CPML)
+        A11 = pml_convolution_coef_strain(6,i,j,k,ispec_CPML)
+        A12 = pml_convolution_coef_strain(7,i,j,k,ispec_CPML)
+        A13 = pml_convolution_coef_strain(8,i,j,k,ispec_CPML)
+
+        A14 = pml_convolution_coef_strain(9,i,j,k,ispec_CPML)
+        A15 = pml_convolution_coef_strain(10,i,j,k,ispec_CPML)
+        A16 = pml_convolution_coef_strain(11,i,j,k,ispec_CPML)
+        A17 = pml_convolution_coef_strain(12,i,j,k,ispec_CPML)
+
+        A18 = pml_convolution_coef_strain(13,i,j,k,ispec_CPML)
+        A19 = pml_convolution_coef_strain(14,i,j,k,ispec_CPML)
+
+        A20 = pml_convolution_coef_strain(15,i,j,k,ispec_CPML)
+        A21 = pml_convolution_coef_strain(16,i,j,k,ispec_CPML)
+
+        A22 = pml_convolution_coef_strain(17,i,j,k,ispec_CPML)
+        A23 = pml_convolution_coef_strain(18,i,j,k,ispec_CPML)
 
         ! derivatives
         duxdxl_x = A6 * PML_dux_dxl(i,j,k) + A7 * rmemory_dux_dxl_x(i,j,k,ispec_CPML,1) &
@@ -423,18 +412,18 @@ subroutine pml_compute_memory_variables_elastic(ispec,ispec_CPML, &
     enddo
   enddo
 
-end subroutine pml_compute_memory_variables_elastic
+  end subroutine pml_compute_memory_variables_elastic
 
 !
 !=====================================================================
 !
 
-subroutine pml_compute_memory_variables_acoustic(ispec,ispec_CPML, &
-                                                 temp1,temp2,temp3, &
-                                                 rmemory_dpotential_dxl,rmemory_dpotential_dyl,rmemory_dpotential_dzl, &
-                                                 PML_dpotential_dxl,PML_dpotential_dyl,PML_dpotential_dzl, &
-                                                 PML_dpotential_dxl_old,PML_dpotential_dyl_old,PML_dpotential_dzl_old, &
-                                                 PML_dpotential_dxl_new,PML_dpotential_dyl_new,PML_dpotential_dzl_new)
+  subroutine pml_compute_memory_variables_acoustic(ispec,ispec_CPML, &
+                                                   temp1,temp2,temp3, &
+                                                   rmemory_dpotential_dxl,rmemory_dpotential_dyl,rmemory_dpotential_dzl, &
+                                                   PML_dpotential_dxl,PML_dpotential_dyl,PML_dpotential_dzl, &
+                                                   PML_dpotential_dxl_old,PML_dpotential_dyl_old,PML_dpotential_dzl_old, &
+                                                   PML_dpotential_dxl_new,PML_dpotential_dyl_new,PML_dpotential_dzl_new)
 
 ! calculates C-PML elastic memory variables and computes stress sigma
 
@@ -450,10 +439,9 @@ subroutine pml_compute_memory_variables_acoustic(ispec,ispec_CPML, &
                          rhostore,irregular_element_number, &
                          jacobian_regular,xix_regular
 
-  use pml_par, only: NSPEC_CPML,CPML_regions,k_store_x,k_store_y,k_store_z, &
-                     d_store_x,d_store_y,d_store_z, &
-                     alpha_store_x,alpha_store_y,alpha_store_z, &
-                     convolution_coef_acoustic_alpha,convolution_coef_acoustic_beta
+  use pml_par, only: NSPEC_CPML, &
+                     pml_convolution_coef_alpha,pml_convolution_coef_beta, &
+                     pml_convolution_coef_strain
 
   implicit none
 
@@ -486,47 +474,43 @@ subroutine pml_compute_memory_variables_acoustic(ispec,ispec_CPML, &
   real(kind=CUSTOM_REAL) :: A10,A11,A12,A13  ! L132
   real(kind=CUSTOM_REAL) :: A14,A15,A16,A17  ! L123
   real(kind=CUSTOM_REAL) :: coef0_1,coef1_1,coef2_1,coef0_2,coef1_2,coef2_2,coef0_3,coef1_3,coef2_3
-  integer :: CPML_region_local
   integer :: i,j,k,ispec_irreg
-
-  real(kind=CUSTOM_REAL) :: kappa_x,kappa_y,kappa_z
-  real(kind=CUSTOM_REAL) :: d_x,d_y,d_z,alpha_x,alpha_y,alpha_z
-
-  CPML_region_local = CPML_regions(ispec_CPML)
 
   do k=1,NGLLZ
     do j=1,NGLLY
       do i=1,NGLLX
-        kappa_x = k_store_x(i,j,k,ispec_CPML)
-        kappa_y = k_store_y(i,j,k,ispec_CPML)
-        kappa_z = k_store_z(i,j,k,ispec_CPML)
-        d_x = d_store_x(i,j,k,ispec_CPML)
-        d_y = d_store_y(i,j,k,ispec_CPML)
-        d_z = d_store_z(i,j,k,ispec_CPML)
-        alpha_x = alpha_store_x(i,j,k,ispec_CPML)
-        alpha_y = alpha_store_y(i,j,k,ispec_CPML)
-        alpha_z = alpha_store_z(i,j,k,ispec_CPML)
+        ! PML convolution coefficients
+        A6 = pml_convolution_coef_strain(1,i,j,k,ispec_CPML)
+        A7 = pml_convolution_coef_strain(2,i,j,k,ispec_CPML)
+        A8 = pml_convolution_coef_strain(3,i,j,k,ispec_CPML)
+        A9 = pml_convolution_coef_strain(4,i,j,k,ispec_CPML)
+
+        A10 = pml_convolution_coef_strain(5,i,j,k,ispec_CPML)
+        A11 = pml_convolution_coef_strain(6,i,j,k,ispec_CPML)
+        A12 = pml_convolution_coef_strain(7,i,j,k,ispec_CPML)
+        A13 = pml_convolution_coef_strain(8,i,j,k,ispec_CPML)
+
+        A14 = pml_convolution_coef_strain(9,i,j,k,ispec_CPML)
+        A15 = pml_convolution_coef_strain(10,i,j,k,ispec_CPML)
+        A16 = pml_convolution_coef_strain(11,i,j,k,ispec_CPML)
+        A17 = pml_convolution_coef_strain(12,i,j,k,ispec_CPML)
 
         !---------------------- A6, A7, A8, A9 --------------------------
-        call lijk_parameter_computation(kappa_z,d_z,alpha_z,kappa_y,d_y,alpha_y,kappa_x,d_x,alpha_x, &
-                                        CPML_region_local,231, &
-                                        A6,A7,A8,A9)
-
         ! coefficients
         ! alpha_z
-        coef0_1 = convolution_coef_acoustic_alpha(7,i,j,k,ispec_CPML)
-        coef1_1 = convolution_coef_acoustic_alpha(8,i,j,k,ispec_CPML)
-        coef2_1 = convolution_coef_acoustic_alpha(9,i,j,k,ispec_CPML)
+        coef0_1 = pml_convolution_coef_alpha(7,i,j,k,ispec_CPML)
+        coef1_1 = pml_convolution_coef_alpha(8,i,j,k,ispec_CPML)
+        coef2_1 = pml_convolution_coef_alpha(9,i,j,k,ispec_CPML)
 
         ! alpha_y
-        coef0_2 = convolution_coef_acoustic_alpha(4,i,j,k,ispec_CPML)
-        coef1_2 = convolution_coef_acoustic_alpha(5,i,j,k,ispec_CPML)
-        coef2_2 = convolution_coef_acoustic_alpha(6,i,j,k,ispec_CPML)
+        coef0_2 = pml_convolution_coef_alpha(4,i,j,k,ispec_CPML)
+        coef1_2 = pml_convolution_coef_alpha(5,i,j,k,ispec_CPML)
+        coef2_2 = pml_convolution_coef_alpha(6,i,j,k,ispec_CPML)
 
         ! beta_x = alpha_x + d_x / kappa_x
-        coef0_3 = convolution_coef_acoustic_beta(1,i,j,k,ispec_CPML)
-        coef1_3 = convolution_coef_acoustic_beta(2,i,j,k,ispec_CPML)
-        coef2_3 = convolution_coef_acoustic_beta(3,i,j,k,ispec_CPML)
+        coef0_3 = pml_convolution_coef_beta(1,i,j,k,ispec_CPML)
+        coef1_3 = pml_convolution_coef_beta(2,i,j,k,ispec_CPML)
+        coef2_3 = pml_convolution_coef_beta(3,i,j,k,ispec_CPML)
 
         rmemory_dpotential_dxl(1,i,j,k,ispec_CPML) = coef0_1 * rmemory_dpotential_dxl(1,i,j,k,ispec_CPML) + &
                 coef1_1 * PML_dpotential_dxl_new(i,j,k) + coef2_1 * PML_dpotential_dxl_old(i,j,k)
@@ -538,25 +522,21 @@ subroutine pml_compute_memory_variables_acoustic(ispec,ispec_CPML, &
                 coef1_3 * PML_dpotential_dxl_new(i,j,k) + coef2_3 * PML_dpotential_dxl_old(i,j,k)
 
         !---------------------- A10,A11,A12,A13 --------------------------
-        call lijk_parameter_computation(kappa_x,d_x,alpha_x,kappa_z,d_z,alpha_z,kappa_y,d_y,alpha_y, &
-                                        CPML_region_local,132, &
-                                        A10,A11,A12,A13)
-
         ! coefficients
         ! alpha_x
-        coef0_1 = convolution_coef_acoustic_alpha(1,i,j,k,ispec_CPML)
-        coef1_1 = convolution_coef_acoustic_alpha(2,i,j,k,ispec_CPML)
-        coef2_1 = convolution_coef_acoustic_alpha(3,i,j,k,ispec_CPML)
+        coef0_1 = pml_convolution_coef_alpha(1,i,j,k,ispec_CPML)
+        coef1_1 = pml_convolution_coef_alpha(2,i,j,k,ispec_CPML)
+        coef2_1 = pml_convolution_coef_alpha(3,i,j,k,ispec_CPML)
 
         ! alpha_z
-        coef0_2 = convolution_coef_acoustic_alpha(7,i,j,k,ispec_CPML)
-        coef1_2 = convolution_coef_acoustic_alpha(8,i,j,k,ispec_CPML)
-        coef2_2 = convolution_coef_acoustic_alpha(9,i,j,k,ispec_CPML)
+        coef0_2 = pml_convolution_coef_alpha(7,i,j,k,ispec_CPML)
+        coef1_2 = pml_convolution_coef_alpha(8,i,j,k,ispec_CPML)
+        coef2_2 = pml_convolution_coef_alpha(9,i,j,k,ispec_CPML)
 
         ! beta_y = alpha_y + d_y / kappa_y
-        coef0_3 = convolution_coef_acoustic_beta(4,i,j,k,ispec_CPML)
-        coef1_3 = convolution_coef_acoustic_beta(5,i,j,k,ispec_CPML)
-        coef2_3 = convolution_coef_acoustic_beta(6,i,j,k,ispec_CPML)
+        coef0_3 = pml_convolution_coef_beta(4,i,j,k,ispec_CPML)
+        coef1_3 = pml_convolution_coef_beta(5,i,j,k,ispec_CPML)
+        coef2_3 = pml_convolution_coef_beta(6,i,j,k,ispec_CPML)
 
         rmemory_dpotential_dyl(1,i,j,k,ispec_CPML) = coef0_1 * rmemory_dpotential_dyl(1,i,j,k,ispec_CPML) + &
                 coef1_1 * PML_dpotential_dyl_new(i,j,k) + coef2_1 * PML_dpotential_dyl_old(i,j,k)
@@ -568,25 +548,21 @@ subroutine pml_compute_memory_variables_acoustic(ispec,ispec_CPML, &
                 coef1_3 * PML_dpotential_dyl_new(i,j,k) + coef2_3 * PML_dpotential_dyl_old(i,j,k)
 
         !---------------------- A14,A15,A16,A17 --------------------------
-        call lijk_parameter_computation(kappa_x,d_x,alpha_x,kappa_y,d_y,alpha_y,kappa_z,d_z,alpha_z, &
-                                        CPML_region_local,123, &
-                                        A14,A15,A16,A17)
-
         ! coefficients
         ! alpha_x
-        coef0_1 = convolution_coef_acoustic_alpha(1,i,j,k,ispec_CPML)
-        coef1_1 = convolution_coef_acoustic_alpha(2,i,j,k,ispec_CPML)
-        coef2_1 = convolution_coef_acoustic_alpha(3,i,j,k,ispec_CPML)
+        coef0_1 = pml_convolution_coef_alpha(1,i,j,k,ispec_CPML)
+        coef1_1 = pml_convolution_coef_alpha(2,i,j,k,ispec_CPML)
+        coef2_1 = pml_convolution_coef_alpha(3,i,j,k,ispec_CPML)
 
         ! alpha_y
-        coef0_2 = convolution_coef_acoustic_alpha(4,i,j,k,ispec_CPML)
-        coef1_2 = convolution_coef_acoustic_alpha(5,i,j,k,ispec_CPML)
-        coef2_2 = convolution_coef_acoustic_alpha(6,i,j,k,ispec_CPML)
+        coef0_2 = pml_convolution_coef_alpha(4,i,j,k,ispec_CPML)
+        coef1_2 = pml_convolution_coef_alpha(5,i,j,k,ispec_CPML)
+        coef2_2 = pml_convolution_coef_alpha(6,i,j,k,ispec_CPML)
 
         ! beta_z = alpha_z + d_z / kappa_z
-        coef0_3 = convolution_coef_acoustic_beta(7,i,j,k,ispec_CPML)
-        coef1_3 = convolution_coef_acoustic_beta(8,i,j,k,ispec_CPML)
-        coef2_3 = convolution_coef_acoustic_beta(9,i,j,k,ispec_CPML)
+        coef0_3 = pml_convolution_coef_beta(7,i,j,k,ispec_CPML)
+        coef1_3 = pml_convolution_coef_beta(8,i,j,k,ispec_CPML)
+        coef2_3 = pml_convolution_coef_beta(9,i,j,k,ispec_CPML)
 
         rmemory_dpotential_dzl(1,i,j,k,ispec_CPML) = coef0_1 * rmemory_dpotential_dzl(1,i,j,k,ispec_CPML) + &
                 coef1_1 * PML_dpotential_dzl_new(i,j,k) + coef2_1 * PML_dpotential_dzl_old(i,j,k)
@@ -680,7 +656,7 @@ subroutine pml_compute_memory_variables_acoustic_elastic(ispec_CPML,iface,iglob,
 
   use pml_par, only: CPML_regions,k_store_x,k_store_y,k_store_z,d_store_x,d_store_y,d_store_z, &
                      alpha_store_x,alpha_store_y,alpha_store_z, &
-                     convolution_coef_acoustic_alpha, &
+                     pml_convolution_coef_alpha, &
                      PML_displ_old,PML_displ_new
 
   implicit none
@@ -698,16 +674,18 @@ subroutine pml_compute_memory_variables_acoustic_elastic(ispec_CPML,iface,iglob,
   real(kind=CUSTOM_REAL) :: kappa_x,kappa_y,kappa_z,d_x,d_y,d_z,alpha_x,alpha_y,alpha_z
 
   CPML_region_local = CPML_regions(ispec_CPML)
+
   kappa_x = k_store_x(i,j,k,ispec_CPML)
   kappa_y = k_store_y(i,j,k,ispec_CPML)
   kappa_z = k_store_z(i,j,k,ispec_CPML)
+
   d_x = d_store_x(i,j,k,ispec_CPML)
   d_y = d_store_y(i,j,k,ispec_CPML)
   d_z = d_store_z(i,j,k,ispec_CPML)
+
   alpha_x = alpha_store_x(i,j,k,ispec_CPML)
   alpha_y = alpha_store_y(i,j,k,ispec_CPML)
   alpha_z = alpha_store_z(i,j,k,ispec_CPML)
-
 
   call lxy_interface_parameter_computation(kappa_y,d_y,alpha_y,kappa_z,d_z,alpha_z, &
                                            CPML_region_local,23, &
@@ -715,14 +693,14 @@ subroutine pml_compute_memory_variables_acoustic_elastic(ispec_CPML,iface,iglob,
 
   ! coefficients
   ! alpha_y
-  coef0_1 = convolution_coef_acoustic_alpha(4,i,j,k,ispec_CPML)
-  coef1_1 = convolution_coef_acoustic_alpha(5,i,j,k,ispec_CPML)
-  coef2_1 = convolution_coef_acoustic_alpha(6,i,j,k,ispec_CPML)
+  coef0_1 = pml_convolution_coef_alpha(4,i,j,k,ispec_CPML)
+  coef1_1 = pml_convolution_coef_alpha(5,i,j,k,ispec_CPML)
+  coef2_1 = pml_convolution_coef_alpha(6,i,j,k,ispec_CPML)
 
   ! alpha_z
-  coef0_2 = convolution_coef_acoustic_alpha(7,i,j,k,ispec_CPML)
-  coef1_2 = convolution_coef_acoustic_alpha(8,i,j,k,ispec_CPML)
-  coef2_2 = convolution_coef_acoustic_alpha(9,i,j,k,ispec_CPML)
+  coef0_2 = pml_convolution_coef_alpha(7,i,j,k,ispec_CPML)
+  coef1_2 = pml_convolution_coef_alpha(8,i,j,k,ispec_CPML)
+  coef2_2 = pml_convolution_coef_alpha(9,i,j,k,ispec_CPML)
 
   ! displ_x
   rmemory_coupling_ac_el_displ(1,i,j,k,iface,1) = coef0_1 * rmemory_coupling_ac_el_displ(1,i,j,k,iface,1) + &
@@ -742,14 +720,14 @@ subroutine pml_compute_memory_variables_acoustic_elastic(ispec_CPML,iface,iglob,
 
   ! coefficients
   ! alpha_x
-  coef0_1 = convolution_coef_acoustic_alpha(1,i,j,k,ispec_CPML)
-  coef1_1 = convolution_coef_acoustic_alpha(2,i,j,k,ispec_CPML)
-  coef2_1 = convolution_coef_acoustic_alpha(3,i,j,k,ispec_CPML)
+  coef0_1 = pml_convolution_coef_alpha(1,i,j,k,ispec_CPML)
+  coef1_1 = pml_convolution_coef_alpha(2,i,j,k,ispec_CPML)
+  coef2_1 = pml_convolution_coef_alpha(3,i,j,k,ispec_CPML)
 
   ! alpha_z
-  coef0_2 = convolution_coef_acoustic_alpha(7,i,j,k,ispec_CPML)
-  coef1_2 = convolution_coef_acoustic_alpha(8,i,j,k,ispec_CPML)
-  coef2_2 = convolution_coef_acoustic_alpha(9,i,j,k,ispec_CPML)
+  coef0_2 = pml_convolution_coef_alpha(7,i,j,k,ispec_CPML)
+  coef1_2 = pml_convolution_coef_alpha(8,i,j,k,ispec_CPML)
+  coef2_2 = pml_convolution_coef_alpha(9,i,j,k,ispec_CPML)
 
   ! displ_y
   rmemory_coupling_ac_el_displ(2,i,j,k,iface,1) = coef0_1 * rmemory_coupling_ac_el_displ(2,i,j,k,iface,1) + &
@@ -768,14 +746,14 @@ subroutine pml_compute_memory_variables_acoustic_elastic(ispec_CPML,iface,iglob,
                                            A_12,A_13,A_14)
   ! coefficients
   ! alpha_x
-  coef0_1 = convolution_coef_acoustic_alpha(1,i,j,k,ispec_CPML)
-  coef1_1 = convolution_coef_acoustic_alpha(2,i,j,k,ispec_CPML)
-  coef2_1 = convolution_coef_acoustic_alpha(3,i,j,k,ispec_CPML)
+  coef0_1 = pml_convolution_coef_alpha(1,i,j,k,ispec_CPML)
+  coef1_1 = pml_convolution_coef_alpha(2,i,j,k,ispec_CPML)
+  coef2_1 = pml_convolution_coef_alpha(3,i,j,k,ispec_CPML)
 
   ! alpha_y
-  coef0_2 = convolution_coef_acoustic_alpha(4,i,j,k,ispec_CPML)
-  coef1_2 = convolution_coef_acoustic_alpha(5,i,j,k,ispec_CPML)
-  coef2_2 = convolution_coef_acoustic_alpha(6,i,j,k,ispec_CPML)
+  coef0_2 = pml_convolution_coef_alpha(4,i,j,k,ispec_CPML)
+  coef1_2 = pml_convolution_coef_alpha(5,i,j,k,ispec_CPML)
+  coef2_2 = pml_convolution_coef_alpha(6,i,j,k,ispec_CPML)
 
   ! displ_z
   rmemory_coupling_ac_el_displ(3,i,j,k,iface,1) = coef0_1 * rmemory_coupling_ac_el_displ(3,i,j,k,iface,1) + &
@@ -790,17 +768,17 @@ subroutine pml_compute_memory_variables_acoustic_elastic(ispec_CPML,iface,iglob,
   displ_z = A_12 * displ(3,iglob) + A_13 * rmemory_coupling_ac_el_displ(3,i,j,k,iface,1) + &
                                     A_14 * rmemory_coupling_ac_el_displ(3,i,j,k,iface,2)
 
-end subroutine pml_compute_memory_variables_acoustic_elastic
+  end subroutine pml_compute_memory_variables_acoustic_elastic
 
 !
 !=====================================================================
 !
 
-subroutine pml_compute_memory_variables_elastic_acoustic(ispec_CPML,iface,iglob,i,j,k, &
-                                                         pressure_x,pressure_y,pressure_z, &
-                                                         potential_acoustic,potential_dot_acoustic, &
-                                                         potential_dot_dot_acoustic,num_coupling_ac_el_faces, &
-                                                         rmemory_coupling_el_ac_potential)
+  subroutine pml_compute_memory_variables_elastic_acoustic(ispec_CPML,iface,iglob,i,j,k, &
+                                                           pressure_x,pressure_y,pressure_z, &
+                                                           potential_acoustic,potential_dot_acoustic, &
+                                                           potential_dot_dot_acoustic,num_coupling_ac_el_faces, &
+                                                           rmemory_coupling_el_ac_potential)
   ! calculates C-PML elastic memory variables and computes stress sigma
 
   ! second-order accurate convolution term calculation from equation (21) of
@@ -814,7 +792,7 @@ subroutine pml_compute_memory_variables_elastic_acoustic(ispec_CPML,iface,iglob,
 
   use pml_par, only: CPML_regions,k_store_x,k_store_y,k_store_z,d_store_x,d_store_y,d_store_z, &
                      alpha_store_x,alpha_store_y,alpha_store_z, &
-                     convolution_coef_acoustic_alpha, &
+                     pml_convolution_coef_alpha, &
                      PML_potential_acoustic_old,PML_potential_acoustic_new
 
   implicit none
@@ -833,12 +811,15 @@ subroutine pml_compute_memory_variables_elastic_acoustic(ispec_CPML,iface,iglob,
   real(kind=CUSTOM_REAL) :: kappa_x,kappa_y,kappa_z,d_x,d_y,d_z,alpha_x,alpha_y,alpha_z
 
   CPML_region_local = CPML_regions(ispec_CPML)
+
   kappa_x = k_store_x(i,j,k,ispec_CPML)
   kappa_y = k_store_y(i,j,k,ispec_CPML)
   kappa_z = k_store_z(i,j,k,ispec_CPML)
+
   d_x = d_store_x(i,j,k,ispec_CPML)
   d_y = d_store_y(i,j,k,ispec_CPML)
   d_z = d_store_z(i,j,k,ispec_CPML)
+
   alpha_x = alpha_store_x(i,j,k,ispec_CPML)
   alpha_y = alpha_store_y(i,j,k,ispec_CPML)
   alpha_z = alpha_store_z(i,j,k,ispec_CPML)
@@ -849,14 +830,14 @@ subroutine pml_compute_memory_variables_elastic_acoustic(ispec_CPML,iface,iglob,
 
   ! coefficients
   ! alpha_y
-  coef0_1 = convolution_coef_acoustic_alpha(4,i,j,k,ispec_CPML)
-  coef1_1 = convolution_coef_acoustic_alpha(5,i,j,k,ispec_CPML)
-  coef2_1 = convolution_coef_acoustic_alpha(6,i,j,k,ispec_CPML)
+  coef0_1 = pml_convolution_coef_alpha(4,i,j,k,ispec_CPML)
+  coef1_1 = pml_convolution_coef_alpha(5,i,j,k,ispec_CPML)
+  coef2_1 = pml_convolution_coef_alpha(6,i,j,k,ispec_CPML)
 
   ! alpha_z
-  coef0_2 = convolution_coef_acoustic_alpha(7,i,j,k,ispec_CPML)
-  coef1_2 = convolution_coef_acoustic_alpha(8,i,j,k,ispec_CPML)
-  coef2_2 = convolution_coef_acoustic_alpha(9,i,j,k,ispec_CPML)
+  coef0_2 = pml_convolution_coef_alpha(7,i,j,k,ispec_CPML)
+  coef1_2 = pml_convolution_coef_alpha(8,i,j,k,ispec_CPML)
+  coef2_2 = pml_convolution_coef_alpha(9,i,j,k,ispec_CPML)
 
   rmemory_coupling_el_ac_potential(1,i,j,k,iface,1) = coef0_1 * rmemory_coupling_el_ac_potential(1,i,j,k,iface,1) + &
                                                     coef1_1 * PML_potential_acoustic_new(i,j,k,ispec_CPML) + &
@@ -875,14 +856,14 @@ subroutine pml_compute_memory_variables_elastic_acoustic(ispec_CPML,iface,iglob,
 
   ! coefficients
   ! alpha_x
-  coef0_1 = convolution_coef_acoustic_alpha(1,i,j,k,ispec_CPML)
-  coef1_1 = convolution_coef_acoustic_alpha(2,i,j,k,ispec_CPML)
-  coef2_1 = convolution_coef_acoustic_alpha(3,i,j,k,ispec_CPML)
+  coef0_1 = pml_convolution_coef_alpha(1,i,j,k,ispec_CPML)
+  coef1_1 = pml_convolution_coef_alpha(2,i,j,k,ispec_CPML)
+  coef2_1 = pml_convolution_coef_alpha(3,i,j,k,ispec_CPML)
 
   ! alpha_z
-  coef0_2 = convolution_coef_acoustic_alpha(7,i,j,k,ispec_CPML)
-  coef1_2 = convolution_coef_acoustic_alpha(8,i,j,k,ispec_CPML)
-  coef2_2 = convolution_coef_acoustic_alpha(9,i,j,k,ispec_CPML)
+  coef0_2 = pml_convolution_coef_alpha(7,i,j,k,ispec_CPML)
+  coef1_2 = pml_convolution_coef_alpha(8,i,j,k,ispec_CPML)
+  coef2_2 = pml_convolution_coef_alpha(9,i,j,k,ispec_CPML)
 
   rmemory_coupling_el_ac_potential(2,i,j,k,iface,1) = coef0_1 * rmemory_coupling_el_ac_potential(2,i,j,k,iface,1) + &
                                                     coef1_1 * PML_potential_acoustic_new(i,j,k,ispec_CPML) + &
@@ -901,14 +882,14 @@ subroutine pml_compute_memory_variables_elastic_acoustic(ispec_CPML,iface,iglob,
 
   ! coefficients
   ! alpha_x
-  coef0_1 = convolution_coef_acoustic_alpha(1,i,j,k,ispec_CPML)
-  coef1_1 = convolution_coef_acoustic_alpha(2,i,j,k,ispec_CPML)
-  coef2_1 = convolution_coef_acoustic_alpha(3,i,j,k,ispec_CPML)
+  coef0_1 = pml_convolution_coef_alpha(1,i,j,k,ispec_CPML)
+  coef1_1 = pml_convolution_coef_alpha(2,i,j,k,ispec_CPML)
+  coef2_1 = pml_convolution_coef_alpha(3,i,j,k,ispec_CPML)
 
   ! alpha_y
-  coef0_2 = convolution_coef_acoustic_alpha(4,i,j,k,ispec_CPML)
-  coef1_2 = convolution_coef_acoustic_alpha(5,i,j,k,ispec_CPML)
-  coef2_2 = convolution_coef_acoustic_alpha(6,i,j,k,ispec_CPML)
+  coef0_2 = pml_convolution_coef_alpha(4,i,j,k,ispec_CPML)
+  coef1_2 = pml_convolution_coef_alpha(5,i,j,k,ispec_CPML)
+  coef2_2 = pml_convolution_coef_alpha(6,i,j,k,ispec_CPML)
 
   rmemory_coupling_el_ac_potential(3,i,j,k,iface,1) = coef0_1 * rmemory_coupling_el_ac_potential(3,i,j,k,iface,1) + &
                                                     coef1_1 * PML_potential_acoustic_new(i,j,k,ispec_CPML) + &
@@ -922,15 +903,15 @@ subroutine pml_compute_memory_variables_elastic_acoustic(ispec_CPML,iface,iglob,
              + A_3 * rmemory_coupling_el_ac_potential(3,i,j,k,iface,1) + A_4 * rmemory_coupling_el_ac_potential(3,i,j,k,iface,2)
 
 
-end subroutine pml_compute_memory_variables_elastic_acoustic
+  end subroutine pml_compute_memory_variables_elastic_acoustic
 
 !
 !=====================================================================
 !
 
-subroutine lijk_parameter_computation(kappa_x,d_x,alpha_x,kappa_y,d_y,alpha_y,kappa_z,d_z,alpha_z, &
-                                      CPML_region_local,index_ijk, &
-                                      A_0,A_1,A_2,A_3)
+  subroutine lijk_parameter_computation(kappa_x,d_x,alpha_x,kappa_y,d_y,alpha_y,kappa_z,d_z,alpha_z, &
+                                        CPML_region_local,index_ijk, &
+                                        A_0,A_1,A_2,A_3)
 
   use constants, only: CUSTOM_REAL,CPML_X_ONLY,CPML_Y_ONLY,CPML_Z_ONLY, &
                        CPML_XY_ONLY,CPML_XZ_ONLY,CPML_YZ_ONLY,CPML_XYZ
@@ -1086,14 +1067,14 @@ subroutine lijk_parameter_computation(kappa_x,d_x,alpha_x,kappa_y,d_y,alpha_y,ka
   A_2 = bar_A_2
   A_3 = bar_A_3
 
-end subroutine lijk_parameter_computation
+  end subroutine lijk_parameter_computation
 
 !
 !=====================================================================
 !
 
-subroutine lx_parameter_computation(kappa_x,d_x,alpha_x, &
-                                    CPML_region_local,A_0,A_1)
+  subroutine lx_parameter_computation(kappa_x,d_x,alpha_x, &
+                                      CPML_region_local,A_0,A_1)
 
   use constants, only: CUSTOM_REAL,CPML_X_ONLY,CPML_Y_ONLY,CPML_Z_ONLY, &
                        CPML_XY_ONLY,CPML_XZ_ONLY,CPML_YZ_ONLY,CPML_XYZ
@@ -1157,14 +1138,14 @@ subroutine lx_parameter_computation(kappa_x,d_x,alpha_x, &
   ! unused, now uses pre-computed arrays
   !call compute_convolution_coef(alpha_x, coef0_1, coef1_1, coef2_1)
 
-end subroutine lx_parameter_computation
+  end subroutine lx_parameter_computation
 
 !
 !=====================================================================
 !
 
-subroutine ly_parameter_computation(kappa_y,d_y,alpha_y, &
-                                    CPML_region_local,A_0,A_1)
+  subroutine ly_parameter_computation(kappa_y,d_y,alpha_y, &
+                                      CPML_region_local,A_0,A_1)
 
   use constants, only: CUSTOM_REAL,CPML_X_ONLY,CPML_Y_ONLY,CPML_Z_ONLY, &
                        CPML_XY_ONLY,CPML_XZ_ONLY,CPML_YZ_ONLY,CPML_XYZ
@@ -1228,14 +1209,14 @@ subroutine ly_parameter_computation(kappa_y,d_y,alpha_y, &
   !unused, now uses pre-computed arrays
   !call compute_convolution_coef(alpha_y, coef0_1, coef1_1, coef2_1)
 
-end subroutine ly_parameter_computation
+  end subroutine ly_parameter_computation
 
 !
 !=====================================================================
 !
 
-subroutine lz_parameter_computation(kappa_z,d_z,alpha_z, &
-                                    CPML_region_local,A_0,A_1)
+  subroutine lz_parameter_computation(kappa_z,d_z,alpha_z, &
+                                      CPML_region_local,A_0,A_1)
 
   use constants, only: CUSTOM_REAL,CPML_X_ONLY,CPML_Y_ONLY,CPML_Z_ONLY, &
                        CPML_XY_ONLY,CPML_XZ_ONLY,CPML_YZ_ONLY,CPML_XYZ
@@ -1299,15 +1280,15 @@ subroutine lz_parameter_computation(kappa_z,d_z,alpha_z, &
   ! unused, now uses pre-computed arrays
   !call compute_convolution_coef(alpha_z, coef0_1, coef1_1, coef2_1)
 
-end subroutine lz_parameter_computation
+  end subroutine lz_parameter_computation
 
 !
 !=====================================================================
 !
 
-subroutine lxy_interface_parameter_computation(kappa_x,d_x,alpha_x,kappa_y,d_y,alpha_y, &
-                                               CPML_region_local,index_ijk, &
-                                               A_0,A_1,A_2)
+  subroutine lxy_interface_parameter_computation(kappa_x,d_x,alpha_x,kappa_y,d_y,alpha_y, &
+                                                 CPML_region_local,index_ijk, &
+                                                 A_0,A_1,A_2)
 
   use constants, only: CUSTOM_REAL,CPML_X_ONLY,CPML_Y_ONLY,CPML_Z_ONLY, &
                        CPML_XY_ONLY,CPML_XZ_ONLY,CPML_YZ_ONLY,CPML_XYZ
@@ -1439,16 +1420,16 @@ subroutine lxy_interface_parameter_computation(kappa_x,d_x,alpha_x,kappa_y,d_y,a
   A_1 = bar_A_1
   A_2 = bar_A_2
 
-end subroutine lxy_interface_parameter_computation
+  end subroutine lxy_interface_parameter_computation
 
 !
 !=====================================================================
 !
 
-subroutine l_interface_parameter_computation(kappa_x, d_x, alpha_x, &
-                                             kappa_y, d_y, alpha_y, &
-                                             CPML_region_local,index_ijk, &
-                                             A_0, A_1, A_2, A_3, A_4)
+  subroutine l_interface_parameter_computation(kappa_x, d_x, alpha_x, &
+                                               kappa_y, d_y, alpha_y, &
+                                               CPML_region_local,index_ijk, &
+                                               A_0, A_1, A_2, A_3, A_4)
 
   use constants, only: CUSTOM_REAL, CPML_XYZ, &
                        CPML_X_ONLY,CPML_Y_ONLY,CPML_Z_ONLY, &
@@ -1514,7 +1495,7 @@ subroutine l_interface_parameter_computation(kappa_x, d_x, alpha_x, &
       bar_A_4 = bar_A_0 * alpha_y**2 &
               * (beta_x - alpha_y) * (beta_y - alpha_y) / (alpha_x - alpha_y)
     else
-      stop 'Error occured in l_parameter_computation in CPML_XYZ region'
+      stop 'Error occured in l_interface_parameter_computation in CPML_XYZ region'
     endif
 
   else if (CPML_region_local == CPML_XY_ONLY_TEMP) then
@@ -1529,7 +1510,7 @@ subroutine l_interface_parameter_computation(kappa_x, d_x, alpha_x, &
       bar_A_4 = bar_A_0 * alpha_y**2 &
               * (beta_x - alpha_y) * (beta_y - alpha_y) / (alpha_x - alpha_y)
     else
-      stop 'Error occured in l_parameter_computation in CPML_XY_ONLY region'
+      stop 'Error occured in l_interface_parameter_computation in CPML_XY_ONLY region'
     endif
 
   else if (CPML_region_local == CPML_XZ_ONLY_TEMP) then
@@ -1580,5 +1561,5 @@ subroutine l_interface_parameter_computation(kappa_x, d_x, alpha_x, &
   A_3 = bar_A_3
   A_4 = bar_A_4
 
-end subroutine l_interface_parameter_computation
+  end subroutine l_interface_parameter_computation
 
