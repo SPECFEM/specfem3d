@@ -380,9 +380,12 @@
   subroutine mxm5_single(A,n1,B,C,n3)
 
 ! we can force inlining (Intel compiler)
+#if defined __INTEL_COMPILER
 !DIR$ ATTRIBUTES FORCEINLINE :: mxm5_single
+#else
 ! cray
 !DIR$ INLINEALWAYS mxm5_single
+#endif
 
 ! two-dimensional arrays (25,5)/(5,25)
 
@@ -418,9 +421,12 @@
   subroutine mxm6_single(A,n1,B,C,n3)
 
 ! we can force inlining (Intel compiler)
+#if defined __INTEL_COMPILER
 !DIR$ ATTRIBUTES FORCEINLINE :: mxm6_single
+#else
 ! cray
 !DIR$ INLINEALWAYS mxm6_single
+#endif
 
 ! two-dimensional arrays (36,6)/(6,36)
 
@@ -457,9 +463,12 @@
   subroutine mxm7_single(A,n1,B,C,n3)
 
 ! we can force inlining (Intel compiler)
+#if defined __INTEL_COMPILER
 !DIR$ ATTRIBUTES FORCEINLINE :: mxm7_single
+#else
 ! cray
 !DIR$ INLINEALWAYS mxm7_single
+#endif
 
 ! two-dimensional arrays (49,7)/(7,49)
 
@@ -497,9 +506,12 @@
   subroutine mxm8_single(A,n1,B,C,n3)
 
 ! we can force inlining (Intel compiler)
+#if defined __INTEL_COMPILER
 !DIR$ ATTRIBUTES FORCEINLINE :: mxm8_single
+#else
 ! cray
 !DIR$ INLINEALWAYS mxm8_single
+#endif
 
 ! two-dimensional arrays (64,8)/(8,64)
 
@@ -538,9 +550,12 @@
   subroutine mxm5_3dmat_single(A,n1,B,n2,C,n3)
 
 ! we can force inlining (Intel compiler)
+#if defined __INTEL_COMPILER
 !DIR$ ATTRIBUTES FORCEINLINE :: mxm5_3dmat_single
+#else
 ! cray
 !DIR$ INLINEALWAYS mxm5_3dmat_single
+#endif
 
 ! three-dimensional arrays (5,5,5) for A and C
 
@@ -578,9 +593,12 @@
   subroutine mxm6_3dmat_single(A,n1,B,n2,C,n3)
 
 ! we can force inlining (Intel compiler)
+#if defined __INTEL_COMPILER
 !DIR$ ATTRIBUTES FORCEINLINE :: mxm6_3dmat_single
+#else
 ! cray
 !DIR$ INLINEALWAYS mxm6_3dmat_single
+#endif
 
 ! three-dimensional arrays (6,6,6) for A and C
 
@@ -619,9 +637,12 @@
   subroutine mxm7_3dmat_single(A,n1,B,n2,C,n3)
 
 ! we can force inlining (Intel compiler)
+#if defined __INTEL_COMPILER
 !DIR$ ATTRIBUTES FORCEINLINE :: mxm7_3dmat_single
+#else
 ! cray
 !DIR$ INLINEALWAYS mxm7_3dmat_single
+#endif
 
 ! three-dimensional arrays (7,7,7) for A and C
 
@@ -661,9 +682,12 @@
   subroutine mxm8_3dmat_single(A,n1,B,n2,C,n3)
 
 ! we can force inlining (Intel compiler)
+#if defined __INTEL_COMPILER
 !DIR$ ATTRIBUTES FORCEINLINE :: mxm8_3dmat_single
+#else
 ! cray
 !DIR$ INLINEALWAYS mxm8_3dmat_single
+#endif
 
 ! three-dimensional arrays (8,8,8) for A and C
 
@@ -1178,9 +1202,12 @@
   subroutine mxm5_single(A,n1,B,C,n3)
 
 ! we can force inlining (Intel compiler)
+#if defined __INTEL_COMPILER
 !DIR$ ATTRIBUTES FORCEINLINE :: mxm5_single
+#else
 ! cray
 !DIR$ INLINEALWAYS mxm5_single
+#endif
 
 ! two-dimensional arrays (25,5)/(5,25)
 
@@ -1216,9 +1243,12 @@
   subroutine mxm6_single(A,n1,B,C,n3)
 
 ! we can force inlining (Intel compiler)
+#if defined __INTEL_COMPILER
 !DIR$ ATTRIBUTES FORCEINLINE :: mxm6_single
+#else
 ! cray
 !DIR$ INLINEALWAYS mxm6_single
+#endif
 
 ! two-dimensional arrays (36,6)/(6,36)
 
@@ -1255,9 +1285,12 @@
   subroutine mxm7_single(A,n1,B,C,n3)
 
 ! we can force inlining (Intel compiler)
+#if defined __INTEL_COMPILER
 !DIR$ ATTRIBUTES FORCEINLINE :: mxm7_single
+#else
 ! cray
 !DIR$ INLINEALWAYS mxm7_single
+#endif
 
 ! two-dimensional arrays (49,7)/(7,49)
 
@@ -1295,9 +1328,12 @@
   subroutine mxm8_single(A,n1,B,C,n3)
 
 ! we can force inlining (Intel compiler)
+#if defined __INTEL_COMPILER
 !DIR$ ATTRIBUTES FORCEINLINE :: mxm8_single
+#else
 ! cray
 !DIR$ INLINEALWAYS mxm8_single
+#endif
 
 ! two-dimensional arrays (64,8)/(8,64)
 
@@ -1336,9 +1372,12 @@
   subroutine mxm5_3comp_singleA(A,n1,B1,B2,B3,C1,C2,C3,n3)
 
 ! we can force inlining (Intel compiler)
+#if defined __INTEL_COMPILER
 !DIR$ ATTRIBUTES FORCEINLINE :: mxm5_3comp_singleA
+#else
 ! cray
 !DIR$ INLINEALWAYS mxm5_3comp_singleA
+#endif
 
 ! 3 different arrays for x/y/z-components, 2-dimensional arrays (25,5)/(5,25), same A matrix for all 3 component arrays
 
@@ -1386,9 +1425,12 @@
   subroutine mxm6_3comp_singleA(A,n1,B1,B2,B3,C1,C2,C3,n3)
 
 ! we can force inlining (Intel compiler)
+#if defined __INTEL_COMPILER
 !DIR$ ATTRIBUTES FORCEINLINE :: mxm6_3comp_singleA
+#else
 ! cray
 !DIR$ INLINEALWAYS mxm6_3comp_singleA
+#endif
 
 ! 3 different arrays for x/y/z-components, 2-dimensional arrays (36,6)/(6,36), same A matrix for all 3 component arrays
 
@@ -1439,9 +1481,12 @@
   subroutine mxm7_3comp_singleA(A,n1,B1,B2,B3,C1,C2,C3,n3)
 
 ! we can force inlining (Intel compiler)
+#if defined __INTEL_COMPILER
 !DIR$ ATTRIBUTES FORCEINLINE :: mxm7_3comp_singleA
+#else
 ! cray
 !DIR$ INLINEALWAYS mxm7_3comp_singleA
+#endif
 
 ! 3 different arrays for x/y/z-components, 2-dimensional arrays (49,7)/(7,49), same A matrix for all 3 component arrays
 
@@ -1495,9 +1540,12 @@
   subroutine mxm8_3comp_singleA(A,n1,B1,B2,B3,C1,C2,C3,n3)
 
 ! we can force inlining (Intel compiler)
+#if defined __INTEL_COMPILER
 !DIR$ ATTRIBUTES FORCEINLINE :: mxm8_3comp_singleA
+#else
 ! cray
 !DIR$ INLINEALWAYS mxm8_3comp_singleA
+#endif
 
 ! 3 different arrays for x/y/z-components, 2-dimensional arrays (64,8)/(8,64), same A matrix for all 3 component arrays
 
@@ -1556,9 +1604,12 @@
   subroutine mxm5_3comp_singleB(A1,A2,A3,n1,B,C1,C2,C3,n3)
 
 ! we can force inlining (Intel compiler)
+#if defined __INTEL_COMPILER
 !DIR$ ATTRIBUTES FORCEINLINE :: mxm5_3comp_singleB
+#else
 ! cray
 !DIR$ INLINEALWAYS mxm5_3comp_singleB
+#endif
 
 ! 3 different arrays for x/y/z-components, 2-dimensional arrays (25,5)/(5,25), same B matrix for all 3 component arrays
 
@@ -1606,9 +1657,12 @@
   subroutine mxm6_3comp_singleB(A1,A2,A3,n1,B,C1,C2,C3,n3)
 
 ! we can force inlining (Intel compiler)
+#if defined __INTEL_COMPILER
 !DIR$ ATTRIBUTES FORCEINLINE :: mxm6_3comp_singleB
+#else
 ! cray
 !DIR$ INLINEALWAYS mxm6_3comp_singleB
+#endif
 
 ! 3 different arrays for x/y/z-components, 2-dimensional arrays (36,6)/(6,36), same B matrix for all 3 component arrays
 
@@ -1659,9 +1713,12 @@
   subroutine mxm7_3comp_singleB(A1,A2,A3,n1,B,C1,C2,C3,n3)
 
 ! we can force inlining (Intel compiler)
+#if defined __INTEL_COMPILER
 !DIR$ ATTRIBUTES FORCEINLINE :: mxm6_3comp_singleB
+#else
 ! cray
 !DIR$ INLINEALWAYS mxm6_3comp_singleB
+#endif
 
 ! 3 different arrays for x/y/z-components, 2-dimensional arrays (49,7)/(7,49), same B matrix for all 3 component arrays
 
@@ -1715,9 +1772,12 @@
   subroutine mxm8_3comp_singleB(A1,A2,A3,n1,B,C1,C2,C3,n3)
 
 ! we can force inlining (Intel compiler)
+#if defined __INTEL_COMPILER
 !DIR$ ATTRIBUTES FORCEINLINE :: mxm6_3comp_singleB
+#else
 ! cray
 !DIR$ INLINEALWAYS mxm6_3comp_singleB
+#endif
 
 ! 3 different arrays for x/y/z-components, 2-dimensional arrays (64,8)/(8,64), same B matrix for all 3 component arrays
 
@@ -1775,9 +1835,12 @@
   subroutine mxm5_3dmat_single(A,n1,B,n2,C,n3)
 
 ! we can force inlining (Intel compiler)
+#if defined __INTEL_COMPILER
 !DIR$ ATTRIBUTES FORCEINLINE :: mxm5_3dmat_single
+#else
 ! cray
 !DIR$ INLINEALWAYS mxm5_3dmat_single
+#endif
 
 ! three-dimensional arrays (5,5,5) for A and C
 
@@ -1815,9 +1878,12 @@
   subroutine mxm6_3dmat_single(A,n1,B,n2,C,n3)
 
 ! we can force inlining (Intel compiler)
+#if defined __INTEL_COMPILER
 !DIR$ ATTRIBUTES FORCEINLINE :: mxm6_3dmat_single
+#else
 ! cray
 !DIR$ INLINEALWAYS mxm6_3dmat_single
+#endif
 
 ! three-dimensional arrays (6,6,6) for A and C
 
@@ -1856,9 +1922,12 @@
   subroutine mxm7_3dmat_single(A,n1,B,n2,C,n3)
 
 ! we can force inlining (Intel compiler)
+#if defined __INTEL_COMPILER
 !DIR$ ATTRIBUTES FORCEINLINE :: mxm7_3dmat_single
+#else
 ! cray
 !DIR$ INLINEALWAYS mxm7_3dmat_single
+#endif
 
 ! three-dimensional arrays (7,7,7) for A and C
 
@@ -1898,9 +1967,12 @@
   subroutine mxm8_3dmat_single(A,n1,B,n2,C,n3)
 
 ! we can force inlining (Intel compiler)
+#if defined __INTEL_COMPILER
 !DIR$ ATTRIBUTES FORCEINLINE :: mxm8_3dmat_single
+#else
 ! cray
 !DIR$ INLINEALWAYS mxm8_3dmat_single
+#endif
 
 ! three-dimensional arrays (8,8,8) for A and C
 
@@ -1942,9 +2014,12 @@
   subroutine mxm5_3comp_3dmat_single(A1,A2,A3,n1,B,n2,C1,C2,C3,n3)
 
 ! we can force inlining (Intel compiler)
+#if defined __INTEL_COMPILER
 !DIR$ ATTRIBUTES FORCEINLINE :: mxm5_3comp_3dmat_single
+#else
 ! cray
 !DIR$ INLINEALWAYS mxm5_3comp_3dmat_single
+#endif
 
 ! 3 different arrays for x/y/z-components, 3-dimensional arrays (5,5,5), same B matrix for all 3 component arrays
 
@@ -1993,10 +2068,13 @@
 
   subroutine mxm6_3comp_3dmat_single(A1,A2,A3,n1,B,n2,C1,C2,C3,n3)
 
-  ! we can force inlining (Intel compiler)
-  !DIR$ ATTRIBUTES FORCEINLINE :: mxm6_3comp_3dmat_single
-  ! cray
-  !DIR$ INLINEALWAYS mxm6_3comp_3dmat_single
+! we can force inlining (Intel compiler)
+#if defined __INTEL_COMPILER
+!DIR$ ATTRIBUTES FORCEINLINE :: mxm6_3comp_3dmat_single
+#else
+! cray
+!DIR$ INLINEALWAYS mxm6_3comp_3dmat_single
+#endif
 
   ! 3 different arrays for x/y/z-components, 3-dimensional arrays (6,6,6), same B matrix for all 3 component arrays
 
@@ -2048,10 +2126,13 @@
 
   subroutine mxm7_3comp_3dmat_single(A1,A2,A3,n1,B,n2,C1,C2,C3,n3)
 
-  ! we can force inlining (Intel compiler)
-  !DIR$ ATTRIBUTES FORCEINLINE :: mxm7_3comp_3dmat_single
-  ! cray
-  !DIR$ INLINEALWAYS mxm7_3comp_3dmat_single
+! we can force inlining (Intel compiler)
+#if defined __INTEL_COMPILER
+!DIR$ ATTRIBUTES FORCEINLINE :: mxm7_3comp_3dmat_single
+#else
+! cray
+!DIR$ INLINEALWAYS mxm7_3comp_3dmat_single
+#endif
 
   ! 3 different arrays for x/y/z-components, 3-dimensional arrays (7,7,7), same B matrix for all 3 component arrays
 
@@ -2107,9 +2188,12 @@
   subroutine mxm8_3comp_3dmat_single(A1,A2,A3,n1,B,n2,C1,C2,C3,n3)
 
   ! we can force inlining (Intel compiler)
-  !DIR$ ATTRIBUTES FORCEINLINE :: mxm8_3comp_3dmat_single
-  ! cray
-  !DIR$ INLINEALWAYS mxm8_3comp_3dmat_single
+#if defined __INTEL_COMPILER
+!DIR$ ATTRIBUTES FORCEINLINE :: mxm8_3comp_3dmat_single
+#else
+! cray
+!DIR$ INLINEALWAYS mxm8_3comp_3dmat_single
+#endif
 
   ! 3 different arrays for x/y/z-components, 3-dimensional arrays (8,8,8), same B matrix for all 3 component arrays
 
