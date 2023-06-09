@@ -105,7 +105,7 @@ module pml_par
   real(kind=CUSTOM_REAL), dimension(:,:,:,:,:), allocatable :: rmemory_duz_dxl_z,rmemory_duz_dyl_z,rmemory_duz_dzl_z
 
   !store the field accel at time step n-1 for second order convolution scheme
-!  real(kind=CUSTOM_REAL), dimension(:), allocatable :: potential_dot_dot_acoustic_old
+  !real(kind=CUSTOM_REAL), dimension(:), allocatable :: potential_dot_dot_acoustic_old
 
   real(kind=CUSTOM_REAL), dimension(:,:,:,:,:), allocatable :: rmemory_dpotential_dxl
   real(kind=CUSTOM_REAL), dimension(:,:,:,:,:), allocatable :: rmemory_dpotential_dyl

@@ -152,7 +152,6 @@
         rmemory_duz_dxl_z(i,j,k,ispec_CPML,3) = coef0_3 * rmemory_duz_dxl_z(i,j,k,ispec_CPML,3) &
                + PML_duz_dxl_new(i,j,k) * coef1_3 + PML_duz_dxl_old(i,j,k) * coef2_3
 
-
         !---------------------- A10,A11,A12,A13 --------------------------
         ! coefficients
         ! alpha_x

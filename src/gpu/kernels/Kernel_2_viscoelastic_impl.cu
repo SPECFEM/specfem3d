@@ -556,7 +556,6 @@ __device__  __forceinline__ void sum_hprimewgll_gamma(int I, int J, int K,
 
 // computes the spatial derivatives
 
-
 __device__  __forceinline__ void get_spatial_derivatives(realw* xixl,realw* xiyl,realw* xizl,
                                                          realw* etaxl,realw* etayl,realw* etazl,
                                                          realw* gammaxl,realw* gammayl,realw* gammazl,
@@ -582,7 +581,7 @@ __device__  __forceinline__ void get_spatial_derivatives(realw* xixl,realw* xiyl
     // local padded index
     int offset = ispec_irreg*NGLL3_PADDED + tx;
 
-    *xixl = get_global_cr( &d_xix[offset]);
+    *xixl = get_global_cr(&d_xix[offset]);
     *xiyl = get_global_cr(&d_xiy[offset]);
     *xizl = get_global_cr(&d_xiz[offset]);
     *etaxl = get_global_cr(&d_etax[offset]);

@@ -1011,6 +1011,67 @@ __global__ void pml_impose_boundary_condition_cuda_kernel(realw* accel,
 
 
 //
+// src/gpu/kernels/pml_kernel_2_viscoelastic_impl.cu
+//
+
+__global__ void
+pml_kernel_2_impl(int nb_blocks_to_compute,
+                  const int* d_ibool,
+                  const int* d_phase_ispec_inner_elastic,const int num_phase_ispec_elastic,
+                  const int d_iphase,
+                  const int* d_irregular_element_number,
+                  realw_const_p d_displ,
+                  realw_const_p d_veloc,
+                  realw_p d_accel,
+                  realw_const_p d_xix,realw_const_p d_xiy,realw_const_p d_xiz,
+                  realw_const_p d_etax,realw_const_p d_etay,realw_const_p d_etaz,
+                  realw_const_p d_gammax,realw_const_p d_gammay,realw_const_p d_gammaz,
+                  const realw xix_regular,const realw jacobian_regular,
+                  realw_const_p d_hprime_xx,
+                  realw_const_p d_hprimewgll_xx,
+                  realw_const_p d_wgllwgll_xy,realw_const_p d_wgllwgll_xz,realw_const_p d_wgllwgll_yz,
+                  realw_const_p d_kappav,realw_const_p d_muv,
+                  const int COMPUTE_AND_STORE_STRAIN,
+                  realw_p epsilondev_xx,realw_p epsilondev_yy,realw_p epsilondev_xy,
+                  realw_p epsilondev_xz,realw_p epsilondev_yz,
+                  realw_p epsilon_trace_over_3,
+                  const int SIMULATION_TYPE,
+                  realw_const_p d_rhostore,
+                  realw_const_p wgll_cube,
+                  const int NSPEC_CPML,
+                  const int* d_is_CPML,
+                  const int* d_spec_to_CPML,
+                  realw_const_p d_PML_displ_new,
+                  realw_const_p d_PML_displ_old,
+                  realw_p d_rmemory_displ_elastic,
+                  realw_p d_rmemory_dux_dxl_x,
+                  realw_p d_rmemory_duy_dxl_y,
+                  realw_p d_rmemory_duz_dxl_z,
+                  realw_p d_rmemory_dux_dyl_x,
+                  realw_p d_rmemory_duy_dyl_y,
+                  realw_p d_rmemory_duz_dyl_z,
+                  realw_p d_rmemory_dux_dzl_x,
+                  realw_p d_rmemory_duy_dzl_y,
+                  realw_p d_rmemory_duz_dzl_z,
+                  realw_p d_rmemory_dux_dxl_y,
+                  realw_p d_rmemory_dux_dxl_z,
+                  realw_p d_rmemory_duy_dxl_x,
+                  realw_p d_rmemory_duz_dxl_x,
+                  realw_p d_rmemory_dux_dyl_y,
+                  realw_p d_rmemory_duy_dyl_x,
+                  realw_p d_rmemory_duy_dyl_z,
+                  realw_p d_rmemory_duz_dyl_y,
+                  realw_p d_rmemory_dux_dzl_z,
+                  realw_p d_rmemory_duy_dzl_z,
+                  realw_p d_rmemory_duz_dzl_x,
+                  realw_p d_rmemory_duz_dzl_y,
+                  realw_const_p pml_convolution_coef_alpha,
+                  realw_const_p pml_convolution_coef_beta,
+                  realw_const_p pml_convolution_coef_strain,
+                  realw_const_p pml_convolution_coef_abar);
+
+
+//
 // src/gpu/kernels/prepare_boundary_accel_on_device.cu
 //
 

@@ -1263,5 +1263,16 @@ void FC_FUNC_(compute_forces_viscoelastic_cuda,
              mp->d_rhostore,
              FORWARD_OR_ADJOINT);
   }
+
+  // adds PML contributions
+  if (mp->NSPEC_CPML > 0){
+    compute_forces_viscoelastic_pml_cuda(Mesh_pointer,
+                                         iphase,
+                                         nspec_outer_elastic,
+                                         nspec_inner_elastic,
+                                         COMPUTE_AND_STORE_STRAIN,
+                                         FORWARD_OR_ADJOINT_f);
+  }
+
 }
 

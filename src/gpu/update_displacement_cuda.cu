@@ -85,24 +85,21 @@ void FC_FUNC_(update_displacement_cuda,
   //max_v = get_device_array_maximum_value(mp->d_veloc, size);
   //max_a = get_device_array_maximum_value(mp->d_accel, size);
   //printf("rank %d - max displ: %f veloc: %f accel: %f\n",mp->myrank,max_d,max_v,max_a);
+  //max_d = get_device_array_maximum_value(mp->d_PML_displ_old, mp->NSPEC_CPML * NGLL3 * NDIM);
+  //max_v = get_device_array_maximum_value(mp->d_PML_displ_new, mp->NSPEC_CPML * NGLL3 * NDIM);
+  //printf("rank %d - max PML displ new: %e displ old: %e\n",mp->myrank,max_d,max_v);
 
   // PML
-  int size2,blocksize2,size_padded2;
   int num_blocks_x2,num_blocks_y2;
   dim3 grid2,threads2;
 
   if (mp->pml_conditions){
     if (*FORWARD_OR_ADJOINT == 1 && mp->NSPEC_CPML > 0){
 
-      blocksize2 = NGLL3; // NGLLX*NGLLY*NGLLZ
-      size2 = mp->NSPEC_CPML;
-
-      size_padded2 = ((int)ceil(((double)size2)/((double)blocksize2)))*blocksize2;
-
-      get_blocks_xy(size_padded2/blocksize2,&num_blocks_x2,&num_blocks_y2);
+      get_blocks_xy(mp->NSPEC_CPML,&num_blocks_x2,&num_blocks_y2);
 
       grid2 = dim3(num_blocks_x2,num_blocks_y2);
-      threads2 = dim3(blocksize2,1,1);
+      threads2 = dim3(NGLL3,1,1);
 
       // stores wavefields as old
 #ifdef USE_CUDA

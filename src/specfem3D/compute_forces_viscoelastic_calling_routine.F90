@@ -129,28 +129,6 @@
                                             nspec_outer_elastic, &
                                             nspec_inner_elastic, &
                                             COMPUTE_AND_STORE_STRAIN,ATTENUATION,1) ! 1 == forward
-
-      ! adds contributions for PML elements
-      if (NSPEC_CPML > 0 .and. .not. backward_simulation) then
-        ! GPU
-        ! note: the compute forces for PML is not implemented yet on GPUs
-        !       thus, we need to transfer the fields onto the CPU and back when done
-        ! needs to transfer displ,veloc,accel
-        call transfer_fields_el_from_device(NDIM*NGLOB_AB,displ,veloc,accel,Mesh_pointer)
-        ! PML_displ_old,new
-        call transfer_pml_displ_from_device(NDIM*NGLLCUBE*NSPEC_CPML,PML_displ_old,PML_displ_new,Mesh_pointer)
-        ! computes PML element contributions
-        call compute_forces_viscoelastic_PML(iphase, &
-                                             displ,veloc,accel, &
-                                             epsilondev_xx,epsilondev_yy,epsilondev_xy, &
-                                             epsilondev_xz,epsilondev_yz,epsilon_trace_over_3, &
-                                             backward_simulation)
-        ! needs to transfer displ,veloc,accel
-        call transfer_fields_el_to_device(NDIM*NGLOB_AB,displ,veloc,accel,Mesh_pointer)
-        ! PML_displ_old,new
-        call transfer_pml_displ_to_device(NDIM*NGLLCUBE*NSPEC_CPML,PML_displ_old,PML_displ_new,Mesh_pointer)
-      endif
-
     endif
 
     ! debug timing
@@ -380,6 +358,12 @@
     endif
   endif
 
+  ! PML
+  ! impose Dirichlet conditions on the outer edges of the C-PML layers
+  if (PML_CONDITIONS) then
+    call pml_impose_boundary_condition_elastic()
+  endif
+
   ! multiplies with inverse of mass matrix (note: rmass has been inverted already)
   if (.not. GPU_MODE) then
     ! on CPU
@@ -406,12 +390,6 @@
       ! on GPU
       call compute_coupling_ocean_cuda(Mesh_pointer,1) ! 1 == forward
     endif
-  endif
-
-  ! PML
-  ! impose Dirichlet conditions on the outer edges of the C-PML layers
-  if (PML_CONDITIONS) then
-    call pml_impose_boundary_condition_elastic()
   endif
 
 ! updates velocities
@@ -449,8 +427,7 @@
   if (PML_CONDITIONS) then
     if (SIMULATION_TYPE == 1 .and. SAVE_FORWARD) then
       if (nglob_interface_PML_elastic > 0) then
-        call save_field_on_pml_interface(displ,veloc,accel,nglob_interface_PML_elastic, &
-                                         b_PML_field,b_reclen_PML_field)
+        call save_field_on_pml_interface(nglob_interface_PML_elastic,b_PML_field,b_reclen_PML_field)
       endif
     endif
   endif

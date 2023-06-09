@@ -247,17 +247,18 @@
 !
 !=====================================================================
 !
-  subroutine save_field_on_pml_interface(displ,veloc,accel,nglob_interface_PML_elastic, &
-                                         b_PML_field,b_reclen_PML_field)
+  subroutine save_field_on_pml_interface(nglob_interface_PML_elastic,b_PML_field,b_reclen_PML_field)
 
   use constants, only: CUSTOM_REAL,NDIM
   use specfem_par, only: NGLOB_AB,it
   use specfem_par, only: GPU_MODE,Mesh_pointer
+  use specfem_par_elastic, only: displ,veloc,accel
+
   use pml_par, only: points_interface_PML_elastic
+
   implicit none
 
   integer, intent(in) :: nglob_interface_PML_elastic,b_reclen_PML_field
-  real(kind=CUSTOM_REAL), dimension(NDIM,NGLOB_AB), intent(in) :: displ,veloc,accel
   real(kind=CUSTOM_REAL), dimension(9,nglob_interface_PML_elastic) :: b_PML_field
 
   integer :: iglob_pml,iglob

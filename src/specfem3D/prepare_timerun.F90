@@ -123,7 +123,7 @@
     ! flushes file buffer for main output file (IMAIN)
     call flush_IMAIN()
 
-    !daniel debug: total time estimation
+    !#TODO: total time estimation based on number of elements and number of time steps before time loop starts?
     !  average time per element per time step:
     !     elastic elements    ~ dt = 1.17e-05 s (intel xeon 2.6GHz, stand 2013)
     !                              = 3.18e-07 s (Kepler K20x, stand 2013)

@@ -685,13 +685,34 @@ typedef struct mesh_ {
 
   realw* d_PML_displ_old; realw* d_PML_displ_new;
 
-  //realw* d_accel_elastic_CPML;
-  //realw* d_pml_convolution_coef_alpha;
-  //realw* d_pml_convolution_coef_beta;
-  //realw* d_pml_convolution_coef_abar;
-  //realw* d_pml_convolution_coef_strain;
-  //realw* d_rmemory_displ_elastic;
-  
+  realw* d_rmemory_displ_elastic;
+  realw* d_rmemory_dux_dxl_x;
+  realw* d_rmemory_duy_dxl_y;
+  realw* d_rmemory_duz_dxl_z;
+  realw* d_rmemory_dux_dyl_x;
+  realw* d_rmemory_duy_dyl_y;
+  realw* d_rmemory_duz_dyl_z;
+  realw* d_rmemory_dux_dzl_x;
+  realw* d_rmemory_duy_dzl_y;
+  realw* d_rmemory_duz_dzl_z;
+  realw* d_rmemory_dux_dxl_y;
+  realw* d_rmemory_dux_dxl_z;
+  realw* d_rmemory_duy_dxl_x;
+  realw* d_rmemory_duz_dxl_x;
+  realw* d_rmemory_dux_dyl_y;
+  realw* d_rmemory_duy_dyl_x;
+  realw* d_rmemory_duy_dyl_z;
+  realw* d_rmemory_duz_dyl_y;
+  realw* d_rmemory_dux_dzl_z;
+  realw* d_rmemory_duy_dzl_z;
+  realw* d_rmemory_duz_dzl_x;
+  realw* d_rmemory_duz_dzl_y;
+
+  realw* d_pml_convolution_coef_alpha;
+  realw* d_pml_convolution_coef_beta;
+  realw* d_pml_convolution_coef_strain;
+  realw* d_pml_convolution_coef_abar;
+
   // ------------------------------------------------------------------ //
   // acoustic wavefield
   // ------------------------------------------------------------------ //
@@ -782,6 +803,8 @@ void start_timing_gpu(gpu_event* start,gpu_event* stop);
 void stop_timing_gpu(gpu_event* start,gpu_event* stop, const char* info_str);
 void stop_timing_gpu(gpu_event* start,gpu_event* stop, const char* info_str,realw* t);
 
+// PML defined in pml_compute_accel_cuda.cu
+void (compute_forces_viscoelastic_pml_cuda)(long*,int*,int*,int*,int*,int*);
 
 /* ----------------------------------------------------------------------------------------------- */
 

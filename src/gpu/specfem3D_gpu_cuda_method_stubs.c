@@ -470,16 +470,6 @@ void FC_FUNC_(noise_read_add_surface_movie_cu,
 // src/gpu/pml_compute_accel_cuda.cu
 //
 
-void FC_FUNC_(compute_forces_viscoelastic_pml_cuda,
-              COMPUTE_FORCES_VISCOELASTIC_PML_CUDA)(long* Mesh_pointer,
-                                                    int* iphase,
-                                                    realw* deltat,
-                                                    int* nspec_outer_elastic,
-                                                    int* nspec_inner_elastic,
-                                                    int* COMPUTE_AND_STORE_STRAIN,
-                                                    int* ATTENUATION,
-                                                    int* FORWARD_OR_ADJOINT_f) {}
-
 void FC_FUNC_(pml_impose_boundary_condition_elastic_cuda,
               PML_IMPOSE_BOUNDARY_CONDITION_ELASTIC_CUDA)(long* Mesh_pointer) {}
 
@@ -611,8 +601,12 @@ void FC_FUNC_(prepare_fields_elastic_pml,
                                           int* is_CPML,
                                           int* CPML_to_spec,
                                           int* spec_to_CPML,
-                                          realw* PML_displ_old,
-                                          realw* PML_displ_new) {}
+                                          realw* pml_convolution_coef_alpha,
+                                          realw* pml_convolution_coef_beta,
+                                          realw* pml_convolution_coef_abar,
+                                          realw* pml_convolution_coef_strain,
+                                          realw* h_wgll_cube,
+                                          realw* rhostore) {}
 
 void FC_FUNC_(prepare_sim2_or_3_const_device,
               PREPARE_SIM2_OR_3_CONST_DEVICE)(long* Mesh_pointer,int *nadj_rec_local, int* NTSTEP_BETWEEN_READ_ADJSRC,
@@ -638,7 +632,6 @@ void FC_FUNC_(prepare_fields_gravity_device,
                                              realw* minus_deriv_gravity,
                                              realw* minus_g,
                                              realw* h_wgll_cube,
-                                             int* ACOUSTIC_SIMULATION,
                                              realw* rhostore) {}
 
 void FC_FUNC_(prepare_fault_device,
