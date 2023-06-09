@@ -522,6 +522,20 @@
   if (USE_TRICK_FOR_BETTER_PRESSURE) &
     call exit_mpi(myrank,'USE_TRICK_FOR_BETTER_PRESSURE not implemented for OUTPUT_ENERGY, please turn one of them off')
 
+  ! GPU simulations
+  if (GPU_MODE) then
+    ! we need to transfer fields for computing energies in this routine
+    if (ELASTIC_SIMULATION) then
+      call transfer_displ_from_device(NDIM*NGLOB_AB,displ,Mesh_pointer)
+      call transfer_veloc_from_device(NDIM*NGLOB_AB,veloc,Mesh_pointer)
+    endif
+    if (ACOUSTIC_SIMULATION) then
+      call transfer_fields_ac_from_device(NGLOB_AB,potential_acoustic, &
+                                          potential_dot_acoustic, potential_dot_dot_acoustic, &
+                                          Mesh_pointer)
+    endif
+  endif
+
   kinetic_energy = 0.d0
   potential_energy = 0.d0
 
