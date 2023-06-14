@@ -67,10 +67,9 @@ void Kernel_2_acoustic(int nb_blocks_to_compute, Mesh* mp, int d_iphase,
   //       to combine forward and backward wavefield in the same kernel call
 
   // kernel timing
-  gpu_event start, stop;
-  if (CUDA_TIMING ){
-    start_timing_gpu(&start,&stop);
-  }
+  gpu_event start,stop;
+  if (GPU_TIMING){ start_timing_gpu(&start,&stop); }
+
   int nb_field = mp->simulation_type == 3 ? 2 : 1 ;
 
   // sets gpu arrays
@@ -202,8 +201,8 @@ void Kernel_2_acoustic(int nb_blocks_to_compute, Mesh* mp, int d_iphase,
 
   }
 
-  // Cuda timing
-  if (CUDA_TIMING ){
+  // kernel timing
+  if (GPU_TIMING){
     realw flops,time;
     stop_timing_gpu(&start,&stop,"Kernel_2_acoustic_impl",&time);
     // time in seconds
