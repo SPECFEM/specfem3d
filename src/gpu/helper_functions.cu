@@ -227,7 +227,7 @@ void stop_timing_gpu(gpu_event* start,gpu_event* stop, const char* info_str){
 #endif
 
   // user output
-  printf("%s: Execution Time = %f ms\n",info_str,time);
+  printf("GPU_timing %s: Execution Time = %f ms\n",info_str,time);
 }
 
 /* ----------------------------------------------------------------------------------------------- */
@@ -253,7 +253,7 @@ void stop_timing_gpu(gpu_event* start,gpu_event* stop, const char* info_str, rea
 #endif
 
   // user output
-  printf("%s: Execution Time = %f ms\n",info_str,time);
+  printf("GPU_timing %s: Execution Time = %f ms\n",info_str,time);
 
   // returns time
   *t = time;
