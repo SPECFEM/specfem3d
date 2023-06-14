@@ -154,6 +154,7 @@ xdecompose_mesh_mpi_OBJECTS = \
 	$O/module_database.dec.o \
 	$O/module_mesh.dec.o \
 	$O/module_partition.dec.o \
+	$O/part_decompose_mesh.dec_module.o \
 	$O/program_decompose_mesh_mpi.mpidec.o \
 	$(EMPTY_MACRO)
 
