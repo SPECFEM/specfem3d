@@ -156,8 +156,8 @@
 !! \param nrec_store The number of receivers on the local processor
   subroutine init_asdf_data(nrec_store)
 
-  use constants, only: NDIM
-  use specfem_par, only: myrank,NSTEP,NTSTEP_BETWEEN_OUTPUT_SEISMOS
+  use constants, only: NDIM,myrank
+  use specfem_par, only: NSTEP,NTSTEP_BETWEEN_OUTPUT_SEISMOS
 
   use asdf_data, only: asdf_container
 
@@ -221,7 +221,9 @@
 
   use constants, only: CUSTOM_REAL,NDIM,myrank
 
-  use specfem_par, only: NSTEP,NTSTEP_BETWEEN_OUTPUT_SAMPLE,nlength_seismogram, &
+  use specfem_par, only: &
+    nlength_seismogram, &
+    seismo_current, &
     stlat,stlon,stele,stbur,station_name,network_name
 
   use asdf_data, only: asdf_container
@@ -236,10 +238,6 @@
   ! local Variables
   integer :: length_station_name, length_network_name
   integer :: ier, i, index_increment
-  integer :: seismo_current_used
-
-  ! actual seismogram length
-  seismo_current_used = ceiling(real(NSTEP) / NTSTEP_BETWEEN_OUTPUT_SAMPLE)
 
   index_increment = iorientation
 
@@ -258,13 +256,13 @@
   asdf_container%receiver_el(irec_local) = stele(irec)
   asdf_container%receiver_dpt(irec_local) = stbur(irec)
 
-  allocate(asdf_container%records(i)%record(seismo_current_used),stat=ier)
+  allocate(asdf_container%records(i)%record(seismo_current),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 2017')
   if (ier /= 0) call exit_MPI (myrank, 'Allocating ASDF container failed.')
   asdf_container%records(i)%record(:) = 0.0
 
   ! seismogram as real data
-  asdf_container%records(i)%record(1:seismo_current_used) = real(seismogram_tmp(iorientation, 1:seismo_current_used),kind=4)
+  asdf_container%records(i)%record(1:seismo_current) = real(seismogram_tmp(iorientation, 1:seismo_current),kind=4)
 
   end subroutine store_asdf_data
 
@@ -316,7 +314,10 @@
   use iso_c_binding, only: C_NULL_CHAR !,c_ptr
 !  use iso_Fortran_env
 
-  use specfem_par, only: seismo_offset,DT,NSTEP,NTSTEP_BETWEEN_OUTPUT_SAMPLE,OUTPUT_FILES,WRITE_SEISMOGRAMS_BY_MAIN
+  use specfem_par, only: DT,NSTEP, &
+    seismo_offset,seismo_current, &
+    NTSTEP_BETWEEN_OUTPUT_SAMPLE, &
+    OUTPUT_FILES,WRITE_SEISMOGRAMS_BY_MAIN
 
   implicit none
 
@@ -327,7 +328,6 @@
   integer :: num_stations
   integer :: stationxml_length
   integer :: nsamples  ! constant, as in SPECFEM
-  integer :: seismo_current_used
   double precision :: sampling_rate
   double precision :: startTime
   integer(kind=8) :: start_time
@@ -392,9 +392,6 @@
   ! alias MPI communicator
   call world_duplicate(comm)
   call world_size(mysize)
-
-  ! actual seismogram length
-  seismo_current_used = ceiling(real(NSTEP) / NTSTEP_BETWEEN_OUTPUT_SAMPLE)
 
   num_stations = asdf_container%nrec_local
   sampling_rate = 1.0/(DT*NTSTEP_BETWEEN_OUTPUT_SAMPLE)
@@ -620,7 +617,7 @@
   deallocate(displs)
   deallocate(rcounts)
 
-  allocate(one_seismogram(NDIM,seismo_current_used),stat=ier)
+  allocate(one_seismogram(NDIM,seismo_current),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 2032')
   if (ier /= 0) call exit_MPI(myrank,'error allocating one_seismogram array')
   one_seismogram(:,:) = 0.0
@@ -795,7 +792,7 @@
               if (len_trim(component_names_gather(i+((j-1)*NDIM),k)) == 0) cycle
 
               !  write(*,*) j, l, l+i, size(asdf_container%records)
-              one_seismogram(i,:) = asdf_container%records(l+i)%record(1:seismo_current_used)
+              one_seismogram(i,:) = asdf_container%records(l+i)%record(1:seismo_current)
             enddo
           endif
 
@@ -810,14 +807,14 @@
               !       we therefore skip components with an empty ("") entry.
               if (len_trim(component_names_gather(i+((j-1)*NDIM),k)) == 0) cycle
 
-              one_seismogram(i,:) = asdf_container%records(l+i)%record(1:seismo_current_used)
+              one_seismogram(i,:) = asdf_container%records(l+i)%record(1:seismo_current)
             enddo
             ! send (real) data
-            call send_r(one_seismogram,NDIM*seismo_current_used,receiver,itag)
+            call send_r(one_seismogram,NDIM*seismo_current,receiver,itag)
 
           else if (myrank == 0) then
             ! receive (real) data
-            call recv_r(one_seismogram,NDIM*seismo_current_used,sender,itag)
+            call recv_r(one_seismogram,NDIM*seismo_current,sender,itag)
 
           endif
         endif
@@ -852,7 +849,7 @@
 
             ! writes (float) data
             call ASDF_write_partial_waveform_f(data_ids(i), &
-                                               one_seismogram(i,1:seismo_current_used), 0, seismo_current_used, ier)
+                                               one_seismogram(i,1:seismo_current), 0, seismo_current, ier)
             if (ier /= 0) call exit_MPI(myrank,'Error ASDF write partial waveform failed')
 
             call ASDF_close_dataset_f(data_ids(i), ier)
@@ -938,11 +935,11 @@
           ! see asdf implementation of ASDF_write_partial_waveform_f():
           ! https://github.com/SeismicData/asdf-library/blob/f28233894ef0a065eb725b9d22e55d0d02a7aac1/src/ASDF_write.c#L354
           if (myrank == current_proc) then
-            one_seismogram(i,:) = asdf_container%records(l+i)%record(1:seismo_current_used)
+            one_seismogram(i,:) = asdf_container%records(l+i)%record(1:seismo_current)
 
             ! writes (float) data
             call ASDF_write_partial_waveform_f(data_ids(i), &
-                                               one_seismogram(i,1:seismo_current_used), 0, seismo_current_used, ier)
+                                               one_seismogram(i,1:seismo_current), 0, seismo_current, ier)
             if (ier /= 0) call exit_MPI(myrank,'Error ASDF parallel write partial waveform failed')
           endif
 

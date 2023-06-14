@@ -40,14 +40,9 @@
   ! timing
   double precision, external :: wtime
   double precision :: write_time_begin,write_time
-  logical :: do_save_seismograms
 
-  ! check if we need to save seismos
-  if (SIMULATION_TYPE == 3 .and. (.not. SAVE_SEISMOGRAMS_IN_ADJOINT_RUN)) then
-    do_save_seismograms = .false.
-  else
-    do_save_seismograms = .true.
-  endif
+  ! checks if anything to do
+  if (.not. do_save_seismograms) return
 
   ! checks subsampling recurrence
   if (mod(it-1,NTSTEP_BETWEEN_OUTPUT_SAMPLE) == 0) then
@@ -75,7 +70,7 @@
     ! - ispec_selected_source   -> element containing source position, which becomes an adjoint "receiver"
 
     ! gets seismogram values
-    if (do_save_seismograms .and. nrec_local > 0) then
+    if (nrec_local > 0) then
       ! seismograms displ/veloc/accel/pressure
       if (GPU_MODE) then
         ! on GPU
@@ -98,9 +93,23 @@
   endif ! NTSTEP_BETWEEN_OUTPUT_SAMPLE
 
   ! write the current or final seismograms
+  !
+  ! for example:
+  !   NTSTEP_BETWEEN_OUTPUT_SEISMOS = 10 , NTSTEP_BETWEEN_OUTPUT_SAMPLE = 5
+  !       -> 10 / 5 == 2 steps (nlength_seismogram)
+  !          we will store samples at it==1,it==6 and output at it==10
+  !   NTSTEP_BETWEEN_OUTPUT_SEISMOS = 10 , NTSTEP_BETWEEN_OUTPUT_SAMPLE = 1
+  !       -> 10 / 1 == 10 steps
+  !          we will store samples at it==1,2,3,..,10 and output at it==10
+  !
+  !   that is for NTSTEP_BETWEEN_OUTPUT_SEISMOS = 10 , NTSTEP_BETWEEN_OUTPUT_SAMPLE = 5,
+  !   the seismograms have samples for the wavefield at mod((it-1),NTSTEP_BETWEEN_OUTPUT_SAMPLE) == 0,
+  !   which is at it==1,it==6. for writing the seismograms however,
+  !   we would write out at mod(it,NTSTEP_BETWEEN_OUTPUT_SEISMOS) == 0, which is at it==10
+  !
   if (mod(it,NTSTEP_BETWEEN_OUTPUT_SEISMOS) == 0 .or. it == it_end) then
 
-    if (do_save_seismograms .and. .not. INVERSE_FWI_FULL_PROBLEM) then
+    if (.not. INVERSE_FWI_FULL_PROBLEM) then
 
       ! user output
       if (myrank == 0) then
@@ -157,7 +166,7 @@
         ! timing
         write_time = wtime() - write_time_begin
         ! output
-        write(IMAIN,*) 'Total number of time steps done: ', it-it_begin+1
+        write(IMAIN,*) 'Total number of time steps written: ', seismo_offset + seismo_current
         if (WRITE_SEISMOGRAMS_BY_MAIN) then
           write(IMAIN,*) 'Writing the seismograms by main proc alone took ',sngl(write_time),' seconds'
         else
@@ -167,7 +176,7 @@
         call flush_IMAIN()
       endif
 
-    endif ! do_save_seismograms
+    endif
 
     ! resets current seismogram position
     seismo_offset = seismo_offset + seismo_current
@@ -856,7 +865,7 @@
           it_tmp = seismo_offset + isample
 
           ! subtract half duration of the source to make sure travel time is correct
-          time_t = real(dble((it_tmp-1)*NTSTEP_BETWEEN_OUTPUT_SAMPLE) * DT - t0,kind=CUSTOM_REAL)
+          time_t = real(dble((it_tmp-1) * NTSTEP_BETWEEN_OUTPUT_SAMPLE) * DT - t0,kind=CUSTOM_REAL)
 
           ! distinguish between single and double precision for reals
           write(IOUT,*) time_t,all_seismograms(iorientation,isample,irec_local)
