@@ -577,14 +577,14 @@ AS_IF([test x"$want_hip" != xno], [
       GPU_PLATFORM=`$HIPCONFIG_PROG --platform`
       AS_IF([test x"$GPU_PLATFORM" = xnvidia], [
           AC_MSG_NOTICE([HIP PLATFORM NVIDIA detected.])
-          HIP_PLATFORM=nvcc
-          FLAG_PLATFORM="${FC_DEFINE}__HIP_PLATFORM_NVCC__"
+          HIP_PLATFORM=nvidia
+          FLAG_PLATFORM="${FC_DEFINE}__HIP_PLATFORM_NVIDIA__"
       ])
 
       AS_IF([test x"$GPU_PLATFORM" = xamd], [
           AC_MSG_NOTICE([HIP PLATFORM AMD detected.])
-          HIP_PLATFORM=hcc
-          FLAG_PLATFORM="${FC_DEFINE}__HIP_PLATFORM_HCC__"
+          HIP_PLATFORM=amd
+          FLAG_PLATFORM="${FC_DEFINE}__HIP_PLATFORM_AMD__"
       ])
       # compiler might require a platform selection flag
       case "${HIP_FLAGS}" in
