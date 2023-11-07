@@ -53,6 +53,7 @@
 
   ! local variables below
   integer :: isource,ier,ipos,dummyval
+  integer :: ishift,nright
   double precision :: t_shift(NSOURCES)
   double precision :: length
   character(len=7) :: dummy
@@ -199,9 +200,21 @@
       ! gets external STF file name
       read(IIN,"(a)") string
       external_source_time_function_filename = trim(string)
-
-      ! reads in stf values
-      call read_external_source_time_function(isource,user_source_time_function,external_source_time_function_filename)
+      if(trim(external_source_time_function_filename).eq.'REUSE' .or. &
+         trim(external_source_time_function_filename).eq.'Reuse' .or. &
+         trim(external_source_time_function_filename).eq.'reuse')then
+        ! Reuse the source time function of the first source.
+        if (isource.eq.1) then
+          stop 'Error: "reuse" option cannot be used for the first source!'
+        endif
+        ishift=nint(t_shift(isource)/DT)
+        nright=NSTEP_STF-ishift
+        user_source_time_function(1:ishift,isource)=0.0_CUSTOM_REAL
+        user_source_time_function(ishift+1:NSTEP_STF,isource)=user_source_time_function(1:nright,1)
+      else
+        ! reads in stf values
+        call read_external_source_time_function(isource,user_source_time_function,external_source_time_function_filename)
+      endif
     endif
 
     ! checks Par_file flag to override type setting
