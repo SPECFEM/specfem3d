@@ -119,6 +119,16 @@ def define_parallel_absorbing_surf():
             if dz <= topographic_surface_distance_tolerance and dn < topographic_surface_normal_tolerance:
                 top_surf.append(k)
 
+    # checking list sizes before return
+    len_return_items = [len(liste) for liste in \
+                absorbing_surf_xmin,absorbing_surf_xmax,absorbing_surf_ymin,absorbing_surf_ymax,\
+                absorbing_surf_bottom,top_surf]
+    if (0 in len_return_items ): 
+        print ('WARNING::define_parallel_absorbing_surf:: empty return list(s). try increasing tolerance!')
+        import sys
+        sys.exit()
+    ##    
+
     return absorbing_surf_xmin,absorbing_surf_xmax,absorbing_surf_ymin,absorbing_surf_ymax,absorbing_surf_bottom,top_surf
 
 def define_top_bottom_absorbing_surf(zmin_box,zmax_box):
