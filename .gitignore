@@ -41,3 +41,4 @@ doc/USER_MANUAL/Schedule
 .*swo
 .*swn
 *~
+*.pyc
