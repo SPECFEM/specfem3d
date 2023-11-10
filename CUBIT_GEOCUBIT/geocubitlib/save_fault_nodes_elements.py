@@ -33,7 +33,8 @@ class fault_input:
         print('len(Ad):',len(quads_Ad))
 
         if not (len(quads_Au) == len(quads_Ad)):
-            print('Number of elements for each fauld side up and down do not concide')
+            print('Number of elements for up and down fault sides does not coincide!')
+            import sys
             sys.exit('goodbye')
 
         save_elements_nodes(self.name,quads_Au,quads_Ad)
