@@ -2412,8 +2412,6 @@ Kernel_2_att_impl(int nb_blocks_to_compute,
 #endif
   }
 
-// JC JC here we will need to add GPU support for the new C-PML routines
-
   // synchronize all the threads (one thread for each of the NGLL grid points of the
   // current spectral element) because we need the whole element to be ready in order
   // to be able to compute the matrix products along cut planes of the 3D element below
@@ -2547,8 +2545,6 @@ Kernel_2_att_impl(int nb_blocks_to_compute,
                             &rho_s_H1,&rho_s_H2,&rho_s_H3);
   }
 
-// JC JC here we will need to add GPU support for the new C-PML routines
-
   // form dot product with test vector, symmetric form
   // 1. cut-plane xi
   __syncthreads();
@@ -2582,8 +2578,6 @@ Kernel_2_att_impl(int nb_blocks_to_compute,
     sum_terms2 += rho_s_H2;
     sum_terms3 += rho_s_H3;
   }
-
-// JC JC here we will need to add GPU support for the new C-PML routines
 
   // assembles acceleration array
   if (threadIdx.x < NGLL3) {
@@ -2661,8 +2655,6 @@ Kernel_2_att_impl(int nb_blocks_to_compute,
     epsilondev_yz[tx + working_element*NGLL3] = epsilondev_yz_loc;
     epsilondev_trace[tx + working_element*NGLL3] = epsilondev_trace_loc;
   } // threadIdx.x
-
-// JC JC here we will need to add GPU support for the new C-PML routines
 
 } // kernel_2_att_impl()
 
@@ -2814,8 +2806,6 @@ Kernel_2_att_org_impl(int nb_blocks_to_compute,
     // copy displacement from global memory to shared memory
     load_shared_memory_displ<FORWARD_OR_ADJOINT>(&tx,&iglob,d_displ,s_dummyx_loc,s_dummyy_loc,s_dummyz_loc);
 
-// JC JC here we will need to add GPU support for the new C-PML routines
-
     // attenuation
     // use first order Taylor expansion of displacement for local storage of stresses
     // at this current time step, to fix attenuation in a consistent way
@@ -2874,8 +2864,6 @@ Kernel_2_att_org_impl(int nb_blocks_to_compute,
       tempy3l += s_dummyy_loc[l*NGLL2+J*NGLLX+I]*fac3;
       tempz3l += s_dummyz_loc[l*NGLL2+J*NGLLX+I]*fac3;
     }
-
-// JC JC here we will need to add GPU support for the new C-PML routines
 
     // attenuation
     // temporary variables used for fixing attenuation in a consistent way
@@ -2963,8 +2951,6 @@ Kernel_2_att_org_impl(int nb_blocks_to_compute,
             + s_dummyz_loc[3*NGLL2+J*NGLLX+I]*d_hprime_xx[3*NGLLX+K]
             + s_dummyz_loc[4*NGLL2+J*NGLLX+I]*d_hprime_xx[4*NGLLX+K];
 
-// JC JC here we will need to add GPU support for the new C-PML routines
-
     // attenuation
     // temporary variables used for fixing attenuation in a consistent way
     tempx1l_att = s_dummyx_loc_att[K*NGLL2+J*NGLLX]*d_hprime_xx[I]
@@ -3049,8 +3035,6 @@ Kernel_2_att_org_impl(int nb_blocks_to_compute,
     duzdyl = xiyl*tempz1l + etayl*tempz2l + gammayl*tempz3l;
     duzdzl = xizl*tempz1l + etazl*tempz2l + gammazl*tempz3l;
 
-// JC JC here we will need to add GPU support for the new C-PML routines
-
     // precompute some sums to save CPU time
     duxdxl_plus_duydyl = duxdxl + duydyl;
     duxdxl_plus_duzdzl = duxdxl + duzdzl;
@@ -3058,8 +3042,6 @@ Kernel_2_att_org_impl(int nb_blocks_to_compute,
     duxdyl_plus_duydxl = duxdyl + duydxl;
     duzdxl_plus_duxdzl = duzdxl + duxdzl;
     duzdyl_plus_duydzl = duzdyl + duydzl;
-
-// JC JC here we will need to add GPU support for the new C-PML routines
 
     // attenuation
     // temporary variables used for fixing attenuation in a consistent way
@@ -3207,8 +3189,6 @@ Kernel_2_att_org_impl(int nb_blocks_to_compute,
   // to be able to compute the matrix products along cut planes of the 3D element below
   __syncthreads();
 
-// JC JC here we will need to add GPU support for the new C-PML routines
-
   if (active ){
 
 #ifndef MANUALLY_UNROLLED_LOOPS
@@ -3326,10 +3306,7 @@ Kernel_2_att_org_impl(int nb_blocks_to_compute,
     d_accel[iglob*3 + 2] += sum_terms3;
 #endif // USE_TEXTURES_FIELDS
 
-// JC JC here we will need to add GPU support for the new C-PML routines
-
 #else // MESH_COLORING
-
     //mesh coloring
     if (use_mesh_coloring_gpu ){
 
@@ -3370,8 +3347,6 @@ Kernel_2_att_org_impl(int nb_blocks_to_compute,
     epsilondev_xz[tx + working_element*NGLL3] = epsilondev_xz_loc;
     epsilondev_yz[tx + working_element*NGLL3] = epsilondev_yz_loc;
   } // if (active)
-
-// JC JC here we will need to add GPU support for the new C-PML routines
 
 } // kernel_2_att_impl()
 

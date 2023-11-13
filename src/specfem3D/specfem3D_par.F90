@@ -193,6 +193,7 @@ module specfem_par
 
   integer :: nlength_seismogram
   integer :: seismo_offset,seismo_current
+  logical :: do_save_seismograms
 
   ! for ASDF/SAC headers time
   integer :: yr_PDE,jda_PDE,ho_PDE,mi_PDE

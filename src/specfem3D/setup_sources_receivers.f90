@@ -1265,13 +1265,27 @@
   !         nadj_rec_local - determines the number of adjoint sources, i.e., number of station locations (STATIONS_ADJOINT), which
   !                          act as sources to drive the adjoint wavefield
 
+  ! check if we need to save seismos
+  if (SIMULATION_TYPE == 3 .and. (.not. SAVE_SEISMOGRAMS_IN_ADJOINT_RUN)) then
+    do_save_seismograms = .false.
+  else
+    do_save_seismograms = .true.
+  endif
+
+  ! sets local receivers to zero if no seismogram needs to be saved
+  if (.not. do_save_seismograms) nrec_local = 0
+
   ! user output
   if (myrank == 0) then
     write(IMAIN,*) 'seismograms:'
-    if (WRITE_SEISMOGRAMS_BY_MAIN) then
-      write(IMAIN,*) '  seismograms written by main process only'
+    if (do_save_seismograms) then
+      if (WRITE_SEISMOGRAMS_BY_MAIN) then
+        write(IMAIN,*) '  seismograms written by main process only'
+      else
+        write(IMAIN,*) '  seismograms written by all processes'
+      endif
     else
-      write(IMAIN,*) '  seismograms written by all processes'
+      write(IMAIN,*) '  seismograms will not be saved'
     endif
     write(IMAIN,*)
     write(IMAIN,*) '  Total number of simulation steps (NSTEP)                       = ',NSTEP

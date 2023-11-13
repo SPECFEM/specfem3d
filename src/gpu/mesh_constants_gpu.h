@@ -112,8 +112,7 @@ typedef double realw;
 #endif
 
 // performance timers
-#define CUDA_TIMING 0
-#define CUDA_TIMING_UPDATE 0
+#define GPU_TIMING 0
 
 // error checking after cuda function calls
 // (note: this synchronizes many calls, thus e.g. no asynchronuous memcpy possible)

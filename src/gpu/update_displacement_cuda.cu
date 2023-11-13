@@ -77,7 +77,7 @@ void FC_FUNC_(update_displacement_cuda,
 
   // kernel timing
   gpu_event start,stop;
-  if (CUDA_TIMING_UPDATE ) start_timing_gpu(&start,&stop);
+  if (GPU_TIMING) start_timing_gpu(&start,&stop);
 
   // debug
   //realw max_d,max_v,max_a;
@@ -166,8 +166,8 @@ void FC_FUNC_(update_displacement_cuda,
     }
   }
 
-  // Cuda timing
-  if (CUDA_TIMING_UPDATE ){
+  // kernel timing
+  if (GPU_TIMING){
     realw flops,time;
     stop_timing_gpu(&start,&stop,"UpdateDispVeloc_kernel",&time);
     // time in seconds
@@ -235,7 +235,7 @@ void FC_FUNC_(update_displacement_ac_cuda,
 
   // kernel timing
   gpu_event start,stop;
-  if (CUDA_TIMING_UPDATE ) start_timing_gpu(&start,&stop);
+  if (GPU_TIMING) start_timing_gpu(&start,&stop);
 
 #ifdef USE_CUDA
   if (run_cuda){
@@ -255,8 +255,8 @@ void FC_FUNC_(update_displacement_ac_cuda,
   }
 #endif
 
-  // Cuda timing
-  if (CUDA_TIMING_UPDATE ){
+  // kernel timing
+  if (GPU_TIMING){
     realw flops,time;
     stop_timing_gpu(&start,&stop,"UpdatePotential_kernel",&time);
     // time in seconds

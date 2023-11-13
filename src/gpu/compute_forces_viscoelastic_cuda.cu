@@ -91,7 +91,7 @@ void Kernel_2(int nb_blocks_to_compute,Mesh* mp,int d_iphase,realw d_deltat,
 
   // kernel timing
   gpu_event start,stop;
-  if (CUDA_TIMING){ start_timing_gpu(&start,&stop); }
+  if (GPU_TIMING){ start_timing_gpu(&start,&stop); }
 
   // defines local parameters for forward/adjoint function calls
   realw *displ,*veloc,*accel;
@@ -1076,8 +1076,8 @@ void Kernel_2(int nb_blocks_to_compute,Mesh* mp,int d_iphase,realw d_deltat,
     } // ANISOTROPY
   } // ATTENUATION
 
-  // Cuda timing
-  if (CUDA_TIMING){
+  // kernel timing
+  if (GPU_TIMING){
     if (ATTENUATION){
       stop_timing_gpu(&start,&stop,"Kernel_2_att_impl");
     }else{

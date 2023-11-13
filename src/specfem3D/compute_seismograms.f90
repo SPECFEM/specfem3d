@@ -634,7 +634,7 @@
                                       hprime_xx,hprime_yy,hprime_zz)
 
       ! source time function value
-      time_source_dble = dble(NSTEP-it)*DT - t0 - tshift_src(irec)
+      time_source_dble = dble(NSTEP-it) * DT - t0 - tshift_src(irec)
 
       ! determines source time function value
       stf = get_stf_viscoelastic(time_source_dble,irec,NSTEP-it+1)
