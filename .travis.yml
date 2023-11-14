@@ -221,12 +221,15 @@ before_install:
   #- test -n $CC && unset CC
 
   # updates repository
+  # (fails currently...)
+  #- |
+  #  travis_retry sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 6B05F25D762E3157
+  #  travis_retry sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 78BD65473CB3BD13
+  #  travis_retry sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 762E3157
   - |
-    travis_retry sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 6B05F25D762E3157
-    travis_retry sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 78BD65473CB3BD13
-    travis_retry sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 762E3157
+    echo "update apt-get"
     travis_retry sudo apt-get update
-
+    echo
 
 install:
   # installs compilers
