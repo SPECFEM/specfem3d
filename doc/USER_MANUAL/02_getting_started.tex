@@ -202,6 +202,26 @@ ADIOS is currently only usable for meshfem3D generated mesh (i.e. not for meshes
 with CUBIT). Additional control parameters are discussed in section~\ref{cha:Main-Parameter}.
 
 %-----------------------------------------------------------------------------------------------------------------------------------%
+\section{Using HDF5 for file I/O}
+%-----------------------------------------------------------------------------------------------------------------------------------%
+
+As file I/O can be a bottleneck in large-scale simulations, SPECFEM3D supports file I/O using the HDF5 format
+for movie snapshots and database files. To support this feature, you will need to compile the code with corresponding HDF5 flags.
+The configuration of the package could look for example like:
+{\small
+\begin{verbatim}
+  ./configure --with-hdf5 HDF5_INC="/opt/homebrew/include" HDF5_LIBS="-L/opt/homebrew/lib" \
+      ..
+\end{verbatim}
+}
+In the main \texttt{Par\_file}, you will then have to turn on the HDF5 flag \texttt{HDF5\_ENABLED}.
+Note that additional MPI processes can be launched specifically to handle the file I/O in an asynchronous way.
+The number of these additional MPI processes is specified by the parameter \texttt{HDF5\_IO\_NODES}, such that
+the total number of MPI processes to launch the executables becomes \texttt{NPROC + HDF5\_IO\_NODES}.
+
+
+
+%-----------------------------------------------------------------------------------------------------------------------------------%
 \section{Adding OpenMP support in addition to MPI}
 %-----------------------------------------------------------------------------------------------------------------------------------%
 
