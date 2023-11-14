@@ -65,6 +65,11 @@ for the solver, i.e., you may change this parameter after running
 is not used at the time of generating the distributed databases but
 is required for the solver. Please see also Section~\ref{sec:Choosing-the-Time-Step}
 for further details.
+\item [{\texttt{LTS\_MODE}}] Turning this flag on will use a local-time stepping scheme for the Newmark time scheme.
+It will re-distribute the mesh partitioning to balance out elements with similar local-time step sizes.
+This feature can help improve the time-to-solution when the mesh contains elements of various sizes,
+in particular when the mesh contains only a few very small elements that would limit the global time step size.
+
 \end{description}
 
 \vspace{1cm}
@@ -409,6 +414,7 @@ More precisely, the current kernel summing and smoothing routines work fine, wit
 
 \item [{\texttt{GPU\_MODE}}] Turn this flag on to use GPUs.
 
+%% ADIOS
 \item [\texttt{ADIOS\_ENABLED}] Turn this flag on to enable ADIOS. If set to \texttt{.false.}, subsequent ADIOS
 parameters will not be considered.
 \item [\texttt{ADIOS\_FOR\_DATABASES}] Turn this flag on to use ADIOS for xmeshfem3D output and
@@ -416,8 +422,17 @@ xgenerate\_database input.
 \item [\texttt{ADIOS\_FOR\_MESH}]  Turn this flag on to use ADIOS for generated databases.
 \item [\texttt{ADIOS\_FOR\_FORWARD\_ARRAYS}] Turn this flag on to read and write forward arrays using ADIOS.
 \item [\texttt{ADIOS\_FOR\_KERNELS}] Turn this flag on to produce ADIOS kernels that can later be visualized with the ADIOS version of combine\_vol\_data.
+
+%% HDF5
+\item [\texttt{HDF5\_ENABLED}] Turn this flag on to enable HDF5 file I/O. If set to \texttt{.false.}, subsequent HDF5
+parameters will not be considered.
+\item [\texttt{HDF5\_FOR\_MOVIES}] Turn this flag on to use HDF5 format for movie outputs.
+\item [\texttt{HDF5\_IO\_NODES}] Setting this number >0 will allocate additional MPI processes specifically to handle
+the HDF5 file I/O in an asynchronous way.
+
 \end{description}
 There are quite a few more parameters to change the default setup of your runs. Please check the comments in the \texttt{DATA/Par\_file} directly for further explanations.\newline
+
 
 
 \subsection{PML absorbing boundary layers}

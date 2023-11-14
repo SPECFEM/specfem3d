@@ -200,11 +200,11 @@
       ! gets external STF file name
       read(IIN,"(a)") string
       external_source_time_function_filename = trim(string)
-      if(trim(external_source_time_function_filename).eq.'REUSE' .or. &
-         trim(external_source_time_function_filename).eq.'Reuse' .or. &
-         trim(external_source_time_function_filename).eq.'reuse')then
+      if (trim(external_source_time_function_filename) == 'REUSE' .or. &
+         trim(external_source_time_function_filename) == 'Reuse' .or. &
+         trim(external_source_time_function_filename) == 'reuse') then
         ! Reuse the source time function of the first source.
-        if (isource.eq.1) then
+        if (isource == 1) then
           stop 'Error: "reuse" option cannot be used for the first source!'
         endif
         ishift=nint(t_shift(isource)/DT)
