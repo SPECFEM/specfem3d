@@ -50,7 +50,7 @@ if [ "$step" == "1" ]; then
   echo
 
   # checks if executables were compiled and available
-  if [ ! -e ../../bin/xspecfem3D ]; then
+  if [ ! -e ../../../bin/xspecfem3D ]; then
     echo "Please compile first all binaries in the root directory, before running this example..."; echo
     exit 1
   fi

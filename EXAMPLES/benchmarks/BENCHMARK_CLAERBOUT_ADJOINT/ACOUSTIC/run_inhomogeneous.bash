@@ -20,7 +20,7 @@ echo "perturbation: $percent"
 echo
 
 # SPECFEM3D root directory
-ROOT=../../../
+ROOT=../../../../
 
 ## compiler
 # intel

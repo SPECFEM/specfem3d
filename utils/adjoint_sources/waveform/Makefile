@@ -23,8 +23,8 @@ xcreate_adjsrc_waveform: $(LIB_OBJS)
 create_adjsrc_waveform.o: create_adjsrc_waveform.f90
 	${F90} $(FLAGS) -c create_adjsrc_waveform.f90
 
-rw_ascfile_c.o: ../../lib/rw_ascfile_c.c
-	${CC} -c -o rw_ascfile_c.o ../../lib/rw_ascfile_c.c
+rw_ascfile_c.o: ../../scripts/lib/rw_ascfile_c.c
+	${CC} -c -o rw_ascfile_c.o ../../scripts/lib/rw_ascfile_c.c
 
 
 clean:

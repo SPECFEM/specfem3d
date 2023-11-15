@@ -2,7 +2,7 @@
 
 # checks if your GEOCUBIT.py is already in your path (which GEOCUBIT.py)
 if ! [ -x "$(command -v GEOCUBIT.py)" ]; then
-geocubit=../../CUBIT_GEOCUBIT/GEOCUBIT.py
+geocubit=../../../CUBIT_GEOCUBIT/GEOCUBIT.py
 else
 geocubit=GEOCUBIT.py
 fi

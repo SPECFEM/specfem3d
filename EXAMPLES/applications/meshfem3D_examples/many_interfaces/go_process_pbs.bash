@@ -35,7 +35,7 @@ echo "   setting up example..."
 echo
 
 # checks if executables were compiled and available
-if [ ! -e ../../../bin/xspecfem3D ]; then
+if [ ! -e ../../../../bin/xspecfem3D ]; then
   echo "Please compile first all binaries in the root directory, before running this example..."; echo
   exit 1
 fi
@@ -49,9 +49,9 @@ rm -rf OUTPUT_FILES/DATABASES_MPI/*
 # compilation of executables must have been done prior on front node
 # links executables
 cd bin/
-ln -s ../../../../bin/xmeshfem3D
-ln -s ../../../../bin/xgenerate_databases
-ln -s ../../../../bin/xspecfem3D
+ln -s ../../../../../bin/xmeshfem3D
+ln -s ../../../../../bin/xgenerate_databases
+ln -s ../../../../../bin/xspecfem3D
 cd ../
 
 # script to run the mesher and the solver

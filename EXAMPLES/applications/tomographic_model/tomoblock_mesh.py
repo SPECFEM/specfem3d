@@ -24,7 +24,7 @@ cubit.cmd('mesh volume 1')
 # GEOCUBIT
 #
 # adds path to geocubit (if not setup yet)
-sys.path.append('../../CUBIT_GEOCUBIT/')
+sys.path.append('../../../CUBIT_GEOCUBIT/')
 
 print("path: ")
 print(sys.path)
