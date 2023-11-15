@@ -3,7 +3,7 @@
 #
 # Temporary instructions
 #
-# 1. set path to GEOCUBIT base directory (../../CUBIT_GEOCUBIT/), for example:
+# 1. set path to GEOCUBIT base directory (../../../CUBIT_GEOCUBIT/), for example:
 #    export PYTHONPATH=$PYTHONPATH:/import/c/w/tape/3D/SPECFEM3D/CUBIT_GEOCUBIT
 #    export PATH=$PATH:/import/c/w/tape/3D/SPECFEM3D/CUBIT_GEOCUBIT
 #
@@ -16,7 +16,7 @@
 
 # checks if your GEOCUBIT.py is already in your path (which GEOCUBIT.py)
 if ! [ -x "$(command -v GEOCUBIT.py)" ]; then
-geocubit=../../CUBIT_GEOCUBIT/GEOCUBIT.py
+geocubit=../../../CUBIT_GEOCUBIT/GEOCUBIT.py
 else
 geocubit=GEOCUBIT.py
 fi

@@ -23,8 +23,8 @@ xcreate_adjsrc_amplitude: $(LIB_OBJS)
 create_adjsrc_amplitude.o: create_adjsrc_amplitude.f90
 	${F90} $(FLAGS) -c create_adjsrc_amplitude.f90
 
-rw_ascfile_c.o: ../../lib/rw_ascfile_c.c
-	${CC} -c -o rw_ascfile_c.o ../../lib/rw_ascfile_c.c
+rw_ascfile_c.o: ../../scripts/lib/rw_ascfile_c.c
+	${CC} -c -o rw_ascfile_c.o ../../scripts/lib/rw_ascfile_c.c
 
 
 clean:

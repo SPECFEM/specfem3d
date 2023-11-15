@@ -83,7 +83,7 @@ cubit.cmd('mesh volume all')
 try:
     import geocubitlib
 except:
-    sys.path.append('../../CUBIT_GEOCUBIT/')
+    sys.path.append('../../../CUBIT_GEOCUBIT/')
     print("path: ")
     print(sys.path)
     print("")

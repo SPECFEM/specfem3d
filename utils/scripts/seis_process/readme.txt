@@ -91,7 +91,7 @@ the processing scripts make use of additional software
   https://geodynamics.org/portals/seismo/samples/seis_process-1.0.1.tar.gz
 
 - convolve_stf
-  source code provided in utils/lib or on https://geodynamics.org/portals/seismo/ inside
+  source code provided in utils/scripts/lib or on https://geodynamics.org/portals/seismo/ inside
   the post-process utilities:
   https://geodynamics.org/portals/seismo/samples/seis_process-1.0.1.tar.gz
 

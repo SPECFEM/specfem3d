@@ -25,7 +25,7 @@ print("major version number: ",cubit_version_major)
 # GEOCUBIT
 #
 # adds path to geocubit (if not setup yet)
-sys.path.append('../../../CUBIT_GEOCUBIT/')
+sys.path.append('../../../../CUBIT_GEOCUBIT/')
 
 # in case importing menu fails due to import utilities errors to find,
 # this will add the geocubitlib/ folder to the sys.path:

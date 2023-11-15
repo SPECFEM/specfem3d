@@ -36,7 +36,7 @@ cp -v OUTPUT_FILES/$sta.* SEM/
 # compile adjoint_source tool
 if [ ! -e xcreate_adjsrc_traveltime ]; then
   # creates adjoint sources
-  cd ../../utils/adjoint_sources/traveltime
+  cd ../../../utils/adjoint_sources/traveltime
 
   # fortran compiler (as specified in Makefile)
   FC=`grep '^FC .*' ../../../Makefile | cut -d = -f 2 | sed "s/^[ \t]*//"`

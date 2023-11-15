@@ -14,7 +14,7 @@ echo "setting up example..."
 echo
 
 # SPECFEM3D root directory
-ROOT=../../../
+ROOT=../../../../
 
 # links executables
 mkdir -p bin
