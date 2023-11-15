@@ -21,17 +21,17 @@ if [[ "${TEST}" == *"with-hdf5"* ]]; then
   echo "additional installation: ${TEST}"
   echo
   sudo apt-get install -yq --no-install-recommends libhdf5-mpi-dev
-  # checks installation paths
-  echo
-  dpkg -L libhdf5-mpi-dev
-  echo
-  dpkg -L libhdf5-openmpi-dev
-  echo
-  echo "hdf5 module paths:"
-  find /usr/ -iname 'hdf5.mod'
-  echo "hdf5 library paths:"
-  find /usr/ -iname 'libhdf5hl_fortran*'
-  echo
+  ## checks installation paths
+  #echo
+  #dpkg -L libhdf5-mpi-dev
+  #echo
+  #dpkg -L libhdf5-openmpi-dev
+  #echo
+  #echo "hdf5 module paths:"
+  #find /usr/ -iname 'hdf5.mod'
+  #echo "hdf5 library paths:"
+  #find /usr/ -iname 'libhdf5hl_fortran*'
+  #echo
 fi
 
 # checks exit code
