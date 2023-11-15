@@ -35,7 +35,7 @@ to compile this executable xdecompose_mesh for partitioning your mesh files
 
       for example, a call could look like:
 
-       > ./xdecompose_mesh 4 ../examples/homogeneous_halfspace/MESH/ ../OUTPUT_FILES/DATABASES_MPI/
+       > ./xdecompose_mesh 4 ../EXAMPLES/applications/homogeneous_halfspace/MESH/ ../OUTPUT_FILES/DATABASES_MPI/
 
 
 

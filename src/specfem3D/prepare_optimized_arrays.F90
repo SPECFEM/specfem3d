@@ -83,7 +83,7 @@
   integer :: OMP_GET_MAX_THREADS
 
 
-! the old OpenMP implementation for compute_forces_viscoelastic is in utils/unused_routines/:
+! the old OpenMP implementation for compute_forces_viscoelastic is in utils/infos/unused_routines/:
 ! older_please_do_not_use_anymore_partial_OpenMP_port/older_not_maintained_compute_forces_viscoelastic_Dev_openmp.f90
 
   ! gets number of openMP threads
