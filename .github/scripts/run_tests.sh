@@ -104,6 +104,12 @@ if [ "$TESTDIR" == "EXAMPLES/applications/meshfem3D_examples/sep_bathymetry/" ];
   sed -i "s:^NSTEP .*:NSTEP    = 1000:" DATA/Par_file
 fi
 
+# hdf5 i/o example
+if [[ "${TESTFLAGS}" == *"--with-hdf5"* ]]; then
+  # replaces run script
+  cp -v run_this_example_HDF5_IO_server.sh run_this_example.sh
+fi
+
 
 # default script
 ./run_this_example.sh

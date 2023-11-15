@@ -48,6 +48,7 @@ case "$TESTDIR" in
   27) dir=EXAMPLES/applications/Gmsh_simple_box_hex27/ ;;
   28) dir=EXAMPLES/applications/waterlayered_poroelastic/ ;;
   29) dir=EXAMPLES/applications/inversion_examples/fwi_test_acoustic/ ;;
+  30) dir=EXAMPLES/applications/LTS_homogeneous_halfspace_HEX8/ ;;
   *) dir=EXAMPLES/applications/homogeneous_halfspace/ ;;
 esac
 
@@ -223,6 +224,10 @@ else
     sed -i "s/Niter .*/Niter       : 1/" DATA/inverse_problem/inversion_fwi.dat
     sed -i "s/NSTEP .*/NSTEP         : 100/" DATA/inverse_problem/acquisition.dat
   fi
+  # LTS example
+  if [ "$TESTID" == "37" ]; then
+    sed -i "s:^NSTEP .*:NSTEP    = 1000:" DATA/Par_file
+  fi
 
   # coverage run
   if [ "$TESTCOV" == "1" ]; then
@@ -345,6 +350,23 @@ if [ "$TESTCOV" == "1" ] && [ "$TESTID" == "0" ]; then
   cd $WORKDIR
 fi
 echo -en 'travis_fold:end:coverage.kernel\\r'
+
+## LTS example
+echo 'Coverage...' && echo -en 'travis_fold:start:coverage.LTS\\r'
+if [ "$TESTCOV" == "1" ] && [ "$TESTID" == "0" ]; then
+  ##
+  ## testing LTS simulation
+  ##
+  echo "##################################################################"
+  echo "EXAMPLES/applications/LTS_homogeneous_halfspace_HEX8/"
+  echo
+  cd EXAMPLES/applications/LTS_homogeneous_halfspace_HEX8/
+  sed -i "s:^NSTEP .*:NSTEP    = 50:" DATA/Par_file
+  ./run_this_example.sh
+  if [[ $? -ne 0 ]]; then exit 1; fi
+  cd $WORKDIR
+fi
+echo -en 'travis_fold:end:coverage.LTS\\r'
 
 #echo 'Coverage...' && echo -en 'travis_fold:start:coverage.acoustic\\r'
 #if [ "$TESTCOV" == "1" ] && [ "$TESTID" == "1" ]; then

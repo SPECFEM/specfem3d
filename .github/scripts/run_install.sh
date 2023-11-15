@@ -15,6 +15,11 @@ if [[ $? -ne 0 ]]; then exit 1; fi
 # fortran/openMPI compiler
 sudo apt-get install -yq --no-install-recommends gfortran g++ openmpi-bin libopenmpi-dev
 
+# parallel hdf5
+if [[ "${TESTFLAGS}" == *"--with-hdf5"* ]]; then
+  sudo apt-get install -yq --no-install-recommends libhdf5-mpi-dev
+fi
+
 # checks exit code
 if [[ $? -ne 0 ]]; then exit 1; fi
 echo

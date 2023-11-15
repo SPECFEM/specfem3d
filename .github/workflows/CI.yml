@@ -682,4 +682,28 @@ jobs:
       run: ./.github/scripts/run_tests.sh
       shell: bash
 
+  linuxTest_18:
+    name: Test run example 18 - socal1D hdf5 i/o
+    runs-on: ubuntu-latest
+    needs: [linuxCheck]
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Install packages
+      run: ./.github/scripts/run_install.sh
+      shell: bash
+
+    - name: Run build
+      env:
+        TESTFLAGS: --with-mpi --with-hdf5
+      run: ./.github/scripts/run_build.sh
+      shell: bash
+
+    - name: Run test
+      env:
+        TESTDIR: EXAMPLES/applications/meshfem3D_examples/socal1D/
+        TESTID: 0
+      run: ./.github/scripts/run_tests.sh
+      shell: bash
 
