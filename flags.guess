@@ -108,7 +108,7 @@ case $my_FC in
 # with some versions of gfortran/gcc you make get errors about unused functions when compiling with the options below;
 # if so, either change -Wunused to -Wunused -Werror=no-unused-function, or remove -Wunused, or remove -Werror
 #
-        DEF_FFLAGS="-std=f2003 -fimplicit-none -fmax-errors=10 -pedantic -pedantic-errors -Waliasing -Wampersand -Wcharacter-truncation -Wline-truncation -Wsurprising -Wno-tabs -Wunderflow -ffpe-trap=invalid,zero,overflow -Wunused" # -mcmodel=medium
+        DEF_FFLAGS="-std=f2008 -fimplicit-none -fmax-errors=10 -pedantic -pedantic-errors -Waliasing -Wampersand -Wcharacter-truncation -Wline-truncation -Wsurprising -Wno-tabs -Wunderflow -ffpe-trap=invalid,zero,overflow -Wunused" # -mcmodel=medium
         OPT_FFLAGS="-O3 -finline-functions"
         DEBUG_FFLAGS="-g -O0 -ggdb -fbacktrace -fbounds-check -frange-check -Werror"
         # useful to track loss of accuracy because of automatic double to single precision conversion:  -Wconversion  (this may generate many warnings...)
