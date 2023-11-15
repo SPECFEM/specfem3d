@@ -23,7 +23,7 @@ echo
 # bash function for checking seismogram output with reference solutions
 my_test(){
   echo "testing seismograms:"
-  ln -s $WORKDIR/utils/compare_seismogram_correlations.py
+  ln -s $WORKDIR/utils/scripts/compare_seismogram_correlations.py
   ./compare_seismogram_correlations.py REF_SEIS/ OUTPUT_FILES/
   if [[ $? -ne 0 ]]; then exit 1; fi
   ./compare_seismogram_correlations.py REF_SEIS/ OUTPUT_FILES/ | grep min/max | cut -d \| -f 3 | awk '{print "correlation:",$1; if ($1 < 0.999 ){print $1,"failed"; exit 1;}else{ print $1,"good"; exit 0;}}'
@@ -41,24 +41,24 @@ sed -i "s:^NTSTEP_BETWEEN_OUTPUT_INFO .*:NTSTEP_BETWEEN_OUTPUT_INFO    = 50:" DA
 
 # limit time steps for specific examples
 # simple mesh example
-if [ "$TESTDIR" == "EXAMPLES/meshfem3D_examples/simple_model/" ]; then
+if [ "$TESTDIR" == "EXAMPLES/applications/meshfem3D_examples/simple_model/" ]; then
   sed -i "s:^NSTEP .*:NSTEP    = 800:" DATA/Par_file
 fi
 # tpv5 example
-if [ "$TESTDIR" == "EXAMPLES/fault_examples/tpv5/" ]; then
+if [ "$TESTDIR" == "EXAMPLES/applications/fault_examples/tpv5/" ]; then
   sed -i "s:^NSTEP .*:NSTEP    = 1500:" DATA/Par_file
 fi
 # layered halfspace example
-if [ "$TESTDIR" == "EXAMPLES/layered_halfspace/" ]; then
+if [ "$TESTDIR" == "EXAMPLES/applications/layered_halfspace/" ]; then
   sed -i "s:^NSTEP .*:NSTEP    = 200:" DATA/Par_file
 fi
 # small adjoint example
-if [ "$TESTDIR" == "EXAMPLES/small_adjoint_multiple_sources/" ]; then
+if [ "$TESTDIR" == "EXAMPLES/applications/small_adjoint_multiple_sources/" ]; then
   # full length
   sed -i "s:^NSTEP .*:NSTEP    = 1000:" DATA/Par_file
 fi
 # socal examples
-if [ "$TESTDIR" == "EXAMPLES/meshfem3D_examples/socal1D/" ]; then
+if [ "$TESTDIR" == "EXAMPLES/applications/meshfem3D_examples/socal1D/" ]; then
   # full length
   sed -i "s:^NSTEP .*:NSTEP    = 840:" DATA/Par_file
   # model setup
@@ -80,27 +80,27 @@ if [ "$TESTDIR" == "EXAMPLES/meshfem3D_examples/socal1D/" ]; then
   fi
 fi
 # coupling FK
-if [ "$TESTDIR" == "EXAMPLES/small_example_coupling_FK_specfem/" ]; then
+if [ "$TESTDIR" == "EXAMPLES/applications/small_example_coupling_FK_specfem/" ]; then
   sed -i "s:^NSTEP .*:NSTEP    = 1000:" DATA/Par_file
 fi
 # elastic halfspace, no absorbing
-if [ "$TESTDIR" == "EXAMPLES/homogeneous_halfspace_HEX8_elastic_no_absorbing/" ]; then
+if [ "$TESTDIR" == "EXAMPLES/applications/homogeneous_halfspace_HEX8_elastic_no_absorbing/" ]; then
   sed -i "s:^NSTEP .*:NSTEP    = 600:" DATA/Par_file
 fi
 # waterlayered_halfspace example
-if [ "$TESTDIR" == "EXAMPLES/waterlayered_halfspace/" ]; then
+if [ "$TESTDIR" == "EXAMPLES/applications/waterlayered_halfspace/" ]; then
   sed -i "s:^NSTEP .*:NSTEP    = 600:" DATA/Par_file
 fi
 # tomographic model
-if [ "$TESTDIR" == "EXAMPLES/tomographic_model/" ]; then
+if [ "$TESTDIR" == "EXAMPLES/applications/tomographic_model/" ]; then
   sed -i "s:^NSTEP .*:NSTEP    = 500:" DATA/Par_file
 fi
 # cavity example
-if [ "$TESTDIR" == "EXAMPLES/meshfem3D_examples/cavity/" ]; then
+if [ "$TESTDIR" == "EXAMPLES/applications/meshfem3D_examples/cavity/" ]; then
   sed -i "s:^NSTEP .*:NSTEP    = 2000:" DATA/Par_file
 fi
 # SEP example
-if [ "$TESTDIR" == "EXAMPLES/meshfem3D_examples/sep_bathymetry/" ]; then
+if [ "$TESTDIR" == "EXAMPLES/applications/meshfem3D_examples/sep_bathymetry/" ]; then
   sed -i "s:^NSTEP .*:NSTEP    = 1000:" DATA/Par_file
 fi
 

@@ -288,7 +288,7 @@ jobs:
 
     - name: Run test
       env:
-        TESTDIR: EXAMPLES/meshfem3D_examples/simple_model/
+        TESTDIR: EXAMPLES/applications/meshfem3D_examples/simple_model/
       run: ./.github/scripts/run_tests.sh
       shell: bash
 
@@ -312,7 +312,7 @@ jobs:
 
     - name: Run test
       env:
-        TESTDIR: EXAMPLES/fault_examples/tpv5/
+        TESTDIR: EXAMPLES/applications/fault_examples/tpv5/
       run: ./.github/scripts/run_tests.sh
       shell: bash
 
@@ -337,7 +337,7 @@ jobs:
 
     - name: Run test
       env:
-        TESTDIR: EXAMPLES/layered_halfspace/
+        TESTDIR: EXAMPLES/applications/layered_halfspace/
       run: ./.github/scripts/run_tests.sh
       shell: bash
 
@@ -361,7 +361,7 @@ jobs:
 
     - name: Run test
       env:
-        TESTDIR: EXAMPLES/small_adjoint_multiple_sources/
+        TESTDIR: EXAMPLES/applications/small_adjoint_multiple_sources/
       run: ./.github/scripts/run_tests.sh
       shell: bash
 
@@ -385,7 +385,7 @@ jobs:
 
     - name: Run test
       env:
-        TESTDIR: EXAMPLES/meshfem3D_examples/socal1D/
+        TESTDIR: EXAMPLES/applications/meshfem3D_examples/socal1D/
         TESTID: 0
       run: ./.github/scripts/run_tests.sh
       shell: bash
@@ -410,7 +410,7 @@ jobs:
 
     - name: Run test
       env:
-        TESTDIR: EXAMPLES/meshfem3D_examples/socal1D/
+        TESTDIR: EXAMPLES/applications/meshfem3D_examples/socal1D/
         TESTID: 1
       run: ./.github/scripts/run_tests.sh
       shell: bash
@@ -435,7 +435,7 @@ jobs:
 
     - name: Run test
       env:
-        TESTDIR: EXAMPLES/meshfem3D_examples/socal1D/
+        TESTDIR: EXAMPLES/applications/meshfem3D_examples/socal1D/
         TESTID: 2
       run: ./.github/scripts/run_tests.sh
       shell: bash
@@ -461,7 +461,7 @@ jobs:
 
     - name: Run test
       env:
-        TESTDIR: EXAMPLES/meshfem3D_examples/socal1D/
+        TESTDIR: EXAMPLES/applications/meshfem3D_examples/socal1D/
         TESTID: 3
       run: ./.github/scripts/run_tests.sh
       shell: bash
@@ -486,7 +486,7 @@ jobs:
 
     - name: Run test
       env:
-        TESTDIR: EXAMPLES/small_example_coupling_FK_specfem/
+        TESTDIR: EXAMPLES/applications/small_example_coupling_FK_specfem/
       run: ./.github/scripts/run_tests.sh
       shell: bash
 
@@ -510,7 +510,7 @@ jobs:
 
     - name: Run test
       env:
-        TESTDIR: EXAMPLES/homogeneous_halfspace_HEX8_elastic_no_absorbing/
+        TESTDIR: EXAMPLES/applications/homogeneous_halfspace_HEX8_elastic_no_absorbing/
       run: ./.github/scripts/run_tests.sh
       shell: bash
 
@@ -534,7 +534,7 @@ jobs:
 
     - name: Run test
       env:
-        TESTDIR: EXAMPLES/homogeneous_poroelastic/
+        TESTDIR: EXAMPLES/applications/homogeneous_poroelastic/
       run: ./.github/scripts/run_tests.sh
       shell: bash
 
@@ -558,7 +558,7 @@ jobs:
 
     - name: Run test
       env:
-        TESTDIR: EXAMPLES/CPML_examples/homogeneous_halfspace_HEX8_elastic_absorbing_CPML_5sides/
+        TESTDIR: EXAMPLES/applications/CPML_examples/homogeneous_halfspace_HEX8_elastic_absorbing_CPML_5sides/
       run: ./.github/scripts/run_tests.sh
       shell: bash
 
@@ -582,7 +582,7 @@ jobs:
 
     - name: Run test
       env:
-        TESTDIR: EXAMPLES/CPML_examples/homogeneous_halfspace_HEX8_acoustic_absorbing_CPML_5sides/
+        TESTDIR: EXAMPLES/applications/CPML_examples/homogeneous_halfspace_HEX8_acoustic_absorbing_CPML_5sides/
       run: ./.github/scripts/run_tests.sh
       shell: bash
 
@@ -606,7 +606,7 @@ jobs:
 
     - name: Run test
       env:
-        TESTDIR: EXAMPLES/waterlayered_halfspace/
+        TESTDIR: EXAMPLES/applications/waterlayered_halfspace/
       run: ./.github/scripts/run_tests.sh
       shell: bash
 
@@ -630,7 +630,7 @@ jobs:
 
     - name: Run test
       env:
-        TESTDIR: EXAMPLES/tomographic_model/
+        TESTDIR: EXAMPLES/applications/tomographic_model/
       run: ./.github/scripts/run_tests.sh
       shell: bash
 
@@ -654,7 +654,7 @@ jobs:
 
     - name: Run test
       env:
-        TESTDIR: EXAMPLES/meshfem3D_examples/cavity/
+        TESTDIR: EXAMPLES/applications/meshfem3D_examples/cavity/
       run: ./.github/scripts/run_tests.sh
       shell: bash
 
@@ -678,7 +678,7 @@ jobs:
 
     - name: Run test
       env:
-        TESTDIR: EXAMPLES/meshfem3D_examples/sep_bathymetry/
+        TESTDIR: EXAMPLES/applications/meshfem3D_examples/sep_bathymetry/
       run: ./.github/scripts/run_tests.sh
       shell: bash
 

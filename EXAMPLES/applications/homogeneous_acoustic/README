@@ -1,0 +1,147 @@
+----------------------------------------------------------------------
+README
+----------------------------------------------------------------------
+
+This examples creates a homogeneous halfspace, i.e. a single volume block with a
+constant acoustic material property, using CUBIT and runs a forward simulation.
+
+step-by-step tutorial:
+
+1. configure package:
+
+   - determine the path for your compiled version of SCOTCH
+
+   - From the SPECFEM3D root directory SPECFEM3D/
+     configure the package, e.g. using intel's ifort compiler:
+     > cd SPECFEM3D
+     > ./configure FC=ifort MPIFC=mpif90
+
+     If successful, this will generate the files in src/shared/:
+     Makefile, constants.h, and precision.h, among others
+
+     note: If SCOTCH is installed separately, then the same compiler
+           used for SCOTCH must be used for SPECFEM3D (ifort, gfortran, pgf90)
+
+   - copy run scripts from utils/scripts/Cluster/ into SPECFEM3D/, e.g.,
+     pbs/go_decomposer_pbs.bash
+     pbs/go_generate_databases_pbs.bash
+     pbs/go_solver_pbs.bash
+
+     > cp utils/scripts/Cluster/pbs/*.bash .
+
+     note: you may need to adjust the commands (e.g., -q or -l)
+     note: in this example you do not need go_mesher_pbs.bash and valgrind_go_solver_pbs.bash
+
+2. copy three input files from examples directory into SPECFEM3D/DATA/
+
+     > cd EXAMPLES/applications/homogeneous_acoustic/DATA/
+     > cp * ../../../../DATA/
+
+
+3. create mesh:
+
+   - from the directory SPECFEM3D/EXAMPLES/applications/homogeneous_acoustic,
+     open the cubit GUI:
+
+     > claro (or cubit)
+
+     then run meshing script:
+     claro -> Menu "Tools" -> "Play Journal File" ... and select file: "block_mesh.py"
+
+     if everything goes fine, this creates the ten mesh files in subdirectory MESH/:
+        MESH/absorbing_surface_file_bottom
+        MESH/absorbing_surface_file_xmax
+        MESH/absorbing_surface_file_xmin
+        MESH/absorbing_surface_file_ymax
+        MESH/absorbing_surface_file_ymin
+        MESH/free_or_absorbing_surface_file_zmax
+        MESH/materials_file
+        MESH/mesh_file
+        MESH/nodes_coords_file
+        MESH/nummaterial_velocity_file
+
+     the cubit graphics window should show a mesh similar to the file homogeneous.png
+
+     A default mesh for running this example is already provided in MESH-default/ folder.
+
+4. decompose mesh files:
+
+   - compile decomposer in directory SPECFEM3D/:
+     > make xdecompose_mesh
+
+   - run decomposer:
+     > qsub go_decomposer_pbs.bash
+
+     note: this script will need to be tailored to your cluster, e.g.,
+     > bsub < go_decomposer_lsf.bash
+
+     this creates mesh partitions "proc000***_Database" in directory OUTPUT_FILES/DATABASES_MPI/.
+     the output file OUTPUT_FILES/*.o contains information on the partitioning
+
+     note 1: the program xdecompose_mesh is a serial program (runs on 1 core)
+     note 2: for small jobs (like this one), you can simply launch the job on
+             the local node from directory SPECFEM3D:
+
+     > ./bin/xdecompose_mesh 4 EXAMPLES/applications/homogeneous_acoustic/MESH/ OUTPUT_FILES/DATABASES_MPI/
+
+
+5. generate databases:
+
+   - compile generate_databases in directory SPECFEM3D/:
+     > make xgenerate_databases
+
+   - submit job script:
+     > qsub go_generate_databases_pbs.bash
+
+     note: this script will need to be tailored to your cluster, e.g.,
+     > bsub < go_generate_databases_lsf.bash
+
+     this will create binary mesh files, e.g. "proc000***_external_mesh.bin"
+     in directory OUTPUT_FILES/DATABASES_MPI/.
+
+     optional: load vtk files (e.g., vs) into paraview and check them out
+
+6. run simulation:
+
+   - compile specfem3D:
+     > make xspecfem3D
+
+   - submit job script:
+     > qsub go_solver_pbs.bash
+
+     note 1: this script will need to be tailored to your cluster, e.g.,
+             > bsub < go_solver_lsf.bash
+     note 2: the simulation runs on 4 cores and should take about 5 minutes,
+             and you can track the progress with the timestamp files
+             generated in OUTPUT_FILES/
+
+   - the job should take about 30 minutes
+   - when the job is complete, you should have 3 sets (semd,semv,sema)
+     of 18 (ls -1 *semd | wc) seismogram files in the directory OUTPUT_FILES,
+     as well as 3 timestamp****** files
+
+
+7. check with 6 reference seismograms in
+      SPECFEM3D/EXAMPLES/applications/homogeneous_acoustic/REF_SEIS/
+
+   - option 1: from SPECFEM3D/, quick viewing using xmgrace (if available):
+
+     > xmgrace EXAMPLES/applications/homogeneous_acoustic/REF_SEIS/*Z.semd &
+     > xmgrace OUTPUT_FILES/*Z.semd &
+
+   - option 2: generate ps files using gnuplot:
+
+     > cd SPECFEM3D/EXAMPLES/applications/homogeneous_acoustic/REF_SEIS
+     > gnuplot plot_these_seismograms_with_gnuplot.gnu
+
+     You should see a figure in a render window.
+
+===========================================================
+
+
+For a default simulation, you can run the script provided in this example:
+
+ > ./run_this_example.sh
+
+Please consider submitting your own example to this package!
+

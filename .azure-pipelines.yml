@@ -216,6 +216,6 @@ jobs:
       BUILD: true
   - template: .azure-pipelines/test-template.yml
     parameters:
-      workingDirectory: EXAMPLES/meshfem3D_examples/simple_model
+      workingDirectory: EXAMPLES/applications/meshfem3D_examples/simple_model
 
 

@@ -1,0 +1,149 @@
+----------------------------------------------------------------------
+README - homogeneous halfspace using internal mesher
+----------------------------------------------------------------------
+
+This example creates a homogeneous halfspace, i.e. a single volume block with a
+constant elastic material property, using SPECFEM's internal mesher, and runs a
+forward simulation.
+
+The other README files available with this example are instructions to test optional advanced features
+as dscribed below -
+
+README_kernel               - steps to generate sensitivity kernels
+README_source_time_function - steps to use a customized source time function
+README_external_mesh        - steps to use external mesher generated files to define the discretization
+                              of the simulation domain
+
+----------------------------------------------------------------------
+Step-by-step tutorial:
+
+1. check that all software is available (or that modules are loaded):
+	openmpi: > which mpirun
+     optional:
+        gnuplot: > which gnuplot
+        xmgrace: > which xmgrace
+
+2. configure package:
+
+   - From the SPECFEM3D root directory SPECFEM3D/
+     configure the package, e.g. using intel's ifort compiler:
+     > cd SPECFEM3D
+     > ./configure FC=ifort MPIFC=mpif90
+
+     If successful, this will generate the files in setup/:
+     config.h, constants.h, precision.h, among others
+
+   - copy run scripts for your particular cluster from utils/scripts/Cluster/ into SPECFEM3D/, e.g.,
+     slurm/go_mesher_slurm.bash
+     slurm/go_generate_databases_slurm.bash
+     slurm/go_solver_slurm.bash
+
+     > cp utils/scripts/Cluster/slurm/*.bash .
+
+     note: you may need to adjust the commands for your particular cluster (e.g., -q or -l)
+     note: in this example you do not need go_decomposer_slurm.bash
+
+3. copy input files from examples directory into SPECFEM3D/DATA/
+
+     note: this may not be needed if the files are already symbolically linked
+
+     > cd EXAMPLES/applications/homogeneous_halfspace/DATA/
+     > cp * ../../../../DATA/
+     > cd ../
+     > cp -r meshfem3D_files ../../../DATA/
+     > cd ../../../
+
+4. make mesh internally
+
+   - compile internal mesher in directory SPECFEM3D/:
+     > make xmeshfem3D
+
+   - run mesher:
+     > sbatch go_mesher_slurm.bash
+
+     note: this script will need to be tailored to your cluster, e.g.,
+     > bsub < go_mesher_lsf.bash
+     > qsub go_mesher_pbs.bash
+
+     this creates mesh partitions "proc000***_Database" in directory OUTPUT_FILES/DATABASES_MPI/
+
+     note 1: the program xmeshfem3D is a parallel program (runs on $NPROC$ cores)
+     note 2: for small jobs (like this one), you can simply launch the job on
+             the local node from the directory SPECFEM3D:
+             > mpiexec -np 4 ./bin/xmeshfem3D
+
+5. generate databases:
+
+   - compile generate_databases in directory SPECFEM3D/:
+     > make xgenerate_databases
+
+   - submit job script:
+     > sbatch go_generate_databases_slurm.bash
+     
+     note: this script will need to be tailored to your cluster, e.g.,
+     > bsub < go_generate_databases_lsf.bash
+     > qsub go_generate_databases_pbs.bash
+
+     this will create binary mesh files, e.g. "proc000***_external_mesh.bin"
+     in directory OUTPUT_FILES/DATABASES_MPI/
+
+     optional 1: load vtk files (e.g., vs) into paraview and check them out
+     optional 2: if you want to view the mesh as a single file, you can merge using
+
+     > sbatch go_combine_vol_data_slurm.bash
+
+6. run simulation:
+
+   - compile specfem3D in directory SPECFEM3D/:
+     > make xspecfem3D
+
+   - submit job script:
+     > sbatch go_solver_slurm.bash
+
+     note: this script will need to be tailored to your cluster, e.g.,
+     > bsub < go_solver_lsf.bash
+     > qsub go_solver_pbs.bash
+     
+     note: the simulation runs on 4 cores and should take about 15 minutes,
+           and you can track the progress with the timestamp files
+           generated in OUTPUT_FILES/
+
+   - when the job is complete, you should have 12 displacement seismogram files in the directory OUTPUT_FILES,
+     as well as 11 timestamp****** files
+     > ls -1 OUTPUT_FILES/*semd | wc
+     > ls -1 OUTPUT_FILES/timestamp* | wc
+
+7. check with 6 reference seismograms in SPECFEM3D/EXAMPLES/applications/homogeneous_halfspace/REF_SEIS/
+
+   - option 1: from SPECFEM3D/, quick viewing using xmgrace (if available):
+
+     > xmgrace EXAMPLES/applications/homogeneous_halfspace/REF_SEIS/*Z.semd &
+     > xmgrace OUTPUT_FILES/*Z.semd &
+
+   - option 2: generate ps files using gnuplot:
+
+     > cd EXAMPLES/applications/homogeneous_halfspace/REF_SEIS
+     > gnuplot
+
+         gnuplot> load "plot_these_seismograms_with_gnuplot.gnu"
+
+     You should see a figure in a render window.
+     Writing the figure to a file may depend on your gnuplot settings.
+     One example to generate a postscript is shown below:
+
+         gnuplot> load "plot_these_seismograms_with_gnuplot.gnu"
+         gnuplot> set term postscript color solid
+         Terminal type set to 'postscript'
+         Options are 'landscape noenhanced color colortext \
+            solid dashlength 1.0 linewidth 1.0 defaultplex \
+            palfuncparam 2000,0.003 \
+            butt "Helvetica" 14'
+         gnuplot> set output 'my.ps'
+         gnuplot> replot
+         gnuplot> quit
+
+     - copy gnuplot script plot_these_seismograms_with_gnuplot.gnu to OUTPUT_FILES/
+     - execute same commands as above
+     - you should see the same image as generated from the reference seismograms
+
+===========================================================

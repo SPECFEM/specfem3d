@@ -1,0 +1,57 @@
+--------------------------------------------------------------------------------
+README
+--------------------------------------------------------------------------------
+
+CAVITY FILE:
+==================
+
+In order to create a cavity, a file with the required information has to be
+created. Then the appropriate file name should be provided in 
+Mesh_par_file in the line:
+
+CAVITY_FILE = cavity.dat
+
+The cavity file has the following format:
+- First line  : description
+- Second line : number of cavities (0 or positive integer)
+- Third line  : description
+- Fourth line : range of cavity -> x0, x1, y0, y1, z0, z1
+
+Example 1: "cavity.dat"
+--------------------------------------------------------------------------------
+# number of cavities (0 or positive integer)
+1                                                                                
+# range of cavity (x0, x1, y0, y1, z0, z1 in m)                                  
+145.5d0 147.0d0 0.00d0 144.0d0 -10.50d0 -9.0d0 
+--------------------------------------------------------------------------------
+
+Above information creates a cavity of the size 1.5 along X, 144.0 along Y, and
+1.5 along Z directions, respectively.
+
+Example 2: "no_cavity.dat"
+--------------------------------------------------------------------------------
+# number of cavities (0 or positive integer)                                     
+0                                                                                
+--------------------------------------------------------------------------------
+
+Above information does not create any cavities.
+
+NOTE:
+==================
+
+Cavity is created removing the elements from the cavity region. Therefore the
+element size in the cavity region should be less or equal to the cavity size.
+
+LIMITATIONS:
+==================
+
+- Cavity axis must be parallel to the coordinate axis.
+- Cavity cross-section must lie entirely on a single partition if running a
+  parallel program 
+
+
+KNOWN ISSUES:
+==================
+- if the cavity cross-section is shared among more than 1 processors, program
+  crashes
+

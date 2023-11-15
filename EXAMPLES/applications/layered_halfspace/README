@@ -1,0 +1,153 @@
+----------------------------------------------------------------------
+README
+----------------------------------------------------------------------
+
+This example creates a layered model, with three volumes and two different material
+descriptions, using CUBIT.
+It is used for validation with a layer-cake solution from Komatitsch and Tromp (1999),
+using a 2-layer model as shown in their Figure 8, left. The source is a vertical point force (pointing down).
+
+step-by-step tutorial:
+
+0. bash run this example in the directory EXAMPLES/applications/layered_halfspace/
+   
+     > ./run_this_example.sh
+
+which basically goes through the following steps:
+
+1. recompile and link all executables 
+
+     > cd ../../../ # to the root directory of the package
+     > make clean
+     > make 
+     > cd -
+     > cd bin
+     > rm -f ./x*
+     > ln -s ../../../../bin/xdecompose_mesh 
+     > ln -s ../../../../bin/xgenerate_databases 
+     > ln -s ../../../../bin/xspecfem3D 
+     > cd ..
+Note three input files (CMTSOLUTION, Par_file, STATIONS) are already in the DATA/ directory.
+
+2. create mesh:
+
+   - from the directory SPECFEM3D/EXAMPLES/applications/layered_halfspace,
+     open cubit GUI:
+
+     > claro
+
+     then run meshing script:
+     claro -> Menu "Tools" -> "Play Journal File" ... and select file: "2lay_mesh_boundary_fig8.py"
+
+     (or select: "2lay_mesh_boundary_fig8-nodoubling.py" for regular mesh without doubling layer)
+
+     this creates all the mesh files in subdirectory MESH/ through the cubit2specfem3d.py script, including:
+      nodes_coords_file, nummaterial_velocity_file,
+      materials_file, mesh_file,
+      absorb_surface_file_bottom/xmin/xmax/ymin/ymax, free_surface_file
+
+
+   - optional: check mesh quality using check_mesh_quality.f90
+
+      using the CUBIT GUI:
+        claro -> Menu "File" -> "Export...", select Abaqus (*.inp)
+
+        e.g. export as "layered_halfspace_mesh.inp"
+
+        note 1: only output blocks for volumes, i.e. block ids 1,2,3 for this example here
+        note 2: do NOT select "Export Using Cubit IDs"
+
+      alternatively, using the CUBIT command line:
+        > export Abaqus "layered_halfspace_mesh.inp" Block 1,2,3 overwrite cubitids
+
+      change directory:
+        > cd ../../../src/check_mesh_quality/
+
+      save number of nodes and number of elements and edit in header of
+      check_mesh_quality.f90:
+
+        character(len=100), parameter :: cubit_mesh_file = 'EXAMPLES/applications/layered_halfspace/layered_halfspace_mesh.inp'
+        integer, parameter :: NPOIN = 76819    ! number of nodes
+        integer, parameter :: NSPEC = 70200    ! number of elements (only volumes, i.e. block ids 1,2,3 )
+        integer, parameter :: NGNOD = 8        ! hexahedral elements
+        logical, parameter :: IGNORE_OTHER_HEADERS = .false.
+        double precision, parameter :: delta_t = 0.005         ! arbitrary, initial guess
+        double precision, parameter :: VP_MAX = 7500.d0        ! maximum vp in volume block id 3
+
+      compile programs in SPECFEM3D:
+        > cd ../../
+        > make xcheck_mesh_quality
+
+      run program:
+        > ./bin/xcheck_mesh_quality
+      at prompts, enter, for example, 1, then 0.6 to list elements with high skewness
+
+      plot skewness histogram as ps file
+        > gnuplot
+        > load "plot_mesh_quality_histogram.gnu"
+        > set term postscript color solid
+        > set output 'hist_skewness.ps'
+        > replot
+        > quit
+
+
+3. decompose mesh files:
+
+    - to run directly without scheduler, first enter bin/ directory (important!)
+        > ./xdecompose_mesh $NPROC ../MESH/ ../OUTPUT_FILES/DATABASES_MPI/
+
+    or copy utils/scripts/Cluster/pbs/go_decomposer_pbs.bash to example run directory:
+
+    - set mesh directory in go_decomposer_pbs.bash to:
+        MESHDIR=MESH/
+
+    - run decomposer:
+      > qsub go_decomposer_pbs.bash
+
+      which creates mesh partitions "proc0000***_Database" in directory "OUTPUT_FILES/DATABASES_MPI".
+      as specified for LOCAL_PATH in  DATA/Par_file 
+
+
+4. generate databases:
+    - to run without scheduler, enter bin/
+       > mpiexec -np 4 ./xgenerate_databases
+    
+    or copy utils/scripts/Cluster/pbs/go_generate_databases_pbs.bash to example run directory:
+
+    - submit job script:
+      > qsub go_generate_databases_pbs.bash
+
+      this will create binary mesh files in directory OUTPUT_FILES/DATABASES_MPI/, including:
+      proc000***_external_mesh,attenuation,ibool,rho,vp,vs,x,y,z.bin
+      if SAVE_MESH_FILES=.true., one also gets proc000***_vp,vs.vtk which can be loaded into paraview
+      to view model, mesh, and partitioning
+
+      (note: if execution fails due to memory shortage - most likely fails when calling routine to
+           create regional mesh - then try to increase process memory stack size: ulimit -s 2000000  (2GB) )
+
+
+5. run simulation:
+    - without scheduler (in bin/)
+      > mpiexec -np 4 ./xspecfem3D 
+ 
+    - with scheduler
+      > qsub go_solver_pbs.bash  # copied from utils/scripts/Cluster/pbs
+
+    note: simulation will take about 25 minutes and generate
+    3 sets (semd,semv,sema) of 6 seismogram files in OUTPUT_FILES,
+    as well as 7 timestamp****** files
+
+Optional:
+  Compare the solution traces in the directory
+    OUTPUT_FILES/:
+    DB.X55.HXZ.semd
+    DB.X31.HXZ.semd
+
+  with the reference solutions provided in the directory
+    EXAMPLES/applications/layered_halfspace/VALIDATION_3D_SEM_SIMPLER_LAYER_SOURCE_DEPTH/REF_SEIS/:
+    Uz_file_Ycste_0055.txt  -- Komatitsch and Tromp (1999, Figure 9, top left)
+    Uz_file_Ycste_0031.txt  -- Komatitsch and Tromp (1999, Figure 9, bottom left)
+
+  Note: a time shift (~2.53s) is needed to align these given to differences in origin time convention
+
+
