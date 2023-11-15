@@ -15,6 +15,25 @@ if [[ $? -ne 0 ]]; then exit 1; fi
 # fortran/openMPI compiler
 sudo apt-get install -yq --no-install-recommends gfortran g++ openmpi-bin libopenmpi-dev
 
+# parallel hdf5
+if [[ "${TEST}" == *"with-hdf5"* ]]; then
+  echo
+  echo "additional installation: ${TEST}"
+  echo
+  sudo apt-get install -yq --no-install-recommends libhdf5-mpi-dev
+  ## checks installation paths
+  #echo
+  #dpkg -L libhdf5-mpi-dev
+  #echo
+  #dpkg -L libhdf5-openmpi-dev
+  #echo
+  #echo "hdf5 module paths:"
+  #find /usr/ -iname 'hdf5.mod'
+  #echo "hdf5 library paths:"
+  #find /usr/ -iname 'libhdf5hl_fortran*'
+  #echo
+fi
+
 # checks exit code
 if [[ $? -ne 0 ]]; then exit 1; fi
 echo

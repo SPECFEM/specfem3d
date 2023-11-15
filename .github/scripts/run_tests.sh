@@ -76,7 +76,8 @@ if [ "$TESTDIR" == "EXAMPLES/applications/meshfem3D_examples/socal1D/" ]; then
     rm -f REF_SEIS; ln -s REF_SEIS.1d_cascadia REF_SEIS
   else
     # default
-    continue
+    # just continue
+    :
   fi
 fi
 # coupling FK
@@ -104,6 +105,17 @@ if [ "$TESTDIR" == "EXAMPLES/applications/meshfem3D_examples/sep_bathymetry/" ];
   sed -i "s:^NSTEP .*:NSTEP    = 1000:" DATA/Par_file
 fi
 
+# hdf5 i/o example
+if [[ "${TEST}" == *"with-hdf5"* ]]; then
+  echo
+  echo "test run: ${TEST}"
+  echo
+  sed -i "s:^HDF5_ENABLED .*:HDF5_ENABLED    = .true.:" DATA/Par_file
+  sed -i "s:^HDF5_FOR_MOVIES .*:HDF5_FOR_MOVIES    = .true.:" DATA/Par_file
+  sed -i "s:^HDF5_IO_NODES .*:HDF5_IO_NODES    = 1:" DATA/Par_file
+  # replaces run script
+  cp -v run_this_example_HDF5_IO_server.sh run_this_example.sh
+fi
 
 # default script
 ./run_this_example.sh
