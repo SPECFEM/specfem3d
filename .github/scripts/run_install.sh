@@ -16,8 +16,16 @@ if [[ $? -ne 0 ]]; then exit 1; fi
 sudo apt-get install -yq --no-install-recommends gfortran g++ openmpi-bin libopenmpi-dev
 
 # parallel hdf5
-if [[ "${TESTFLAGS}" == *"--with-hdf5"* ]]; then
+if [[ "${TEST}" == *"with-hdf5"* ]]; then
+  echo
+  echo "additional installation: ${TEST}"
+  echo
   sudo apt-get install -yq --no-install-recommends libhdf5-mpi-dev
+  echo
+  find /usr/ -iname 'hdf5.mod'
+  echo
+  find /usr/ -iname 'libhdf5hl_fortran*'
+  echo
 fi
 
 # checks exit code

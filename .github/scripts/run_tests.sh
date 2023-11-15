@@ -105,7 +105,10 @@ if [ "$TESTDIR" == "EXAMPLES/applications/meshfem3D_examples/sep_bathymetry/" ];
 fi
 
 # hdf5 i/o example
-if [[ "${TESTFLAGS}" == *"--with-hdf5"* ]]; then
+if [[ "${TEST}" == *"with-hdf5"* ]]; then
+  echo
+  echo "test run: ${TEST}"
+  echo
   # replaces run script
   cp -v run_this_example_HDF5_IO_server.sh run_this_example.sh
 fi
