@@ -34,7 +34,7 @@ or convolve the synthetic seismograms with the instrument response.
 seismograms. Preferably, avoid filtering your records more than once.
 \item Now, you are ready to compare your synthetic and observed seismograms.
 \end{enumerate}
-\noindent We generally use the following scripts provided in the \texttt{utils/seis\_process/}
+\noindent We generally use the following scripts provided in the \texttt{utils/scripts/seis\_process/}
 directory:
 
 
@@ -93,7 +93,7 @@ usage.\newline
 
 In order to convert between SAC format and ASCII files, useful scripts
 are provided in the subdirectories ~\newline
- \texttt{utils/sac2000\_alpha\_convert/} and \texttt{utils/seis\_process/asc2sac/}.
+ \texttt{utils/scripts/sac2000\_alpha\_convert/} and \texttt{utils/scripts/seis\_process/asc2sac/}.
 
 
 \subsection{Script \texttt{rotate.pl}}
@@ -150,7 +150,7 @@ need to clean the local scratch disk for the next simulation. This
 is especially important in the case of kernel simulation, where very
 large files are generated for the absorbing boundaries to help with
 the reconstruction of the regular forward wavefield. A sample script
-is provided in \texttt{utils/}:
+is provided in \texttt{utils/scripts/Cluster}:
 \begin{verbatim}
 cleanbase.pl machines
 \end{verbatim}

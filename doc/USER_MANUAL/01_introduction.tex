@@ -140,7 +140,7 @@ RECIPROCITY_AND_KH_INTEGRAL     = .false. # does not work yet
 \end{verbatim}
 That part (coupling with FK) is actively maintained and works fine. See e.g. \href{https://doi.org/10.1002/2014GL061644}{GRL\_Ping\_Tong\_2014} for some examples.
 There is also an example that is provided with the code:\newline
-\texttt{specfem3d/EXAMPLES/small\_example\_coupling\_FK\_specfem}. \newline
+\texttt{specfem3d/EXAMPLES/applications/small\_example\_coupling\_FK\_specfem}. \newline
 
 Regarding coupling with DSM, that part is not actively maintained any more, but it is still included in the code, you may have to test it again and make minor adjustments if needed. The necessary tools are in directory \texttt{specfem3d/EXTERNAL\_PACKAGES\_coupled\_with\_SPECFEM3D/DSM\_for\_SPECFEM3D}, and there is a \texttt{README} file in \texttt{specfem3d/EXTERNAL\_PACKAGES\_coupled\_with\_SPECFEM3D} that should be more or less up-to-date (there are about four steps to follow in total, the first one being creating the database of DSM tractions and displacements on the edges of the coupling box).
 See e.g. \href{https://doi.org/10.1093/gji/ggs006}{GJI\_Vadim\_2013} and \href{https://doi.org/10.1093/gji/ggv189}{GJI\_Vadim\_2015} for some examples.\newline

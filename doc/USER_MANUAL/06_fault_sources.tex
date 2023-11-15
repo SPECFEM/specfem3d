@@ -421,7 +421,7 @@ linear slip weakening friction
 parameters are documented in page 10 of
 
 \begin{lyxlist}{00.00.0000}
-\item [{$\mathtt{EXAMPLES/tpv16/description/TPV16\_17\_Description\_v03.pdf}$}]~
+\item [{$\mathtt{EXAMPLES/applications/fault\_examples/tpv16/description/TPV16\_17\_Description\_v03.pdf}$}]~
 \end{lyxlist}
 
 To activate this feature, in \texttt{DATA/Par\_file\_faults} name list \&\textbf{RUPTURE\_SWITCHES}, set TPV16=.TRUE..
@@ -479,7 +479,7 @@ is how to set it:
 $\mathtt{h\_fault}$. Usually this value is prescribed by the user
 during mesh generation. Otherwise it can be found by inspection of
 the mesh inside the CUBIT GUI.
-\item Use the Matlab function $\mathtt{utils/critical\_timestep.m}$ to
+\item Use the Matlab function $\mathtt{utils/small\_utilities/critical\_timestep.m}$ to
 compute\newline
  $\mathtt{dtc\_fault}=\mathtt{critical\_timestep\left(c_{p},h\_fault,ngll\right)}$.
 \newline
@@ -567,7 +567,7 @@ Column 3 = rupture time (s)\newline
 \item Fault quantities (slip, slip rate, stresses, etc) at regular times
 are stored in binary data files called $\mathtt{Snapshot\#it\#.bin}$,
 where \#it\# is the timestep number. These can be read in Matlab with
-the function $\mathtt{utils/FSEM3D\_snapshot.m}$
+the function $\mathtt{utils/dynamic\_rupture/FSEM3D\_snapshot.m}$
 \end{enumerate}
 
 \section{Post-processing and Visualization}

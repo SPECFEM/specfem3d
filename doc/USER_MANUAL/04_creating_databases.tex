@@ -65,7 +65,7 @@ for the solver, i.e., you may change this parameter after running
 is not used at the time of generating the distributed databases but
 is required for the solver. Please see also Section~\ref{sec:Choosing-the-Time-Step}
 for further details.
-\item [{\texttt{LTS\_MODE}}] Turning this flag on will use a local-time stepping scheme for the Newmark time scheme.
+\item [{\texttt{LTS\_MODE}}] Turning this flag on will use a local-time stepping scheme for the Newmark time scheme \citep{Rietmann2015,Rietmann2016}.
 It will re-distribute the mesh partitioning to balance out elements with similar local-time step sizes.
 This feature can help improve the time-to-solution when the mesh contains elements of various sizes,
 in particular when the mesh contains only a few very small elements that would limit the global time step size.
@@ -125,7 +125,7 @@ for iterative inversion procedures. Note that for simulation setups with attenua
 it will also read in the external binary mesh files for $Q_{\kappa}$ and $Q_{\mu}$.
 Note that Qmu is always equal to Qs, but Qkappa is in general not equal to Qp.
 To convert one to the other see \texttt{doc/note\_on\_Qkappa\_versus\_Qp.pdf}
-and in folder \texttt{utils/attenuation}, the tool
+and in folder \texttt{utils/small\_utilities/attenuation}, the tool
 \texttt{conversion\_from\_Qkappa\_Qmu\_to\_Qp\_Qs\_from\_Dahlen\_Tromp\_959\_960.f90}.
 
 
@@ -168,7 +168,7 @@ The code uses a constant $Q$ quality factor, write(IMAIN,*) "but approximated ba
 The approximation is thus performed in a given frequency band determined based on that \texttt{ATTENUATION\_f0\_REFERENCE} reference frequency.
 Note that Qmu is always equal to Qs, but Qkappa is in general not equal to Qp.
 To convert one to the other see \texttt{doc/note\_on\_Qkappa\_versus\_Qp.pdf}
-and in folder \texttt{utils/attenuation}, the tool
+and in folder \texttt{utils/small\_utilities/attenuation}, the tool
 \texttt{conversion\_from\_Qkappa\_Qmu\_to\_Qp\_Qs\_from\_Dahlen\_Tromp\_959\_960.f90}.
 
 \item [{\texttt{ANISOTROPY}}] Set to \texttt{.true.} if you want to use
@@ -454,10 +454,10 @@ such as CUBIT/TRELIS or similar), try to have elements inside the PML as regular
 i.e. ideally non-deformed cubes obtained by `extrusion' of regular surface mesh elements meshing the
 outer edges of the computational domain without PML; by doing so, the PMLs obtained will be far more stable
 in time (PML being weakly unstable from a mathematical point of view, very deformed mesh elements
-inside the PMLs can trigger instabilities much more quickly). \red{We have two utilities in directory utils/CPML that do that automatically
+inside the PMLs can trigger instabilities much more quickly). \red{We have two utilities in directory \texttt{utils/CPML} that do that automatically
 and that are very fast}. To stabilize PMLs it also helps to add a transition layer of geometrically-regular non-PML elements, in which attenuation is also
 turned off (i.e. $Q_\kappa = Q_\mu = 9999$ in that layer), as in the red layer of Figure~\ref{fig:mesh_extrusion}.
-Our tools in directory utils/CPML implement that transition layer automatically.\newline
+Our tools in directory \texttt{utils/CPML} implement that transition layer automatically.\newline
 
 
 If you use PML and an external tomographic velocity and density model,
