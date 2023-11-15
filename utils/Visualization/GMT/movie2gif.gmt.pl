@@ -10,8 +10,8 @@
 
 use Getopt::Std;
 
-# USERS: point this to your SPECFEM3D/utils/lib directory
-use lib '../../../utils/lib';
+# USERS: point this to your SPECFEM3D/utils/scripts/lib directory
+use lib '../../../utils/scripts/lib';
 use CMT_TOOLS;
 use GMT_PLOT;
 use vars qw($opt_t $opt_p $opt_n $opt_g $opt_x $opt_2 $opt_s $opt_d $opt_R);

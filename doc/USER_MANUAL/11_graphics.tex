@@ -232,7 +232,6 @@ proc000003_velocity_Z_it000400.bin
 
 You have to go in the directory of the concerned example (where are the directories \texttt{DATA}, \texttt{OUTPUT\_FILES}, etc.).
 Then, you can launch \texttt{xcombine\_vol\_data}, specifying the path where it is located. As an example, if the \texttt{DATA} and \texttt{OUTPUT\_FILES} directories of the concerned example are in the root specfem3d directory, \texttt{xcombine\_vol\_data} is in \texttt{./bin}, and you have to type:
-
 {\footnotesize
 \begin{verbatim}
 ./bin/xcombine_vol_data 0 3 velocity_Z_it000400 ./OUTPUT_FILES/DATABASES_MPI ./OUTPUT_FILES 0
@@ -248,7 +247,6 @@ You will then have to convert the \texttt{.mesh} file into the VTU (Unstructured
 \noindent
 For this task, you can use and modify the
 script \texttt{mesh2vtu.pl} located in directory \texttt{\small utils/Visualization/Paraview}, for example:
-
 {\footnotesize
 \begin{verbatim}
 mesh2vtu.pl -i velocity_Z_it000400.mesh -o velocity_Z_it000400.vtu
@@ -290,7 +288,6 @@ circle path. It applies to meshes created with the internal mesher
 \begin{enumerate}
 \item On machines where you have access to the script, copy the \texttt{Mesh\_Par\_file},
 and \texttt{output\_solver} files, and run:
-
 {\small
 \begin{verbatim}
 slice_number.pl Mesh_Par_file output_solver.txt slice_file
@@ -307,12 +304,11 @@ provide a slice file before proceeding to the next step.
 After obtaining the slice files, you can collect the corresponding
 kernel files from the given slices.
 \begin{enumerate}
-\item You can use or modify the script \texttt{utils/copy\_basin\_database.pl}
+\item You can use or modify the script \texttt{utils/scripts/Cluster/copy\_basin\_database.pl}
 to accomplish this:
-
 {\small
 \begin{verbatim}
-utils/copy_database.pl slice_file lsf_machine_file filename [jobid]
+utils/scripts/Cluster/copy_basin_database.pl slice_file lsf_machine_file filename [jobid]
 \end{verbatim}
 }
 where \texttt{\small lsf\_machine\_file}{\small{} is the machine file
@@ -356,7 +352,6 @@ points of the elements to the mesh file.
 grid file) format which can be viewed in ParaView. For this task,
 you can use and modify the script \texttt{mesh2vtu.pl} located in
 directory \texttt{utils/Visualization/Paraview/}, for example:
-
 {\footnotesize
 \begin{verbatim}
 mesh2vtu.pl -i file.mesh -o file.vtu

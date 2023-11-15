@@ -8,8 +8,8 @@
 #
 # will create shakemap file ../OUTPUT_FILES/gmt_shaking_map.ps for peak ground velocity
 
-# USERS: change this to point to SPECFEM3D/utils/lib/
-use lib '../utils/lib';
+# USERS: change this to point to SPECFEM3D/utils/scripts/lib/
+use lib '../utils/scripts/lib';
 use GMT_PLOT;
 use GMT_PLOT_SC;
 use CMT_TOOLS;

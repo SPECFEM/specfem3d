@@ -31,10 +31,10 @@ from the adjoint seismograms recorded at the original earthquake location.
 \begin{enumerate}
 \item First, run a regular forward simulation (\texttt{SIMULATION\_TYPE =
 1} and \texttt{SAVE\_FORWARD = .false.}). You can automatically set
-these two variables using the \texttt{\small utils/change\_simulation\_type.pl}{\small{}
+these two variables using the \texttt{\small utils/scripts/change\_simulation\_type.pl}{\small{}
 script:}{\small \par}
 \begin{verbatim}
-utils/change_simulation_type.pl -f
+utils/scripts/change_simulation_type.pl -f
 \end{verbatim}
 
 and then collect the recorded seismograms at all the stations given
@@ -71,7 +71,7 @@ as the original recorded seismograms.
 \item \textbf{Set the related parameters and run the adjoint simulation}\newline
 In the \texttt{DATA/Par\_file}, set the two related parameters to
 be \texttt{SIMULATION\_TYPE = 2} and \texttt{SAVE\_FORWARD = .false.}.
-More conveniently, use the scripts \texttt{utils/change\_simulation\_type.pl}
+More conveniently, use the scripts \texttt{utils/scripts/change\_simulation\_type.pl}
 to modify the \texttt{DATA/Par\_file} automatically (\texttt{change\_simulation\_type.pl
 -a}). Then run the solver to launch the adjoint simulation.
 \item \textbf{Collect the seismograms at the original source location}

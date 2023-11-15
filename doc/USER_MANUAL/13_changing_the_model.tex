@@ -97,7 +97,7 @@ x y z   vp    vs    rho Qp  Qs
 \noindent
 where  \texttt{x}, \texttt{y}, \texttt{z} are the grid point position, \texttt{vp}, \texttt{vs} and \texttt{rho} the P- and S-wave speeds and density, and \texttt{Qp} and \texttt{Qs} the quality factors for P- and S-wave speeds. The quality factors are optional and can be omitted for purely elastic models (the tomography routine will recognize both formats). Internally, the quality factors will be converted to bulk and shear attenuation values,
 $Q_{\kappa}$ and $Q_{\mu}$ respectively \citep{AnHa78}.
-Note that Qmu is always equal to Qs, but Qkappa is in general not equal to Qp. To convert one to the other see doc/note\_on\_Qkappa\_versus\_Qp.pdf and utils/attenuation/conversion\_from\_Qkappa\_Qmu\_to\_Qp\_Qs\_from\_Dahlen\_Tromp\_959\_960.f90.
+Note that Qmu is always equal to Qs, but Qkappa is in general not equal to Qp. To convert one to the other see \texttt{doc/note\_on\_Qkappa\_versus\_Qp.pdf} and \texttt{utils/small\_utilities/attenuation/conversion\_from\_Qkappa\_Qmu\_to\_Qp\_Qs\_from\_Dahlen\_Tromp\_959\_960.f90}.
 For simulations with attenuation, please note that the Vp- and Vs-velocities of your model are given for a reference
 frequency. To change this reference frequency, you change the value
 of \texttt{ATTENUATION\_f0\_REFERENCE} defined (in Hz) in input file \texttt{DATA/Par\_file}.\newline
@@ -176,7 +176,7 @@ Output to this routine consists of:
 \item [{\texttt{rho,vp,vs}}] isotropic model parameters for density $\rho$
 ($kg/m^{3}$), $v_{p}$ ($m/s$) and $v_{s}$ ($m/s$)
 \item [{\texttt{qkappa\_atten,qmu\_atten}}] Bulk and shear wave quality factor: $0<Q_{\kappa,\mu}<9000$.
-Note that Qmu is always equal to Qs, but Qkappa is in general not equal to Qp. To convert one to the other see doc/note\_on\_Qkappa\_versus\_Qp.pdf and utils/attenuation/conversion\_from\_Qkappa\_Qmu\_to\_Qp\_Qs\_from\_Dahlen\_Tromp\_959\_960.f90.
+Note that Qmu is always equal to Qs, but Qkappa is in general not equal to Qp. To convert one to the other see \texttt{doc/note\_on\_Qkappa\_versus\_Qp.pdf} and \texttt{utils/small\_utilities/attenuation/conversion\_from\_Qkappa\_Qmu\_to\_Qp\_Qs\_from\_Dahlen\_Tromp\_959\_960.f90}.
 \item [{\texttt{iflag\_aniso}}] anisotropic model flag, $0$ indicating
 no anisotropy or $1$ using anisotropic model parameters as defined
 in routine file \texttt{model\_aniso.f90}
@@ -252,6 +252,6 @@ that binary files are single precision floating point numbers stored in little e
 There is currently only support for \texttt{vp}, \texttt{vs} and \texttt{rho} variables.\newline
 
 An example demonstrating the use SEP models is given in:
-\texttt{EXAMPLES/meshfem3D\_examples/sep\_bathymetry}.
+\texttt{EXAMPLES/applications/meshfem3D\_examples/sep\_bathymetry}.
 
 

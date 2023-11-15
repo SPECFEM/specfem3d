@@ -75,7 +75,7 @@ RUN ./configure CC=${CC} FC=${FC} MPIFC=${MPIFC} FLAGS_CHECK="${FLAGS}" --with-m
 RUN rm -rf .git \
     && rm -rf external_libs/ doc/ lib/ m4/ obj/ \
     && rm -rf src/inverse_problem_for_source/ \
-    && rm -rf utils/ADJOINT_TOMOGRAPHY_TOOLS/ utils/dynamic_rupture/ utils/unused_routines/ utils/Visualization/ \
+    && rm -rf utils/ADJOINT_TOMOGRAPHY_TOOLS/ utils/dynamic_rupture/ utils/infos/ utils/Visualization/ \
     && find ./EXAMPLES -mindepth 1 -maxdepth 1 -type d -not -name "homogeneous_halfspace_HEX8_elastic_absorbing_Stacey_5sides" | xargs rm -rf
 
 #########################################################

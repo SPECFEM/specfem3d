@@ -146,7 +146,7 @@ in which case it will be assumed to be pure shear attenuation $Q_{\mu}$, or two
 separate values for bulk and shear attenuation, $Q_{\kappa}$ and $Q_{\mu}$ respectively.
 Note that Qmu is always equal to Qs, but Qkappa is in general not equal to Qp. To convert one to the other
 see \texttt{doc/note\_on\_Qkappa\_versus\_Qp.pdf} and\newline
-\texttt{utils/attenuation/conversion\_from\_Qkappa\_Qmu\_to\_Qp\_Qs\_from\_Dahlen\_Tromp\_959\_960.f90}.\newline
+\texttt{utils/small\_utilities/attenuation/conversion\_from\_Qkappa\_Qmu\_to\_Qp\_Qs\_from\_Dahlen\_Tromp\_959\_960.f90}.\newline
 
 
 Please note that your Vp- and Vs-speeds are given for a reference frequency. To change
@@ -321,7 +321,7 @@ Note that Qmu is always equal to Qs, but Qkappa is in general not equal to Qp.\n
 
 To convert one to the other see \texttt{doc/note\_on\_Qkappa\_versus\_Qp.pdf} and the helper code\newline
 \texttt{conversion\_from\_Qkappa\_Qmu\_to\_Qp\_Qs\_from\_Dahlen\_Tromp\_959\_960.f90} in folder
-\texttt{utils/attenuation/}.
+\texttt{utils/small\_utilities/attenuation/}.
 
 \item For tomographic velocity models, please read Chapter \ref{cha:-Changing-the}
 and Section \ref{sec:Using-tomographic} `Using external tomographic
@@ -575,7 +575,7 @@ directory, as most of the binaries of the package.\newline
 
 Input for the mesh generation program is provided through the parameter
 file \texttt{Mesh\_Par\_file}, which resides in the subdirectory \texttt{DATA/meshfem3D\_files/}.
-(To see how to use it, see the EXAMPLES specific to the internal mesher in directory \texttt{EXAMPLES/meshfem3D\_examples/}.)
+(To see how to use it, see the EXAMPLES specific to the internal mesher in directory \texttt{EXAMPLES/applications/meshfem3D\_examples/}.)
 Before running the mesher, a number of parameters need to be set in
 the \texttt{Mesh\_Par\_file}. This requires a basic understanding
 of how the SEM is implemented, and we encourage you to read \citet{KoVi98,KoTr99}
@@ -802,14 +802,14 @@ and have compiled the mesher, you are ready to run it!\newline
 
 
 Depending on your system, please check how to run executables with MPI.
-To run the mesher on your cluster, we provide some example scripts for you to modify accordingly in \texttt{utils/Cluster/}.
+To run the mesher on your cluster, we provide some example scripts for you to modify accordingly in \texttt{utils/scripts/Cluster/}.
 For some installations, you might need to provide a file
 that tells MPI what compute nodes to use for the simulations. In this case, the
 file must have a number of entries (one entry per line) at least equal
 to the number of processors needed for the run.
 A sample file name is \texttt{mymachines}. This file is not used by the mesher
 or solver, but is required by the \texttt{go\_mesher***} and \texttt{go\_solver**}
-default job submission scripts provided in directory \texttt{utils/Cluster/}.
+default job submission scripts provided in directory \texttt{utils/scripts/Cluster/}.
 To run the mesher, it is most easily accomplished based upon the \texttt{go\_mesher***} script.
 When you run on a PC cluster, the script assumes that the nodes are
 named \texttt{n001}, \texttt{n002}, etc.
@@ -883,7 +883,7 @@ The line format for poroelastic materials is as follow:
 \texttt{eta\_f} = fluid viscosity,\newline
 \texttt{mu\_fr} = frame shear modulus.\newline
 \end{description}
-Using an external mesh (for instance coming from CUBIT/TRELIS), poroelastic materials have the ID number 3, while 1 is acoustic and 2 is elastic (see the example in the package: EXAMPLES/homogeneous\_poroelastic).\newline
+Using an external mesh (for instance coming from CUBIT/TRELIS), poroelastic materials have the ID number 3, while 1 is acoustic and 2 is elastic (see the example in the package: \texttt{EXAMPLES/applications/homogeneous\_poroelastic}).\newline
 
 
 \noindent

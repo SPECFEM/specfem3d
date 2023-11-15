@@ -986,7 +986,7 @@ end subroutine add_BT_single
   logical :: has_vs_zero
 
   ! tabulated values of critical frequency (non-dimensional, 1D)
-  ! (taken from utils/critical_timestep.m)
+  ! (taken from utils/small_utilities/critical_timestep.m)
   real(kind=CUSTOM_REAL),dimension(19),parameter :: &
     Omega_max = (/2.0000000e+00, 4.8989795e+00, 8.6203822e+00, 1.3540623e+01, 1.9797952e+01, 2.7378050e+01, &
                   3.6256848e+01, 4.6421894e+01, 5.7867306e+01, 7.0590158e+01, 8.4588883e+01, 9.9862585e+01, &
@@ -1094,7 +1094,7 @@ end subroutine add_BT_single
     call get_timestep_limit_significant_digit(dt_suggested)
 
     ! critical time step estimation
-    ! see: utils/critical_timestep.m
+    ! see: utils/small_utilities/critical_timestep.m
     NGLL = max(NGLLX,NGLLY,NGLLZ)
     ! checks
     if (NGLL < 2 .or. NGLL > 20) stop 'Error critical time step estimation: NGLL must be from 2 to 20'

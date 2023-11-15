@@ -19,36 +19,36 @@ echo
 # chooses example directory
 case "$TESTDIR" in
   0) dir=./ ;;
-  1) dir=EXAMPLES/homogeneous_halfspace_HEX8_elastic_absorbing_Stacey_5sides/ ;;
-  2) dir=EXAMPLES/homogeneous_acoustic/ ;;
-  3) dir=EXAMPLES/homogeneous_poroelastic/ ;;
-  4) dir=EXAMPLES/meshfem3D_examples/simple_model/ ;;
-  5) dir=EXAMPLES/homogeneous_acoustic/ ;;
-  6) dir=EXAMPLES/homogeneous_acoustic/ ;;
-  7) dir=EXAMPLES/homogeneous_halfspace/ ;;
-  8) dir=EXAMPLES/CPML_examples/homogeneous_halfspace_HEX8_acoustic_absorbing_CPML_5sides/ ;;
-  9) dir=EXAMPLES/CPML_examples/homogeneous_halfspace_HEX8_elastic_absorbing_CPML_5sides/ ;;
-  10) dir=EXAMPLES/noise_tomography/ ;;
-  11) dir=EXAMPLES/tomographic_model/ ;;
-  12) dir=EXAMPLES/homogeneous_acoustic/ ;;
-  13) dir=EXAMPLES/waterlayered_halfspace/ ;;
-  14) dir=EXAMPLES/homogeneous_halfspace_HEX27_elastic_no_absorbing/ ;;
-  15) dir=EXAMPLES/homogeneous_acoustic/ ;;
-  16) dir=EXAMPLES/fault_examples/tpv5/ ;;
-  17) dir=EXAMPLES/meshfem3D_examples/socal1D/ ;;
-  18) dir=EXAMPLES/meshfem3D_examples/cavity/ ;;
-  19) dir=EXAMPLES/meshfem3D_examples/sep_bathymetry/ ;;
-  20) dir=EXAMPLES/small_example_coupling_FK_specfem/ ;;
-  21) dir=EXAMPLES/layered_halfspace/ ;;
-  22) dir=EXAMPLES/homogeneous_halfspace_HEX8_elastic_no_absorbing/ ;;
-  23) dir=EXAMPLES/Gmsh_simple_lddrk/ ;;
-  24) dir=EXAMPLES/decompose_mesh_MPI/ ;;
-  25) dir=EXAMPLES/meshfem3D_examples/regular_element_mesh/ ;;
-  26) dir=EXAMPLES/small_adjoint_multiple_sources/ ;;
-  27) dir=EXAMPLES/Gmsh_simple_box_hex27/ ;;
-  28) dir=EXAMPLES/waterlayered_poroelastic/ ;;
-  29) dir=EXAMPLES/inversion_examples/fwi_test_acoustic/ ;;
-  *) dir=EXAMPLES/homogeneous_halfspace/ ;;
+  1) dir=EXAMPLES/applications/homogeneous_halfspace_HEX8_elastic_absorbing_Stacey_5sides/ ;;
+  2) dir=EXAMPLES/applications/homogeneous_acoustic/ ;;
+  3) dir=EXAMPLES/applications/homogeneous_poroelastic/ ;;
+  4) dir=EXAMPLES/applications/meshfem3D_examples/simple_model/ ;;
+  5) dir=EXAMPLES/applications/homogeneous_acoustic/ ;;
+  6) dir=EXAMPLES/applications/homogeneous_acoustic/ ;;
+  7) dir=EXAMPLES/applications/homogeneous_halfspace/ ;;
+  8) dir=EXAMPLES/applications/CPML_examples/homogeneous_halfspace_HEX8_acoustic_absorbing_CPML_5sides/ ;;
+  9) dir=EXAMPLES/applications/CPML_examples/homogeneous_halfspace_HEX8_elastic_absorbing_CPML_5sides/ ;;
+  10) dir=EXAMPLES/applications/noise_tomography/ ;;
+  11) dir=EXAMPLES/applications/tomographic_model/ ;;
+  12) dir=EXAMPLES/applications/homogeneous_acoustic/ ;;
+  13) dir=EXAMPLES/applications/waterlayered_halfspace/ ;;
+  14) dir=EXAMPLES/applications/homogeneous_halfspace_HEX27_elastic_no_absorbing/ ;;
+  15) dir=EXAMPLES/applications/homogeneous_acoustic/ ;;
+  16) dir=EXAMPLES/applications/fault_examples/tpv5/ ;;
+  17) dir=EXAMPLES/applications/meshfem3D_examples/socal1D/ ;;
+  18) dir=EXAMPLES/applications/meshfem3D_examples/cavity/ ;;
+  19) dir=EXAMPLES/applications/meshfem3D_examples/sep_bathymetry/ ;;
+  20) dir=EXAMPLES/applications/small_example_coupling_FK_specfem/ ;;
+  21) dir=EXAMPLES/applications/layered_halfspace/ ;;
+  22) dir=EXAMPLES/applications/homogeneous_halfspace_HEX8_elastic_no_absorbing/ ;;
+  23) dir=EXAMPLES/applications/Gmsh_simple_lddrk/ ;;
+  24) dir=EXAMPLES/applications/decompose_mesh_MPI/ ;;
+  25) dir=EXAMPLES/applications/meshfem3D_examples/regular_element_mesh/ ;;
+  26) dir=EXAMPLES/applications/small_adjoint_multiple_sources/ ;;
+  27) dir=EXAMPLES/applications/Gmsh_simple_box_hex27/ ;;
+  28) dir=EXAMPLES/applications/waterlayered_poroelastic/ ;;
+  29) dir=EXAMPLES/applications/inversion_examples/fwi_test_acoustic/ ;;
+  *) dir=EXAMPLES/applications/homogeneous_halfspace/ ;;
 esac
 
 # info
@@ -68,7 +68,7 @@ echo
 # bash function for checking seismogram output with reference solutions
 my_test(){
   echo "testing seismograms:"
-  ln -s $WORKDIR/utils/compare_seismogram_correlations.py
+  ln -s $WORKDIR/utils/scripts/compare_seismogram_correlations.py
   ./compare_seismogram_correlations.py REF_SEIS/ OUTPUT_FILES/
   if [[ $? -ne 0 ]]; then exit 1; fi
   ./compare_seismogram_correlations.py REF_SEIS/ OUTPUT_FILES/ | grep min/max | cut -d \| -f 3 | awk '{print "correlation:",$1; if ($1 < 0.999 ){print $1,"failed"; exit 1;}else{ print $1,"good"; exit 0;}}'
@@ -282,9 +282,9 @@ cd $WORKDIR
 #  ## testing homogeneous halfspace
 #  ##
 #  echo "##################################################################"
-#  echo "EXAMPLES/homogeneous_halfspace_HEX8_elastic_no_absorbing/"
+#  echo "EXAMPLES/applications/homogeneous_halfspace_HEX8_elastic_no_absorbing/"
 #  echo
-#  cd EXAMPLES/homogeneous_halfspace_HEX8_elastic_no_absorbing/
+#  cd EXAMPLES/applications/homogeneous_halfspace_HEX8_elastic_no_absorbing/
 #  sed -i "s:^NSTEP .*:NSTEP    = 5:" DATA/Par_file
 #  ./run_this_example.sh
 #  if [[ $? -ne 0 ]]; then exit 1; fi
@@ -298,9 +298,9 @@ if [ "$TESTCOV" == "1" ] && [ "$TESTID" == "0" ]; then
   ## testing hex27 example
   ##
   echo "##################################################################"
-  echo "EXAMPLES/homogeneous_halfspace_HEX27_elastic_no_absorbing/"
+  echo "EXAMPLES/applications/homogeneous_halfspace_HEX27_elastic_no_absorbing/"
   echo
-  cd EXAMPLES/homogeneous_halfspace_HEX27_elastic_no_absorbing/
+  cd EXAMPLES/applications/homogeneous_halfspace_HEX27_elastic_no_absorbing/
   sed -i "s:^NSTEP .*:NSTEP    = 5:" DATA/Par_file
   ./run_this_example.sh
   if [[ $? -ne 0 ]]; then exit 1; fi
@@ -314,9 +314,9 @@ if [ "$TESTCOV" == "1" ] && [ "$TESTID" == "0" ]; then
   ## testing poroelastic
   ##
   echo "##################################################################"
-  echo "EXAMPLES/homogeneous_poroelastic/"
+  echo "EXAMPLES/applications/homogeneous_poroelastic/"
   echo
-  cd EXAMPLES/homogeneous_poroelastic/
+  cd EXAMPLES/applications/homogeneous_poroelastic/
   sed -i "s:^NSTEP .*:NSTEP    = 5:" DATA/Par_file
   ./run_this_example.sh
   if [[ $? -ne 0 ]]; then exit 1; fi
@@ -331,9 +331,9 @@ if [ "$TESTCOV" == "1" ] && [ "$TESTID" == "0" ]; then
   ## testing acoustic kernel simulation
   ##
   echo "##################################################################"
-  echo "EXAMPLES/homogeneous_acoustic/"
+  echo "EXAMPLES/applications/homogeneous_acoustic/"
   echo
-  cd EXAMPLES/homogeneous_acoustic/
+  cd EXAMPLES/applications/homogeneous_acoustic/
   cp -v DATA/Par_file DATA/Par_file.org
   sed -i "s:^NSTEP .*:NSTEP    = 5:" DATA/Par_file
   sed -i "s:300:5:" run_this_example_kernel.sh
@@ -351,7 +351,7 @@ echo -en 'travis_fold:end:coverage.kernel\\r'
 #  ##
 #  ## testing acoustic
 #  ##
-#  cd EXAMPLES/homogeneous_acoustic/
+#  cd EXAMPLES/applications/homogeneous_acoustic/
 #  sed -i "s:^NSTEP .*:NSTEP    = 5:" DATA/Par_file
 #  ./run_this_example.sh
 #  cd $WORKDIR
@@ -367,9 +367,9 @@ if [ "$TESTCOV" == "1" ] && [ "$TESTID" == "1" ]; then
   ## testing PML acoustic
   ##
   echo "##################################################################"
-  echo "EXAMPLES/CPML_examples/homogeneous_halfspace_HEX8_acoustic_absorbing_CPML_5sides/"
+  echo "EXAMPLES/applications/CPML_examples/homogeneous_halfspace_HEX8_acoustic_absorbing_CPML_5sides/"
   echo
-  cd EXAMPLES/CPML_examples/homogeneous_halfspace_HEX8_acoustic_absorbing_CPML_5sides/
+  cd EXAMPLES/applications/CPML_examples/homogeneous_halfspace_HEX8_acoustic_absorbing_CPML_5sides/
   sed -i "s:^NSTEP .*:NSTEP    = 5:" DATA/Par_file
   ./run_this_example.sh
   if [[ $? -ne 0 ]]; then exit 1; fi
@@ -383,9 +383,9 @@ if [ "$TESTCOV" == "1" ] && [ "$TESTID" == "1" ]; then
   ## testing PML elastic
   ##
   echo "##################################################################"
-  echo "EXAMPLES/CPML_examples/homogeneous_halfspace_HEX8_elastic_absorbing_CPML_5sides/"
+  echo "EXAMPLES/applications/CPML_examples/homogeneous_halfspace_HEX8_elastic_absorbing_CPML_5sides/"
   echo
-  cd EXAMPLES/CPML_examples/homogeneous_halfspace_HEX8_elastic_absorbing_CPML_5sides/
+  cd EXAMPLES/applications/CPML_examples/homogeneous_halfspace_HEX8_elastic_absorbing_CPML_5sides/
   sed -i "s:^NSTEP .*:NSTEP    = 5:" DATA/Par_file
   ./run_this_example.sh
   if [[ $? -ne 0 ]]; then exit 1; fi
@@ -402,9 +402,9 @@ if [ "$TESTCOV" == "1" ] && [ "$TESTID" == "1" ]; then
   ## testing noise
   ##
   echo "##################################################################"
-  echo "EXAMPLES/noise_tomography/"
+  echo "EXAMPLES/applications/noise_tomography/"
   echo
-  cd EXAMPLES/noise_tomography/
+  cd EXAMPLES/applications/noise_tomography/
   sed -i "s:^NSTEP .*:NSTEP    = 5:" DATA/Par_file
   sed -i '10,$ d' NOISE_TOMOGRAPHY/S_squared  # truncates file, deletes all lines from line 10 till end
   ./run_this_example.sh
@@ -422,9 +422,9 @@ if [ "$TESTCOV" == "1" ] && [ "$TESTID" == "1" ]; then
   ## testing tomographic model
   ##
   echo "##################################################################"
-  echo "EXAMPLES/tomographic_model/"
+  echo "EXAMPLES/applications/tomographic_model/"
   echo
-  cd EXAMPLES/tomographic_model/
+  cd EXAMPLES/applications/tomographic_model/
   sed -i "s:^NSTEP .*:NSTEP    = 5:" DATA/Par_file
   ./run_this_example.sh
   if [[ $? -ne 0 ]]; then exit 1; fi
@@ -439,9 +439,9 @@ if [ "$TESTCOV" == "1" ] && [ "$TESTID" == "1" ]; then
   ## testing layered halfspace
   ##
   echo "##################################################################"
-  echo "EXAMPLES/layered_halfspace/"
+  echo "EXAMPLES/applications/layered_halfspace/"
   echo
-  cd EXAMPLES/layered_halfspace/
+  cd EXAMPLES/applications/layered_halfspace/
   sed -i "s:^NSTEP .*:NSTEP    = 5:" DATA/Par_file
   ./run_this_example.sh
   if [[ $? -ne 0 ]]; then exit 1; fi
@@ -455,9 +455,9 @@ if [ "$TESTCOV" == "1" ] && [ "$TESTID" == "1" ]; then
   ## testing waterlayered serial
   ##
   echo "##################################################################"
-  echo "EXAMPLES/waterlayered_halfspace/"
+  echo "EXAMPLES/applications/waterlayered_halfspace/"
   echo
-  cd EXAMPLES/waterlayered_halfspace/
+  cd EXAMPLES/applications/waterlayered_halfspace/
   sed -i "s:^NSTEP .*:NSTEP    = 5:" DATA/Par_file
   ./run_this_example.sh
   if [[ $? -ne 0 ]]; then exit 1; fi
@@ -475,9 +475,9 @@ if [ "$TESTCOV" == "1" ] && [ "$TESTID" == "2" ]; then
   ## testing simple model
   ##
   echo "##################################################################"
-  echo "EXAMPLES/meshfem3D_examples/simple_model/"
+  echo "EXAMPLES/applications/meshfem3D_examples/simple_model/"
   echo
-  cd EXAMPLES/meshfem3D_examples/simple_model/
+  cd EXAMPLES/applications/meshfem3D_examples/simple_model/
   sed -i "s:^NSTEP .*:NSTEP    = 5:" DATA/Par_file
   ./run_this_example.sh
   if [[ $? -ne 0 ]]; then exit 1; fi
@@ -492,9 +492,9 @@ if [ "$TESTCOV" == "1" ] && [ "$TESTID" == "2" ]; then
   ## testing socal example
   ##
   echo "##################################################################"
-  echo "EXAMPLES/meshfem3D_examples/socal1D/"
+  echo "EXAMPLES/applications/meshfem3D_examples/socal1D/"
   echo
-  cd EXAMPLES/meshfem3D_examples/socal1D/
+  cd EXAMPLES/applications/meshfem3D_examples/socal1D/
   sed -i "s:^NSTEP .*:NSTEP    = 5:" DATA/Par_file
   ./run_this_example.sh
   if [[ $? -ne 0 ]]; then exit 1; fi
@@ -508,9 +508,9 @@ if [ "$TESTCOV" == "1" ] && [ "$TESTID" == "2" ]; then
   ## testing socal example
   ##
   echo "##################################################################"
-  echo "EXAMPLES/meshfem3D_examples/socal1D/"
+  echo "EXAMPLES/applications/meshfem3D_examples/socal1D/"
   echo
-  cd EXAMPLES/meshfem3D_examples/socal1D/
+  cd EXAMPLES/applications/meshfem3D_examples/socal1D/
   sed -i "s:^NSTEP .*:NSTEP    = 5:" DATA/Par_file
   sed -i "s:^MODEL .*:MODEL    = 1d_socal:" DATA/Par_file
   rm -f REF_SEIS; ln -s REF_SEIS.1d_socal REF_SEIS
@@ -526,9 +526,9 @@ if [ "$TESTCOV" == "1" ] && [ "$TESTID" == "2" ]; then
   ## testing socal example
   ##
   echo "##################################################################"
-  echo "EXAMPLES/meshfem3D_examples/socal1D/"
+  echo "EXAMPLES/applications/meshfem3D_examples/socal1D/"
   echo
-  cd EXAMPLES/meshfem3D_examples/socal1D/
+  cd EXAMPLES/applications/meshfem3D_examples/socal1D/
   sed -i "s:^NSTEP .*:NSTEP    = 5:" DATA/Par_file
   sed -i "s:^MODEL .*:MODEL    = 1d_prem:" DATA/Par_file
   rm -f REF_SEIS; ln -s REF_SEIS.1d_prem REF_SEIS
@@ -544,9 +544,9 @@ if [ "$TESTCOV" == "1" ] && [ "$TESTID" == "2" ]; then
   ## testing socal example
   ##
   echo "##################################################################"
-  echo "EXAMPLES/meshfem3D_examples/socal1D/"
+  echo "EXAMPLES/applications/meshfem3D_examples/socal1D/"
   echo
-  cd EXAMPLES/meshfem3D_examples/socal1D/
+  cd EXAMPLES/applications/meshfem3D_examples/socal1D/
   sed -i "s:^NSTEP .*:NSTEP    = 5:" DATA/Par_file
   sed -i "s:^MODEL .*:MODEL    = 1d_cascadia:" DATA/Par_file
   rm -f REF_SEIS; ln -s REF_SEIS.1d_cascadia REF_SEIS
@@ -562,9 +562,9 @@ if [ "$TESTCOV" == "1" ] && [ "$TESTID" == "2" ]; then
   ## testing cavity example
   ##
   echo "##################################################################"
-  echo "EXAMPLES/meshfem3D_examples/cavity/"
+  echo "EXAMPLES/applications/meshfem3D_examples/cavity/"
   echo
-  cd EXAMPLES/meshfem3D_examples/cavity/
+  cd EXAMPLES/applications/meshfem3D_examples/cavity/
   sed -i "s:^NSTEP .*:NSTEP    = 5:" DATA/Par_file
   ./run_this_example.sh
   if [[ $? -ne 0 ]]; then exit 1; fi
@@ -578,9 +578,9 @@ if [ "$TESTCOV" == "1" ] && [ "$TESTID" == "2" ]; then
   ## testing SEP model
   ##
   echo "##################################################################"
-  echo "EXAMPLES/meshfem3D_examples/sep_bathymetry/"
+  echo "EXAMPLES/applications/meshfem3D_examples/sep_bathymetry/"
   echo
-  cd EXAMPLES/meshfem3D_examples/sep_bathymetry/
+  cd EXAMPLES/applications/meshfem3D_examples/sep_bathymetry/
   sed -i "s:^NSTEP .*:NSTEP    = 5:" DATA/Par_file
   ./run_this_example.sh
   if [[ $? -ne 0 ]]; then exit 1; fi
@@ -595,9 +595,9 @@ if [ "$TESTCOV" == "1" ] && [ "$TESTID" == "2" ]; then
   ## testing fault example
   ##
   echo "##################################################################"
-  echo "EXAMPLES/fault_examples/tpv5/"
+  echo "EXAMPLES/applications/fault_examples/tpv5/"
   echo
-  cd EXAMPLES/fault_examples/tpv5/
+  cd EXAMPLES/applications/fault_examples/tpv5/
   sed -i "s:^NSTEP .*:NSTEP    = 5:" DATA/Par_file
   ./run_this_example.sh
   if [[ $? -ne 0 ]]; then exit 1; fi
@@ -611,9 +611,9 @@ if [ "$TESTCOV" == "1" ] && [ "$TESTID" == "2" ]; then
   ## testing coupling FK
   ##
   echo "##################################################################"
-  echo "EXAMPLES/small_example_coupling_FK_specfem/"
+  echo "EXAMPLES/applications/small_example_coupling_FK_specfem/"
   echo
-  cd EXAMPLES/small_example_coupling_FK_specfem/
+  cd EXAMPLES/applications/small_example_coupling_FK_specfem/
   sed -i "s:^NSTEP .*:NSTEP    = 5:" DATA/Par_file
   ./run_this_example.sh
   if [[ $? -ne 0 ]]; then exit 1; fi
@@ -627,9 +627,9 @@ if [ "$TESTCOV" == "1" ] && [ "$TESTID" == "2" ]; then
   ## testing Gmsh example
   ##
   echo "##################################################################"
-  echo "EXAMPLES/Gmsh_simple_lddrk/"
+  echo "EXAMPLES/applications/Gmsh_simple_lddrk/"
   echo
-  cd EXAMPLES/Gmsh_simple_lddrk/
+  cd EXAMPLES/applications/Gmsh_simple_lddrk/
   sed -i "s:^NSTEP .*:NSTEP    = 5:" DATA/Par_file
   ./run_this_example.sh
   if [[ $? -ne 0 ]]; then exit 1; fi
@@ -643,9 +643,9 @@ if [ "$TESTCOV" == "1" ] && [ "$TESTID" == "2" ]; then
   ## testing decompose_mesh_MPI example
   ##
   echo "##################################################################"
-  echo "EXAMPLES/decompose_mesh_MPI/"
+  echo "EXAMPLES/applications/decompose_mesh_MPI/"
   echo
-  cd EXAMPLES/decompose_mesh_MPI/
+  cd EXAMPLES/applications/decompose_mesh_MPI/
   sed -i "s:^NSTEP .*:NSTEP    = 5:" DATA/Par_file
   ./run_this_example.sh
   if [[ $? -ne 0 ]]; then exit 1; fi
@@ -659,9 +659,9 @@ if [ "$TESTCOV" == "1" ] && [ "$TESTID" == "2" ]; then
   ## testing regular elements example
   ##
   echo "##################################################################"
-  echo "EXAMPLES/meshfem3D_examples/regular_element_mesh/"
+  echo "EXAMPLES/applications/meshfem3D_examples/regular_element_mesh/"
   echo
-  cd EXAMPLES/meshfem3D_examples/regular_element_mesh/
+  cd EXAMPLES/applications/meshfem3D_examples/regular_element_mesh/
   sed -i "s:^NSTEP .*:NSTEP    = 5:" DATA/Par_file
   ./run_this_example.sh
   if [[ $? -ne 0 ]]; then exit 1; fi
@@ -675,9 +675,9 @@ if [ "$TESTCOV" == "1" ] && [ "$TESTID" == "2" ]; then
   ## testing regular elements example
   ##
   echo "##################################################################"
-  echo "EXAMPLES/small_adjoint_multiple_sources/"
+  echo "EXAMPLES/applications/small_adjoint_multiple_sources/"
   echo
-  cd EXAMPLES/small_adjoint_multiple_sources/
+  cd EXAMPLES/applications/small_adjoint_multiple_sources/
   sed -i "s:^NSTEP .*:NSTEP    = 5:" DATA/Par_file
   ./run_this_example.sh
   if [[ $? -ne 0 ]]; then exit 1; fi
@@ -691,9 +691,9 @@ if [ "$TESTCOV" == "1" ] && [ "$TESTID" == "2" ]; then
   ## testing regular elements example
   ##
   echo "##################################################################"
-  echo "EXAMPLES/waterlayered_poroelastic/"
+  echo "EXAMPLES/applications/waterlayered_poroelastic/"
   echo
-  cd EXAMPLES/waterlayered_poroelastic/
+  cd EXAMPLES/applications/waterlayered_poroelastic/
   sed -i "s:^NSTEP .*:NSTEP    = 5:" DATA/Par_file
   ./run_this_example.sh
   if [[ $? -ne 0 ]]; then exit 1; fi
@@ -711,9 +711,9 @@ if [ "$TESTCOV" == "1" ] && [ "$TESTID" == "3" ]; then
   ## testing elastic serial
   ##
   echo "##################################################################"
-  echo "EXAMPLES/homogeneous_halfspace/"
+  echo "EXAMPLES/applications/homogeneous_halfspace/"
   echo
-  cd EXAMPLES/homogeneous_halfspace/
+  cd EXAMPLES/applications/homogeneous_halfspace/
   cp -v DATA/Par_file DATA/Par_file.org
   sed -i "s:^NPROC .*:NPROC    = 1:" DATA/Par_file
   sed -i "s:^NSTEP .*:NSTEP    = 5:" DATA/Par_file
@@ -729,7 +729,7 @@ echo -en 'travis_fold:end:coverage.serial-elastic\\r'
 #  ##
 #  ## testing acoustic serial
 #  ##
-#  cd EXAMPLES/homogeneous_acoustic/
+#  cd EXAMPLES/applications/homogeneous_acoustic/
 #  cp -v DATA/Par_file DATA/Par_file.org
 #  sed -i "s:^NPROC .*:NPROC    = 1:" DATA/Par_file
 #  sed -i "s:^NSTEP .*:NSTEP    = 5:" DATA/Par_file
@@ -745,9 +745,9 @@ if [ "$TESTCOV" == "1" ] && [ "$TESTID" == "3" ]; then
   ## testing simple model serial
   ##
   echo "##################################################################"
-  echo "EXAMPLES/meshfem3D_examples/simple_model"
+  echo "EXAMPLES/applications/meshfem3D_examples/simple_model"
   echo
-  cd EXAMPLES/meshfem3D_examples/simple_model
+  cd EXAMPLES/applications/meshfem3D_examples/simple_model
   cp -v DATA/Par_file DATA/Par_file.org
   sed -i "s:^NPROC .*:NPROC    = 1:" DATA/Par_file
   sed -i "s:^NSTEP .*:NSTEP    = 5:" DATA/Par_file
@@ -768,9 +768,9 @@ if [ "$TESTCOV" == "1" ] && [ "$TESTID" == "3" ]; then
   ## testing Gmsh-hex27 example
   ##
   echo "##################################################################"
-  echo "EXAMPLES/Gmsh_simple_box_hex27/"
+  echo "EXAMPLES/applications/Gmsh_simple_box_hex27/"
   echo
-  cd EXAMPLES/Gmsh_simple_box_hex27/
+  cd EXAMPLES/applications/Gmsh_simple_box_hex27/
   sed -i "s:^NSTEP .*:NSTEP    = 5:" DATA/Par_file
   ./run_this_example.sh
   if [[ $? -ne 0 ]]; then exit 1; fi
