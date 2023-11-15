@@ -87,7 +87,7 @@ end module my_mpi
 
   ! initialize the MPI communicator and start the NPROCTOT MPI processes.
   call MPI_INIT(ier)
-  if (ier /= 0 ) stop 'Error initializing MPI'
+  if (ier /= 0) stop 'Error initializing MPI'
 
   ! initialize status size
   my_status_size   = MPI_STATUS_SIZE
@@ -212,7 +212,7 @@ end module my_mpi
 
   ! synchronizes MPI processes
   call MPI_BARRIER(my_local_mpi_comm_world,ier)
-  if (ier /= 0 ) stop 'Error synchronize MPI processes'
+  if (ier /= 0) stop 'Error synchronize MPI processes'
 
   end subroutine synchronize_all
 
@@ -234,7 +234,7 @@ end module my_mpi
 
   ! synchronizes MPI processes
   call MPI_BARRIER(comm,ier)
-  if (ier /= 0 ) stop 'Error synchronize MPI processes for specified communicator'
+  if (ier /= 0) stop 'Error synchronize MPI processes for specified communicator'
 
   end subroutine synchronize_all_comm
 
@@ -1946,11 +1946,11 @@ end module my_mpi
 
   ! probe for incoming message from process source
   call MPI_Probe(source,itag,my_local_mpi_comm_world,msg_status,ier)
-  if ( ier /= 0 ) stop 'error mpi_probe for message status'
+  if ( ier /= 0) stop 'error mpi_probe for message status'
 
   ! gets the size of the message
   call MPI_Get_count(msg_status,MPI_INTEGER,recv_count,ier)
-  if ( ier /= 0 ) stop 'error mpi_get_count did not receive count'
+  if ( ier /= 0) stop 'error mpi_get_count did not receive count'
 
   end subroutine get_count_i
 
@@ -1973,7 +1973,7 @@ end module my_mpi
   integer :: ier
 
   call MPI_COMM_SIZE(my_local_mpi_comm_world,sizeval,ier)
-  if (ier /= 0 ) stop 'Error getting MPI world size'
+  if (ier /= 0) stop 'Error getting MPI world size'
 
   end subroutine world_size
 
@@ -1994,7 +1994,7 @@ end module my_mpi
   integer :: ier
 
   call MPI_COMM_SIZE(comm,sizeval,ier)
-  if (ier /= 0 ) stop 'Error getting MPI world size'
+  if (ier /= 0) stop 'Error getting MPI world size'
 
   end subroutine world_size_comm
 
@@ -2014,7 +2014,7 @@ end module my_mpi
   integer :: ier
 
   call MPI_COMM_RANK(my_local_mpi_comm_world,rank,ier)
-  if (ier /= 0 ) stop 'Error getting MPI rank'
+  if (ier /= 0) stop 'Error getting MPI rank'
 
   end subroutine world_rank
 
@@ -2035,7 +2035,7 @@ end module my_mpi
   integer :: ier
 
   call MPI_COMM_RANK(comm,rank,ier)
-  if (ier /= 0 ) stop 'Error getting MPI rank'
+  if (ier /= 0) stop 'Error getting MPI rank'
 
   end subroutine world_rank_comm
 
@@ -2123,7 +2123,7 @@ end module my_mpi
   integer :: ier
 
   call MPI_Comm_free(comm,ier)
-  if (ier /= 0 ) stop 'Error freeing MPI communicator'
+  if (ier /= 0) stop 'Error freeing MPI communicator'
 
   end subroutine world_comm_free
 
@@ -2372,7 +2372,7 @@ end module my_mpi
 
   ! synchronizes MPI processes
   call MPI_BARRIER(my_local_mpi_comm_inter,ier)
-  if (ier /= 0 ) stop 'Error synchronize MPI inter processes'
+  if (ier /= 0) stop 'Error synchronize MPI inter processes'
 
   end subroutine synchronize_inter
 
@@ -2390,7 +2390,7 @@ end module my_mpi
   integer :: ier
 
   call MPI_Comm_free(my_local_mpi_comm_inter,ier)
-  if (ier /= 0 ) stop 'Error freeing MPI inter communicator'
+  if (ier /= 0) stop 'Error freeing MPI inter communicator'
 
   end subroutine world_comm_free_inter
 
@@ -2518,7 +2518,7 @@ end module my_mpi
   integer :: ier
 
   call MPI_IRECV(recvbuf,recvcount,CUSTOM_MPI_TYPE,dest,recvtag, &
-                my_local_mpi_comm_inter,req,ier)
+                 my_local_mpi_comm_inter,req,ier)
 
   end subroutine irecvv_cr_inter
 
