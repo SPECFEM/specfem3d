@@ -682,4 +682,31 @@ jobs:
       run: ./.github/scripts/run_tests.sh
       shell: bash
 
+  linuxTest_18:
+    name: Test run example 18 - socal1D hdf5 i/o
+    runs-on: ubuntu-latest
+    needs: [linuxCheck]
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Install packages
+      env:
+        TEST: with-hdf5
+      run: ./.github/scripts/run_install.sh
+      shell: bash
+
+    - name: Run build
+      env:
+        TESTFLAGS: --with-mpi --with-hdf5 HDF5_INC=/usr/include/hdf5/openmpi/ HDF5_LIBS=-L/usr/lib/x86_64-linux-gnu/hdf5/openmpi
+      run: ./.github/scripts/run_build.sh
+      shell: bash
+
+    - name: Run test
+      env:
+        TEST: with-hdf5
+        TESTDIR: EXAMPLES/applications/meshfem3D_examples/socal1D/
+        TESTID: 0
+      run: ./.github/scripts/run_tests.sh
+      shell: bash
 

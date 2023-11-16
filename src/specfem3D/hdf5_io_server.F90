@@ -640,7 +640,8 @@ contains
   use shared_parameters, only: NPROC,DT,NSTEP,NTSTEP_BETWEEN_FRAMES, &
     MOVIE_SURFACE,MOVIE_VOLUME,USE_HIGHRES_FOR_MOVIES,CREATE_SHAKEMAP, &
     MOVIE_VOLUME_STRESS, &
-    NSTEP,NTSTEP_BETWEEN_OUTPUT_SEISMOS
+    NSTEP,NTSTEP_BETWEEN_OUTPUT_SEISMOS, &
+    HDF5_FORMAT
 
   use specfem_par, only: nlength_seismogram
 
@@ -723,35 +724,39 @@ contains
   !
 
   if (myrank == 0) then
-    ! get receiver info from compute nodes
-    call get_receiver_info(islice_num_rec_local)
+    ! for seismograms stored in HDF5 format
+    if (HDF5_FORMAT) then
+      ! get receiver info from compute nodes
+      call get_receiver_info(islice_num_rec_local)
 
-    ! initialize output file for seismo
-    call write_output_hdf5_seismogram_init()
+      ! initialize output file for seismo
+      call write_output_hdf5_seismogram_init()
+      if (VERBOSE) print *, "io_server: seismo init done"
 
-    ! count the number of procs having receivers (n_procs_with_rec)
-    ! and the number of receivers on each procs (islice...)
-    call count_nprocs_with_recs(islice_num_rec_local)
+      ! count the number of procs having receivers (n_procs_with_rec)
+      ! and the number of receivers on each procs (islice...)
+      call count_nprocs_with_recs(islice_num_rec_local)
 
-    ! check the seismo types to be saved
-    call count_seismo_type()
+      ! check the seismo types to be saved
+      call count_seismo_type()
 
-    ! allocate temporal arrays for seismo signals
-    call allocate_seismo_arrays(islice_num_rec_local)
+      ! allocate temporal arrays for seismo signals
+      call allocate_seismo_arrays(islice_num_rec_local)
 
-    ! initialize receive count
-    ! count the number of messages being sent
-    n_recv_msg_seismo = n_procs_with_rec * n_msg_seismo_each_proc * n_seismo_type
+      ! initialize receive count
+      ! count the number of messages being sent
+      n_recv_msg_seismo = n_procs_with_rec * n_msg_seismo_each_proc * n_seismo_type
 
-    if (NTSTEP_BETWEEN_OUTPUT_SEISMOS < NSTEP) then
-      max_seismo_out = int(NSTEP/NTSTEP_BETWEEN_OUTPUT_SEISMOS)
-      if (mod(NSTEP,NTSTEP_BETWEEN_OUTPUT_SEISMOS) /= 0) max_seismo_out = max_seismo_out+1
-    else
-      max_seismo_out = 1
+      if (NTSTEP_BETWEEN_OUTPUT_SEISMOS < NSTEP) then
+        max_seismo_out = int(NSTEP/NTSTEP_BETWEEN_OUTPUT_SEISMOS)
+        if (mod(NSTEP,NTSTEP_BETWEEN_OUTPUT_SEISMOS) /= 0) max_seismo_out = max_seismo_out+1
+      else
+        max_seismo_out = 1
+      endif
+
+      ! receive the global id of received
+      call recv_id_rec(islice_num_rec_local)
     endif
-
-    ! receive the global id of received
-    call recv_id_rec(islice_num_rec_local)
 
     !
     ! initialize surface movie

@@ -58,6 +58,13 @@
 
 ! HDF5 writes into a single file (by main process only)
 
+  ! checks if anything to do
+  if (.not. HDF5_FORMAT) return
+
+  ! safety check
+  if (.not. WRITE_SEISMOGRAMS_BY_MAIN) &
+    stop 'HDF5_FORMAT must have WRITE_SEISMOGRAMS_BY_MAIN set to .true.'
+
   ! io server
   if (HDF5_IO_NODES > 0) then
     ! only io nodes do the file output
@@ -87,10 +94,6 @@
     ! main process writes out all
     continue
   endif
-
-  ! safety check
-  if (.not. WRITE_SEISMOGRAMS_BY_MAIN) &
-    stop 'HDF5_FORMAT must have WRITE_SEISMOGRAMS_BY_MAIN set to .true.'
 
   ! initializes
   ! we only want to do this once
@@ -216,6 +219,9 @@
   character(len=3),dimension(NDIM) :: channels
   character(len=3),dimension(1) :: channels_press
   character(len=MAX_STRING_LEN) :: fname_h5_seismo
+
+  ! checks if anything to do
+  if (.not. HDF5_FORMAT) return
 
   ! only main process creates file
   if (myrank /= 0) return
