@@ -838,7 +838,7 @@
 
 ! returns source time function value for specified time
 
-  use constants, only: USE_MONOCHROMATIC_CMT_SOURCE
+  use constants, only: PI,USE_MONOCHROMATIC_CMT_SOURCE
 
   use specfem_par, only: USE_FORCE_POINT_SOURCE,USE_RICKER_TIME_FUNCTION, &
                          hdur,hdur_Gaussian,force_stf
@@ -857,6 +857,7 @@
 
   double precision, external :: comp_source_time_function,comp_source_time_function_rickr, &
     comp_source_time_function_gauss,comp_source_time_function_gauss_2, &
+    comp_source_time_function_brune,comp_source_time_function_smooth_brune, &
     comp_source_time_function_mono,comp_source_time_function_ext
 
   ! external source time function
@@ -890,6 +891,18 @@
     case (4)
       ! Gaussian source time function by Meschede et al. (2011)
       stf = comp_source_time_function_gauss_2(time_source_dble,hdur(isource))
+    case (5)
+      ! Brune source time function
+      ! hdur is the rise time
+      ! Frequency parameter:
+      f0=2.0d0*PI/hdur(isource)
+      stf = comp_source_time_function_brune(time_source_dble,f0)
+    case (6)
+      ! Smoothed Brune source time function
+      ! hdur is the rise time
+      ! Frequency parameter:
+      f0=2.0d0*PI/hdur(isource)
+      stf = comp_source_time_function_smooth_brune(time_source_dble,f0)
     case default
       stop 'unsupported force_stf value!'
     end select

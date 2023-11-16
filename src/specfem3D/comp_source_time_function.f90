@@ -263,6 +263,58 @@
 !-------------------------------------------------------------------------------------------------
 !
 
+  double precision function comp_source_time_function_brune(t,f0)
+
+  use constants, only: PI
+  
+  implicit none
+
+  double precision, intent(in) :: t,f0
+
+  ! local variables
+  double precision :: ft
+
+  ! Brune source-time function
+  if(t .lt. 0.d0)then
+    comp_source_time_function_brune = 0.d0
+  else 
+    ft = f0*t
+    comp_source_time_function_brune = 1.d0 - exp( -ft ) * (1.0d0+ft) 
+  endif
+
+  end function comp_source_time_function_brune
+
+!
+!-------------------------------------------------------------------------------------------------
+!
+
+  double precision function comp_source_time_function_smooth_brune(t,f0)
+
+  implicit none
+
+  double precision, intent(in) :: t,f0
+
+  ! local variables
+  double precision,parameter :: tau0=2.31d0
+  double precision :: f,ft
+
+  ! Brune source-time function
+  ft = f0*t
+  if (ft .lt. 0.d0) then
+    comp_source_time_function_smooth_brune = 0.d0
+  elseif (ft .ge. 0.d0 .and. ft .lt. tau0)then 
+    comp_source_time_function_smooth_brune = 1.d0 - exp(-ft)*( 1.0d0 + ft +  &
+    0.5d0*ft**2 - (1.5d0*ft**3)/tau0 + (1.5d0*ft**4)/(tau0**2) - &
+    (0.5d0*ft**5)/(tau0**3) )
+  else ! (ft .gt. tau0)then 
+    comp_source_time_function_smooth_brune = 1.d0 - exp( -ft ) * (1.0d0+ft) 
+  endif
+
+  end function comp_source_time_function_smooth_brune
+
+!
+!-------------------------------------------------------------------------------------------------
+!
 
   double precision function comp_source_time_function_mono(t,f0)
 

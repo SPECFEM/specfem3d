@@ -250,6 +250,20 @@
       ! null half-duration indicates a Dirac
       ! replace with very short Gaussian function
       if (hdur(isource) < 5. * DT ) hdur(isource) = 5. * DT
+    case (5)
+      ! Brune source time function
+      ! half-duration is the rise time
+      ! (see constants.h: TINYVAL = 1.d-9 )
+      if (hdur(isource) < TINYVAL ) then
+        stop 'Error set force period, make sure all forces have a non-zero rise time'
+      endif
+    case (6)
+      ! Smoothed Brune source time function
+      ! half-duration is the rise time
+      ! (see constants.h: TINYVAL = 1.d-9 )
+      if (hdur(isource) < TINYVAL ) then
+        stop 'Error set force period, make sure all forces have a non-zero rise time'
+      endif
     case default
       stop 'unsupported source time function type (force_stf) value!'
     end select

@@ -193,7 +193,7 @@ See the parameter \texttt{source time function:} below for source-time functions
 \item \texttt{latorUTM:} Set the latitude or UTM $x$ coordinate.
 \item \texttt{longorUTM:} Set the longitude or UTM $y$ coordinate.
 \item \texttt{depth:} Set the depth of the source (in km).
-\item \texttt{source time function:} Set the type of source-time function: 0 = Gaussian function, 1 = Ricker function, 2 = Heaviside (step) function, 3 = monochromatic function, 4 = Gaussian function as defined in \citet{Meschede2011}.
+\item \texttt{source time function:} Set the type of source-time function: 0 = Gaussian function, 1 = Ricker function, 2 = Heaviside (step) function, 3 = monochromatic function, 4 = Gaussian function as defined in \citet{Meschede2011}, 5 = Brune function, and 6 = Smoothed Brune function. For the Brune and Smoothed Brune source time functions \texttt{hdurorf0} is the rise time. The Brune and Smoothed Brune functions are currently implemented only for the viscoelastic simulations.
 When {\texttt{USE\_RICKER\_TIME\_FUNCTION}} is turned on in the main parameter file \texttt{DATA/Par\_file},
 it will override this source time function type selection and always use a Ricker wavelet.
 Note that we use the standard definition of a Ricker, for a dominant frequency $f_0$:
