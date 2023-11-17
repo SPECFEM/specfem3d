@@ -263,6 +263,85 @@
 !-------------------------------------------------------------------------------------------------
 !
 
+  double precision function comp_source_time_function_brune(t,f0)
+
+  use constants, only: PI
+  
+  implicit none
+
+  double precision, intent(in) :: t,f0
+
+  ! local variables
+  double precision :: omega,omegat
+
+  ! Brune source-time function
+  ! Moment function
+  !if(t .lt. 0.d0)then
+  !  comp_source_time_function_brune = 0.d0
+  !else 
+  !  omegat = 2.d0*PI*f0*t
+  !  comp_source_time_function_brune = 1.d0 - exp( -omegat ) * (1.0d0+omegat) 
+  !endif
+  ! Moment rate function
+  if(t .lt. 0.d0)then
+    comp_source_time_function_brune = 0.d0
+  else 
+    omega = 2.d0*PI*f0
+    omegat = omega*t
+    comp_source_time_function_brune = omega*omegat*exp( -omegat ) 
+  endif
+
+  end function comp_source_time_function_brune
+
+!
+!-------------------------------------------------------------------------------------------------
+!
+
+  double precision function comp_source_time_function_smooth_brune(t,f0)
+  
+  use constants, only: PI
+
+  implicit none
+
+  double precision, intent(in) :: t,f0
+
+  ! local variables
+  double precision,parameter :: tau0=2.31d0
+  double precision :: omega,omegat
+
+  ! Brune source-time function
+  ! Moment function
+  !omegat = 2.d0*PI*f0*t
+  !if (t .lt. 0.d0) then
+  !  comp_source_time_function_smooth_brune = 0.d0
+  !elseif (omegat .ge. 0.d0 .and. omegat .lt. tau0)then 
+  !  comp_source_time_function_smooth_brune = 1.d0 - exp(-omegat)*( 1.0d0 + omegat +  &
+  !  0.5d0*omegat**2 - (1.5d0*omegat**3)/tau0 + (1.5d0*omegat**4)/(tau0**2) - &
+  !  (0.5d0*omegat**5)/(tau0**3) )
+  !else ! (omegat .gt. tau0)then 
+  !  comp_source_time_function_smooth_brune = 1.d0 - exp( -omegat ) *
+  !  (1.0d0+omegat) 
+  !endif
+  ! Moment rate function
+  omega = 2.d0*PI*f0
+  omegat = omega*t
+  if (t .lt. 0.d0) then
+    comp_source_time_function_smooth_brune = 0.d0
+  elseif (omegat .ge. 0.d0 .and. omegat .lt. tau0)then 
+    comp_source_time_function_smooth_brune = ( 0.5d0*omega*(omegat**2)* &
+      exp(-omegat)/tau0**3 ) * ( tau0**3 - 3.d0*(tau0**2)*(omegat-3.d0) + &
+      3.d0*tau0*omegat*(omegat-4.d0) - (omegat**2)*(omegat-5.d0) )
+  else ! (omegat .gt. tau0)then 
+    comp_source_time_function_smooth_brune = omega*omegat*exp( -omegat ) 
+  endif
+
+  end function comp_source_time_function_smooth_brune
+
+!
+!-------------------------------------------------------------------------------------------------
+!
+
+
 
   double precision function comp_source_time_function_mono(t,f0)
 
