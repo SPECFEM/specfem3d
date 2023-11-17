@@ -466,7 +466,7 @@
         ! This needs to be CHECKED!!!
         t0 = min(t0,1.5d0 * (tshift_src(isource) - hdur(isource)))
       case (6)
-        ! Smotthed Brune
+        ! Smoothed Brune
         ! This needs to be CHECKED!!!
         t0 = min(t0,1.5d0 * (tshift_src(isource) - hdur(isource)))
       case default
