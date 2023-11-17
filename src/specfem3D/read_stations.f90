@@ -38,11 +38,8 @@
   character(len=*),intent(in) :: rec_filename
 
   ! local parameters
-  integer :: i,irec,ier
+  integer :: irec,ier
   character(len=MAX_STRING_LEN) :: line
-
-  integer, allocatable, dimension(:) :: station_duplet
-  integer :: length_station_name,length_network_name
 
   ! loop on all the stations to read the file
   if (myrank == 0) then
@@ -67,56 +64,8 @@
     ! close receiver file
     close(IIN)
 
-    ! In case that the same station and network name appear twice (or more times) in the STATIONS
-    ! file, problems occur, as two (or more) seismograms are written (with mode
-    ! "append") to a file with same name. The philosophy here is to accept multiple
-    ! appearances and to just add a count to the station name in this case.
-    allocate(station_duplet(nrec),stat=ier)
-    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1970')
-    if (ier /= 0 ) call exit_MPI(myrank,'Error allocating station_duplet array')
-
-    station_duplet(:) = 0
-    do irec = 1,nrec
-      ! checks if duplicate of another station read in so far
-      do i = 1,irec-1
-        if ((station_name(irec) == station_name(i)) .and. (network_name(irec) == network_name(i))) then
-          station_duplet(i) = station_duplet(i) + 1
-          if (len_trim(station_name(irec)) <= MAX_LENGTH_STATION_NAME-3) then
-            write(station_name(irec),"(a,'_',i2.2)") trim(station_name(irec)),station_duplet(i)+1
-          else
-            call exit_MPI(myrank,'Please increase MAX_LENGTH_STATION_NAME by at least 3 to name station duplets')
-          endif
-        endif
-      enddo
-
-      ! checks name lengths
-      length_station_name = len_trim(station_name(irec))
-      length_network_name = len_trim(network_name(irec))
-
-      ! check that length conforms to standard
-      if (length_station_name < 1 .or. length_station_name > MAX_LENGTH_STATION_NAME) then
-        print *, 'Error: invalid station name ',trim(station_name(irec))
-        call exit_MPI(myrank,'wrong length of station name')
-      endif
-      if (length_network_name < 1 .or. length_network_name > MAX_LENGTH_NETWORK_NAME) then
-        print *, 'Error: invalid network name ',trim(network_name(irec))
-        call exit_MPI(myrank,'wrong length of network name')
-      endif
-
-    enddo
-
-    ! user output
-    if (maxval(station_duplet) > 0) then
-      print *,'Warning: found ',maxval(station_duplet),' station duplets (having same network & station names)'
-      print *,'  station_duplet: ',station_duplet(:)
-      print *,'  station_name  : ',station_name(:)
-      print *,'Please check your STATIONS file entries to avoid confusions...'
-      print *
-    endif
-
-    ! free temporary array
-    deallocate(station_duplet)
-
+    ! find duplicate station names
+    call read_stations_find_duplets()
   endif
 
   ! broadcast values to other slices
@@ -128,6 +77,215 @@
   call bcast_all_dp(stbur,nrec)
 
   end subroutine read_stations
+
+!
+!-------------------------------------------------------------------------------------------
+!
+
+  subroutine read_stations_find_duplets()
+
+  use constants, only: MAX_LENGTH_STATION_NAME,MAX_LENGTH_NETWORK_NAME,MAX_STRING_LEN
+
+  use specfem_par, only: myrank,nrec,station_name,network_name
+
+  implicit none
+
+  ! local parameters
+  integer :: i,irec,ier
+
+  integer, allocatable, dimension(:) :: station_duplet
+  integer :: length_station_name,length_network_name
+
+  ! hash table
+  integer, allocatable, dimension(:) :: hash_table
+  integer :: hash,hash_prob,hash_collisions
+  integer, parameter :: NREC_MINIMUM_FOR_HASH = 10000  ! minimum number of stations for using hash table
+
+  ! In case that the same station and network name appear twice (or more times) in the STATIONS
+  ! file, problems occur, as two (or more) seismograms are written (with mode
+  ! "append") to a file with same name. The philosophy here is to accept multiple
+  ! appearances and to just add a count to the station name in this case.
+  allocate(station_duplet(nrec),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1970')
+  if (ier /= 0 ) call exit_MPI(myrank,'Error allocating station_duplet array')
+  station_duplet(:) = 0
+
+  ! initializes the hash table
+  if (nrec >= NREC_MINIMUM_FOR_HASH) then
+    ! makes hash table slightly larger than the actual number of stations to avoid many hash collisions
+    allocate(hash_table(5*nrec),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1971')
+    if (ier /= 0 ) call exit_MPI(myrank,'Error allocating hash_table array')
+    hash_table(:) = 0
+    hash_collisions = 0
+  endif
+
+  do irec = 1,nrec
+    ! checks if duplicate of another station read in so far
+    if (nrec < NREC_MINIMUM_FOR_HASH) then
+      ! way 1:
+      ! loops over all previous stations and checks station/network names
+      ! this will get slow for very large STATIONS files (> 100,000 stations); scales approx. quadratic ~O(n**2)
+      do i = 1,irec-1
+        if ((station_name(irec) == station_name(i)) .and. (network_name(irec) == network_name(i))) then
+          ! increases duplet count
+          station_duplet(i) = station_duplet(i) + 1
+          ! appends duplet number to station name
+          if (len_trim(station_name(irec)) <= MAX_LENGTH_STATION_NAME-3) then
+            write(station_name(irec),"(a,'_',i2.2)") trim(station_name(irec)),station_duplet(i)+1
+          else
+            call exit_MPI(myrank,'Please increase MAX_LENGTH_STATION_NAME by at least 3 to name station duplets')
+          endif
+        endif
+      enddo
+
+    else
+      ! way 2:
+      ! gets a hash value and checks in hash table for duplicates; scales approx. linearly ~O(n)
+      hash = hashFunc(station_name(irec),network_name(irec))
+      if (hash_table(hash) == 0) then
+        ! stores station index
+        hash_table(hash) = irec
+      else
+        ! found a duplicate hash
+        ! check if name matches
+        i = hash_table(hash)
+        if ((station_name(irec) == station_name(i)) .and. (network_name(irec) == network_name(i))) then
+          ! debug
+          !print *,'debug: Duplicate found in hash table:', &
+          !        irec,trim(station_name(irec)),trim(network_name(irec)), &
+          !        ' - hash number',hash, &
+          !        'return index',i,trim(station_name(i)),trim(network_name(i))
+          ! increases duplet count
+          station_duplet(i) = station_duplet(i) + 1
+          ! appends duplet number to station name
+          if (len_trim(station_name(irec)) <= MAX_LENGTH_STATION_NAME-3) then
+            write(station_name(irec),"(a,'_',i2.2)") trim(station_name(irec)),station_duplet(i)+1
+          else
+            call exit_MPI(myrank,'Please increase MAX_LENGTH_STATION_NAME by at least 3 to name station duplets')
+          endif
+        else
+          ! hash collision
+          hash_collisions = hash_collisions + 1
+          ! debug
+          !print *,'debug: Collision found in hash table:', &
+          !        irec,trim(station_name(irec)),trim(network_name(irec)), &
+          !        ' - hash number',hash, &
+          !        'return index',i,trim(station_name(i)),trim(network_name(i))
+          ! put hash in next free slot (linear probing)
+          hash_prob = hash
+          do while (hash_table(hash_prob) /= 0)
+            ! increases hash index
+            hash_prob = mod(hash_prob + 1,size(hash_table))
+            ! check if we reach again same hash, then table is full
+            if (hash_prob == hash) then
+              print *,'Error: Hash table is full, please consider a larger hash table!'
+              call exit_MPI(myrank,'Please increase hash table size for station duplets search')
+            endif
+            ! check entry
+            i = hash_table(hash_prob)
+            if (i == 0) then
+              ! stores station index in new free slot
+              hash_table(hash_prob) = irec
+              exit
+            else if (i == irec) then
+              ! station already stored, done adding
+              exit
+            else
+              ! check entry, maybe station moved hash index due to previous collisions
+              if ((station_name(irec) == station_name(i)) .and. (network_name(irec) == network_name(i))) then
+                ! debug
+                !print *,'debug: Duplicate found in hash table:', &
+                !        irec,trim(station_name(irec)),trim(network_name(irec)), &
+                !        ' - hash number by collision probing',hash_prob, &
+                !        'return index',i,trim(station_name(i)),trim(network_name(i))
+                ! increases duplet count
+                station_duplet(i) = station_duplet(i) + 1
+                ! appends duplet number to station name
+                if (len_trim(station_name(irec)) <= MAX_LENGTH_STATION_NAME-3) then
+                  write(station_name(irec),"(a,'_',i2.2)") trim(station_name(irec)),station_duplet(i)+1
+                else
+                  call exit_MPI(myrank,'Please increase MAX_LENGTH_STATION_NAME by at least 3 to name station duplets')
+                endif
+                ! done
+                exit
+              endif
+            endif
+          enddo
+        endif
+
+      endif
+    endif
+
+    ! checks name lengths
+    length_station_name = len_trim(station_name(irec))
+    length_network_name = len_trim(network_name(irec))
+
+    ! check that length conforms to standard
+    if (length_station_name < 1 .or. length_station_name > MAX_LENGTH_STATION_NAME) then
+      print *, 'Error: invalid station name ',trim(station_name(irec))
+      call exit_MPI(myrank,'wrong length of station name')
+    endif
+    if (length_network_name < 1 .or. length_network_name > MAX_LENGTH_NETWORK_NAME) then
+      print *, 'Error: invalid network name ',trim(network_name(irec))
+      call exit_MPI(myrank,'wrong length of network name')
+    endif
+
+  enddo
+
+  ! user output
+  if (sum(station_duplet) > 0) then
+    print *
+    print *,'Warning: found ',sum(station_duplet),' station duplets (having same network & station names)'
+    do irec = 1,nrec
+      if (station_duplet(irec) > 0) then
+        print *,'  station_name  : ',station_name(irec),' network: ',network_name(irec)
+        print *,'           irec : ',irec,' duplets: ',station_duplet(irec)
+      endif
+    enddo
+    print *,'Please check your STATIONS file entries to avoid confusions...'
+    print *
+  endif
+
+  ! debug: hash table info
+  !if (nrec >= NREC_MINIMUM_FOR_HASH .and. hash_collisions > 0) &
+  !  print *,'debug: hash table collisions: ',hash_collisions
+
+  ! free temporary array
+  deallocate(station_duplet)
+  if (nrec >= NREC_MINIMUM_FOR_HASH) deallocate(hash_table)
+
+  contains
+
+    ! defines a simple hash function
+    integer function hashFunc(sta_name,net_name)
+      character(len=MAX_LENGTH_STATION_NAME), intent(in) :: sta_name
+      character(len=MAX_LENGTH_NETWORK_NAME), intent(in) :: net_name
+      ! local parameters
+      integer :: i, sum, prime
+      integer, parameter :: base = 31   ! seems to be a good number (arbitrary choice for a prime)
+                                        ! smaller prime numbers lead to more collisions
+      character(len=(MAX_LENGTH_STATION_NAME+MAX_LENGTH_NETWORK_NAME)) :: name
+
+      ! full name, e.g., S00001DB
+      name = sta_name // net_name
+
+      sum = 0
+      prime = 1
+      do i = 1, len_trim(name)
+        ! too simple, will get lots of hash collisions
+        ! sum = sum + ichar(name(i:i))
+
+        ! adding a bit more complexity, based on polynomial rolling
+        sum = mod(sum + ichar(name(i:i)) * prime, size(hash_table))
+        prime = mod(prime * base, size(hash_table))
+      enddo
+
+      hashFunc = mod(sum, size(hash_table))
+    end function hashFunc
+
+
+  end subroutine read_stations_find_duplets
 
 !
 !-------------------------------------------------------------------------------------------
