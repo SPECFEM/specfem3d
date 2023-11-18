@@ -73,9 +73,12 @@
   integer :: imin,imax,jmin,jmax,kmin,kmax
 
 !! DK DK dec 2017: also loop on all the elements in contact with the initial guess element to improve accuracy of estimate
-  logical, dimension(:),allocatable :: flag_topological    ! making array allocatable, otherwise will crash for large meshes
+  logical, dimension(:),allocatable, save :: flag_topological    ! making array allocatable, otherwise will crash for large meshes
   integer :: number_of_mesh_elements_for_the_initial_guess
   logical :: use_adjacent_elements_search
+
+  ! flag to allocate topological array only once
+  logical, save :: has_flag_topological = .false.
 
 ! dynamic array
 !  integer, dimension(:), allocatable :: array_of_all_elements_of_ispec_selected
@@ -338,6 +341,18 @@
   if (use_adjacent_elements_search) then
     !! DK DK dec 2017: also loop on all the elements in contact with the initial guess element to improve accuracy of estimate
 
+    ! allocates arrays
+    ! we only do this the first time running through this, and keep the arrays to speed this for the next point location
+    if (.not. has_flag_topological) then
+      ! topological flags to find neighboring elements
+      allocate(flag_topological(NGLOB_AB),stat=ier)
+      if (ier /= 0) stop 'Error allocating flag_topological array'
+      flag_topological(:) = .false.
+
+      ! allocate only once
+      has_flag_topological = .true.
+    endif
+
     if (use_brute_force_search) then
       ! brute-force search always loops over whole mesh slice
       num_elem_local = NSPEC_AB
@@ -355,7 +370,7 @@
       kdtree_search_num_nodes = num_elem_local
 
       ! debug
-      !print *,'  total number of search elements: ',num_elem_local,POINT_CAN_BE_BURIED,r_search,elemsize_max_glob
+      !print *,'debug: total number of search elements: ',num_elem_local,POINT_CAN_BE_BURIED,r_search,elemsize_max_glob
 
       ! allocates search array
       if (kdtree_search_num_nodes > 0) then
@@ -386,8 +401,6 @@
     endif
 
     ! flagging corners
-    allocate(flag_topological(NGLOB_AB),stat=ier)
-    if (ier /= 0) stop 'Error allocating flag_topological array'
     flag_topological(:) = .false.
 
     ! mark the eight corners of the initial guess element
@@ -541,7 +554,8 @@
       endif
     endif
 
-    deallocate(flag_topological)
+    ! we keep topological flags for next point locations to speed up routine, thus keep this here commented out.
+    ! deallocate(flag_topological)
 
   else
     ! no need for adjacent element, only loop within initial guess
