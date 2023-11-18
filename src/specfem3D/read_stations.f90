@@ -84,7 +84,8 @@
 
   subroutine read_stations_find_duplets()
 
-  use constants, only: MAX_LENGTH_STATION_NAME,MAX_LENGTH_NETWORK_NAME,MAX_STRING_LEN
+  use constants, only: MAX_LENGTH_STATION_NAME,MAX_LENGTH_NETWORK_NAME, &
+                       DUPLETS_NREC_MINIMUM_FOR_HASH
 
   use specfem_par, only: myrank,nrec,station_name,network_name
 
@@ -99,7 +100,6 @@
   ! hash table
   integer, allocatable, dimension(:) :: hash_table
   integer :: hash,hash_prob,hash_collisions
-  integer, parameter :: NREC_MINIMUM_FOR_HASH = 10000  ! minimum number of stations for using hash table
 
   ! In case that the same station and network name appear twice (or more times) in the STATIONS
   ! file, problems occur, as two (or more) seismograms are written (with mode
@@ -111,7 +111,7 @@
   station_duplet(:) = 0
 
   ! initializes the hash table
-  if (nrec >= NREC_MINIMUM_FOR_HASH) then
+  if (nrec >= DUPLETS_NREC_MINIMUM_FOR_HASH) then
     ! makes hash table slightly larger than the actual number of stations to avoid many hash collisions
     allocate(hash_table(5*nrec),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 1971')
@@ -122,7 +122,7 @@
 
   do irec = 1,nrec
     ! checks if duplicate of another station read in so far
-    if (nrec < NREC_MINIMUM_FOR_HASH) then
+    if (nrec < DUPLETS_NREC_MINIMUM_FOR_HASH) then
       ! way 1:
       ! loops over all previous stations and checks station/network names
       ! this will get slow for very large STATIONS files (> 100,000 stations); scales approx. quadratic ~O(n**2)
@@ -248,12 +248,12 @@
   endif
 
   ! debug: hash table info
-  !if (nrec >= NREC_MINIMUM_FOR_HASH .and. hash_collisions > 0) &
+  !if (nrec >= DUPLETS_NREC_MINIMUM_FOR_HASH .and. hash_collisions > 0) &
   !  print *,'debug: hash table collisions: ',hash_collisions
 
   ! free temporary array
   deallocate(station_duplet)
-  if (nrec >= NREC_MINIMUM_FOR_HASH) deallocate(hash_table)
+  if (nrec >= DUPLETS_NREC_MINIMUM_FOR_HASH) deallocate(hash_table)
 
   contains
 
