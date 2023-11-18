@@ -135,7 +135,11 @@
 
 ! get approximate topography elevation at source long/lat coordinates
 
-  use constants, only: CUSTOM_REAL,NGLLX,NGLLY,NGLLZ,NGLLSQUARE,HUGEVAL,TINYVAL,MIDX,MIDY,MIDZ,USE_DISTANCE_CRITERION_TOPO
+  use constants, only: myrank,CUSTOM_REAL,NGLLX,NGLLY,NGLLZ,NGLLSQUARE, &
+    HUGEVAL,TINYVAL,MIDX,MIDY,MIDZ, &
+    USE_DISTANCE_CRITERION_TOPO
+
+  use shared_parameters, only: free_surface_xy_midpoints,free_surface_typical_size,free_surface_has_typical_size
 
   implicit none
 
@@ -162,12 +166,11 @@
   real(kind=CUSTOM_REAL) :: distmin,dist
   real(kind=CUSTOM_REAL) :: dist_node_min,norm
 
-  integer :: iface,i,j,k,ispec,iglob,igll,jgll,kgll,ijk
+  integer :: iface,i,j,k,ispec,iglob,igll,jgll,kgll,ijk,ier
   integer :: iselected,jselected,iface_selected
   integer :: inode,iadjust,jadjust
   integer :: ilocmin(1)
 
-  real(kind=CUSTOM_REAL) :: typical_size
   logical :: located_target
 
   ! initialize
@@ -178,11 +181,30 @@
 
     ! computes typical size of elements at the surface (uses first element for estimation)
     if (USE_DISTANCE_CRITERION_TOPO) then
-      ispec = free_surface_ispec(1)
-      typical_size =  (xstore(ibool(1,1,1,ispec)) - xstore(ibool(NGLLX,NGLLY,NGLLZ,ispec)))**2 &
-                    + (ystore(ibool(1,1,1,ispec)) - ystore(ibool(NGLLX,NGLLY,NGLLZ,ispec)))**2
-      ! use 10 times the distance as a criterion for point detection
-      typical_size = 10.0_CUSTOM_REAL * typical_size
+      ! do only once
+      if (.not. free_surface_has_typical_size) then
+        ispec = free_surface_ispec(1)
+        free_surface_typical_size =  (xstore(ibool(1,1,1,ispec)) - xstore(ibool(NGLLX,NGLLY,NGLLZ,ispec)))**2 &
+                                   + (ystore(ibool(1,1,1,ispec)) - ystore(ibool(NGLLX,NGLLY,NGLLZ,ispec)))**2
+        ! use 10 times the distance as a criterion for point detection
+        free_surface_typical_size = 10.0_CUSTOM_REAL * free_surface_typical_size
+
+        ! prepares midpoints coordinates
+        allocate(free_surface_xy_midpoints(2,num_free_surface_faces),stat=ier)
+        if (ier /= 0 ) call exit_MPI(myrank,'Error allocating array free_surface_xy_midpoints')
+        free_surface_xy_midpoints(:,:) = 0.0_CUSTOM_REAL
+
+        ! store x/y coordinates of center point
+        do iface = 1,num_free_surface_faces
+          ispec = free_surface_ispec(iface)
+          iglob = ibool(MIDX,MIDY,MIDZ,ispec)
+          free_surface_xy_midpoints(1,iface) = xstore(iglob)
+          free_surface_xy_midpoints(2,iface) = ystore(iglob)
+        enddo
+
+        ! done setup
+        free_surface_has_typical_size = .true.
+      endif
     endif
 
     ! flag to check that we located at least one target element
@@ -196,14 +218,16 @@
 
     ! loops over all free surface faces
     do iface = 1,num_free_surface_faces
-      ispec = free_surface_ispec(iface)
 
       ! exclude elements that are too far from target
       if (USE_DISTANCE_CRITERION_TOPO) then
-        iglob = ibool(MIDX,MIDY,MIDZ,ispec)
-        dist = (x_target - xstore(iglob))**2 + (y_target - ystore(iglob))**2
-        if (dist > typical_size) cycle
+        dist = (x_target - free_surface_xy_midpoints(1,iface))*(x_target - free_surface_xy_midpoints(1,iface)) &
+             + (y_target - free_surface_xy_midpoints(2,iface))*(y_target - free_surface_xy_midpoints(2,iface))
+
+        if (dist > free_surface_typical_size) cycle
       endif
+
+      ispec = free_surface_ispec(iface)
 
       ! loop only on points inside the element
       ! exclude edges to ensure this point is not shared with other elements
@@ -217,8 +241,8 @@
           iglob = ibool(igll,jgll,kgll,ispec)
 
           ! distance (squared) to target
-          dist = ( x_target - xstore(iglob) )**2 + &
-                 ( y_target - ystore(iglob) )**2
+          dist = (x_target - xstore(iglob))*(x_target - xstore(iglob)) &
+               + (y_target - ystore(iglob))*(y_target - ystore(iglob))
 
           ! keep this point if it is closer to the receiver
           if (dist < distmin) then
@@ -284,17 +308,22 @@
             ! stores node infos
             inode = inode + 1
             elevation_node(inode) = zstore(iglob)
-            dist_node(inode) = sqrt( (x_target - xstore(iglob))**2 + (y_target - ystore(iglob))**2)
+
+            ! distance squared
+            dist_node(inode) = (x_target - xstore(iglob))*(x_target - xstore(iglob)) &
+                             + (y_target - ystore(iglob))*(y_target - ystore(iglob))
           enddo
         enddo
 
         ! weighted elevation
-        dist = sum( dist_node(:) )
+        dist = dist_node(1) + dist_node(2) + dist_node(3) + dist_node(4)
         if (dist < distmin) then
 
           ! sets new minimum distance (of all 4 closest nodes)
           distmin = dist
-          target_distmin = distmin
+
+          ! outputs sum of squared distances (used to evaluate closest mesh locations)
+          target_distmin = dist
 
           ! interpolates elevation
           if (dist > TINYVAL) then
@@ -309,7 +338,7 @@
 
             ! gets minimum distance value & index
             ilocmin = minloc(dist_node(:))
-            dist_node_min = dist_node(ilocmin(1))
+            dist_node_min = sqrt(dist_node(ilocmin(1)))
 
             ! checks if a node is almost exactly at target location
             if (dist_node_min < TINYVAL) then
@@ -320,19 +349,20 @@
               ! (closer points have higher weight)
               do k = 1,4
                 if (dist_node(k) > 0.0_CUSTOM_REAL) then
-                  weight(k) = 1.0_CUSTOM_REAL / dist_node(k)
+                  ! needs exact distance for interpolation weight
+                  weight(k) = 1.0_CUSTOM_REAL / sqrt(dist_node(k))
                 else
                   weight(k) = 1.e10  ! very large weight for point on target, will dominate interpolation
                 endif
               enddo
 
               ! normalize weights: w_i = w_i / sum(w_i)
-              norm = sum(weight(:))
+              norm = weight(1) + weight(2) + weight(3) + weight(4)
               if (norm > TINYVAL) then
                 weight(:) = weight(:) / norm
               else
                 ! all 4 weights almost zero, meaning distances are all very large; uses equal weighting
-                weight(:) = 1.0 / 4.0
+                weight(:) = 0.25_CUSTOM_REAL ! 1.0 / 4.0
               endif
               ! interpolation
               target_elevation = weight(1)*elevation_node(1) &
@@ -362,7 +392,11 @@
 
 ! get approximate topography elevation at long/lat coordinates from closest point
 
-  use constants, only: CUSTOM_REAL,NGLLX,NGLLY,NGLLZ,NGLLSQUARE,HUGEVAL,MIDX,MIDY,MIDZ,USE_DISTANCE_CRITERION_TOPO
+  use constants, only: myrank,CUSTOM_REAL,NGLLX,NGLLY,NGLLZ,NGLLSQUARE, &
+    HUGEVAL,MIDX,MIDY,MIDZ, &
+    USE_DISTANCE_CRITERION_TOPO
+
+  use shared_parameters, only: free_surface_xy_midpoints,free_surface_typical_size,free_surface_has_typical_size
 
   implicit none
 
@@ -386,9 +420,7 @@
   ! local parameters
   real(kind=CUSTOM_REAL) :: distmin,dist
 
-  integer :: iface,i,ispec,iglob,igll,jgll,kgll
-
-  real(kind=CUSTOM_REAL) :: typical_size
+  integer :: iface,i,ispec,iglob,igll,jgll,kgll,ier
   logical :: located_target
 
   ! initialize
@@ -399,11 +431,30 @@
 
     ! computes typical size of elements at the surface (uses first element for estimation)
     if (USE_DISTANCE_CRITERION_TOPO) then
-      ispec = free_surface_ispec(1)
-      typical_size =  (xstore(ibool(1,1,1,ispec)) - xstore(ibool(NGLLX,NGLLY,NGLLZ,ispec)))**2 &
-                    + (ystore(ibool(1,1,1,ispec)) - ystore(ibool(NGLLX,NGLLY,NGLLZ,ispec)))**2
-      ! use 10 times the distance as a criterion for point detection
-      typical_size = 10.0_CUSTOM_REAL * typical_size
+      ! do only once
+      if (.not. free_surface_has_typical_size) then
+        ispec = free_surface_ispec(1)
+        free_surface_typical_size =  (xstore(ibool(1,1,1,ispec)) - xstore(ibool(NGLLX,NGLLY,NGLLZ,ispec)))**2 &
+                                   + (ystore(ibool(1,1,1,ispec)) - ystore(ibool(NGLLX,NGLLY,NGLLZ,ispec)))**2
+        ! use 10 times the distance as a criterion for point detection
+        free_surface_typical_size = 10.0_CUSTOM_REAL * free_surface_typical_size
+
+        ! prepares midpoints coordinates
+        allocate(free_surface_xy_midpoints(2,num_free_surface_faces),stat=ier)
+        if (ier /= 0 ) call exit_MPI(myrank,'Error allocating array free_surface_xy_midpoints')
+        free_surface_xy_midpoints(:,:) = 0.0_CUSTOM_REAL
+
+        ! store x/y coordinates of center point
+        do iface = 1,num_free_surface_faces
+          ispec = free_surface_ispec(iface)
+          iglob = ibool(MIDX,MIDY,MIDZ,ispec)
+          free_surface_xy_midpoints(1,iface) = xstore(iglob)
+          free_surface_xy_midpoints(2,iface) = ystore(iglob)
+        enddo
+
+        ! done setup
+        free_surface_has_typical_size = .true.
+      endif
     endif
 
     ! flag to check that we located at least one target element
@@ -414,14 +465,16 @@
 
     ! loops over all free surface faces
     do iface = 1,num_free_surface_faces
-      ispec = free_surface_ispec(iface)
 
       ! excludes elements that are too far from target
       if (USE_DISTANCE_CRITERION_TOPO) then
-        iglob = ibool(MIDX,MIDY,MIDZ,ispec)
-        dist = (x_target - xstore(iglob))**2 + (y_target - ystore(iglob))**2
-        if (dist > typical_size) cycle
+        dist = (x_target - free_surface_xy_midpoints(1,iface))*(x_target - free_surface_xy_midpoints(1,iface)) &
+             + (y_target - free_surface_xy_midpoints(2,iface))*(y_target - free_surface_xy_midpoints(2,iface))
+
+        if (dist > free_surface_typical_size) cycle
       endif
+
+      ispec = free_surface_ispec(iface)
 
       ! loop only on points inside the element
       do i = 1,NGLLSQUARE
@@ -432,8 +485,8 @@
         iglob = ibool(igll,jgll,kgll,ispec)
 
         ! distance (squared) to target
-        dist = ( x_target - xstore(iglob) )**2 + &
-               ( y_target - ystore(iglob) )**2
+        dist = (x_target - xstore(iglob))*(x_target - xstore(iglob)) &
+             + (y_target - ystore(iglob))*(y_target - ystore(iglob))
 
         ! keep this point if it is closer to the receiver
         if (dist < distmin) then
@@ -455,7 +508,8 @@
       iglob = ibool(1,1,1,ispec)
       ! elevation (given in z - coordinate)
       target_elevation = zstore(iglob)
-      target_distmin = ( x_target - xstore(iglob) )**2 + ( y_target - ystore(iglob) )**2
+      target_distmin = (x_target - xstore(iglob))*(x_target - xstore(iglob)) &
+                     + (y_target - ystore(iglob))*(y_target - ystore(iglob))
       located_target = .true.
     endif
 

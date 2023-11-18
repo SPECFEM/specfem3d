@@ -213,6 +213,7 @@ end module constants
   module shared_compute_parameters
 
   ! parameters to be computed based upon parameters above read from file
+  use constants, only: CUSTOM_REAL
 
   implicit none
 
@@ -235,6 +236,13 @@ end module constants
 
   ! fault rupture simulation
   logical :: FAULT_SIMULATION = .false.
+
+  ! free surface
+  ! for elevation search: x/y coordinates of free surface element midpoints
+  real(kind=CUSTOM_REAL), dimension(:,:), allocatable :: free_surface_xy_midpoints
+  real(kind=CUSTOM_REAL) :: free_surface_typical_size
+  ! flag to calculate typical size only once
+  logical :: free_surface_has_typical_size = .false.
 
   end module shared_compute_parameters
 

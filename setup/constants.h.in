@@ -220,6 +220,9 @@
 ! (brute-force search will be slower but even more accurate)
   logical, parameter :: DO_BRUTE_FORCE_POINT_SEARCH = .false.
 
+! minimum number of stations for using hash table in duplets search
+  integer, parameter :: DUPLETS_NREC_MINIMUM_FOR_HASH = 10000
+
 !!-----------------------------------------------------------
 !!
 !! CPML perfectly matched absorbing layers

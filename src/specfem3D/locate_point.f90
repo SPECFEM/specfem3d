@@ -38,7 +38,8 @@
   use specfem_par, only: ibool,myrank,NSPEC_AB,NGLOB_AB, &
                          xstore,ystore,zstore, &
                          ispec_is_surface_external_mesh,iglob_is_surface_external_mesh, &
-                         xyz_midpoints
+                         xyz_midpoints, &
+                         ACOUSTIC_SIMULATION,ELASTIC_SIMULATION
 
   use specfem_par_acoustic, only: ispec_is_acoustic
   use specfem_par_elastic, only: ispec_is_elastic
@@ -72,9 +73,12 @@
   integer :: imin,imax,jmin,jmax,kmin,kmax
 
 !! DK DK dec 2017: also loop on all the elements in contact with the initial guess element to improve accuracy of estimate
-  logical, dimension(:),allocatable :: flag_topological    ! making array allocatable, otherwise will crash for large meshes
+  logical, dimension(:),allocatable, save :: flag_topological    ! making array allocatable, otherwise will crash for large meshes
   integer :: number_of_mesh_elements_for_the_initial_guess
   logical :: use_adjacent_elements_search
+
+  ! flag to allocate topological array only once
+  logical, save :: has_flag_topological = .false.
 
 ! dynamic array
 !  integer, dimension(:), allocatable :: array_of_all_elements_of_ispec_selected
@@ -92,6 +96,14 @@
   integer :: ielem,num_elem_local,ier,ispec_nearest
   logical :: use_brute_force_search
   logical :: is_better_location
+
+  logical :: do_include_slice
+
+  ! flag to check mesh dimensions only once
+  logical, save :: has_slice_dimensions = .false.
+  double precision, save :: x_min_slice,x_max_slice
+  double precision, save :: y_min_slice,y_max_slice
+  double precision, save :: z_min_slice,z_max_slice
 
   !debug
   !print *,'locate point in mesh: ',x_target, y_target, z_target
@@ -113,6 +125,53 @@
 
   ! set distance to huge initial value
   distmin_squared = HUGEVAL
+
+  ! gets local slice dimension
+  if (.not. has_slice_dimensions) then
+    ! mesh slice dimension of current process
+    x_min_slice = minval(xstore)
+    x_max_slice = maxval(xstore)
+    y_min_slice = minval(ystore)
+    y_max_slice = maxval(ystore)
+    z_min_slice = minval(zstore)
+    z_max_slice = maxval(zstore)
+    ! only do this once
+    has_slice_dimensions = .true.
+  endif
+
+  ! checks if target location is in this mesh slice
+  do_include_slice = .false.
+
+  if (POINT_CAN_BE_BURIED .eqv. .false.) then
+    ! only checks if x/y position is in slice
+    if ((x_target < x_max_slice + elemsize_max_glob .and. x_target > x_min_slice - elemsize_max_glob) &
+      .and. (y_target < y_max_slice + elemsize_max_glob .and. y_target > y_min_slice - elemsize_max_glob)) then
+      do_include_slice = .true.
+    endif
+  else
+    ! checks x/y/z position
+    if ((x_target < x_max_slice + elemsize_max_glob .and. x_target > x_min_slice - elemsize_max_glob) &
+      .and. (y_target < y_max_slice + elemsize_max_glob .and. y_target > y_min_slice - elemsize_max_glob) &
+      .and. (z_target < z_max_slice + elemsize_max_glob .and. z_target > z_min_slice - elemsize_max_glob)) then
+      do_include_slice = .true.
+    endif
+  endif
+
+  if (.not. do_include_slice) then
+    ! point outside of this mesh slice
+    ispec_selected = 0
+    domain = 0
+
+    x_found = -HUGEVAL
+    y_found = -HUGEVAL
+    z_found = -HUGEVAL
+
+    !   store final distance squared between asked and found
+    final_distance_squared = HUGEVAL
+
+    ! done search in this slice
+    return
+  endif
 
   ! point search type
   if (DO_BRUTE_FORCE_POINT_SEARCH .or. (POINT_CAN_BE_BURIED .eqv. .false.)) then
@@ -179,7 +238,9 @@
     endif
 
     ! skip buried elements in case station must lie on surface
-    if (.not. POINT_CAN_BE_BURIED .and. .not. ispec_is_surface_external_mesh(ispec)) cycle
+    if (.not. POINT_CAN_BE_BURIED) then
+      if (.not. ispec_is_surface_external_mesh(ispec)) cycle
+    endif
 
     ! distance to element midpoint
     dist_squared = (x_target - xyz_midpoints(1,ispec))*(x_target - xyz_midpoints(1,ispec)) &
@@ -193,10 +254,13 @@
     do k = kmin, kmax
       do j = jmin, jmax
         do i = imin, imax
+
           iglob = ibool(i,j,k,ispec)
 
           ! skip inner GLL points in case station must lie on surface
-          if (.not. POINT_CAN_BE_BURIED .and. .not. iglob_is_surface_external_mesh(iglob)) cycle
+          if (.not. POINT_CAN_BE_BURIED) then
+            if (.not. iglob_is_surface_external_mesh(iglob)) cycle
+          endif
 
           x = dble(xstore(iglob))
           y = dble(ystore(iglob))
@@ -277,6 +341,18 @@
   if (use_adjacent_elements_search) then
     !! DK DK dec 2017: also loop on all the elements in contact with the initial guess element to improve accuracy of estimate
 
+    ! allocates arrays
+    ! we only do this the first time running through this, and keep the arrays to speed this for the next point location
+    if (.not. has_flag_topological) then
+      ! topological flags to find neighboring elements
+      allocate(flag_topological(NGLOB_AB),stat=ier)
+      if (ier /= 0) stop 'Error allocating flag_topological array'
+      flag_topological(:) = .false.
+
+      ! allocate only once
+      has_flag_topological = .true.
+    endif
+
     if (use_brute_force_search) then
       ! brute-force search always loops over whole mesh slice
       num_elem_local = NSPEC_AB
@@ -294,7 +370,7 @@
       kdtree_search_num_nodes = num_elem_local
 
       ! debug
-      !print *,'  total number of search elements: ',num_elem_local,POINT_CAN_BE_BURIED,r_search,elemsize_max_glob
+      !print *,'debug: total number of search elements: ',num_elem_local,POINT_CAN_BE_BURIED,r_search,elemsize_max_glob
 
       ! allocates search array
       if (kdtree_search_num_nodes > 0) then
@@ -320,13 +396,11 @@
 
         ! dummy search in this slice
         num_elem_local = 1
-        kdtree_search_num_nodes = num_elem_local
+        kdtree_search_num_nodes = 1
       endif
     endif
 
     ! flagging corners
-    allocate(flag_topological(NGLOB_AB),stat=ier)
-    if (ier /= 0) stop 'Error allocating flag_topological array'
     flag_topological(:) = .false.
 
     ! mark the eight corners of the initial guess element
@@ -368,11 +442,13 @@
                 ! this element is in contact with the initial guess
                 number_of_mesh_elements_for_the_initial_guess = number_of_mesh_elements_for_the_initial_guess + 1
                 ! check
-                if (number_of_mesh_elements_for_the_initial_guess > 100) stop 'Error must increase array size in locate_point.f90'
+                if (number_of_mesh_elements_for_the_initial_guess > 100) &
+                  stop 'Error must increase array size in locate_point.f90'
 
                 array_of_all_elements_of_ispec_selected(number_of_mesh_elements_for_the_initial_guess) = ispec
 
-                ! let us not count it more than once, it may have a full edge in contact with it and would then be counted twice
+                ! let us not count it more than once,
+                ! it may have a full edge in contact with it and would then be counted twice
                 goto 707
 
               endif
@@ -409,7 +485,8 @@
                 ! this element is in contact with the initial guess
                 number_of_mesh_elements_for_the_initial_guess = number_of_mesh_elements_for_the_initial_guess + 1
 
-                ! let us not count it more than once, it may have a full edge in contact with it and would then be counted twice
+                ! let us not count it more than once,
+                ! it may have a full edge in contact with it and would then be counted twice
                 goto 700
 
               endif
@@ -452,7 +529,8 @@
                 number_of_mesh_elements_for_the_initial_guess = number_of_mesh_elements_for_the_initial_guess + 1
                 array_of_all_elements_of_ispec_selected(number_of_mesh_elements_for_the_initial_guess) = ispec
 
-                ! let us not count it more than once, it may have a full edge in contact with it and would then be counted twice
+                ! let us not count it more than once,
+                ! it may have a full edge in contact with it and would then be counted twice
                 goto 800
 
               endif
@@ -476,7 +554,8 @@
       endif
     endif
 
-    deallocate(flag_topological)
+    ! we keep topological flags for next point locations to speed up routine, thus keep this here commented out.
+    ! deallocate(flag_topological)
 
   else
     ! no need for adjacent element, only loop within initial guess
@@ -519,9 +598,11 @@
           is_better_location = .true.
         endif
         ! takes position if old position is in acoustic element and new one in elastic one
-        ! prefers having station in elastic elements over acoustic at interfaces
-        if (ispec_is_acoustic(ispec_selected) .and. ispec_is_elastic(ispec)) then
-          is_better_location = .true.
+        if (ACOUSTIC_SIMULATION .and. ELASTIC_SIMULATION) then
+          ! prefers having station in elastic elements over acoustic at interfaces
+          if (ispec_is_acoustic(ispec_selected) .and. ispec_is_elastic(ispec)) then
+            is_better_location = .true.
+          endif
         endif
       endif
     endif

@@ -92,6 +92,7 @@
   double precision, dimension(NDIM,NDIM,NREC_SUBSET_MAX) :: nu_subset
   integer, dimension(NREC_SUBSET_MAX) :: ispec_selected_rec_subset,idomain_subset
   integer :: nrec_subset_current_size,irec_in_this_subset,irec_already_done
+  integer :: num_output_info
 
   logical :: is_done_stations
 
@@ -114,6 +115,10 @@
       write(IMAIN,*) '  (depth) becomes directly (z) coordinate'
     endif
     call flush_IMAIN()
+
+    ! output frequency for large number of receivers
+    ! number to output about ~50 steps, rounds to the next multiple of 500
+    num_output_info = max(500,int(ceiling(ceiling(nrec/50.0)/500.0)*500))
   endif
 
   ! compute typical size of elements
@@ -235,8 +240,9 @@
 
       ! user output progress
       if (myrank == 0 .and. nrec > 1000) then
-        if (mod(irec,500) == 0) then
-          write(IMAIN,*) '  located receivers ',irec,'out of',nrec
+        if (mod(irec,num_output_info) == 0) then
+          tCPU = wtime() - tstart
+          write(IMAIN,*) '  located receivers ',irec,'out of',nrec,' - elapsed time: ',sngl(tCPU),'s'
           call flush_IMAIN()
         endif
       endif
@@ -398,17 +404,19 @@
     final_distance_max = maxval(final_distance(:))
 
     ! display maximum error for all the receivers
+    write(IMAIN,*)
     write(IMAIN,*) 'maximum error in location of all the receivers: ',sngl(final_distance_max),' m'
+    write(IMAIN,*)
 
     ! add warning if estimate is poor
     ! (usually means receiver outside the mesh given by the user)
     if (final_distance_max > elemsize_max_glob) then
-      write(IMAIN,*)
       write(IMAIN,*) '************************************************************'
       write(IMAIN,*) '************************************************************'
       write(IMAIN,*) '***** WARNING: at least one receiver is poorly located *****'
       write(IMAIN,*) '************************************************************'
       write(IMAIN,*) '************************************************************'
+      write(IMAIN,*)
     endif
 
     ! write the locations of stations, so that we can load them and write them to SU headers later
@@ -428,7 +436,6 @@
 
     ! elapsed time since beginning of mesh generation
     tCPU = wtime() - tstart
-    write(IMAIN,*)
     write(IMAIN,*) 'Elapsed time for receiver detection in seconds = ',tCPU
     write(IMAIN,*)
     write(IMAIN,*) 'End of receiver detection - done'
