@@ -55,6 +55,7 @@
 
   ! local variables below
   integer :: julian_day,isource
+  integer :: ishift,nright
   integer :: i,itype,istart,iend,ier,ipos
   double precision :: t_shift(NSOURCES)
   character(len=256) :: string
@@ -372,9 +373,22 @@
       ! gets external STF file name
       read(IIN,"(a)") string
       external_source_time_function_filename = trim(string)
+      if (trim(external_source_time_function_filename) == 'REUSE' .or. &
+         trim(external_source_time_function_filename) == 'Reuse' .or. &
+         trim(external_source_time_function_filename) == 'reuse') then
+        ! Reuse the source time function of the first source.
+        if (isource == 1) then
+          stop 'Error: "reuse" option cannot be used for the first source!'
+        endif
+        ishift=nint(t_shift(isource)/DT)
+        nright=NSTEP_STF-ishift
+        user_source_time_function(1:ishift,isource)=0.0_CUSTOM_REAL
+        user_source_time_function(ishift+1:NSTEP_STF,isource)=user_source_time_function(1:nright,1)
+      else
 
-      ! reads in stf values
-      call read_external_source_time_function(isource,user_source_time_function,external_source_time_function_filename)
+        ! reads in stf values
+        call read_external_source_time_function(isource,user_source_time_function,external_source_time_function_filename)
+      endif
     endif
 
   enddo
