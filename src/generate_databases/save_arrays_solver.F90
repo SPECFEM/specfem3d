@@ -574,13 +574,13 @@
     ! saves free surface points
     if (num_free_surface_faces > 0) then
       ! saves free surface interface points
-      allocate( iglob_tmp(NGLLSQUARE*num_free_surface_faces),stat=ier)
+      allocate(iglob_tmp(NGLLSQUARE*num_free_surface_faces),stat=ier)
       if (ier /= 0) call exit_MPI_without_rank('error allocating array 652')
       if (ier /= 0) stop 'error allocating array iglob_tmp'
       inum = 0
       iglob_tmp(:) = 0
-      do i=1,num_free_surface_faces
-        do j=1,NGLLSQUARE
+      do i = 1,num_free_surface_faces
+        do j = 1,NGLLSQUARE
           inum = inum+1
           iglob_tmp(inum) = ibool(free_surface_ijk(1,j,i), &
                                   free_surface_ijk(2,j,i), &
@@ -601,7 +601,7 @@
     if (ACOUSTIC_SIMULATION .and. ELASTIC_SIMULATION) then
       ! saves points on acoustic-elastic coupling interface
       num_points = NGLLSQUARE*num_coupling_ac_el_faces
-      allocate( iglob_tmp(num_points),stat=ier)
+      allocate(iglob_tmp(num_points),stat=ier)
       if (ier /= 0) call exit_MPI_without_rank('error allocating array 653')
       if (ier /= 0) stop 'error allocating array iglob_tmp'
       inum = 0

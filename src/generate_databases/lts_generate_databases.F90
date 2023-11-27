@@ -884,7 +884,7 @@
   do ispec = 1,NSPEC_AB
     ! test p_elem correctness
     p_elem_counter = 0
-    do ilevel=1,num_p_level
+    do ilevel = 1,num_p_level
       if (boundary_elem(ispec,ilevel) .eqv. .true.) p_elem_counter = p_elem_counter + 1
     enddo
     if (p_elem_counter > 1) then
@@ -972,13 +972,15 @@
 
   ! re-order global nodes, puts nodes of same p-level together
   allocate(p_level_iglob_start(num_p_level), &
-           p_level_iglob_end(num_p_level), &
-           stat=ier)
+           p_level_iglob_end(num_p_level),stat=ier)
   if (ier /= 0) stop 'Error allocating array p_level_iglob_start,..'
   ! initializes start/end index arrays
   p_level_iglob_start(:) = 0
   p_level_iglob_end(:) = 0
 
+  ! re-orders iglob values to have a contiguous range for different p-levels
+  ! (this will make the copy of wavefields for different p-levels faster as it accesses
+  !  contiguous memory blocks of the total array)
   call lts_reorder_iglob_by_p_level()
 
   ! stores arrays in databases for solver
@@ -1018,14 +1020,12 @@
   use constants, only: CUSTOM_REAL,NGLLX,NGLLY,NGLLZ,myrank
 
   use generate_databases_par, only: NSPEC_AB,NGLOB_AB, &
-    ibool,num_interfaces_ext_mesh,ibool_interfaces_ext_mesh,nibool_interfaces_ext_mesh
+    ibool
 
   use create_regions_mesh_ext_par, only: &
     xstore => xstore_unique, &
     ystore => ystore_unique, &
     zstore => zstore_unique
-
-  use fault_generate_databases, only: ANY_FAULT,ANY_FAULT_IN_THIS_PROC
 
   ! LTS module
   use lts_generate_databases_par, only: p_level_iglob_start,p_level_iglob_end,num_p_level,iglob_p_refine,p_level
@@ -1033,7 +1033,7 @@
   implicit none
 
   ! local parameters
-  integer :: ispec, iglob, iglob_new, ip, p, ier, i,j,k, iinterface
+  integer :: ispec, iglob, iglob_new, ip, p, ier, i, j, k
   integer, dimension(:), allocatable :: iglob_touched
   integer, dimension(:,:,:,:), allocatable :: ibool_new
   integer, dimension(:), allocatable :: iglob_field_new
@@ -1043,8 +1043,6 @@
 
   integer, dimension(:), allocatable :: num_p
   integer, dimension(:), allocatable :: p_lookup
-
-  integer, dimension(:,:), allocatable :: ibool_interfaces_ext_mesh_new
 
   ! allocates temporary arrays
   allocate(num_p(num_p_level),stat=ier)
@@ -1069,10 +1067,6 @@
   allocate(iglob_touched(NGLOB_AB),stat=ier)
   if (ier /= 0) stop 'Error allocating iglob_touched'
   iglob_touched(:) = 0
-
-  allocate(ibool_interfaces_ext_mesh_new(size(ibool_interfaces_ext_mesh,1),size(ibool_interfaces_ext_mesh,2)),stat=ier)
-  if (ier /= 0) stop 'Error allocating ibool_interfaces_ext_mesh_new'
-  ibool_interfaces_ext_mesh_new(:,:) = 0
 
   allocate(p_lookup(maxval(p_level)),stat=ier)
   if (ier /= 0) stop 'Error allocating p_lookup'
@@ -1209,26 +1203,15 @@
   ! copy new values into original arrays
   ibool(:,:,:,:) = ibool_new(:,:,:,:)
 
-  ! fix MPI interface
-  do iinterface = 1, num_interfaces_ext_mesh
-    do i = 1, nibool_interfaces_ext_mesh(iinterface)
-      iglob = ibool_interfaces_ext_mesh(i,iinterface)
-      ibool_interfaces_ext_mesh_new(i,iinterface) = iglob_touched(iglob)
-    enddo
-  enddo
-  ibool_interfaces_ext_mesh(:,:) = ibool_interfaces_ext_mesh_new(:,:)
-
-  ! fix fault interfaces
-  if (ANY_FAULT) then
-    ! re-orders global values stored in ibulk1 & ibulk2 for fault split nodes
-    if (ANY_FAULT_IN_THIS_PROC) call lts_fault_reorder_ibulk(iglob_touched)
-  endif
-
   ! tests to make sure all arrays are correct
   if (ANY(iglob_touched(:) == -1)) stop 'Error: some iglobs not touched!'
   if (ANY(iglob_p_refine(:) < 1)) stop 'Error: some iglobs listed as p < 1!'
   if (ANY(ibool(:,:,:,:) < 1)) stop 'Error: some ibool still listed as -1!'
 
+  ! re-orders ibool/iglob arrays needed by solver with new iglob ordering
+  call lts_reorder_iglob_solver_arrays(iglob_touched)
+
+  ! free memory
   deallocate(ibool_new)
   deallocate(iglob_field_new)
   deallocate(iglob_field_new_cr)
@@ -1380,6 +1363,79 @@
   endif
 
   end subroutine lts_save_databases
+
+
+!------------------------------------------------------------------------------------------------
+
+  subroutine lts_reorder_iglob_solver_arrays(iglob_touched)
+
+  use generate_databases_par, only: NGLOB_AB, &
+    iglob_is_surface_external_mesh
+
+  ! MPI interfaces
+  use generate_databases_par, only: num_interfaces_ext_mesh, &
+    nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh
+
+  use fault_generate_databases, only: ANY_FAULT,ANY_FAULT_IN_THIS_PROC
+
+  implicit none
+  ! interface
+  integer,dimension(NGLOB_AB),intent(in) :: iglob_touched
+
+  ! local parameters
+  integer :: iglob,iglob_new,ier
+  ! MPI interfaces
+  integer, dimension(:,:), allocatable :: ibool_interfaces_ext_mesh_new
+  integer :: i,iinterface
+  ! surface flags
+  logical, dimension(:), allocatable :: iglob_is_surface_external_mesh_new
+  logical :: flag_l
+
+  ! re-orders MPI interfaces
+  allocate(ibool_interfaces_ext_mesh_new(size(ibool_interfaces_ext_mesh,1),size(ibool_interfaces_ext_mesh,2)),stat=ier)
+  if (ier /= 0) stop 'Error allocating ibool_interfaces_ext_mesh_new'
+  ibool_interfaces_ext_mesh_new(:,:) = 0
+
+  ! fix MPI interface
+  do iinterface = 1, num_interfaces_ext_mesh
+    do i = 1, nibool_interfaces_ext_mesh(iinterface)
+      ! old iglob value
+      iglob = ibool_interfaces_ext_mesh(i,iinterface)
+      ! newly ordered iglob value
+      iglob_new = iglob_touched(iglob)
+      ! sets newly ordered values
+      ibool_interfaces_ext_mesh_new(i,iinterface) = iglob_new
+    enddo
+  enddo
+  ibool_interfaces_ext_mesh(:,:) = ibool_interfaces_ext_mesh_new(:,:)
+
+  ! free memory
+  deallocate(ibool_interfaces_ext_mesh_new)
+
+  ! re-orders flags on iglob array needed for surface points
+  allocate(iglob_is_surface_external_mesh_new(NGLOB_AB),stat=ier)
+  if (ier /= 0) stop 'Error allocating iglob_is_surface_external_mesh_new'
+  iglob_is_surface_external_mesh_new(:) = .false.
+
+  do iglob = 1,NGLOB_AB
+    ! gets flag for point
+    flag_l = iglob_is_surface_external_mesh(iglob)
+    ! new flag on new point location
+    iglob_new = iglob_touched(iglob)
+    iglob_is_surface_external_mesh_new(iglob_new) = flag_l
+  enddo
+  iglob_is_surface_external_mesh(:) = iglob_is_surface_external_mesh_new(:)
+
+  ! free memory
+  deallocate(iglob_is_surface_external_mesh_new)
+
+  ! fix fault interfaces
+  if (ANY_FAULT) then
+    ! re-orders global values stored in ibulk1 & ibulk2 for fault split nodes
+    if (ANY_FAULT_IN_THIS_PROC) call lts_fault_reorder_ibulk(iglob_touched)
+  endif
+
+  end subroutine lts_reorder_iglob_solver_arrays
 
 !------------------------------------------------------------------------------------------------
 !

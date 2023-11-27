@@ -79,8 +79,8 @@
         do i = 1, NGLLX
           iglob = ibool(i,j,k,ispec)
           if (iglob < 1 .or. iglob > nglob) then
-            print *,'error valence iglob:',iglob,i,j,k,ispec
-            stop 'error valence'
+            print *,'Error: valence setup found iglob:',iglob,i,j,k,ispec
+            stop 'Error: valence setup found invalid iglob index'
           endif
           valence(iglob) = valence(iglob) + 1
         enddo
@@ -96,7 +96,6 @@
 
   ! determines spectral elements containing surface points
   do ispec = 1, nspec
-
     ! loops over GLL points not on edges or corners
     do k = 1, NGLLZ
       do j = 1, NGLLY
@@ -116,7 +115,6 @@
         enddo
       enddo
     enddo
-
   enddo ! nspec
 
   ! safety check
