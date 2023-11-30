@@ -382,11 +382,16 @@
   if (FIX_UNDERFLOW_PROBLEM) displ_p(:,:,:) = VERYSMALLVAL
 
   ! collected acceleration
+  use_accel_collected = .false.
   ! only needed for seismograms and shakemaps
   if (SAVE_SEISMOGRAMS_ACCELERATION .or. CREATE_SHAKEMAP) then
-    allocate(accel_collected(NDIM,NGLOB_AB),stat=ier)
+    allocate(accel_collected(NDIM,NGLOB_AB), &
+             mask_ibool_collected(NGLOB_AB),stat=ier)
     if (ier /= 0) call exit_MPI(myrank,'Error allocating working LTS fields displ_p,veloc_p')
     accel_collected(:,:) = 0.0_CUSTOM_REAL
+    mask_ibool_collected(:) = .false.
+    ! sets flag to use array
+    use_accel_collected = .true.
   endif
 
   ! user output

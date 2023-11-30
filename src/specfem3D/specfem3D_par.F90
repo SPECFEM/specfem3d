@@ -871,6 +871,8 @@ module specfem_par_lts
 
   ! collected acceleration wavefield
   real(kind=CUSTOM_REAL), dimension(:,:),allocatable :: accel_collected
+  logical,dimension(:), allocatable :: mask_ibool_collected
+  logical :: use_accel_collected
 
   ! for stacey absorbing boundary conditions
   real(kind=CUSTOM_REAL), dimension(:,:), allocatable :: cmassxyz, rmassxyz

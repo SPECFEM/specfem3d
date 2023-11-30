@@ -847,12 +847,12 @@
   do ispec = 1,NSPEC_AB
     ! test p_elem correctness
     p_elem_counter = 0
-    do ilevel=1,num_p_level
+    do ilevel = 1,num_p_level
       if (p_elem(ispec,ilevel) .eqv. .true.) p_elem_counter = p_elem_counter + 1
     enddo
     if (p_elem_counter /= 1) then
       print *, "ERROR: p_counter:",p_elem_counter
-      call exit_mpi(myrank,"ASSERT(p_elem(ispec,:) only has 1 true) FAIL")
+      call exit_mpi(myrank,"ASSERT(p_elem(ispec,:) should only have 1 true) FAIL")
     endif
   enddo
 
@@ -869,9 +869,11 @@
             do i = 1,NGLLX
               iglob = ibool(i,j,k,ispec)
               if (iglob_p_refine(iglob) < p) then
+                ! contains coarser nodes
                 boundary_elem(ispec,ilevel) = .true.
               else if (iglob_p_refine(iglob) > p) then
-                call exit_mpi(myrank,"ASSERT(p-elem == .true. should if contains this p-level or coarser nodes)")
+                ! finer nodes should not be possible, otherwise p_elem flag is wrongly set
+                call exit_mpi(myrank,"ASSERT(p-elem == .true. should contain this p-level and finer nodes)")
               endif
             enddo
           enddo
@@ -889,7 +891,7 @@
     enddo
     if (p_elem_counter > 1) then
       print *, "ERROR: p_counter:",p_elem_counter
-      call exit_mpi(myrank,"ASSERT(boundary_elem(ispec,:) only has 1 true) FAIL")
+      call exit_mpi(myrank,"ASSERT(boundary_elem(ispec,:) should only have 1 true) FAIL")
     endif
   enddo
 
@@ -1313,6 +1315,9 @@
   character(len=MAX_STRING_LEN) :: prname
 
   ! VTK-file output for debugging
+  logical,dimension(:),allocatable :: tmp_flag
+  character(len=2) :: str_level
+  integer :: ilevel
   logical,parameter :: DEBUG_VTK_OUTPUT = .false.
 
 !#TODO: LTS database not stored yet in HDF5 / ADIOS2 format
@@ -1352,10 +1357,27 @@
   if (SAVE_MESH_FILES) then
     if (DEBUG_VTK_OUTPUT) then
       ! p-refinements
-      filename = trim(prname) // 'ispec_p_refine'
+      filename = trim(prname) // 'lts_ispec_p_refine'
       call write_VTK_data_elem_i(NSPEC_AB,NGLOB_AB,xstore,ystore,zstore,ibool,ispec_p_refine,filename)
       if (myrank == 0 ) then
         write(IMAIN,*) '     written file: ',trim(filename)//'.vtk'
+      endif
+      ! boundary elements
+      allocate(tmp_flag(NSPEC_AB),stat=ier)
+      if (ier /= 0) stop 'Error allocating array tmp_flag'
+      do ilevel = 1,num_p_level
+        tmp_flag(:) = boundary_elem(:,ilevel)
+        ! file name
+        write(str_level,"(i2.2)") ilevel
+        filename = trim(prname) // 'lts_boundary_elem_level_' // trim(str_level)
+        call write_VTK_data_elem_l(NSPEC_AB,NGLOB_AB,xstore,ystore,zstore,ibool,tmp_flag,filename)
+        if (myrank == 0 ) then
+          write(IMAIN,*) '     written file: ',trim(filename)//'.vtk'
+        endif
+      enddo
+      deallocate(tmp_flag)
+      ! end user output
+      if (myrank == 0 ) then
         write(IMAIN,*)
         call flush_IMAIN()
       endif
