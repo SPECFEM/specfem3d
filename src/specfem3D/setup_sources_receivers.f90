@@ -247,11 +247,6 @@
   comp_dir_vect_source_N(:) = 0.d0
   comp_dir_vect_source_Z_UP(:) = 0.d0
 
-  ! allocate array that contains the user defined source time function
-  allocate(user_source_time_function(NSTEP_STF, NSOURCES_STF),stat=ier)
-  if (ier /= 0) call exit_MPI_without_rank('error allocating array 2058')
-  if (ier /= 0) stop 'error allocating arrays for user sources time function'
-  user_source_time_function(:,:) = 0.0_CUSTOM_REAL
   ! sets the size of user_source_time_function array
   if (USE_EXTERNAL_SOURCE_FILE) then
     NSTEP_STF = NSTEP
@@ -273,7 +268,7 @@
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 2059')
   else
     allocate(cmt_stf(1),stat=ier)
-    if (ier /= 0) call exit_MPI_without_rank('error allocating array 2059')
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 2060')
   endif
   if (ier /= 0) stop 'error allocating arrays for other time functions'
   cmt_stf(:) = 0

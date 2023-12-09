@@ -34,7 +34,8 @@
     NLINES_PER_FORCESOLUTION_SOURCE,NLINES_PER_CMTSOLUTION_SOURCE, &
     mygroup
 
-  use shared_parameters, only: USE_FORCE_POINT_SOURCE,USE_EXTERNAL_SOURCE_FILE, &
+  use shared_parameters, only: USE_FORCE_POINT_SOURCE,USE_OTHER_TIME_FUNCTION, &
+    USE_EXTERNAL_SOURCE_FILE, &
     HAS_FINITE_FAULT_SOURCE,NUMBER_OF_SIMULTANEOUS_RUNS
 
   implicit none
@@ -82,6 +83,12 @@
   else
     ! CMTSOLUTION
     nlines_per_source = NLINES_PER_CMTSOLUTION_SOURCE
+  endif
+
+  ! number of lines for source description
+  ! in case of USE_OTHER_TIME_FUNCTION we have to read one additional line per source (the name of other source time function)
+  if (USE_OTHER_TIME_FUNCTION) then
+    nlines_per_source = nlines_per_source + 1
   endif
 
   ! number of lines for source description
