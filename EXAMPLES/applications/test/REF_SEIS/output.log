@@ -1,0 +1,47 @@
+running example: Sun Jul  3 23:45:24 AST 2016
+
+(will take about 15 minutes)
+
+
+   setting up example...
+
+
+  decomposing mesh...
+
+ total number of nodes:
+   nnodes =        23273
+ total number of spectral elements:
+   nspec =        20736
+ materials:
+   num_mat =            1
+   defined =            1 undefined =            0
+ absorbing boundaries:
+   nspec2D_xmin =          576
+   nspec2D_xmax =          576
+   nspec2D_ymin =          576
+   nspec2D_ymax =          576
+   nspec2D_bottom =         1296
+   nspec2D_top =         1296
+ Par_file_faults not found: assume no faults
+ node valence:  min =            1  max =            8
+   nsize =            8 sup_neighbour =           38
+ mesh2dual:
+   max_neighbour =           26
+ partitions:
+   num =            4
+
+ Databases files in directory: ./OUTPUT_FILES/DATABASES_MPI/
+ finished successfully
+
+
+  running database generation on  4 processors...
+
+
+  running solver on  4 processors...
+
+
+see results in directory: OUTPUT_FILES/
+
+done
+Sun Jul  3 23:51:39 AST 2016
+

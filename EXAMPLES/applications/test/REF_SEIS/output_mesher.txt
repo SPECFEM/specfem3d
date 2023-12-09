@@ -1,0 +1,171 @@
+
+ ******************************************
+ *** Specfem3D MPI Mesher - f90 version ***
+ ******************************************
+
+ This is process            0
+ There are            4  MPI processes
+ Processes are numbered from 0 to            3
+
+ There is a total of            4  slices
+
+ NGLLX =            5
+ NGLLY =            5
+ NGLLZ =            5
+
+ Shape functions defined by NGNOD =            8  control nodes
+ Surface shape functions defined by NGNOD2D =            4  control nodes
+ Beware! Curvature (i.e. HEX27 elements) is not handled by our internal mesher
+
+ velocity model:   default
+
+
+ suppressing UTM projection
+
+ no attenuation
+
+ no anisotropy
+
+ no oceans
+
+ incorporating Stacey absorbing conditions
+
+ using a CMTSOLUTION source
+
+
+ using a Gaussian source time function
+
+
+ **************************
+ creating mesh in the model
+ **************************
+
+ external mesh points :        24548
+ defined materials    :            1
+ undefined materials  :            0
+ total number of spectral elements:        20736
+ absorbing boundaries:
+   xmin,xmax :          576         576
+   ymin,ymax :          576         576
+   bottom,top:         1296        1296
+ total number of C-PML elements in the global mesh:            0
+ number of MPI partition interfaces:           12
+
+   minimum memory used so far     :    18.5136795     MB per process
+   minimum total memory requested :    83.938347816467285      MB per process
+
+ create regions:
+
+   ...allocating arrays
+ File DATA/Par_file_faults not found: assume no faults
+   ...setting up jacobian
+   ...indexing global points
+   ...preparing MPI interfaces
+      total MPI interface points:        38220
+      total assembled MPI interface points:       37700
+   ...setting up absorbing boundaries
+      absorbing boundary:
+      total number of free faces =         1296
+      total number of faces =         3600
+   ...determining velocity model
+               10  % time remaining:   2.6372553924014497E-007 s
+               20  % time remaining:   2.3537136368710285E-007 s
+               30  % time remaining:   2.0797815215465795E-007 s
+               40  % time remaining:   1.7959666616385039E-007 s
+               50  % time remaining:   1.4940914061783040E-007 s
+               60  % time remaining:   1.1963326293642313E-007 s
+               70  % time remaining:   9.0153154594916664E-008 s
+               80  % time remaining:   6.0067103898226197E-008 s
+               90  % time remaining:   3.0064856437377670E-008 s
+              100  % time remaining:   2.3136653568616304E-010 s
+   ...detecting acoustic-elastic-poroelastic surfaces
+      total acoustic elements   :           0
+      total elastic elements    :       20736
+      total poroelastic elements:           0
+   ...element inner/outer separation
+      for overlapping of communications with calculations:
+      percentage of   edge elements    10.8024673     %
+      percentage of volume elements    89.1975327     %
+   ...element mesh coloring
+      use coloring =  F
+   ...external binary models
+      no external binary model used
+   ...creating mass matrix
+   ...saving databases
+      saving mesh files for AVS, OpenDX, Paraview
+   ...checking mesh resolution
+
+ ********
+ minimum and maximum number of elements
+ and points in the CUBIT + SCOTCH mesh:
+
+ NSPEC_global_min =         5184
+ NSPEC_global_max =         5184
+ NSPEC_global_max / NSPEC_global_min imbalance =    1.00000000      =    0.00000000      %
+ NSPEC_global_sum =        20736
+
+ NGLOB_global_min =       346385
+ NGLOB_global_max =       346385
+ NGLOB_global_max / NGLOB_global_min imbalance =    1.00000000      =    0.00000000      %
+ NGLOB_global_sum =      1385540
+
+ If you have elements of a single type (all acoustic, all elastic, all poroelastic, and without CPML)
+ in the whole mesh, then there should be no significant imbalance in the above numbers.
+ Otherwise, it is normal to have imbalance in elements and points because the domain decomposer
+ compensates for the different cost of different elements by partitioning them unevenly among processes.
+ ********
+
+
+ ********
+ Model: P velocity min,max =    2800.00024       2800.00024
+ Model: S velocity min,max =    1500.00000       1500.00000
+ ********
+
+ *********************************************
+ *** Verification of simulation parameters ***
+ *********************************************
+
+ *** Xmin and Xmax of the model =    0.00000000       134000.000
+ *** Ymin and Ymax of the model =    0.00000000       134000.000
+ *** Zmin and Zmax of the model =   -60000.0000       0.00000000
+
+ *** Max GLL point distance =    1227.47656
+ *** Min GLL point distance =    642.726562
+ *** Max/min ratio =    1.90979588
+
+ *** Max element size =    3750.00000
+ *** Min element size =    3722.21875
+ *** Max/min ratio =    1.00746357
+
+ *** Minimum period resolved =    3.12500000
+ *** Maximum suggested time step =   0.114772588
+
+ Elapsed time for checking mesh resolution in seconds =    8.4772109985351562E-003
+ saving VTK files for Courant number and minimum period
+
+
+ min and max of topography included in mesh in m is    0.0000000000000000          0.0000000000000000
+
+
+ Repartition of elements:
+ -----------------------
+
+ total number of elements in mesh slice 0:         5184
+ total number of points in mesh slice 0:       346385
+
+ total number of elements in entire mesh:        20736
+ approximate total number of points in entire mesh (with duplicates on MPI edges):    1385540.0000000000
+ approximate total number of DOFs in entire mesh (with duplicates on MPI edges):    4156620.0000000000
+
+ total number of time steps in the solver will be:         5000
+
+ using single precision for the calculations
+
+ smallest and largest possible floating-point numbers are:    1.17549435E-38   3.40282347E+38
+
+
+ Elapsed time for mesh generation and buffer creation in seconds =    5.4326059818267822
+ End of mesh generation
+
+ done
+

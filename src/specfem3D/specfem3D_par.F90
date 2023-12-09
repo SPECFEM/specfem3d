@@ -144,6 +144,7 @@ module specfem_par
   ! source time function
   integer :: nsources_local
   real(kind=CUSTOM_REAL), dimension(:,:), allocatable :: user_source_time_function
+  integer, dimension(:), allocatable :: cmt_stf
 
   ! source encoding
   ! for acoustic sources: takes +/- 1 sign, depending on sign(Mxx)

@@ -59,7 +59,8 @@ module input_output
                          LOCAL_PATH, xigll, yigll, zigll, DT, &
                          ibool, xstore, ystore, zstore, &
                          myrank, USE_SOURCES_RECEIVERS_Z, &
-                         USE_FORCE_POINT_SOURCE,USE_EXTERNAL_SOURCE_FILE, USE_RICKER_TIME_FUNCTION
+                         USE_FORCE_POINT_SOURCE,USE_EXTERNAL_SOURCE_FILE, &
+                         USE_RICKER_TIME_FUNCTION,USE_OTHER_TIME_FUNCTION
 
   use specfem_par, only: nrec,islice_selected_rec,ispec_selected_rec, &
                          xi_receiver,eta_receiver,gamma_receiver,nu_rec, &
@@ -67,7 +68,7 @@ module input_output
                          stlat,stlon,stele,stbur, &
                          x_target_station,y_target_station,z_target_station
 
-  use specfem_par, only: hdur,hdur_Gaussian,force_stf,tshift_src,min_tshift_src_original,t0, &
+  use specfem_par, only: hdur,hdur_Gaussian,force_stf,cmt_stf,tshift_src,min_tshift_src_original,t0, &
                          islice_selected_source,ispec_selected_source
 
   use specfem_par_elastic, only: ispec_is_elastic
@@ -2455,6 +2456,15 @@ contains
       if (allocated(force_stf)) deallocate(force_stf)
       allocate(force_stf(NSOURCES),stat=ier)
       force_stf(:) = 0
+      
+      !! set the size of icmt_stf for other source time function
+      if (allocated(cmt_stf)) deallocate(cmt_stf)
+      if (USE_OTHER_TIME_FUNCTION) then
+        allocate(cmt_stf(NSOURCES),stat=ier)
+      else !! We don't need the array cmt_stf: use a small dummy array
+        allocate(cmt_stf(1),stat=ier)
+      endif
+      cmt_stf(:) = 0
 
       !! VM VM set the size of user_source_time_function
       if (USE_EXTERNAL_SOURCE_FILE) then
@@ -2497,7 +2507,7 @@ contains
               ! only main process reads in CMTSOLUTION file
               call get_cmt(filename,yr,jda,mo,da,ho,mi,sec, &
                            acqui_simu(ievent)%tshift,acqui_simu(ievent)%hdur,lat,long,depth,moment_tensor, &
-                           DT,NSOURCES,min_tshift,acqui_simu(ievent)%user_source_time_function)
+                           DT,NSOURCES,min_tshift,cmt_stf,acqui_simu(ievent)%user_source_time_function)
             endif
             ! broadcasts specific moment tensor infos
             call bcast_all_dp(moment_tensor,6*NSOURCES)
@@ -2510,6 +2520,7 @@ contains
           call bcast_all_dp(long,NSOURCES)
           call bcast_all_dp(depth,NSOURCES)
           call bcast_all_singledp(min_tshift)
+          call bcast_all_i(cmt_stf,NSOURCES)
           call bcast_all_cr(acqui_simu(ievent)%user_source_time_function,NSOURCES_STF*NSTEP_STF)
 
           ! get the moment tensor
@@ -2632,6 +2643,7 @@ contains
       deallocate(tshift_src,hdur,hdur_Gaussian)
       deallocate(factor_force_source,Fx,Fy,Fz)
       deallocate(force_stf)
+      deallocate(cmt_stf)
 
     enddo ! loop over events
 

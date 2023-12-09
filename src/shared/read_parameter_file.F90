@@ -432,6 +432,13 @@
       write(*,*)
     endif
 
+    call read_value_logical(USE_OTHER_TIME_FUNCTION, 'USE_OTHER_TIME_FUNCTION', ier)
+    if (ier /= 0) then
+      some_parameters_missing_from_Par_file = .true.
+      write(*,'(a)') 'USE_OTHER_TIME_FUNCTION        = .false.'
+      write(*,*)
+    endif
+
     call read_value_logical(USE_EXTERNAL_SOURCE_FILE, 'USE_EXTERNAL_SOURCE_FILE', ier)
     if (ier /= 0) then
       some_parameters_missing_from_Par_file = .true.
@@ -1374,6 +1381,7 @@
   call bcast_all_singlel(USE_SOURCES_RECEIVERS_Z)
   call bcast_all_singlel(USE_FORCE_POINT_SOURCE)
   call bcast_all_singlel(USE_RICKER_TIME_FUNCTION)
+  call bcast_all_singlel(USE_OTHER_TIME_FUNCTION)
   call bcast_all_singlel(USE_EXTERNAL_SOURCE_FILE)
   call bcast_all_singlel(PRINT_SOURCE_TIME_FUNCTION)
 

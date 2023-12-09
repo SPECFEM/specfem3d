@@ -27,10 +27,10 @@
 
   subroutine get_cmt(CMTSOLUTION,yr,jda,mo,da,ho,mi,sec, &
                      tshift_src,hdur,lat,long,depth,moment_tensor, &
-                     DT,NSOURCES,min_tshift_src_original,user_source_time_function)
+                     DT,NSOURCES,min_tshift_src_original,cmt_stf,user_source_time_function)
 
   use constants, only: IIN,MAX_STRING_LEN,CUSTOM_REAL
-  use shared_parameters, only: USE_EXTERNAL_SOURCE_FILE,NSTEP_STF,NSOURCES_STF,NOISE_TOMOGRAPHY
+  use shared_parameters, only: USE_OTHER_TIME_FUNCTION,USE_EXTERNAL_SOURCE_FILE,NSTEP_STF,NSOURCES_STF,NOISE_TOMOGRAPHY
 
   implicit none
 
@@ -38,6 +38,7 @@
 
   character(len=MAX_STRING_LEN), intent(in) :: CMTSOLUTION
   integer, intent(in) :: NSOURCES
+  integer, dimension(NSOURCES), intent(out) :: cmt_stf
   double precision, intent(in) :: DT
 
   ! PDE time info (from first header line)
@@ -367,6 +368,22 @@
     ! null half-duration indicates a Heaviside
     ! replace with very short error function
     if (hdur(isource) < 5.d0 * DT) hdur(isource) = 5.d0 * DT
+
+    ! reads OTHER SOURCE TIME FUNCTION
+    if (USE_OTHER_TIME_FUNCTION) then
+      ! gets other STF name
+      read(IIN,"(a)") string
+      if (trim(string) == 'BRUNE' .or. &
+          trim(string) == 'Brune' .or. &
+          trim(string) == 'brune') then
+          cmt_stf(isource) = 5  
+      endif
+      if (trim(string) == 'SMOOTH_BRUNE' .or. &
+          trim(string) == 'Smooth_Brune' .or. &
+          trim(string) == 'smooth_brune') then
+          cmt_stf(isource) = 6  
+      endif
+    endif
 
     ! reads USER EXTERNAL SOURCE if needed
     if (USE_EXTERNAL_SOURCE_FILE) then

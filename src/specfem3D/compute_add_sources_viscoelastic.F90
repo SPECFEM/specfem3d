@@ -841,7 +841,8 @@
   use constants, only: USE_MONOCHROMATIC_CMT_SOURCE
 
   use specfem_par, only: USE_FORCE_POINT_SOURCE,USE_RICKER_TIME_FUNCTION, &
-                         hdur,hdur_Gaussian,force_stf
+                         USE_OTHER_TIME_FUNCTION,hdur,hdur_Gaussian,force_stf, &
+                         cmt_stf
 
   ! for external STFs
   use specfem_par, only: USE_EXTERNAL_SOURCE_FILE
@@ -905,6 +906,41 @@
       stf = comp_source_time_function_smooth_brune(time_source_dble,f0)
     case default
       stop 'unsupported force_stf value!'
+    end select
+  elseif (USE_OTHER_TIME_FUNCTION) then
+    ! moment-tensor
+    select case(cmt_stf(isource))
+    case (0)
+      ! Gaussian source time function value
+      stf = comp_source_time_function_gauss(time_source_dble,hdur_Gaussian(isource))
+    case (1)
+      ! Ricker source time function
+      f0 = hdur(isource) ! using hdur as a FREQUENCY just to avoid changing FORCESOLUTION file format
+      stf = comp_source_time_function_rickr(time_source_dble,f0)
+    case (2)
+      ! Heaviside (step) source time function
+      stf = comp_source_time_function(time_source_dble,hdur_Gaussian(isource))
+    case (3)
+      ! Monochromatic source time function
+      f0 = 1.d0 / hdur(isource) ! using hdur as a PERIOD just to avoid changing FORCESOLUTION file format
+      stf = comp_source_time_function_mono(time_source_dble,f0)
+    case (4)
+      ! Gaussian source time function by Meschede et al. (2011)
+      stf = comp_source_time_function_gauss_2(time_source_dble,hdur(isource))
+    case (5)
+      ! Brune source time function
+      ! hdur is the source duration or the rise time
+      ! Frequency parameter:
+      f0=1.d0/hdur(isource)
+      stf = comp_source_time_function_brune(time_source_dble,f0)
+    case (6)
+      ! Smoothed Brune source time function
+      ! hdur is the source duration or the rise time
+      ! Frequency parameter:
+      f0=1.d0/hdur(isource)
+      stf = comp_source_time_function_smooth_brune(time_source_dble,f0)
+    case default
+      stop 'unsupported  cmt_stf value!'
     end select
   else
     ! moment-tensor

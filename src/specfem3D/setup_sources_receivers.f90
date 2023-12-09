@@ -247,6 +247,11 @@
   comp_dir_vect_source_N(:) = 0.d0
   comp_dir_vect_source_Z_UP(:) = 0.d0
 
+  ! allocate array that contains the user defined source time function
+  allocate(user_source_time_function(NSTEP_STF, NSOURCES_STF),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 2058')
+  if (ier /= 0) stop 'error allocating arrays for user sources time function'
+  user_source_time_function(:,:) = 0.0_CUSTOM_REAL
   ! sets the size of user_source_time_function array
   if (USE_EXTERNAL_SOURCE_FILE) then
     NSTEP_STF = NSTEP
@@ -262,6 +267,17 @@
   if (ier /= 0) stop 'error allocating arrays for user sources time function'
   user_source_time_function(:,:) = 0.0_CUSTOM_REAL
 
+  ! allocate array for cmf_stf for USE_OTHER_TIME_FUNCTION
+  if (USE_OTHER_TIME_FUNCTION) then
+    allocate(cmt_stf(NSOURCES),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 2059')
+  else
+    allocate(cmt_stf(1),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 2059')
+  endif
+  if (ier /= 0) stop 'error allocating arrays for other time functions'
+  cmt_stf(:) = 0
+  
   ! fused wavefield simulations
   call get_run_number_of_the_source()
 
@@ -446,6 +462,41 @@
     t0 = 0.d0
     do isource = 1,NSOURCES
       select case(force_stf(isource))
+      case (0)
+        ! Gaussian source time function
+        t0 = min(t0,1.5d0 * (tshift_src(isource) - hdur(isource)))
+      case (1)
+        ! Ricker source time function
+        t0 = min(t0,1.2d0 * (tshift_src(isource) - 1.0d0/hdur(isource)))
+      case (2)
+        ! Heaviside
+        t0 = min(t0,1.5d0 * (tshift_src(isource) - hdur(isource)))
+      case (3)
+        ! Monochromatic
+        t0 = 0.d0
+      case (4)
+        ! Gaussian source time function by Meschede et al. (2011)
+        t0 = min(t0,1.5d0 * (tshift_src(isource) - hdur(isource)))
+      case (5)
+        ! Brune
+        ! This needs to be CHECKED!!!
+        t0 = min(t0,1.5d0 * (tshift_src(isource) - hdur(isource)))
+      case (6)
+        ! Smoothed Brune
+        ! This needs to be CHECKED!!!
+        t0 = min(t0,1.5d0 * (tshift_src(isource) - hdur(isource)))
+      case default
+        stop 'unsupported force_stf value!'
+      end select
+    enddo
+    ! start time defined as positive value, will be subtracted
+    t0 = - t0
+  elseif (USE_OTHER_TIME_FUNCTION) then
+    ! other source time functions for CMTSOLUTION
+    ! (might start depending on the frequency given by hdur)
+    t0 = 0.d0
+    do isource = 1,NSOURCES
+      select case(cmt_stf(isource))
       case (0)
         ! Gaussian source time function
         t0 = min(t0,1.5d0 * (tshift_src(isource) - hdur(isource)))

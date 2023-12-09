@@ -1,0 +1,11 @@
+#!/bin/bash
+#SBATCH --account=rrg-hngharti
+# parallel job using 40 processors.
+#SBATCH -N 1   # node count
+#SBATCH --ntasks-per-node=40
+#SBATCH -t 00:30:00
+## load appropriate compiler
+source ~/.login
+cd $SLURM_SUBMIT_DIR
+# problems with mpiexec/mpirun so use srun
+python3 create_movie.py

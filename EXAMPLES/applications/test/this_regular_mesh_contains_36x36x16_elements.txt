@@ -1,0 +1,25 @@
+
+this regular mesh contains 36 x 36 x 16 elements:
+
+36 elements along X
+
+36 elements along Y
+
+16 elements along Z
+
+i.e. a total of 36 x 36 x 16 = 20736 elements.
+
+ *** Xmin and Xmax of the model =   0.   134000. m
+ *** Ymin and Ymax of the model =   0.   134000. m
+ *** Zmin and Zmax of the model =   -60000. m    0.
+
+ *** Max element size =    3750 m  along Z
+ *** Min element size =    3722.219 m  along X and Y
+ *** Max/min ratio =    1.007464
+
+
+
+ *** Max GLL point distance =    1227.477 m
+ *** Min GLL point distance =    642.7266 m
+ *** Max/min ratio =    1.909796
+

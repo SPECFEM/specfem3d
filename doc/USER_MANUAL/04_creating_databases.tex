@@ -334,6 +334,7 @@ short half duration is defined to physically describe actions within
 the fluid. Otherwise, if a \texttt{FORCESOLUTION} force source is
 used, a (pseudo) Dirac delta source-time function is defined by default.
 Any other source-time function may then be obtained by convolution.
+\item [{\texttt{USE\_OTHER\_TIME\_FUNCTION}}] Turn this flag on to use other source time functions for the CMTSOLUTION (Brune and Smooth Brune). If this flag is on, one line with the other source time function name (\textt{brune} or \texttt{smooth\_brune}) must be added at the end of each \texttt{CMTSOLUTION}.
 \item [{\texttt{PRINT\_SOURCE\_TIME\_FUNCTION}}] Turn this flag on to print
 information about the source-time function in the file \texttt{OUTPUT\_FILES/plot\_source\_time\_function.txt}.
 This feature is only relevant for the solver.

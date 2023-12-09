@@ -163,7 +163,7 @@ end module constants
 
   ! sources
   logical :: USE_FORCE_POINT_SOURCE
-  logical :: USE_RICKER_TIME_FUNCTION,PRINT_SOURCE_TIME_FUNCTION
+  logical :: USE_RICKER_TIME_FUNCTION,USE_OTHER_TIME_FUNCTION,PRINT_SOURCE_TIME_FUNCTION
   logical :: HAS_FINITE_FAULT_SOURCE
 
   ! external source time function

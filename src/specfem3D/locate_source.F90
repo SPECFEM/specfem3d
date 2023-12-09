@@ -34,7 +34,7 @@
 
   use specfem_par, only: USE_FORCE_POINT_SOURCE,USE_RICKER_TIME_FUNCTION, &
       UTM_PROJECTION_ZONE,SUPPRESS_UTM_PROJECTION,USE_SOURCES_RECEIVERS_Z, &
-      USE_EXTERNAL_SOURCE_FILE, &
+      USE_OTHER_TIME_FUNCTION,USE_EXTERNAL_SOURCE_FILE, &
       USE_TRICK_FOR_BETTER_PRESSURE,COUPLE_WITH_INJECTION_TECHNIQUE, &
       myrank,NSPEC_AB,NGLOB_AB,ibool,xstore,ystore,zstore,DT, &
       NSOURCES,HAS_FINITE_FAULT_SOURCE,LTS_MODE
@@ -42,7 +42,7 @@
   ! sources arrays
   use specfem_par, only: Mxx,Myy,Mzz,Mxy,Mxz,Myz,hdur, &
     tshift_src,utm_x_source,utm_y_source, &
-    force_stf,factor_force_source,comp_dir_vect_source_E,comp_dir_vect_source_N,comp_dir_vect_source_Z_UP, &
+    cmt_stf,force_stf,factor_force_source,comp_dir_vect_source_E,comp_dir_vect_source_N,comp_dir_vect_source_Z_UP, &
     xi_source,eta_source,gamma_source,nu_source, &
     ispec_selected_source,islice_selected_source
 
@@ -520,6 +520,60 @@
             case default
               stop 'unsupported force_stf value!'
             end select
+          elseif (USE_OTHER_TIME_FUNCTION) then
+            ! CMT sources with other time functions
+            select case(cmt_stf(isource))
+            case (0)
+              ! Gaussian
+              write(IMAIN,*) '    using Gaussian source time function'
+              write(IMAIN,*) '             half duration: ',hdur(isource),' seconds'
+              write(IMAIN,*) '    Gaussian half duration: ',hdur(isource)/SOURCE_DECAY_MIMIC_TRIANGLE,' seconds'
+            case (1)
+              ! Ricker
+              write(IMAIN,*) '    using Ricker source time function'
+              ! prints frequency content for point forces
+              f0 = hdur(isource)
+              t0_ricker = 1.2d0/f0
+              write(IMAIN,*)
+              write(IMAIN,*) '    using a source of dominant frequency ',f0
+              write(IMAIN,*) '    t0_ricker = ',t0_ricker,'tshift_src = ',tshift_src(isource)
+              write(IMAIN,*)
+              write(IMAIN,*) '    lambda_S at dominant frequency = ',3000./sqrt(3.)/f0
+              write(IMAIN,*) '    lambda_S at highest significant frequency = ',3000./sqrt(3.)/(2.5*f0)
+              write(IMAIN,*)
+              write(IMAIN,*) '    half duration in frequency: ',hdur(isource),' seconds**(-1)'
+            case (2)
+              ! Heaviside
+              write(IMAIN,*) '    using (quasi) Heaviside source time function'
+              write(IMAIN,*) '             half duration: ',hdur(isource),' seconds'
+            case (3)
+              ! Monochromatic
+              write(IMAIN,*) '    using monochromatic source time function'
+              ! prints frequency content for point forces
+              f0 = hdur(isource)
+              write(IMAIN,*)
+              write(IMAIN,*) '    using a source of period ',f0
+              write(IMAIN,*)
+              write(IMAIN,*) '    half duration in period: ',hdur(isource),' seconds'
+            case (4)
+              ! Gaussian by Meschede et al. (2011)
+              write(IMAIN,*) '    using Gaussian source time function by Meschede et al. (2011), eq.(2)'
+              write(IMAIN,*) '             tau: ',hdur(isource),' seconds'
+            case (5)
+              ! Brune
+              write(IMAIN,*) '    using Brune source time function'
+              ! prints rise time for point forces
+              write(IMAIN,*)
+              write(IMAIN,*) '    rise time: ',hdur(isource),' seconds'
+            case (6)
+              ! Smoothed Brune
+              write(IMAIN,*) '    using Smoothed Brune source time function'
+              ! prints rise time for point forces
+              write(IMAIN,*)
+              write(IMAIN,*) '    rise time: ',hdur(isource),' seconds'
+            case default
+              stop 'unsupported force_stf value!'
+            end select
           else
             ! CMT sources
             if (USE_RICKER_TIME_FUNCTION) then
@@ -803,7 +857,7 @@
       call get_cmt(filename,yr,jda,mo,da,ho,mi,sec, &
                    tshift_src,hdur, &
                    lat,lon,depth,moment_tensor, &
-                   DT,NSOURCES,min_tshift_src_original,user_source_time_function)
+                   DT,NSOURCES,min_tshift_src_original,cmt_stf,user_source_time_function)
 
       ! stores infos for ASDF/SAC files
       yr_PDE = yr     ! year
