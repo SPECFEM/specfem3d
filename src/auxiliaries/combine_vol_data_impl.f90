@@ -39,7 +39,7 @@ module combine_vtk_par
     integer,dimension(:,:),allocatable :: total_dat_con
 
     ! maximum number of slices
-    integer,parameter :: MAX_NUM_NODES = 600
+    integer,parameter :: MAX_NUM_NODES = 1000
 
 end module combine_vtk_par
 

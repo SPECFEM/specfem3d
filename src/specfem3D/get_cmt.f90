@@ -69,6 +69,7 @@
   t_shift(:) = 0.d0
   tshift_src(:) = 0.d0
   hdur(:) = 0.d0
+  cmt_stf(:) = 0
   moment_tensor(:,:) = 0.d0
 
   ! origin time
