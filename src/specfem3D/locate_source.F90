@@ -871,6 +871,7 @@
   endif
 
   ! broadcasts general source information read on the main to the nodes
+  call bcast_all_i(cmt_stf,NSOURCES)
   call bcast_all_dp(tshift_src,NSOURCES)
   call bcast_all_dp(hdur,NSOURCES)
   call bcast_all_dp(lat,NSOURCES)
