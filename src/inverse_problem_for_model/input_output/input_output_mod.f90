@@ -2510,6 +2510,7 @@ contains
                            DT,NSOURCES,min_tshift,cmt_stf,acqui_simu(ievent)%user_source_time_function)
             endif
             ! broadcasts specific moment tensor infos
+            call bcast_all_i(cmt_stf,NSOURCES)
             call bcast_all_dp(moment_tensor,6*NSOURCES)
           endif
 
@@ -2520,7 +2521,6 @@ contains
           call bcast_all_dp(long,NSOURCES)
           call bcast_all_dp(depth,NSOURCES)
           call bcast_all_singledp(min_tshift)
-          call bcast_all_i(cmt_stf,NSOURCES)
           call bcast_all_cr(acqui_simu(ievent)%user_source_time_function,NSOURCES_STF*NSTEP_STF)
 
           ! get the moment tensor
