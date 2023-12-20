@@ -92,12 +92,11 @@ case $my_FC in
         #
         # warnings about external function calls can be suppressed by "-warn all,noexternal" for version > 2018
         # optimization report: "-vec-report0" is old and will be replaced by "-qopt-report0 -qopt-report-phase=vec" for v >=15.0
-        DEF_FFLAGS="-xHost -fpe0 -ftz -assume buffered_io -assume byterecl -align sequence -std08 -diag-disable 6477 -implicitnone -gen-interfaces -warn all" # -mcmodel=medium -shared-intel
+        DEF_FFLAGS="-xHost -fpe0 -ftz -assume buffered_io -assume byterecl -align sequence -std08 -diag-disable 6477 -implicitnone -gen-interfaces -warn all,noexternal" # -mcmodel=medium -shared-intel
         OPT_FFLAGS="-O3 -check nobounds"
         DEBUG_FFLAGS="-check all -debug -g -O0 -fp-stack-check -traceback -ftrapuv"
         # option "-openmp" is soon deprecated and replaced by "-qopenmp" for versions > 17.x
         OMP_FFLAGS="-qopenmp"
-        #
         ;;
     gfortran|*/gfortran|f95|*/f95)
         #
