@@ -14,7 +14,29 @@ For this to work, the python version must match the internal python version from
 
 Another option is to install vtk into the provided Blender python version. For example, on Mac this can be used:
 ```
-/Applications/Blender.app/Contents/Resources/3.6/python/bin/python3.10 -m pip install vtk
+/Applications/Blender.app/Contents/Resources/3.6/python/bin/python3.10 -m ensurepip
+/Applications/Blender.app/Contents/Resources/3.6/python/bin/python3.10 -m pip install vtk==9.2.6
+```
+In this latter case to avoid problems with blender loading the matplotlib rendering modules, comment out the lines related to vtkRenderingMatplotlib in the corresponding vtk file. For example, on Mac this would be needed:
+```
+## correct import problem with vtk in blender
+# see: https://devtalk.blender.org/t/python-console-undefined-symbol-py-main-upon-import/21143/6
+cd /Applications/Blender.app/Contents/Resources/3.6/python/lib/python3.10/site-packages
+
+sed -i "s:from vtkmodules.vtkRenderingMatplotlib import *:#from vtkmodules.vtkRenderingMatplotlib import *:" ./vtk.py
+sed -i "s:from .vtkRenderingMatplotlib import *:#from .vtkRenderingMatplotlib import *:" ./vtkmodules/all.py
+```
+This should work. You could test it by running blender and importing vtk in its scripting environment, or running blender with a short test script `my_test.py`:
+```
+#my test script
+import sys
+for path in sys.path: print(path)
+import vtk
+print("vtk: ",vtk.__path__)
+```
+and run blender with:
+```
+blender -noaudio --background --python my_test.py
 ```
 
 

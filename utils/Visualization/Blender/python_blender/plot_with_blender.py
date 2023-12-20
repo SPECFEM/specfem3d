@@ -4,14 +4,14 @@
 #  /usr/bin/env /Applications/Blender.app/Contents/MacOS/Blender --background --python-use-system-env --python plot_blender_sphere.py --
 #
 #
-# run with: > ./plot_blender_sphere.py --help
+# run with: > ./plot_with_blender.py --help
 #
 ###############################################################################################
 
 import sys
 import os
-#import glob
-#import time
+import time
+import datetime
 
 # blender
 try:
@@ -24,8 +24,11 @@ print("")
 print("Blender: version ",bpy.app.version_string)
 print("")
 
+# blender meshing
+import bmesh
+
 # adds path
-sys.path.append('/Applications/Blender.app/Contents/Resources/3.6/python/lib/python3.10/site-packages')
+#sys.path.append('/Applications/Blender.app/Contents/Resources/3.6/python/lib/python3.10/site-packages')
 
 try:
     import vtk
@@ -36,21 +39,38 @@ except:
         print("  ",path)
     sys.exit(1)
 
+print("VTK: version ",vtk.vtkVersion().GetVTKVersion())
+print("")
+
 try:
     import numpy as np
 except:
     print("Failed importing numpy. Please make sure to have Blender python with numpy working properly.")
     sys.exit(1)
 
-print("")
-print("VTK: version ",vtk.vtkVersion().GetVTKVersion())
-print("")
+from mathutils import Vector,Matrix
+from math import radians,atan2,sin,cos
+
+###############################################################################################
+## USER parameters
+
+## renderer
+# render image size
+blender_img_resolution_X = 2400
+blender_img_resolution_Y = 1600
+
+# cycles rendering (for better glass effect of buildings)
+use_cycles_renderer = False
 
 ###############################################################################################
 
 # Constants
 PI = 3.141592653589793
 DEGREE_TO_RAD = PI / 180.0
+
+# Global variables
+mesh_scale_factor = 1.0
+mesh_origin = [0.0,0.0,0.0]
 
 
 # class to avoid long stdout output by renderer
@@ -78,6 +98,8 @@ class SuppressStream(object):
 
 
 def convert_vtk_to_obj(vtk_file,colormap=0,color_max=None):
+    global mesh_scale_factor,mesh_origin
+
     # Path to your .vtu file
     print("converting vtk file: ",vtk_file)
 
@@ -158,22 +180,20 @@ def convert_vtk_to_obj(vtk_file,colormap=0,color_max=None):
 
 
     # determines origin of mesh to move it back to (0,0,0) and scale it between [-1,1] to better locating it in blender
-    origin = min_coords + 0.5 * (max_coords - min_coords)
+    mesh_origin = min_coords + 0.5 * (max_coords - min_coords)
 
     # z-coordinate: leaves sea level at 0 for mesh origin
-    origin[2] = 0.0
+    mesh_origin[2] = 0.0
 
     # takes maximum size in x/y direction
     dim_max = np.maximum(dimensions[0],dimensions[1])
 
     if np.abs(dim_max) > 0.0:
-        scale_factor = 2.0 / dim_max
-    else:
-        scale_factor = 0.0001  # Change this value according to your data
+        mesh_scale_factor = 2.0 / dim_max
 
     print("  mesh scaling:")
-    print("  origin       :",origin)
-    print("  scale factor :",scale_factor)
+    print("  origin       :",mesh_origin)
+    print("  scale factor :",mesh_scale_factor)
     print("")
 
     # creates an array to store scaled points
@@ -181,8 +201,11 @@ def convert_vtk_to_obj(vtk_file,colormap=0,color_max=None):
 
     # Loop through each point, scale its coordinates, and add it to the new points array
     for i in range(num_points):
-        point = np.array(points.GetPoint(i)) - origin
-        scaled_point = point * scale_factor
+        # translation by origin
+        point = np.array(points.GetPoint(i)) - mesh_origin
+        # uniform scaling
+        scaled_point = point * mesh_scale_factor
+        # stores updated points
         scaled_points.InsertNextPoint(scaled_point)
 
     # creates a new polydata with the scaled points
@@ -722,12 +745,24 @@ def create_blender_setup(obj_file=""):
     print("blender setup:")
     print("")
 
-    # Clear existing objects in the scene
-    #bpy.ops.object.select_all(action='SELECT')
-    #bpy.ops.object.delete()
-    # clears only default Cube object, and leaves Camera and Light object
+    # clears all existing objects in the scene
+    bpy.ops.object.select_all(action='SELECT')
+    bpy.ops.object.delete()
+
+    # clears only default Cube object and any previous output & output_dfx object,
+    # leaves Camera and Light object
+    #print("  objects: ",bpy.data.objects.keys())
+    #objs = bpy.data.objects
+    #for obj in objs:
+    #    print("  objects: ",obj.name)
+    #    if obj.name == "Cube": objs.remove(obj, do_unlink=True)
+    #    if obj.name.contains("output"): objs.remove(obj, do_unlink=True)
+
+    print("  objects: ",bpy.data.objects.keys())
     objs = bpy.data.objects
-    objs.remove(objs["Cube"], do_unlink=True)
+    for obj in objs:
+        print("  objects: ",obj.name)
+    print("")
 
     # import mesh object into blender
     if len(obj_file) > 0:
@@ -737,7 +772,10 @@ def create_blender_setup(obj_file=""):
         # reads the mesh object file
         if extension == '.ply':
             # Import .ply file
-            bpy.ops.import_mesh.ply(filepath=obj_file)
+            # New experimental, but much faster
+            bpy.ops.wm.ply_import(filepath=obj_file)
+            # or standard/legacy ply importer
+            #bpy.ops.import_mesh.ply(filepath=obj_file)
         elif extension == '.obj':
             # Import .obj file into Blender
             bpy.ops.import_scene.obj(filepath=obj_file)
@@ -747,18 +785,6 @@ def create_blender_setup(obj_file=""):
 
         print("  imported in blender: ",obj_file)
         print("")
-
-    ## background plane
-    # Create a mesh plane (to capture shadows and indicate sea level)
-    bpy.ops.mesh.primitive_plane_add(size=10, enter_editmode=False, location=(0, 0, 0))
-
-    # Get the created plane object
-    plane_object = bpy.context.object
-
-    # Set the object's material to white
-    mat = bpy.data.materials.new(name="White")
-    mat.diffuse_color = (0.135, 0.135, 0.135, 1)  # Set diffuse color to white
-    plane_object.data.materials.append(mat)
 
     # blender info
     print("  scenes : ",bpy.data.scenes.keys())
@@ -814,7 +840,7 @@ def create_blender_setup(obj_file=""):
 
     if obj is not None:
         # Ensure the object has a mesh and vertex colors
-        if obj.type == 'MESH' and obj.data.vertex_colors:
+        if obj.type == 'MESH' and not obj.data.vertex_colors is None:
             print("  Object 'output' has vertex colors and is a mesh.")
             # Access vertex color data
             #vertex_colors = obj.data.vertex_colors.active.data
@@ -941,27 +967,255 @@ def create_blender_setup(obj_file=""):
     print("")
 
 
-def save_blender_scene(title=""):
-    ## blender scene setup
-    print("Setting up blender scene...")
+def add_blender_buildings(buildings_file=""):
+    global mesh_origin,mesh_scale_factor
+    global use_cycles_renderer
+
+    # checks if anything to do
+    if len(buildings_file) == 0: return
+
+    print("buildings file: ",buildings_file)
     print("")
+
+    # check file
+    if not os.path.exists(buildings_file):
+        print("Error: buildings file specified not found...")
+        sys.exit(1)
+
+    # buildings need to be given as .ply (Stanford) format file
+    print("  reading in .ply mesh...")
+
+    # Enable the experimental .ply importer
+    # New experimental, but much faster
+    bpy.ops.wm.ply_import(filepath=buildings_file)
+    # or standard/legacy ply importer
+    #bpy.ops.import_mesh.ply(filepath=buildings_file)
+
+    # Print the names of imported objects
+    print("")
+    for obj in bpy.context.selected_objects:
+        print("  imported object:", obj.name," - type: ",obj.type)
+        # select buildings mesh (name must contain dxf)
+        #if obj.type == 'MESH' and 'dxf' in obj.name:
+        #    bpy.context.view_layer.objects.active = obj
+        #    obj_buildings = obj
+        #    break
+    print("")
+
+    # gets active object
+    obj = bpy.context.view_layer.objects.active
+
+    if obj is None:
+        print("  Object for buildings not found.")
+        sys.exit(1)
+
+    # note: due to different resolution of the meshes, the mesh elevation of SPECFEM mesh (e.g., AVS_shaking_map.inp)
+    #       and the buildings (e.g., from SwissTopo) might be slightly off by a few meters.
+
+    # moves and scales UTM mesh
+    if 'utm' in buildings_file:
+        # need to translate and scale the UTM mesh to place it within the vtk mesh
+        print("  UTM mesh: moving & scaling mesh...")
+        print("            mesh origin       = ",mesh_origin)
+        print("            mesh scale factor = ",mesh_scale_factor)
+        print("")
+
+        # Get the mesh data
+        mesh = obj.data
+
+        # Create a BMesh object
+        bm = bmesh.new()
+        bm.from_mesh(mesh)
+
+        # Translate the vertices (example: translating by (1, 0, 0))
+        translation_vector = Vector(mesh_origin)
+        for vert in bm.verts:
+            vert.co -= translation_vector
+
+        # Scale the vertices (example: scaling by 1.5 in all axes)
+        scale_factor = mesh_scale_factor
+        for vert in bm.verts:
+            vert.co *= scale_factor
+
+        # Update the mesh with the modified vertices
+        bm.to_mesh(mesh)
+        bm.free()
+
+    # Create a new material
+    mat = bpy.data.materials.new('buildingsMaterial')
+
+    # enable node-graph edition mode
+    mat.use_nodes = True
+
+    nodes = mat.node_tree.nodes
+    links = mat.node_tree.links
+
+    # Clear default nodes
+    for node in nodes:
+        nodes.remove(node)
 
     # gets scene
     scene = bpy.context.scene
 
-    # camera
-    cam = bpy.data.objects["Camera"]
-    scene.camera = cam
-    # Set camera translation
-    scene.camera.location = (0, -4, 4)
-    # Set camera rotation in euler angles
-    scene.camera.rotation_mode = 'XYZ'
-    scene.camera.rotation_euler = (44.0 * DEGREE_TO_RAD, 0, 0)
-    # Set camera fov in degrees
-    scene.camera.data.angle = float(30.0 * DEGREE_TO_RAD)
+    if use_cycles_renderer:
+        # Set render engine to Cycles
+        scene.render.engine = 'CYCLES'
 
-    # light
-    light = bpy.data.objects["Light"]
+        # Create a Glass BSDF node
+        mat_node = nodes.new(type='ShaderNodeBsdfGlass')
+        # Set IOR (Index of Refraction) and Roughness values
+        mat_node.inputs['IOR'].default_value = 1.5       # (e.g., 1.5 for typical glass)
+        mat_node.inputs['Roughness'].default_value = 0.6  # Roughness value (0.0 for perfectly smooth)
+
+    else:
+        # BLENDER_EEVEE renderer
+        scene.render.engine = 'BLENDER_EEVEE'
+
+        # create a glossy node
+        mat_node = nodes.new(type='ShaderNodeBsdfGlossy')
+        mat_node.inputs['Roughness'].default_value = 0.5  # Roughness value (0.0 for perfectly smooth)
+        mat_node.inputs['Color'].default_value = (0.8, 0.74, 0.56, 1)
+
+        # create a glass node
+        # note: transparency effect w/ eevee for buildings looks not good enough yet...
+        #       glass buildings need cycles renderer.
+        #       thus, i'm using glossy buildings to get some environment colors onto buildings.
+        #mat_node = nodes.new(type='ShaderNodeBsdfGlass')
+        # node color
+        #mat_node.inputs['Color'].default_value = (0.6, 0.6, 0.6, 1)
+        # enable transparency for eevee
+        # material transparency
+        #mat.blend_method = 'BLEND'   # 'OPAQUE', 'BLEND', ..
+        #mat.shadow_method = 'HASHED'
+        #mat.use_backface_culling = False
+        #mat.show_transparent_back = True
+        #mat.use_screen_refraction = True
+        #mat.refraction_depth = 0.01
+
+    # Create Output node
+    output_node = nodes.new(type='ShaderNodeOutputMaterial')
+    output_node.location = 400, 0
+
+    # Link nodes
+    links.new(mat_node.outputs['BSDF'], output_node.inputs['Surface'])
+
+    # Assign the material to the object
+    if obj.data.materials:
+        obj.data.materials[0] = mat
+    else:
+        obj.data.materials.append(mat)
+
+    # blender info
+    print("  scenes : ",bpy.data.scenes.keys())
+    print("  objects: ",bpy.data.objects.keys())
+    for obj in bpy.data.objects:
+        print("    object: ",obj.name)
+    print("")
+
+    print("  blender buildings mesh done")
+    print("")
+
+def get_mesh_elevation_at_origin():
+    # gets vtk mesh object
+    obj = bpy.data.objects['output']
+    if obj == None:
+        print("Error: no mesh object in blender available, exiting...")
+        sys.exit(1)
+
+    # object is a mesh
+    mesh = obj.data
+
+    # Define the point of interest (X, Y, Z coordinates)
+    point_of_interest = Vector((0.0, 0.0, 0.0))  # origin
+
+    # Define the origin of the ray (above the mesh)
+    ray_origin = Vector((point_of_interest.x, point_of_interest.y, 10.0))  # Adjust the Z coordinate as needed
+
+    # Get the world matrix of the object
+    matrix_world = obj.matrix_world
+
+    # Calculate the direction of the ray (pointing downwards)
+    ray_direction = Vector((0, 0, -1))
+
+    # Transform the ray direction to world space
+    ray_direction.rotate(matrix_world.to_quaternion())
+
+    # Perform the ray casting
+    success, location, _, _ = obj.ray_cast(ray_origin, ray_direction)
+
+    if success:
+        # Get the elevation (Z coordinate) of the mesh at the point of interest
+        elevation = location.z
+        print("  mesh elevation at origin = ", elevation)
+        print("")
+    else:
+        # sets a default height
+        elevation = 0.1
+        print("  mesh elevation at origin: no intersection found")
+        print("                            setting default = ",elevation)
+        print("")
+
+    return elevation
+
+
+def save_blender_scene(title="",animation=False,close_up_view=False):
+    global blender_img_resolution_X,blender_img_resolution_Y
+    global use_cycles_renderer
+
+    ## blender scene setup
+    print("Setting up blender scene...")
+    print("")
+
+    # determine elevation from mesh at origin point to position the camera
+    elevation = get_mesh_elevation_at_origin()
+
+    # elevation offset for camera positioning
+    elevation_offset = 0.15
+    camera_angle_depth_degree = 75.0
+    if title == 'Lauterbrunnen' or title == 'Zermatt':
+        elevation_offset = 0.25
+        camera_angle_depth_degree = 70.0
+
+    # gets scene
+    scene = bpy.context.scene
+
+    ## camera
+    print("  adding camera")
+    # adds camera position
+    bpy.ops.object.camera_add(enter_editmode=False, align='VIEW')
+    # current object
+    cam = bpy.context.object
+    cam.name = "Camera"   #cam = bpy.data.objects["Camera"]
+    scene.camera = cam
+
+    if close_up_view:
+        ## close-up view
+        print("  camera location relative to mesh elevation: ",elevation)
+        # Set camera translation
+        scene.camera.location = (0, -0.7, elevation + elevation_offset)
+        # Set camera rotation in euler angles
+        scene.camera.rotation_mode = 'XYZ'
+        scene.camera.rotation_euler = (camera_angle_depth_degree * DEGREE_TO_RAD, 0, 0)
+        # Set camera fov in degrees
+        scene.camera.data.angle = float(30.0 * DEGREE_TO_RAD)
+    else:
+        ## overview
+        # Set camera translation
+        scene.camera.location = (0, -4, 4)
+        # Set camera rotation in euler angles
+        scene.camera.rotation_mode = 'XYZ'
+        scene.camera.rotation_euler = (44.0 * DEGREE_TO_RAD, 0, 0)
+        # Set camera fov in degrees
+        scene.camera.data.angle = float(30.0 * DEGREE_TO_RAD)
+
+    ## light
+    print("  adding light")
+    # adds sun position
+    bpy.ops.object.light_add(type='AREA')
+    # current object
+    light = bpy.context.object
+    light.name = "Light"  #light = bpy.data.objects["Light"]
+
     light.location = (1.5, -0.5, 1.3)
     light.rotation_mode = 'XYZ'
     light.rotation_euler = (0, 40.0 * DEGREE_TO_RAD, 0)
@@ -976,9 +1230,27 @@ def save_blender_scene(title=""):
     light.data.size = 0.1
     light.data.use_contact_shadow = True  # Enable contact shadows
 
+    ## background plane
+    print("  adding sea-level plane")
+    # Create a mesh plane (to capture shadows and indicate sea level)
+    bpy.ops.mesh.primitive_plane_add(size=10, enter_editmode=False, location=(0, 0, 0))
+
+    # Get the created plane object
+    plane_object = bpy.context.object
+
+    # Set the object's material to white
+    mat = bpy.data.materials.new(name="White")
+    if close_up_view:
+        mat.diffuse_color = (0.8, 0.8, 0.8, 1)  # similar as background color to have an infinite background
+    else:
+        mat.diffuse_color = (0.135, 0.135, 0.135, 1)  # gray for better contrast
+    plane_object.data.materials.append(mat)
+
+    # text object
     if len(title) > 0:
-        print("  adding text object: title = ",title)
-        print("")
+        print("  adding text object:")
+        print("    title = ",title)
+
         # Create a new text object
         bpy.ops.object.text_add(location=(-0.3, -1.2, 0.01))  # Adjust the location as needed
         text_object = bpy.context.object
@@ -987,8 +1259,9 @@ def save_blender_scene(title=""):
         # Set text properties (font, size, etc.)
         text_object.data.size = 0.2  # Adjust the font size
 
-        print("  blender fonts: ",bpy.data.fonts.keys())
-        print("")
+        #debug
+        #print("  blender fonts available: ",bpy.data.fonts.keys())
+
         if 'Bfont' in bpy.data.fonts:
             text_object.data.font = bpy.data.fonts['Bfont']  # Use a specific default font
         elif 'Bfont Regular' in bpy.data.fonts:
@@ -1005,37 +1278,300 @@ def save_blender_scene(title=""):
 
         text_object.data.materials.append(text_material)
 
-
     # save scene and render options
+    print("")
     print("  saving blender scene...")
-    # turns on bloom
-    if scene.render.engine == 'BLENDER_EEVEE':
-        scene.eevee.use_bloom = True
+    print("")
+
+    # renderer options
+    if use_cycles_renderer:
+        # Set render engine to Cycles
+        scene.render.engine = 'CYCLES'
+
+        ## adjust settings for faster rendering w/ cycles
+        #scene.cycles.device = 'GPU'
+        # Set tile size
+        scene.cycles.tile_size = 512 # 256
+        # Lower the number of samples
+        scene.cycles.samples = 128 # Adjust the number of samples as needed
+        # Enable denoising
+        scene.cycles.use_denoising = True
+
+        # Adjust light path bounces
+        scene.cycles.max_bounces = 4  # Adjust bounce values for diffuse, glossy, transmission, etc.
+
+        ## additional parameters to check for better performance:
+        # Use Branched Path Tracing integrator
+        #scene.cycles.progressive = 'BRANCHED_PATH'
+        # Adjust Branched Path Tracing settings
+        #scene.cycles.use_square_samples = False  # Enable square samples for the branched path tracing
+        #scene.cycles.diffuse_samples = 3  # Adjust samples per type (diffuse, glossy, etc.)
+        #scene.cycles.glossy_samples = 3
+        #scene.cycles.transmission_samples = 3
+        #scene.cycles.ao_samples = 3
+        #scene.cycles.mesh_light_samples = 3
+        #scene.cycles.subsurface_samples = 3
+
+    else:
+        # Set render engine to Eevee
+        scene.render.engine = 'BLENDER_EEVEE'
+
+        # ambient occlusion
+        scene.eevee.use_gtao = True
+        scene.eevee.gtao_distance = 0.01
+        scene.eevee.gtao_factor = 1.0
+
+        # turns on screen space reflections
+        scene.eevee.use_ssr = True
+        # refraction
+        scene.eevee.use_ssr_refraction = True
+        scene.eevee.ssr_thickness = 0.1
+
+        # turns on bloom
+        #scene.eevee.use_bloom = True
 
     # render resolution
-    scene.render.resolution_x = 2400
-    scene.render.resolution_y = 1600
+    scene.render.resolution_x = blender_img_resolution_X
+    scene.render.resolution_y = blender_img_resolution_Y
+    # Set the render percentage (optional, for scaling down the final output)
+    #scene.render.resolution_percentage = 50  # Adjust as needed
 
-    # sets black background color
+    # sets white background color
     bpy.data.worlds["World"].node_tree.nodes["Background"].inputs[0].default_value = (1, 1, 1, 1)
 
-    # output image
-    scene.render.image_settings.file_format = 'JPEG'   # 'PNG'
-    name = './out'
-    name = name + '.jpg'
-    scene.render.filepath = name
-    scene.render.use_file_extension = False
-    # redirect stdout to null
-    print("  rendering image: {} ...\n".format(name))
-    # to avoid long stdout output by the renderer:
-    #    Fra:1 Mem:189.14M (Peak 190.26M) | Time:00:00.68 | Syncing Sun
-    #    Fra:1 Mem:189.14M (Peak 190.26M) | Time:00:00.68 | Syncing Camera
-    #  ..
-    suppress = False
-    with SuppressStream(sys.stdout,suppress):
-        # Render Scene and store the scene
-        bpy.ops.render.render(write_still=True)
+    print("  renderer: ",scene.render.engine)
     print("")
+
+    if animation:
+        print("animation:")
+
+        # initializes frames
+        number_of_keyframes = 0
+        total_frames = 0
+
+        start_frame = -1
+        end_frame = -1
+
+        scene.frame_start = -1
+        scene.frame_end = -1
+
+        ## dive-in keyframes
+        if 1 == 1:
+            # setup keyframes
+            number_of_keyframes += 4
+            keyframe_interval = 20
+
+            total_frames = (number_of_keyframes-1) * keyframe_interval
+
+            print("  dive-in:")
+            print("    keyframe interval      = ",keyframe_interval)
+            print("    number of keyframes    = ",number_of_keyframes)
+            print("")
+
+            # define a frame timeline
+            start_frame = 0
+            inter_frame_1 = keyframe_interval
+            inter_frame_2 = 2*keyframe_interval
+            end_frame   = total_frames
+
+            scene.frame_start = start_frame
+            scene.frame_end = end_frame
+
+            # moves camera
+            cam = bpy.data.objects["Camera"]
+
+            # start frame
+            cam.keyframe_insert("location", frame=start_frame)        # (0, -4, 4)
+            cam.keyframe_insert("rotation_euler", frame=start_frame)  # (44.0 * DEGREE_TO_RAD, 0, 0)
+
+            # intermediate frame
+            cam.location = (0, -2.5, 1)
+            cam.rotation_euler = (60.0 * DEGREE_TO_RAD, 0, 0)
+            cam.keyframe_insert("location", frame=inter_frame_1)
+            cam.keyframe_insert("rotation_euler", frame=inter_frame_1)
+
+            # intermediate frame
+            cam.location = (0, -1.2, elevation + elevation_offset)
+            cam.rotation_euler = (camera_angle_depth_degree * DEGREE_TO_RAD, 0, 0)
+            cam.keyframe_insert("location", frame=inter_frame_2)
+            cam.keyframe_insert("rotation_euler", frame=inter_frame_2)
+
+            # end frame
+            cam.location = (0, -0.7, elevation + elevation_offset)  # Ending position
+            cam.rotation_euler = (camera_angle_depth_degree * DEGREE_TO_RAD, 0, 0)
+            cam.keyframe_insert("location", frame=end_frame)
+            cam.keyframe_insert("rotation_euler", frame=end_frame)
+
+        ## rotation
+        if 1 == 1:
+            # appends frames for rotation
+            frames = 60  # Number of frames for the animation
+            keyframe_interval = 5
+            number_of_keyframes += frames
+
+            total_frames += frames * keyframe_interval
+
+            print("  rotation:")
+            print("    keyframe interval      = ",keyframe_interval)
+            print("    number of keyframes    = ",frames)
+            print("")
+
+            if start_frame == -1:
+                start_frame = 0
+            else:
+                start_frame = end_frame + 1 * keyframe_interval
+
+            if end_frame == -1:
+                end_frame = total_frames
+            else:
+                end_frame = total_frames + 1 * keyframe_interval
+
+            # updates end frame count
+            scene.frame_end = end_frame
+
+            # Set the rotation parameters
+            rotation_degrees = 360  # Total rotation in degrees
+
+            # moves camera around the z-axis
+            cam = bpy.data.objects['Camera']
+
+            #if scene.frame_start == -1:
+            #    # add start frame
+            #    scene.frame_start = start_frame
+            #    # start frame
+            #    cam.keyframe_insert("location", frame=start_frame)        # (0, -4, 4)
+            #    cam.keyframe_insert("rotation_euler", frame=start_frame)  # (44.0 * DEGREE_TO_RAD, 0, 0)
+
+            # camera offset from z-axis
+            x_0 = cam.location[0]
+            y_0 = cam.location[1]
+            z_0 = cam.location[2]
+
+            offset_distance = (x_0**2 + y_0**2)**0.5
+            angle_0 = atan2(y_0,x_0)
+
+            # Set keyframes for rotation
+            for frame in range(0,frames+1):
+                angle = angle_0 + radians(frame * (rotation_degrees / frames))
+
+                # Calculate camera position around the Z-axis
+                x = offset_distance * cos(angle)
+                y = offset_distance * sin(angle)
+                camera_location = Vector((x, y, z_0))  # Maintain Z position
+
+                # Set camera rotation towards the origin
+                look_at = Vector((0, 0, elevation))  # Origin point on mesh
+                direction = look_at - camera_location
+                rot_quat = direction.to_track_quat('-Z', 'Y')  # Point -Z axis to direction
+                camera_rotation = rot_quat.to_euler()
+
+                # there seems to be a problem with frame interpolation when the angles going past 2 PI, i.e,
+                # having the angle set between [-pi,pi] from the to_euler() output and interpolating a step
+                # between +pi to -pi. to avoid we always increase the angle going from [0,2pi[
+                #
+                # in our case here, we change & increase only the third euler angle, while the first 2 stay fixed
+                # when the camera rotates around the z-axis.
+                if camera_rotation[2] < 0: camera_rotation[2] += 2.0 * PI
+
+                frame_number = start_frame + frame * keyframe_interval
+                scene.frame_set(frame_number)
+
+                # Set camera location and keyframe for each frame
+                cam.rotation_euler = camera_rotation
+                cam.location = camera_location
+
+                cam.keyframe_insert("location", frame=frame_number)
+                cam.keyframe_insert("rotation_euler", frame=frame_number)
+
+                #print("frame: ",frame,frame_number,"angle",angle,cam.location,"rotation",cam.rotation_euler)
+
+        print("  total number of keyframes = ",number_of_keyframes)
+        print("  total number of frames    = ",total_frames)
+        print("")
+
+        # smoothing move
+        #for fcurve in cam.animation_data.action.fcurves:
+        #    for keyframe_point in fcurve.keyframe_points:
+        #        keyframe_point.interpolation = 'LINEAR'
+
+        # render settings
+        # see: https://docs.blender.org/api/current/bpy.types.FFmpegSettings.html#bpy.types.FFmpegSettings
+        # ffmpeg
+        scene.render.image_settings.file_format = 'FFMPEG'   # 'AVI_JPEG', 'FFMPEG'
+        # codec
+        scene.render.ffmpeg.codec = 'H264'                  # compression: 'MPEG4', 'H264'
+        #scene.render.ffmpeg.constant_rate_factor = 'HIGH'
+        scene.render.ffmpeg.format = 'MPEG4'                # output file container format
+        # frames per second (blender default is 24)
+        scene.render.fps = 20
+
+        # user output
+        print("  movie fps                    = ",scene.render.fps)
+        print("  movie format                 = ",scene.render.ffmpeg.format )
+        print("")
+
+        # output movie
+        name = './out.anim'
+        filename = name + '.mp4'
+        scene.render.filepath = filename
+        scene.render.use_file_extension = False
+
+        # timing
+        tic = time.perf_counter()
+
+        # redirect stdout to null
+        print("rendering animation: {} ...".format(filename))
+        # to avoid long stdout output by the renderer:
+        #    Fra:1 Mem:189.14M (Peak 190.26M) | Time:00:00.68 | Syncing Sun
+        #    Fra:1 Mem:189.14M (Peak 190.26M) | Time:00:00.68 | Syncing Camera
+        #  ..
+        suppress = False
+        with SuppressStream(sys.stdout,suppress):
+            # render animation
+            bpy.ops.render.render(animation=True)
+        print("  written to: ",filename)
+        print("")
+
+        # timing
+        toc = time.perf_counter()
+        if toc - tic < 100.0:
+            print("elapsed time for animation render is {:0.4f} seconds\n".format(toc - tic))
+        else:
+            min = int((toc-tic)/60.0)
+            sec = (toc - tic) - min * 60
+            print("elapsed time for animation render is {} min {:0.4f} sec\n".format(min,sec))
+
+    else:
+        # output image
+        scene.render.image_settings.file_format = 'JPEG'   # 'PNG'
+        name = './out'
+        filename = name + '.jpg'
+        scene.render.filepath = filename
+        scene.render.use_file_extension = False
+
+        # timing
+        tic = time.perf_counter()
+
+        # redirect stdout to null
+        print("  rendering image: {} ...".format(filename))
+        # to avoid long stdout output by the renderer:
+        #    Fra:1 Mem:462.85M (Peak 462.85M) | Time:00:00.04 | ..
+        #  ..
+        suppress = False
+        with SuppressStream(sys.stdout,suppress):
+            # Render Scene and store the scene
+            bpy.ops.render.render(write_still=True)
+        print("  written to: ",filename)
+        print("")
+
+        # timing
+        toc = time.perf_counter()
+        if toc - tic < 100.0:
+            print("elapsed time for image render is {:0.4f} seconds\n".format(toc - tic))
+        else:
+            min = int((toc-tic)/60.0)
+            sec = (toc - tic) - min * 60
+            print("elapsed time for image render is {} min {:0.4f} sec\n".format(min,sec))
 
     # save blend file
     dir = os.getcwd()
@@ -1050,7 +1586,7 @@ def save_blender_scene(title=""):
 
 
 # main routine
-def plot_with_blender(vtk_file="",image_title="",colormap=0,color_max=None):
+def plot_with_blender(vtk_file="",image_title="",colormap=0,color_max=None,buildings_file="",animation=False,close_up_view=False):
     """
     renders image for (earth) sphere with textures
     """
@@ -1065,20 +1601,29 @@ def plot_with_blender(vtk_file="",image_title="",colormap=0,color_max=None):
     # setup mesh node with shaders
     create_blender_setup(obj_file)
 
+    # add buildings
+    add_blender_buildings(buildings_file)
+
     # save blender scene
-    save_blender_scene(title=image_title)
+    save_blender_scene(image_title,animation,close_up_view)
 
 
 def usage():
-    print("usage: ./plot_with_blender.py [--vtk_file=file] [--title=my_mesh_name] [--colormap=val] [--color-max=val]")
+    print("usage: ./plot_with_blender.py [--vtk_file=file] [--title=my_mesh_name] [--colormap=val] [--color-max=val] [--buildings=file]")
+    print("                              [--with-cycles/--no-cycles]  [--help]")
     print("  with")
-    print("     --vtk_file              - input mesh file (.vtk, .vtu, .inp)")
-    print("     --title                 - title text (added to image rendering)")
-    print("     --colormap              - color map type: 0==VTK        / 1==topo      / 2==lisbon  / 3==lajolla  / 4==lipari")
-    print("                                               5==davos      / 6==turku     / 7==berlin  / 8==grayC    / 9==snow")
-    print("                                              10==shakeGreen / 11==shakeRed")
-    print("                                               (default is shakeRed)")
-    print("     --color-max             - fixes maximum value of colormap for moviedata to val, e.g., 1.e-7)")
+    print("     --vtk_file                - input mesh file (.vtk, .vtu, .inp)")
+    print("     --title                   - title text (added to image rendering)")
+    print("     --colormap                - color map type: 0==VTK        / 1==topo      / 2==lisbon    / 3==lajolla       / 4==lipari")
+    print("                                                 5==davos      / 6==turku     / 7==berlin    / 8==grayC         / 9==snow")
+    print("                                                10==shakeGreen /11==shakeRed  /12==shakeUSGS /13==shakeUSGSgray")
+    print("                                                 (default is shakeUSGSgray for shakemaps)")
+    print("     --color-max               - fixes maximum value of colormap for moviedata to val, e.g., 1.e-7)")
+    print("     --buildings               - mesh file (.ply) with buildings to visualize for the area")
+    print("     --with-cycles/--no-cycles - turns on/off CYCLES renderer (default is off, using BLENDER_EEVEE)")
+    print("     --small                   - turns on small images size (400x600px) for preview")
+    print("     --anim                    - turns on movie animation (dive-in and rotation)")
+    print("     --help                    - this help for usage...")
     sys.exit(1)
 
 
@@ -1088,6 +1633,9 @@ if __name__ == '__main__':
     image_title = ""
     color_max = None
     colormap = -1
+    buildings_file = ""
+    animation = False
+    close_up_view = False
 
     # reads arguments
     #print("\nnumber of arguments: " + str(len(sys.argv)))
@@ -1098,14 +1646,27 @@ if __name__ == '__main__':
         # get arguments
         if "--help" in arg:
             usage()
-        elif "--vtk_file=" in arg:
-            vtk_file = arg.split('=')[1]
-        elif "--title=" in arg:
-            image_title = arg.split('=')[1]
-        elif "--colormap" in arg:
-            colormap = int(arg.split('=')[1])
+        elif "--anim" in arg:
+            animation = True
+        elif "--buildings=" in arg:
+            buildings_file = arg.split('=')[1]
+        elif "--closeup" in arg:
+            close_up_view = True
         elif "--color-max" in arg:
             color_max = float(arg.split('=')[1])
+        elif "--colormap" in arg:
+            colormap = int(arg.split('=')[1])
+        elif "--with-cycles" in arg:
+            use_cycles_renderer = True
+        elif "--no-cycles" in arg:
+            use_cycles_renderer = False
+        elif "--small" in arg:
+            blender_img_resolution_X = 600
+            blender_img_resolution_Y = 400
+        elif "--title=" in arg:
+            image_title = arg.split('=')[1]
+        elif "--vtk_file=" in arg:
+            vtk_file = arg.split('=')[1]
         elif i >= 8:
             print("argument not recognized: ",arg)
 
@@ -1117,5 +1678,13 @@ if __name__ == '__main__':
         else:
             colormap = 0  # VTK diverging red-blue
 
+    # logging
+    cmd = " ".join(sys.argv)
+    filename = './plot_with_blender.log'
+    with open(filename, 'a') as f:
+      print("command call --- " + str(datetime.datetime.now()),file=f)
+      print(cmd,file=f)
+      print("command logged to file: " + filename)
+
     # main routine
-    plot_with_blender(vtk_file,image_title,colormap,color_max)
+    plot_with_blender(vtk_file,image_title,colormap,color_max,buildings_file,animation,close_up_view)
