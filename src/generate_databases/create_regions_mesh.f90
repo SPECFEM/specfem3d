@@ -1857,7 +1857,7 @@ contains
     nfaces_surface = NSPEC2D_TOP
   endif
 
-! number of surface faces for all partitions together
+  ! number of surface faces for all partitions together
   call sum_all_i(nfaces_surface,nfaces_surface_glob_ext_mesh)
 
   deallocate(ibool_interfaces_ext_mesh_dummy)

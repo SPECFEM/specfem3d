@@ -179,8 +179,12 @@ jobs:
         sudo echo "deb https://apt.repos.intel.com/oneapi all main" | sudo tee /etc/apt/sources.list.d/oneAPI.list
         sudo apt-get update
         echo ""
-        echo "packages intel oneapi:"
-        sudo apt-get install -y intel-oneapi-compiler-fortran intel-oneapi-compiler-dpcpp-cpp-and-cpp-classic intel-oneapi-mpi intel-oneapi-mpi-devel
+        # info
+        #sudo -E apt-cache pkgnames intel | grep intel-oneapi
+        #echo ""
+        echo "installing packages intel oneapi:"
+        sudo apt-get install -y intel-oneapi-compiler-fortran-2023.2.2 intel-oneapi-compiler-dpcpp-cpp-and-cpp-classic-2023.2.2 intel-oneapi-mpi intel-oneapi-mpi-devel
+        echo ""
 
     - name: compiler infos
       run: |
@@ -188,22 +192,54 @@ jobs:
         source /opt/intel/oneapi/setvars.sh
         echo ""
         echo "compiler versions:"
+        echo "icx --version"
+        which icx
+        icx --version
+        echo ""
         echo "icc --version"
+        which icc
         icc --version
+        echo ""
+        echo "ifx --version"
+        which ifx
+        ifx --version
+        echo ""
         echo "ifort --version"
+        which ifort
         ifort --version
+        echo ""
         echo "mpiifort --version"
+        which mpiifort
         mpiifort --version
+        echo ""
         echo "mpif90 --version"
+        which mpif90
         mpif90 --version
         echo ""
-        export TERM=xterm
-        echo "exports:"
-        export
-        echo ""
+        # infos
         which ifort
         which icc
         which mpiifort
+        echo "mpirun:"
+        which mpirun
+        echo ""
+        # intel setup for running tests
+        echo ""
+        echo "replacing mpif90 with mpiifort link:"
+        sudo ln -sf $(which mpiifort) $(which mpif90)
+        mpif90 --version
+        echo ""
+        # debug
+        #export I_MPI_DEBUG=5,pid,host
+        #export I_MPI_LIBRARY_KIND=debug
+        # remove -ftrapuv which leads to issues for running tests
+        sed -i "s/-ftrapuv//g" flags.guess
+        # environment setting
+        export TERM=xterm
+        # export info
+        echo "exports:"
+        export
+        echo ""
         echo ""
         printenv >> $GITHUB_ENV
         echo "CXX=icpc" >> $GITHUB_ENV
@@ -212,7 +248,8 @@ jobs:
         echo ""
 
     - name: configure serial debug
-      run: ./configure --enable-debug --without-mpi FC=ifort CC=icc
+      run: |
+        ./configure --enable-debug --without-mpi FC=ifort CC=icc
 
     - name: make serial debug
       run: |
@@ -221,7 +258,8 @@ jobs:
         make clean
 
     - name: configure serial
-      run: ./configure --without-mpi FC=ifort CC=icc
+      run: |
+        ./configure --without-mpi FC=ifort CC=icc
 
     - name: make serial
       run: |
@@ -229,7 +267,8 @@ jobs:
         make clean
 
     - name: configure parallel debug
-      run: ./configure --enable-debug --with-mpi FC=ifort CC=icc MPIFC=mpiifort MPI_INC="${I_MPI_ROOT}/include"
+      run: |
+        ./configure --enable-debug --with-mpi FC=ifort CC=icc MPIFC=mpiifort MPI_INC="${I_MPI_ROOT}/include"
 
     - name: make parallel debug
       run: |
@@ -238,16 +277,18 @@ jobs:
         make clean
 
     - name: configure parallel
-      run: ./configure --with-mpi FC=ifort CC=icc MPIFC=mpiifort MPI_INC="${I_MPI_ROOT}/include"
+      run: |
+        ./configure --with-mpi FC=ifort CC=icc MPIFC=mpiifort MPI_INC="${I_MPI_ROOT}/include"
 
     - name: make parallel
       run: |
         make -j2 all
         make clean
 
-    # check: fails due to intel MPI issue with mpif90 using gfortran as default on virtual nodes
-    #- name: make tests
-    #  run: make tests
+    # note: fails with -ftrapuv flag due to MPI issue on virtual nodes
+    - name: make tests
+      run: |
+        make tests
 
   linuxTest_0:
     name: Test run example 0 - make tests

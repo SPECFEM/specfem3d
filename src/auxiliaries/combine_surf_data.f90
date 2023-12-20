@@ -277,7 +277,7 @@ program combine_surf_data
     read(27) zstore
     close(27)
 
-    do ispec_surf=1,nspec_surf
+    do ispec_surf = 1,nspec_surf
       ispec = ibelm_surf(ispec_surf)
       k = 1
       do j = 1, NGLLY, iny
@@ -345,7 +345,7 @@ program combine_surf_data
 
     np = npoint * (it-1)
 
-! surface file
+    ! surface file
     local_ibool_surf_file = trim(prname) // 'ibelm_' //trim(surfname)// '.bin'
     open(unit = 28,file = trim(local_ibool_surf_file),status='old', iostat = ier, form='unformatted')
     read(28) nspec_surf
@@ -354,7 +354,7 @@ program combine_surf_data
     read(28) ibelm_surf
     close(28)
 
-! ibool file
+    ! ibool file
     local_ibool_file = trim(prname) // 'ibool' // '.bin'
     open(unit = 28,file = trim(local_ibool_file),status='old', iostat = ier, form='unformatted')
     read(28) ibool

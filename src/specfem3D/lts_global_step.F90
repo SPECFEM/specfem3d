@@ -507,7 +507,7 @@
   integer,intent(in) :: ilevel
 
   ! local parameters
-  integer :: is, ie, iglob_n, iglob
+  integer :: is0, ie, iglob_n, iglob
 
   ! checks that current level is not coarsest one
   if (ilevel >= num_p_level) return
@@ -522,14 +522,14 @@
     !
     ! fast/partial memory copy of displacement array
     ! gets start index from finest level up to end index of current level
-    is = p_level_iglob_start(1)
+    is0 = p_level_iglob_start(1)
     ie = p_level_iglob_end(ilevel)
 
     ! checks
-    if (ie < is) stop 'Error lts_set_finer_initial_condition: invalid start/end index'
+    if (ie < is0) stop 'Error lts_set_finer_initial_condition: invalid start/end index'
 
     ! copies over displacement from coarser level
-    displ_p(:,is:ie,ilevel) = displ_p(:,is:ie,ilevel+1)
+    displ_p(:,is0:ie,ilevel) = displ_p(:,is0:ie,ilevel+1)
 
     ! cancels out coarser node displacements
     do iglob_n = 1,num_p_level_coarser_to_update(ilevel)

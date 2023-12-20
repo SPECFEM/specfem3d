@@ -155,6 +155,8 @@
   allocate(faces_surface_offset(NPROC),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 2119')
   if (ier /= 0) stop 'error allocating array for movie faces'
+  nfaces_perproc_surface(:) = 0
+  faces_surface_offset(:) = 0
 
   ! number of faces per slice
   call gather_all_singlei(nfaces_surface,nfaces_perproc_surface,NPROC)

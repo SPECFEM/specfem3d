@@ -118,7 +118,7 @@
   use specfem_par_lts, only: iglob_p_refine, p_level_iglob_start, p_level_iglob_end, &
     num_p_level_coarser_to_update, p_level_coarser_to_update, lts_current_m, &
     cmassxyz,rmassxyz,rmassxyz_mod, &
-    accel_collected
+    accel_collected,mask_ibool_collected,use_accel_collected
 
   ! debug
   use specfem_par, only: it,xstore,ystore,zstore
@@ -322,22 +322,72 @@
     endif
 
     ! collects acceleration a_n+1 = B u_n+1 from diffferent levels
-    if (allocated(accel_collected)) then
+    if (use_accel_collected) then
       ! collects acceleration B u_n+1 from this current level ilevel
       ! this is computed in the first local iteration (m==1) where the initial condition sets u_0 = u_n+1
       if (ilevel < num_p_level) then
+        ! multiple levels
         ! only store if accel was computed the very first time this level was called
         !(i.e., lts_current_m(ilevel+1) is still at 1)
         if (m == 1 .and. lts_current_m(ilevel+1) == 1) then
-          if (STACEY_ABSORBING_CONDITIONS) then
-            ! uses same mass matrix as on coarsest level
-            accel_collected(:,is:ie) = rmassxyz_mod(:,is:ie)/rmassxyz(:,is:ie) * accel(:,is:ie)
-          else
-            accel_collected(:,is:ie) = accel(:,is:ie)
-          endif
+          ! note: an element in the current p-level can contain nodes that are shared with coarser levels.
+          !       these elements are flagged as boundary elements and updated in the current (finer) level.
+          !       to collect their acceleration, the current level has them computed during the boundary contribution.
+          !       however, those acceleration values will be zeroed out again when the next coarser level is started and
+          !       when it sets its nodes accel(:,is:ie) array to zero.
+          ! thus, if we set
+          !   accel_collected(:,is:ie) = accel(:,is:ie)
+          ! the next time we call this from the coarser level, the values on the boundary nodes that have been computed
+          ! during the finer p-level are zeroed out. thus, the boundary nodes would have zeroes stored in
+          ! the accel_collected(:,:) array.
+          !
+          ! we need to make sure to only update nodes from the current level that are
+          ! not boundary nodes. for that purpose, we use the mask_ibool_collected flags.
+          !
+          ! without distinction of boundary node updates, this could be done:
+          !
+          !   ! uses same mass matrix as on coarsest level
+          !   accel_collected(:,is:ie) = rmassxyz_mod(:,is:ie)/rmassxyz(:,is:ie) * accel(:,is:ie)
+          !
+          ! with consideration of boundary nodes:
+          !
+          ! loop over current level nodes
+          do iglob = is,ie
+            if (.not. mask_ibool_collected(iglob)) then
+              ! uses same mass matrix as on coarsest level
+              accel_collected(:,iglob) = rmassxyz_mod(:,iglob)/rmassxyz(:,iglob) * accel(:,iglob)
+              mask_ibool_collected(iglob) = .true.
+            endif
+          enddo
+          ! boundary points belonging to coarser levels (but are updated in current level)
+          do iglob_n = 1,num_p_level_coarser_to_update(ilevel)
+            iglob = p_level_coarser_to_update(iglob_n,ilevel)
+            if (.not. mask_ibool_collected(iglob)) then
+              if (iglob_p_refine(iglob) > 1) then
+                ! node belongs to finer p-levels
+                ! uses same mass matrix as on coarsest level
+                accel_collected(:,iglob) = rmassxyz_mod(:,iglob)/rmassxyz(:,iglob) * accel(:,iglob)
+              else
+                ! node belongs to coarsest level
+                accel_collected(:,iglob) = accel(:,iglob)
+              endif
+              mask_ibool_collected(iglob) = .true.
+            endif
+          enddo
         endif
       else
-        accel_collected(:,is:ie) = accel(:,is:ie)
+        ! coarsest p-level (ilevel == num_p_level)
+        ! only loop over current level nodes
+        ! as there should be no boundary points belonging to coarser levels
+        do iglob = is,ie
+          if (.not. mask_ibool_collected(iglob)) then
+            accel_collected(:,iglob) = accel(:,iglob)
+            mask_ibool_collected(iglob) = .true.
+          endif
+        enddo
+        ! in case of only a single level (num_p_level==1)
+        ! no need to distinguish between boundary nodes and p-level nodes, just update level points
+        ! accel_collected(:,is:ie) = accel(:,is:ie)
       endif
     endif
 
@@ -366,8 +416,10 @@
       ! sets accel to collected accel wavefield for (possible) seismogram outputs or shakemaps
       ! note: for the next time loop iteration, accel will be zeroed out again,
       !       thus this change will have no effect on the time marching.
-      if (allocated(accel_collected)) then
+      if (use_accel_collected) then
         accel(:,:) = accel_collected(:,:)
+        ! re-sets flags on global nodes (for next lts stepping)
+        mask_ibool_collected(:) = .false.
       endif
     endif
 
