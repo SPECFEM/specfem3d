@@ -1,6 +1,6 @@
 # Specfem3D
 
-[![DOI](https://zenodo.org/badge/14306190.svg)](https://zenodo.org/badge/latestdoi/14306190)<br>
+[![DOI](https://zenodo.org/badge/14306190.svg)](https://zenodo.org/doi/10.5281/zenodo.7734074)
 
 SPECFEM3D_Cartesian simulates acoustic (fluid), elastic (solid), coupled acoustic/elastic, poroelastic or seismic wave propagation in any type of conforming mesh of hexahedra (structured or not.)
 
