@@ -1,0 +1,199 @@
+cff-version: 1.2.0
+
+message: "If this software turns out to be helpful for your research, please cite both the article from preferred-citation and the software itself. More detailed citation suggestions can be found in the user manual."
+title: 'SPECFEM/specfem3d: SPECFEM3D v4.1.0'
+version: v4.1.0
+date-released: '2023-12-20'
+repository-code: https://github.com/SPECFEM/specfem3d/tree/v4.1.0
+url: "https://github.com/SPECFEM/specfem3d"
+type: software
+identifiers:
+  - type: doi
+  - value: 10.5281/zenodo.10413988
+license:
+  - gpl-3.0-or-later
+
+authors:
+- family-names: Komatitsch
+  given-names: Dimitri
+- family-names: Tromp
+  given-names: Jeroen
+- family-names: Garg
+  given-names: Rahul
+- family-names: Gharti
+  given-names: Hom Nath
+- family-names: Nagaso
+  given-names: Masaru
+- family-names: Oral
+  given-names: Elif
+- family-names: Peter
+  given-names: Daniel
+- family-names: Afanasiev
+  given-names: Michael
+- family-names: Almada
+  given-names: Rafael
+- family-names: Ampuero
+  given-names: Jean-Paul
+- family-names: Bachmann
+  given-names: Etienne
+- family-names: Bai
+  given-names: Kangchen
+- family-names: Basini
+  given-names: Piero
+- family-names: Beller
+  given-names: Stephen
+- family-names: Bishop
+  given-names: Jordan
+- family-names: Bissey
+  given-names: Francois
+- family-names: Blitz
+  given-names: Celine
+- family-names: Bottero
+  given-names: Alexis
+- family-names: Bozdag
+  given-names: Ebru
+- family-names: Casarotti
+  given-names: Emanuele
+- family-names: Charles
+  given-names: Joseph
+- family-names: Chen
+  given-names: Min
+- family-names: Cristini
+  given-names: Paul
+- family-names: Durochat
+  given-names: Clement
+- family-names: Galvez Barron
+  given-names: Percy
+- family-names: Gassmoeller
+  given-names: Rene
+- family-names: Goeddeke
+  given-names: Dominik
+- family-names: Grinberg
+  given-names: Leopold
+- family-names: Gupta
+  given-names: Aakash
+- family-names: Heien
+  given-names: Eric
+- family-names: Hjoerleifsdottir
+  given-names: Vala
+- family-names: Karakostas
+  given-names: Foivos
+- family-names: Kientz
+  given-names: Sue
+- family-names: Labarta
+  given-names: Jesus
+- family-names: Le Goff
+  given-names: Nicolas
+- family-names: Le Loher
+  given-names: Pieyre
+- family-names: Lefebvre
+  given-names: Matthieu
+- family-names: Liu
+  given-names: Qinya
+- family-names: Liu
+  given-names: Youshan
+- family-names: Luet
+  given-names: David
+- family-names: Luo
+  given-names: Yang
+- family-names: Maggi
+  given-names: Alessia
+- family-names: Magnoni
+  given-names: Federica
+- family-names: Martin
+  given-names: Roland
+- family-names: Matzen
+  given-names: Rene
+- family-names: McBain
+  given-names: G. D.
+- family-names: McRitchie
+  given-names: Dennis
+- family-names: Meschede
+  given-names: Matthias
+- family-names: Messmer
+  given-names: Peter
+- family-names: Michea
+  given-names: David
+- family-names: Miller
+  given-names: David
+- family-names: Modrak
+  given-names: Ryan
+- family-names: Monteiller
+  given-names: Vadim
+- family-names: Morency
+  given-names: Christina
+- family-names: Nadh Somala
+  given-names: Surendra
+- family-names: Nissen-Meyer
+  given-names: Tarje
+- family-names: Pouget
+  given-names: Kevin
+- family-names: Rietmann
+  given-names: Max
+- family-names: Sales de Andrade
+  given-names: Elliott
+- family-names: Savage
+  given-names: Brian
+- family-names: Schuberth
+  given-names: Bernhard
+- family-names: Sieminski
+  given-names: Anne
+- family-names: Smith
+  given-names: James
+- family-names: Strand
+  given-names: Leif
+- family-names: Tape
+  given-names: Carl
+- family-names: Valero Cano
+  given-names: Eduardo
+- family-names: Videau
+  given-names: Brice
+- family-names: Vilotte
+  given-names: Jean-Pierre
+- family-names: Weng
+  given-names: Huihui
+- family-names: Xie
+  given-names: Zhinan
+- family-names: Zhang
+  given-names: Chang-Hua
+- family-names: Zhu
+  given-names: Hejun
+
+
+preferred-citation:
+  type: article
+  authors:
+  - family-names: Peter
+    given-names: Daniel
+  - family-names: Komatitsch
+    given-names: Dimitri
+  - family-names: Luo
+    given-names: Yang
+  - family-names: Martin
+    given-names: Roland
+  - family-names: Le Goff
+    given-names: Nicolas
+  - family-names: Casarotti
+    given-names: Emanuele
+  - family-names: Le Loher
+    given-names: Pieyre
+  - family-names: Magnoni
+    given-names: Federica
+  - family-names: Liu
+    given-names: Qinya
+  - family-names: Blitz
+    given-names: Celine
+  - family-names: Nissen-Meyer
+    given-names: Tarje
+  - family-names: Basini
+    given-names: Piero
+  - family-names: Tromp
+    given-names: Jeroen
+  title: "Forward and adjoint simulations of seismic wave propagation on fully unstructured hexahedral meshes"
+  journal: "Geophys. J. Int."
+  volume: 186
+  issue: 2
+  start: 721  # First page number
+  end: 739    # Last page number
+  year: 2011
+  doi: "10.1111/j.1365-246X.2011.05044.x"
