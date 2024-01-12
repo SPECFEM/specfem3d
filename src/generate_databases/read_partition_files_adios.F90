@@ -74,12 +74,15 @@
   !statistics
   integer :: num
   !integer :: num_xmin, num_xmax, num_ymin, num_ymax, num_top, num_bottom, num_spec, num_int
+
+  ! undefined materials as 1d string
   integer,parameter :: NUNDEFMAT_MAX = 10
-  character(len=6*NUNDEFMAT_MAX*MAX_STRING_LEN) :: undef_matpropl
+  character(len=6 * NUNDEFMAT_MAX * MAX_STRING_LEN) :: undef_matprop_tmp1d
+
   integer :: icount,j,is,ie
   integer :: ier
 
-  undef_matpropl(:) = ''
+  undef_matprop_tmp1d(:) = ''
   sel_num = 0
 
   !-------------------------------------.
@@ -355,7 +358,8 @@
     sel => selections(sel_num)
     call set_selection_boundingbox(sel, start, count)
     ! Remember: "matpropl" has been transposed in meshfem3D
-    call read_adios_schedule_array(myadios_file, myadios_group, sel, start, count, "matpropl/array", mat_prop)
+    call read_adios_schedule_array(myadios_file, myadios_group, sel, start, count, &
+                                   "matpropl/array", mat_prop)
   endif
 
   if (nundefMat_ext_mesh /= 0) then
@@ -368,7 +372,8 @@
     sel_num = sel_num+1
     sel => selections(sel_num)
     call set_selection_boundingbox(sel, start, count)
-    call read_adios_schedule_array(myadios_file, myadios_group, sel, start, count, "undef_mat_prop", undef_matpropl(1:local_dim))
+    call read_adios_schedule_array(myadios_file, myadios_group, sel, start, count, &
+                                   "undef_mat_prop/array", undef_matprop_tmp1d(1:local_dim))
   endif
 
   ! perform reading
@@ -566,23 +571,25 @@
   if (nundefMat_ext_mesh > 0) then
     do icount = 1,nundefMat_ext_mesh
       do j = 1,6
-        is = (icount-1)*6*MAX_STRING_LEN + (j-1)*MAX_STRING_LEN + 1
-        ie = is + MAX_STRING_LEN
-        undef_mat_prop(j,icount) = undef_matpropl(is:ie)
+        is = (icount-1)*6*MAX_STRING_LEN + ((j-1)*MAX_STRING_LEN + 1)
+        ie = is + MAX_STRING_LEN - 1
+        undef_mat_prop(j,icount) = undef_matprop_tmp1d(is:ie)
       enddo
     enddo
   endif
 
   ! debug
-  !if (myrank == 1) print *,myrank,'undef_matpropl: ',trim(undef_matpropl)
+  !if (myrank == 1) print *,myrank,'undef_matprop_tmp1d: ',trim(undef_matprop_tmp1d)
   !do icount = 0,NPROC-1
   !  print *
+  !  call flush(6)
+  !  call synchronize_all()
   !  if (myrank == icount) then
-  !    print *,myrank,'undef_mat_prop: '
+  !    print *,'debug: ',myrank,'undef_mat_prop: '
   !    do j = 1,6
   !      print *,'  index ',j,': ',trim(undef_mat_prop(j,1))
+  !      call flush(6)
   !    enddo
-  !    call flush(6)
   !  endif
   !  call synchronize_all()
   !enddo

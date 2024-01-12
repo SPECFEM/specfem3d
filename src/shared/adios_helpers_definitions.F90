@@ -1941,13 +1941,20 @@ subroutine  define_adios_local_1d_string_1d(adios_group, group_size_inc, local_d
   !debug
   !print *,"in define local: full_name:", trim(full_name)
 
+  ! Define the dimensions of the array. local_dim used as a dummy
+  ! variable to call the integer routine.
+  call define_adios_global_dims_1d(adios_group, group_size_inc, trim(array_name), local_dim)
+
 #if defined(USE_ADIOS)
   ! ADIOS 1
-  call adios_define_var(adios_group, trim(array_name), trim(path), adios_string, '', '', '', var_id )
+  call adios_define_var(adios_group, "array", trim(full_name), adios_string, '', '', '', var_id )
 
 #elif defined(USE_ADIOS2)
   ! ADIOS 2
   ! note: we won't store the variable object, but get it back by adios2_inquire_** for writing
+
+  full_name = trim(full_name) // '/array'
+
   ! defines global variable
   call adios2_define_variable(v, adios_group, trim(full_name), adios2_type_string, ier)
   call check_adios_err(ier,"Error adios2 could not define parameter: "//trim(full_name))

@@ -108,7 +108,10 @@
   integer :: mat_id,domain_id
   integer(kind=4), dimension(2,nspec) :: material_index
   double precision , dimension(:,:),allocatable :: matpropl
-  character(len=MAX_STRING_LEN*6*NMATERIALS) :: undef_matpropl
+
+  ! undefined materials stored as 1d string
+  integer,parameter :: NUNDEFMAT_MAX = 10
+  character(len=6 * NUNDEFMAT_MAX * MAX_STRING_LEN) :: undef_matprop_tmp1d
 
   !--- Local parameters for ADIOS ---
   character(len=MAX_STRING_LEN) :: output_name
@@ -199,8 +202,15 @@
   if (icount /= ndef) stop 'Error icount not equal to ndef'
 
   ! undefined material properties
+  ! checks for sufficient buffer length
+  if (nundef > NUNDEFMAT_MAX) stop 'Error number of undefined materials exceeds maximum NUNDEFMAT_MAX'
   ! we use a 1D character string for ADIOS read/write
-  undef_matpropl(:) = ''
+  !
+  ! note: ADIOS2 will trim strings when storing and thus shorten the string length if there are spaces,
+  !       in particular at the beginning of the strings.
+  !       we'll trim here explicitly to start the string at the first character undef_matprop_tmp1d(1:1)
+  !       for each property
+  undef_matprop_tmp1d(:) = ''
   icount = 0
   do i = 1,NMATERIALS
     domain_id = int(material_properties(i,7))
@@ -212,41 +222,63 @@
       ! format example tomography: -1 tomography elastic tomography_model.xyz 0 2
       ! material id
       is = (icount-1)*6*MAX_STRING_LEN + 1
-      ie = is + MAX_STRING_LEN
-      write(undef_matpropl(is:ie),*) mat_id
+      ie = is + MAX_STRING_LEN - 1
+      write(undef_matprop_tmp1d(is:ie),*) mat_id
+      ! trim left white space
+      undef_matprop_tmp1d(is:ie) = adjustl(undef_matprop_tmp1d(is:ie))
+
+      !debug
+      !print *,'debug',myrank,'save undef: ',is,ie,'***'//undef_matprop_tmp1d(is:ie)//'***'
+      !call flush(6)
+
       ! keyword/domain/filename
       ! type-keyword
       is = (icount-1)*6*MAX_STRING_LEN + (1*MAX_STRING_LEN + 1)
-      ie = is + MAX_STRING_LEN
-      undef_matpropl(is:ie) = material_properties_undef(i,1) ! 'tomography'
+      ie = is + MAX_STRING_LEN - 1
+      undef_matprop_tmp1d(is:ie) = material_properties_undef(i,1) ! 'tomography'
+      ! trim left white space
+      undef_matprop_tmp1d(is:ie) = adjustl(undef_matprop_tmp1d(is:ie))
+
       ! name type
       is = (icount-1)*6*MAX_STRING_LEN + (2*MAX_STRING_LEN + 1)
-      ie = is + MAX_STRING_LEN
-      undef_matpropl(is:ie) = material_properties_undef(i,2)
+      ie = is + MAX_STRING_LEN - 1
+      undef_matprop_tmp1d(is:ie) = material_properties_undef(i,2)
+      ! trim left white space
+      undef_matprop_tmp1d(is:ie) = adjustl(undef_matprop_tmp1d(is:ie))
+
       ! checks consistency between domain-name and domain_id
       select case (domain_id)
       case (IDOMAIN_ACOUSTIC)
-        if (trim(undef_matpropl(is:ie)) /= 'acoustic') stop 'Error in undef_matpropl acoustic domain'
+        if (trim(undef_matprop_tmp1d(is:ie)) /= 'acoustic') stop 'Error in undef_matprop_tmp1d acoustic domain'
       case (IDOMAIN_ELASTIC)
-        if (trim(undef_matpropl(is:ie)) /= 'elastic')  stop 'Error in undef_matpropl elastic domain'
+        if (trim(undef_matprop_tmp1d(is:ie)) /= 'elastic')  stop 'Error in undef_matprop_tmp1d elastic domain'
       case (IDOMAIN_POROELASTIC)
-        if (trim(undef_matpropl(is:ie)) /= 'poroelastic')  stop 'Error in undef_matpropl poroelastic domain'
+        if (trim(undef_matprop_tmp1d(is:ie)) /= 'poroelastic')  stop 'Error in undef_matprop_tmp1d poroelastic domain'
       end select
+
       ! default name
       is = (icount-1)*6*MAX_STRING_LEN + (3*MAX_STRING_LEN + 1)
-      ie = is + MAX_STRING_LEN
-      undef_matpropl(is:ie) = material_properties_undef(i,3) ! 'tomography_model.xyz'
+      ie = is + MAX_STRING_LEN - 1
+      undef_matprop_tmp1d(is:ie) = material_properties_undef(i,3) ! 'tomography_model.xyz'
+      ! trim left white space
+      undef_matprop_tmp1d(is:ie) = adjustl(undef_matprop_tmp1d(is:ie))
+
       ! default tomo-id (unused)
       is = (icount-1)*6*MAX_STRING_LEN + (4*MAX_STRING_LEN + 1)
-      ie = is + MAX_STRING_LEN
-      write(undef_matpropl(is:ie),*) 0
+      ie = is + MAX_STRING_LEN - 1
+      write(undef_matprop_tmp1d(is:ie),*) 0
+      ! trim left white space
+      undef_matprop_tmp1d(is:ie) = adjustl(undef_matprop_tmp1d(is:ie))
+
       ! domain-id
       is = (icount-1)*6*MAX_STRING_LEN + (5*MAX_STRING_LEN + 1)
-      ie = is + MAX_STRING_LEN
-      write(undef_matpropl(is:ie),*) domain_id
+      ie = is + MAX_STRING_LEN - 1
+      write(undef_matprop_tmp1d(is:ie),*) domain_id
+      ! trim left white space
+      undef_matprop_tmp1d(is:ie) = adjustl(undef_matprop_tmp1d(is:ie))
     endif
   enddo
-  if (icount /= nundef) stop 'Error icount not equal to ndef'
+  if (icount /= nundef) stop 'Error icount not equal to nundef'
 
   ! element anchor points
   call safe_alloc(elmnts_mesh, NGNOD, nspec, "elmnts_mesh")
@@ -723,9 +755,9 @@
     local_dim = 6 * nundef * MAX_STRING_LEN
     ! all processes will have an identical entry, uses "local" variable to store string
     call define_adios_local_string_1D_array(myadios_group, group_size_inc, local_dim, '', &
-                                            "undef_mat_prop", undef_matpropl(1:local_dim))
+                                            "undef_mat_prop", undef_matprop_tmp1d(1:local_dim))
     ! note: global arrays with strings doesn't work yet... (segmentation fault)
-    !call define_adios_global_array1D(myadios_group, group_size_inc, local_dim, '', "undef_mat_prop",undef_matpropl)
+    !call define_adios_global_array1D(myadios_group, group_size_inc, local_dim, '', "undef_mat_prop",undef_matprop_tmp1d)
   endif
 
   local_dim = 2 * nspec_wmax
@@ -832,14 +864,13 @@
   if (nundef /= 0) then
     local_dim = 6 * nundef * MAX_STRING_LEN
     ! "local" variable, all process will write the same entry
-    !call adios_write(handle, "undef_mat_prop", undef_matpropl(1:local_dim),ier)
+    !call adios_write(handle, "undef_mat_prop", undef_matprop_tmp1d(1:local_dim),ier)
 
     ! note: global arrays don't work yet with strings, produces segmentation faults (ADIOS error?)...
     ! todo - check
     call write_adios_global_string_1d_array(myadios_file, myadios_group, myrank, sizeprocs, local_dim, &
                                             local_dim*sizeprocs, local_dim*myrank, &
-                                            "undef_mat_prop", undef_matpropl(1:local_dim))
-
+                                            "undef_mat_prop", undef_matprop_tmp1d(1:local_dim))
   endif
 
   local_dim = 2 * nspec_wmax
