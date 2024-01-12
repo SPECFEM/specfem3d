@@ -902,6 +902,7 @@ end subroutine init_tomography_files
   real(kind=CUSTOM_REAL) :: xloc,yloc
   real(kind=CUSTOM_REAL) :: elevation,distmin
   double precision :: lon,lat,depth
+  double precision :: x_current,y_current
 
   ! initializes flag
   has_tomo_value = .false.
@@ -953,7 +954,9 @@ end subroutine init_tomography_files
 
     ! project x and y in UTM back to lon/lat since model file is in lon/lat
     if (.not. SUPPRESS_UTM_PROJECTION) then
-      call utm_geo(lon,lat,xmesh,ymesh,IUTM2LONGLAT)
+      x_current = xmesh
+      y_current = ymesh
+      call utm_geo(lon,lat,x_current,y_current,IUTM2LONGLAT)
     else
       lon = dble(xmesh)
       lat = dble(ymesh)
