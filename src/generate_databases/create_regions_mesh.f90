@@ -267,7 +267,6 @@
     call print_timing()
   endif
 
-
   ! colors mesh if requested
   call synchronize_all()
   if (myrank == 0) then
@@ -314,6 +313,18 @@
     call flush_IMAIN()
   endif
   call create_mass_matrices(nglob_unique)
+
+  ! user output
+  call print_timing()
+
+  ! sets up mesh adjacency for point searches
+  call synchronize_all()
+  if (myrank == 0) then
+    write(IMAIN,*)
+    write(IMAIN,*) '  ...setting up mesh adjacency '
+    call flush_IMAIN()
+  endif
+  call setup_mesh_adjacency()
 
   ! user output
   call print_timing()

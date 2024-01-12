@@ -337,6 +337,11 @@ module specfem_par
   ! coordinates of element midpoints
   double precision, dimension(:,:), allocatable :: xyz_midpoints
 
+  ! adjacency arrays
+  integer,dimension(:),allocatable :: neighbors_xadj   ! adjacency indexing
+  integer,dimension(:),allocatable :: neighbors_adjncy ! adjacency
+  integer :: num_neighbors_all
+
   !-----------------------------------------------------------------
   ! GPU
   !-----------------------------------------------------------------

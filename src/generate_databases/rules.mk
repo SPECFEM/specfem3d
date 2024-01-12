@@ -74,6 +74,7 @@ generate_databases_OBJECTS = \
 	$O/save_arrays_solver.gen.o \
 	$O/save_arrays_solver_hdf5.gen_hdf5.o \
 	$O/setup_color_perm.gen.o \
+	$O/setup_mesh_adjacency.gen.o \
 	$O/setup_mesh.gen.o \
 	$O/memory_eval.gen.o \
 	$(EMPTY_MACRO)
@@ -112,6 +113,7 @@ generate_databases_SHARED_OBJECTS = \
 	$O/get_shape3D.shared.o \
 	$O/gll_library.shared.o \
 	$O/hdf5_manager.shared_hdf5_module.o \
+	$O/heap_sort.shared.o \
 	$O/hex_nodes.shared.o \
 	$O/lagrange_poly.shared.o \
 	$O/netlib_specfun_erf.shared.o \
@@ -122,6 +124,7 @@ generate_databases_SHARED_OBJECTS = \
 	$O/read_value_parameters.shared.o \
 	$O/recompute_jacobian.shared.o \
 	$O/save_header_file.shared.o \
+	$O/search_kdtree.shared.o \
 	$O/sort_array_coordinates.shared.o \
 	$O/utm_geo.shared.o \
 	$O/write_VTK_data.shared.o \
@@ -222,6 +225,10 @@ $O/generate_databases.gen.o: $O/adios_manager.shared_adios_module.o
 
 ## LTS
 $O/lts_generate_databases.gen.o: $O/fault_generate_databases.gen.o
+
+## kdtree
+$O/setup_mesh_adjacency.gen.o: $O/search_kdtree.shared.o
+
 
 #######################################
 

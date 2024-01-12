@@ -24,7 +24,6 @@
 ! 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 !
 !=====================================================================
-!
 
 
   subroutine setup_mesh
@@ -122,6 +121,7 @@
   deallocate(ibool)
   deallocate(ispec_is_surface_external_mesh)
   deallocate(iglob_is_surface_external_mesh)
+  deallocate(neighbors_xadj,neighbors_adjncy)
 
   ! user output
   if (myrank == 0) then

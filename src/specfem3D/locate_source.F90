@@ -246,6 +246,7 @@
                                 x_new, y_new, z_new, &
                                 idomain_found, nu_found, final_distance_squared)
 
+      ! sets found position in this slice
       ispec_selected_source_subset(isource_in_this_subset) = ispec_found
 
       x_found_subset(isource_in_this_subset) = x_new

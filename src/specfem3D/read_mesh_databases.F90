@@ -1231,6 +1231,25 @@
   call bcast_all_l_for_database(ispec_is_surface_external_mesh(1), size(ispec_is_surface_external_mesh))
   call bcast_all_l_for_database(iglob_is_surface_external_mesh(1), size(iglob_is_surface_external_mesh))
 
+  ! for mesh adjacency
+  if (I_should_read_the_database) then
+    read(IIN) num_neighbors_all
+  endif
+  call bcast_all_i_for_database(num_neighbors_all, 1)
+  allocate(neighbors_adjncy(num_neighbors_all),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1666')
+  allocate(neighbors_xadj(NSPEC_AB + 1),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1667')
+  if (ier /= 0) stop 'error allocating array for mesh adjacency'
+  neighbors_adjncy(:) = 0; neighbors_xadj(:) = 0
+
+  if (I_should_read_the_database) then
+    read(IIN) neighbors_xadj
+    read(IIN) neighbors_adjncy
+  endif
+  call bcast_all_i_for_database(neighbors_xadj(1), size(neighbors_xadj))
+  call bcast_all_i_for_database(neighbors_adjncy(1), size(neighbors_adjncy))
+
   ! checks i/o so far
   if (I_should_read_the_database) then
     read(IIN) itest
