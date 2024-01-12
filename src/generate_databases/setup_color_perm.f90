@@ -421,6 +421,8 @@
   use generate_databases_par, only: NGLLX,NGLLY,NGLLZ,IMAIN, &
     PML_CONDITIONS,is_CPML,CPML_to_spec,NSPEC_CPML,ATTENUATION
 
+  use generate_databases_par, only: ispec_is_surface_external_mesh
+
   use create_regions_mesh_ext_par
 
   implicit none
@@ -598,6 +600,7 @@
   call permute_elements_logical1D(ispec_is_elastic,temp_array_logical_1D,perm,nspec)
   call permute_elements_logical1D(ispec_is_poroelastic,temp_array_logical_1D,perm,nspec)
   call permute_elements_logical1D(ispec_is_inner,temp_array_logical_1D,perm,nspec)
+  call permute_elements_logical1D(ispec_is_surface_external_mesh,temp_array_logical_1D,perm,nspec)
   deallocate(temp_array_logical_1D)
 
   ! mesh arrays
