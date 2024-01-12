@@ -312,8 +312,12 @@ module manager_hdf5
   integer(HID_T) :: plist_id, fplist_id, gplist_id
 
   ! string array
+  ! initial string length for network/station names (to be determined later)
   integer(SIZE_T) :: str_len = 16
   integer(HID_T) :: str_type
+  ! maximum string length for passing character array undef_mat_prop
+  integer(SIZE_T), parameter :: str_len_max = MAX_STRING_LEN
+  integer(HID_T) :: str_type_max
 
   type(c_ptr) :: f_ptr
 
@@ -373,6 +377,13 @@ contains
     call check_error()
 
     call h5tset_size_f(str_type, str_len, error)
+    call check_error()
+
+    ! string array type for undef_mat_prop array
+    call h5tcopy_f(H5T_Fortran_S1, str_type_max, error)
+    call check_error()
+
+    call h5tset_size_f(str_type_max, str_len_max, error)
     call check_error()
 #else
   ! no HDF5 compilation support
@@ -1439,15 +1450,16 @@ contains
     integer                           :: rank = 2
     integer(HSIZE_T), dimension(2)    :: dim
 
+    ! write string array for undef_mat_prop
     dim = shape(data)
 
     call h5screate_simple_f(rank, dim, dspace_id, error)
     if (error /= 0) write(*,*) 'hdf5 dataspace create failed for ', dataset_name
     call check_error()
-    call h5dcreate_f(group_id, trim(dataset_name), H5T_NATIVE_CHARACTER, dspace_id, dataset_id, error)
+    call h5dcreate_f(group_id, trim(dataset_name), str_type_max, dspace_id, dataset_id, error)
     if (error /= 0) write(*,*) 'hdf5 dataset create failed for ', dataset_name
     call check_error()
-    call h5dwrite_f(dataset_id, H5T_NATIVE_CHARACTER, data, dim, error)
+    call h5dwrite_f(dataset_id, str_type_max, data, dim, error)
     if (error /= 0) write(*,*) 'hdf5 dataset write failed for ', dataset_name
     call check_error()
     call h5sclose_f(dspace_id, error)
@@ -2090,6 +2102,8 @@ contains
     character(len=*), intent(in) :: dataset_name
     character(len=*), dimension(:,:), intent(inout) :: data
     integer(HSIZE_T), dimension(2)    :: dim
+
+    ! reads in string array for undef_mat_prop
     dim = shape(data)
 
     call h5dopen_f(group_id, dataset_name, dataset_id, error)
@@ -2098,7 +2112,7 @@ contains
     call check_error()
     call h5pset_dxpl_mpio_f(plist_id, H5FD_MPIO_COLLECTIVE_F, error)
     call check_error()
-    call h5dread_f(dataset_id, H5T_NATIVE_CHARACTER, data, dim, error, xfer_prp=plist_id)
+    call h5dread_f(dataset_id, str_type_max, data, dim, error, xfer_prp=plist_id)
     call check_error()
     call h5pclose_f(plist_id, error)
     call check_error()

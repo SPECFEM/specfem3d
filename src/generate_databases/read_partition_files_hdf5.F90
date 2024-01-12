@@ -110,16 +110,23 @@
   nmat_ext_mesh = attr_data(1)
 
   ! read data mat_prop
-  ! allocate array for nodes coords
-  allocate(mat_prop(17,nmat_ext_mesh),stat=ier)
-  if (ier /= 0) call exit_MPI_without_rank('error allocating array 585')
-  if (ier /= 0) stop 'Error allocating array mat_prop'
-  mat_prop(:,:) = 0.d0
+  if (nmat_ext_mesh /= 0) then
+    ! allocate array for nodes coords
+    allocate(mat_prop(17,nmat_ext_mesh),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 585')
+    if (ier /= 0) stop 'Error allocating array mat_prop'
+    mat_prop(:,:) = 0.d0
 
-  call h5_read_dataset_p(dsetname, mat_prop)
+    call h5_read_dataset_p(dsetname, mat_prop)
+  else
+    ! dummy
+    allocate(mat_prop(17,0),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array dummy 585')
+  endif
 
   if (myrank == 0) then
     write(IMAIN,*) 'defined materials    : ',nmat_ext_mesh
+    call flush_IMAIN()
   endif
   call synchronize_all()
 
@@ -128,8 +135,8 @@
   dsetname = "undef_mat_prop"
   attrname = "count_undef_mat"
   call h5_read_attribute_p(attrname,dsetname,attr_data)
-
   nundefMat_ext_mesh = attr_data(1)
+
   !print *, "num undef mat ext", nundefMat_ext_mesh
   ! error when trying to read 0 row Dataset in H5
   if (nundefMat_ext_mesh /= 0) then
@@ -138,13 +145,20 @@
     allocate(undef_mat_prop(6,nundefMat_ext_mesh),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 585')
     if (ier /= 0) stop 'Error allocating array mat_prop'
+    undef_mat_prop(:,:) = ''
+
     call h5_read_dataset_p(dsetname, undef_mat_prop)
+  else
+    ! dummy
+    allocate(undef_mat_prop(6,0),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array dummy 585')
   endif
 
   call h5_close_group()
 
   if (myrank == 0) then
     write(IMAIN,*) 'undefined materials  : ',nundefMat_ext_mesh
+    call flush_IMAIN()
   endif
   call synchronize_all()
 
@@ -219,6 +233,7 @@
   call sum_all_i(nspec_ab,num)
   if (myrank == 0) then
     write(IMAIN,*) 'total number of spectral elements: ',num
+    call flush_IMAIN()
   endif
   call synchronize_all()
 
@@ -540,6 +555,7 @@
   call sum_all_i(num_interfaces_ext_mesh,num)
   if (myrank == 0) then
     write(IMAIN,*) 'number of MPI partition interfaces: ',num
+    call flush_IMAIN()
   endif
   call synchronize_all()
 
@@ -589,6 +605,7 @@
     ! user output
     if (myrank == 0) then
       write(IMAIN,*) 'moho surfaces: ',num_moho
+      call flush_IMAIN()
     endif
     call synchronize_all()
   else
