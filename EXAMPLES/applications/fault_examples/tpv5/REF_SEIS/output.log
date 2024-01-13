@@ -1,4 +1,4 @@
-running example: Wed Sep 23 16:10:04 +03 2020
+running example: Sat Jan 13 12:18:04 CET 2024
 
    setting up example...
 
@@ -34,6 +34,15 @@ running example: Wed Sep 23 16:10:04 +03 2020
    nspec2D_top =         1772
    no absorbing_cpml_file file found
    no moho_surface_file file found
+ faults :
+   number of faults =            1
+   reading fault: elements =         378
+   closing fault: elements =         378
+   fault-up   surface: minimum element size =   1000.0000000000000
+   fault-down surface: minimum element size =   1000.0000000000000
+   using kd-tree search for matching fault nodes
+   search timing:    1.88000500E-04 (s)
+   opposite node maximum gap distance =  0.20000000000000001
  node valence:
    min =            1  max =           10
  neighbors:
@@ -61,35 +70,46 @@ running example: Wed Sep 23 16:10:04 +03 2020
  fault repartitioning: (parallel version)
    total number of fault elements:          378
 
-   repartition loop           1  changed          378  coupled fault elements out of          378
-   repartition loop           2  changed          378  coupled fault elements out of          378
+   heuristic scheme
+   adding elements touching faults
+   partition :           0 initial elements =        8988  - fault elements added =           1
+   partition :           1 initial elements =        9429  - fault elements added =         -21
+   partition :           2 initial elements =        9135  - fault elements added =          -2
+   partition :           3 initial elements =        9660  - fault elements added =          22
 
    written file: ./OUTPUT_FILES/DATABASES_MPI/part_array.vtk
 
  element distribution:
-   partition            0        has         9156  elements
-   partition            1        has         9639  elements
-   partition            2        has         8946  elements
-   partition            3        has         9471  elements
-   elements per partition: min/max   =         8946        9639
-   elements per partition: imbalance =    7.18954229     %
+   partition            0        has         8989  elements
+   partition            1        has         9408  elements
+   partition            2        has         9133  elements
+   partition            3        has         9682  elements
+   elements per partition: min/max   =         8989        9682
+   elements per partition: imbalance =    7.15761185     %
                            (0% being totally balanced, 100% being unbalanced)
 
  load distribution:
    element loads: min/max =           41          41
 
-   partition            0        has       375396  load units
-   partition            1        has       395199  load units
-   partition            2        has       366786  load units
-   partition            3        has       388311  load units
-   load per partition: min/max   =       366786      395199
-   load per partition: imbalance =    7.18954229     %
+   partition            0        has       368549  load units
+   partition            1        has       385728  load units
+   partition            2        has       374453  load units
+   partition            3        has       396962  load units
+   load per partition: min/max   =       368549      396962
+   load per partition: imbalance =    7.15761185     %
                        (0% being totally balanced, 100% being unbalanced)
 
  partitions:
-   num =            4
+   num         =            4
+   ninterfaces =            6
+
+   partition            0 has number of MPI interfaces:            2 maximum size        4634
+   partition            1 has number of MPI interfaces:            3 maximum size        4822
+   partition            2 has number of MPI interfaces:            3 maximum size        4634
+   partition            3 has number of MPI interfaces:            2 maximum size        4822
 
  Databases files in directory: ./OUTPUT_FILES/DATABASES_MPI
+
 
  finished successfully
 
@@ -103,5 +123,5 @@ running example: Wed Sep 23 16:10:04 +03 2020
 see results in directory: OUTPUT_FILES/
 
 done
-Wed Sep 23 16:16:51 +03 2020
+Sat Jan 13 12:20:10 CET 2024
 
