@@ -3,6 +3,10 @@
  *** Specfem3D MPI meshfem3D - f90 version ***
  ******************************************
 
+ Running Git package version of the code: 4.1.0
+ which is Git unknown
+ dating unknown
+
  Reading parameters from ./DATA/Par_file
 
  Reading mesh parameters from file ./DATA/meshfem3D_files/Mesh_Par_file
@@ -183,7 +187,7 @@
  maximum length of an edge in the whole mesh (m) =    625.00000000000728
 
  ***
- *** max equiangle skewness =    2.2617277734851675E-015  in element           25  of slice            0
+ *** max equiangle skewness =    2.2617277734851675E-015  in element          101  of slice            0
  ***
 
  max deviation angle from a right angle (90 degrees) is therefore =    2.0355549961366507E-013
@@ -250,7 +254,9 @@
  smallest and largest possible floating-point numbers are:    1.17549435E-38   3.40282347E+38
 
 
- Elapsed time for mesh generation and buffer creation in seconds =   0.15040100000000001
+ Elapsed time for mesh generation and buffer creation in seconds =    6.73940033E-02
+ Elapsed time for mesh generation and buffer creation in hh:mm:ss =    0 h 00 m 00 s
+
  End of mesh generation
 
  done
