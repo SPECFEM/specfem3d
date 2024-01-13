@@ -3,9 +3,9 @@
  *** Specfem3D MPI database generation ***
  *****************************************
 
- Running Git package version of the code: 3.0.0
- which is Git undefined in the case of old tar ball builds
- dating undefined in the case of old tar ball builds
+ Running Git package version of the code: 4.1.0
+ which is Git unknown
+ dating unknown
 
  This is process            0
  There are            4  MPI processes
@@ -100,12 +100,12 @@
       total assembled MPI interface points:       31652
 
    ...setting up absorbing boundaries
-      boundary xmin   :         240
-      boundary xmax   :           0
-      boundary ymin   :         240
-      boundary ymax   :           0
-      boundary bottom :         576
-      boundary top    :         576
+      boundary xmin   :         480
+      boundary xmax   :         480
+      boundary ymin   :         480
+      boundary ymax   :         480
+      boundary bottom :        2304
+      boundary top    :        2304
       absorbing boundary:
       total number of free faces =         2304
       total number of faces      =         4224
@@ -113,15 +113,15 @@
    ...setting up mesh surface
 
    ...determining velocity model
-               10  % time remaining:   3.3761936015434797E-007 s
-               20  % time remaining:   3.0871431557170600E-007 s
-               30  % time remaining:   2.7501285620383007E-007 s
-               40  % time remaining:   2.3758951999934660E-007 s
-               50  % time remaining:   1.9470365692905013E-007 s
-               60  % time remaining:   1.5373022297035268E-007 s
-               70  % time remaining:   1.1591642534403950E-007 s
-               80  % time remaining:   7.7166522565676176E-008 s
-               90  % time remaining:   3.8402081113986241E-008 s
+               10  % time remaining:   1.2950303915931729E-007 s
+               20  % time remaining:   1.1477623542305116E-007 s
+               30  % time remaining:   1.0024634953788367E-007 s
+               40  % time remaining:   8.5919416149408886E-008 s
+               50  % time remaining:   7.2045597566102535E-008 s
+               60  % time remaining:   5.7508678814883817E-008 s
+               70  % time remaining:   4.3087593427117165E-008 s
+               80  % time remaining:   2.8776946105608660E-008 s
+               90  % time remaining:   1.4388556641620200E-008 s
               100  % time remaining:   0.0000000000000000      s
 
    ...detecting acoustic-elastic-poroelastic surfaces
@@ -139,6 +139,7 @@
       percentage of   edge elements    8.15972137     %
       percentage of volume elements    91.8402786     %
 
+
    ...element mesh coloring
       use coloring =  F
 
@@ -147,7 +148,28 @@
 
    ...creating mass matrix
 
-   ...saving databases
+   ...setting up mesh adjacency
+
+      mesh adjacency:
+      total number of elements in this slice  =         5760
+
+      maximum number of neighbors allowed     =          300
+      minimum array memory required per slice =    6.61376953     (MB)
+
+      maximum search elements                                      =         5760
+      maximum of actual search elements (after distance criterion) =         3452
+
+      estimated maximum element size            =    625.000000
+      maximum distance between neighbor centers =    2021.7740038424060
+
+      maximum neighbors found per element =          124
+          (maximum neighbor of neighbors) =           98
+      total number of neighbors           =       566064
+
+      Elapsed time for detection of neighbors in seconds =   0.19609100000000002
+
+
+   ...saving mesh databases
       using binary file format
       database file (for rank 0): ./OUTPUT_FILES/DATABASES_MPI/proc000000_external_mesh.bin
       saving mesh files for AVS, OpenDX, Paraview
@@ -201,9 +223,9 @@
  *** Max/min ratio =    1.20000303
 
  *** Minimum period resolved =   0.325520813
- *** Maximum suggested time step =    7.75289582E-03
+ *** Maximum suggested time step =    7.74999987E-03
 
- Elapsed time for checking mesh resolution in seconds =    8.6729999999999308E-003
+ Elapsed time for checking mesh resolution in seconds =    2.7110000000001300E-003
  saving VTK files for Courant number and minimum period
 
 
@@ -218,6 +240,18 @@
  Repartition of elements:
  -----------------------
 
+ load distribution:
+   element loads: min/max =       236160      236160
+
+   partition            0        has       236160  load units
+   partition            1        has       236160  load units
+   partition            2        has       236160  load units
+   partition            3        has       236160  load units
+
+   load per partition: min/max   =       236160      236160
+   load per partition: imbalance =    0.00000000     %
+                       (0% being totally balanced, 100% being unbalanced)
+
  total number of elements in mesh slice 0:         5760
  total number of   regular elements in mesh slice 0:            0
  total number of irregular elements in mesh slice 0:         5760
@@ -225,7 +259,7 @@
 
  total number of elements in entire mesh:        23040
  approximate total number of points in entire mesh (with duplicates on MPI edges):               1543076
- approximate total number of DOFs in entire mesh (with duplicates on MPI edges):               4629228
+ approximate total number of DOFs   in entire mesh (with duplicates on MPI edges):               4629228
 
  total number of time steps in the solver will be:         1000
 
@@ -234,7 +268,9 @@
  smallest and largest possible floating-point numbers are:    1.17549435E-38   3.40282347E+38
 
 
- Elapsed time for mesh generation and buffer creation in seconds =    8.4606429999999992
+ Elapsed time for mesh generation and buffer creation in seconds =    3.09999394
+ Elapsed time for mesh generation and buffer creation in hh:mm:ss =    0 h 00 m 03 s
+
  End of mesh generation
 
  done

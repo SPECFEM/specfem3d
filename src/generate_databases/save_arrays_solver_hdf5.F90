@@ -64,6 +64,9 @@
   use generate_databases_par, only: ispec_is_surface_external_mesh,iglob_is_surface_external_mesh, &
     nfaces_surface
 
+  ! mesh adjacency
+  use generate_databases_par, only: neighbors_xadj,neighbors_adjncy,num_neighbors_all
+
   use create_regions_mesh_ext_par
 
   use manager_hdf5
@@ -129,6 +132,8 @@
   integer, dimension(0:NPROC-1) :: offset_num_colors_elastic
   integer, dimension(0:NPROC-1) :: offset_nspec_ab
   integer, dimension(0:NPROC-1) :: offset_nglob_ab
+  integer, dimension(0:NPROC-1) :: offset_neighbors_xadj
+  integer, dimension(0:NPROC-1) :: offset_neighbors_adjncy
 
   ! saves mesh file external_mesh.h5
   tempstr = "/external_mesh.h5"
@@ -240,6 +245,10 @@
   call gather_all_all_singlei(nspec_ab,offset_nspec_ab,NPROC)
   call gather_all_all_singlei(nglob_ab,offset_nglob_ab,NPROC)
 
+  ! mesh adjacency
+  call gather_all_all_singlei(nspec_ab+1,offset_neighbors_xadj,NPROC)
+  call gather_all_all_singlei(num_neighbors_all,offset_neighbors_adjncy,NPROC)
+
   !
   ! make datasets by main
   !
@@ -303,6 +312,10 @@
 
     call h5_write_dataset_no_group("offset_nspec_ab",offset_nspec_ab)
     call h5_write_dataset_no_group("offset_nglob_ab",offset_nglob_ab)
+
+    ! mesh adjacency
+    call h5_write_dataset_no_group("offset_neighbors_xadj",offset_neighbors_xadj)
+    call h5_write_dataset_no_group("offset_neighbors_adjncy",offset_neighbors_adjncy)
 
     ! other datasets
 
@@ -853,6 +866,15 @@
     call h5_create_dataset_gen(dset_name,(/sum(offset_nspec_ab(:))/), 1, 0)
     dset_name = "iglob_is_surface_external_mesh" ! 1 l (/offset_nglob_ab/)
     call h5_create_dataset_gen(dset_name,(/sum(offset_nglob_ab(:))/), 1, 0)
+
+    ! mesh adjacency
+    dset_name = "num_neighbors_all" ! 1 i (/myrank/)
+    call h5_create_dataset_gen(dset_name,(/NPROC/), 1, 1)
+    dset_name = "neighbors_xadj" ! 1 i (/offset_neighbors_xadj/)   ! actual array size: nspec_ab + 1
+    call h5_create_dataset_gen(dset_name,(/sum(offset_neighbors_xadj(:))/), 1, 0)
+    dset_name = "neighbors_adjncy" ! 1 i (/offset_neighbors_adjncy/)
+    call h5_create_dataset_gen(dset_name,(/sum(offset_neighbors_adjncy(:))/), 1, 0)
+
     ! arrays for visualization
     dset_name = "spec_elm_conn_xdmf" ! 2 i (/0,offset_nspec*(NGLLX-1)*(NGLLY-1)*(NGLLZ-1)/)
     call h5_create_dataset_gen(dset_name,(/9,sum(offset_nspec(:)*(NGLLX-1)*(NGLLY-1)*(NGLLZ-1))/), 2, 1)
@@ -1421,6 +1443,16 @@
   dset_name = "iglob_is_surface_external_mesh" ! 1 l (/offset_nglob_ab/)
   call h5_write_dataset_collect_hyperslab(dset_name, iglob_is_surface_external_mesh, &
           (/sum(offset_nglob_ab(0:myrank-1))/), if_col)
+
+  ! mesh adjacency
+  dset_name = "num_neighbors_all" ! 1 i (/myrank/)
+  call h5_write_dataset_collect_hyperslab(dset_name, (/num_neighbors_all/), (/myrank/), if_col)
+  dset_name = "neighbors_xadj" ! 1 i (/offset_nspec_ab+1/)
+  call h5_write_dataset_collect_hyperslab(dset_name, neighbors_xadj, &
+          (/sum(offset_neighbors_xadj(0:myrank-1))/), if_col)
+  dset_name = "neighbors_adjncy" ! 1 i (/offset_num_neighbors_all/)
+  call h5_write_dataset_collect_hyperslab(dset_name, neighbors_adjncy, &
+          (/sum(offset_neighbors_adjncy(0:myrank-1))/), if_col)
 
   ! arrays for visualization
   dset_name = "spec_elm_conn_xdmf" ! 2 i (/0,offset_nspec*(NGLLX-1)*(NGLLY-1)*(NGLLZ-1)/)

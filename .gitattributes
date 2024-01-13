@@ -7,3 +7,4 @@
 *.adj binary
 *.ascii binary
 *.bin binary
+faultst*.dat binary

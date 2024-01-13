@@ -75,6 +75,10 @@
   ! domain
   integer,dimension(:),allocatable :: tomo_domain_id
 
+  ! coordinates given as lon / lat / depth instead of x / y / z directly
+  ! for reading IRIS EMC models converted to tomography models
+  logical :: use_format_with_lonlatdepth = .false.
+
   end module model_tomography_par
 
 !
@@ -557,6 +561,14 @@ end subroutine init_tomography_files
     ! total number of element records
     nrecord(imat) = NX(imat)*NY(imat)*NZ(imat)
 
+    ! user output
+    if (myrank_tomo == 0) then
+      if (use_format_with_lonlatdepth) then
+        write(IMAIN,*) '     EMC model  : uses lon / lat / depth as coordinates'
+      endif
+      call flush_IMAIN()
+    endif
+
     !--------------------------------------
     ! data records
     !--------------------------------------
@@ -737,6 +749,7 @@ end subroutine init_tomography_files
   subroutine tomo_read_next_line(unit_in,string_read)
 
   use constants, only: MAX_STRING_LEN
+  use model_tomography_par, only: use_format_with_lonlatdepth
   implicit none
 
   integer :: unit_in
@@ -756,6 +769,17 @@ end subroutine init_tomography_files
 
      ! reads next line if empty
      if (len_trim(string_read) == 0) cycle
+
+     ! for converted IRIS EMC models
+     ! check if format used lon/lat/depth (specified in header comment)
+     if (string_read(1:1) == '#') then
+       ! header can specify type for IRIS EMC models
+       ! # model type        : IRIS EMC model
+       ! # coordinate format : lon / lat / depth
+       if (index(string_read,'coordinate format') > 0 .and. index(string_read,'lon / lat / depth') > 0) then
+         use_format_with_lonlatdepth = .true.
+       endif
+     endif
 
      ! exit loop when we find the first line that is not a comment or a white line
      if (string_read(1:1) /= '#') exit
@@ -827,6 +851,13 @@ end subroutine init_tomography_files
   use generate_databases_par, only: nmat_ext_mesh,undef_mat_prop,nundefMat_ext_mesh, &
                                     ATTENUATION_COMP_MAXIMUM
 
+  ! for lon/lat format and surface elevation
+  use constants, only: IUTM2LONGLAT,HUGEVAL
+  use shared_parameters, only: SUPPRESS_UTM_PROJECTION
+  use generate_databases_par, only: nspec => NSPEC_AB,ibool
+  use create_regions_mesh_ext_par, only: nglob_unique,xstore_unique,ystore_unique,zstore_unique, &
+    num_free_surface_faces,free_surface_ijk,free_surface_ispec
+
   use model_tomography_par
 
   implicit none
@@ -867,6 +898,12 @@ end subroutine init_tomography_files
   real(kind=CUSTOM_REAL), dimension(21) :: c1,c2,c3,c4,c5,c6,c7,c8
   real(kind=CUSTOM_REAL), dimension(21) :: c_final
 
+  ! topo / depth
+  real(kind=CUSTOM_REAL) :: xloc,yloc
+  real(kind=CUSTOM_REAL) :: elevation,distmin
+  double precision :: lon,lat,depth
+  double precision :: x_current,y_current
+
   ! initializes flag
   has_tomo_value = .false.
 
@@ -898,9 +935,44 @@ end subroutine init_tomography_files
   endif
 
   ! determine spacing and cell for linear interpolation
-  spac_x = (xmesh - ORIG_X(imat)) / SPACING_X(imat)
-  spac_y = (ymesh - ORIG_Y(imat)) / SPACING_Y(imat)
-  spac_z = (zmesh - ORIG_Z(imat)) / SPACING_Z(imat)
+  if (use_format_with_lonlatdepth) then
+    ! for IRIS EMC models with lon / lat / depth coordinates
+    ! x/y position as custom real
+    xloc = real(xmesh,kind=CUSTOM_REAL)
+    yloc = real(ymesh,kind=CUSTOM_REAL)
+
+    ! get approximate topography elevation at target coordinates from free surface
+    call get_topo_elevation_free_closest(xloc,yloc,elevation,distmin, &
+                                         nspec,nglob_unique,ibool,xstore_unique,ystore_unique,zstore_unique, &
+                                         num_free_surface_faces,free_surface_ispec,free_surface_ijk)
+    ! location depth in Z-direction
+    if (distmin < HUGEVAL) then
+      depth = dble(elevation) - zmesh
+    else
+      depth = - zmesh
+    endif
+
+    ! project x and y in UTM back to lon/lat since model file is in lon/lat
+    if (.not. SUPPRESS_UTM_PROJECTION) then
+      x_current = xmesh
+      y_current = ymesh
+      call utm_geo(lon,lat,x_current,y_current,IUTM2LONGLAT)
+    else
+      lon = dble(xmesh)
+      lat = dble(ymesh)
+    endif
+
+    ! lon / lat / depth coordinates
+    spac_x = (lon - ORIG_X(imat)) / SPACING_X(imat)
+    spac_y = (lat - ORIG_Y(imat)) / SPACING_Y(imat)
+    spac_z = (depth - ORIG_Z(imat)) / SPACING_Z(imat)
+
+  else
+    ! default x / y / z grid coordinates
+    spac_x = (xmesh - ORIG_X(imat)) / SPACING_X(imat)
+    spac_y = (ymesh - ORIG_Y(imat)) / SPACING_Y(imat)
+    spac_z = (zmesh - ORIG_Z(imat)) / SPACING_Z(imat)
+  endif
 
   ix = int(spac_x)
   iy = int(spac_y)

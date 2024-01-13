@@ -158,6 +158,11 @@
   logical,dimension(:),allocatable :: ispec_is_surface_external_mesh,iglob_is_surface_external_mesh
   integer :: nfaces_surface,nfaces_surface_glob_ext_mesh
 
+  ! adjacency arrays
+  integer,dimension(:),allocatable :: neighbors_xadj   ! adjacency indexing
+  integer,dimension(:),allocatable :: neighbors_adjncy ! adjacency
+  integer :: num_neighbors_all
+
   end module generate_databases_par
 
 !

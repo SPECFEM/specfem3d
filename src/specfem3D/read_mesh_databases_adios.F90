@@ -142,7 +142,9 @@
     local_dim_coupling_ac_po_jacobian2Dw, &
     local_dim_coupling_ac_po_normal, &
     local_dim_ispec_is_surface_external_mesh, &
-    local_dim_iglob_is_surface_external_mesh
+    local_dim_iglob_is_surface_external_mesh, &
+    local_dim_neighbors_xadj, &
+    local_dim_neighbors_adjncy
 
   integer :: nspec_ext,nglob_ext,nspec_irregular_ext
 
@@ -318,6 +320,9 @@
   endif
 
   call read_adios_scalar(myadios_file, myadios_group, myrank, "nfaces_surface", nfaces_surface)
+
+  ! mesh adjacency
+  call read_adios_scalar(myadios_file, myadios_group, myrank, "num_neighbors_all", num_neighbors_all)
 
   !------------------------.
   ! Get the 'chunks' sizes |
@@ -532,6 +537,12 @@
                                    "ispec_is_surface_external_mesh", local_dim_ispec_is_surface_external_mesh)
   call read_adios_scalar_local_dim(myadios_file, myadios_group, myrank, &
                                    "iglob_is_surface_external_mesh", local_dim_iglob_is_surface_external_mesh)
+
+  ! for mesh adjacency
+  call read_adios_scalar_local_dim(myadios_file, myadios_group, myrank, &
+                                   "neighbors_xadj", local_dim_neighbors_xadj)
+  call read_adios_scalar_local_dim(myadios_file, myadios_group, myrank, &
+                                   "neighbors_adjncy", local_dim_neighbors_adjncy)
 
 !TODO
 #if 1
@@ -1100,6 +1111,14 @@
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 1927')
   if (ier /= 0) stop 'error allocating array for mesh surface'
   ispec_is_surface_external_mesh(:) = .false.; iglob_is_surface_external_mesh(:) = .false.
+
+  ! for mesh adjacency
+  allocate(neighbors_adjncy(num_neighbors_all),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1666')
+  allocate(neighbors_xadj(NSPEC_AB + 1),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1667')
+  if (ier /= 0) stop 'error allocating array for mesh adjacency'
+  neighbors_adjncy(:) = 0; neighbors_xadj(:) = 0
 
   !-----------------------------------.
   ! Read arrays from external_mesh.bp |
@@ -1677,6 +1696,24 @@
   call set_selection_boundingbox(sel, start, count_ad)
   call read_adios_schedule_array(myadios_file, myadios_group, sel, start, count_ad, &
                                  "iglob_is_surface_external_mesh/array", iglob_is_surface_external_mesh)
+
+  ! mesh adjacency
+  start(1) = local_dim_neighbors_xadj * myrank
+  count_ad(1) = NSPEC_AB + 1
+  sel_num = sel_num+1
+  sel => selections(sel_num)
+  call set_selection_boundingbox(sel, start, count_ad)
+  call read_adios_schedule_array(myadios_file, myadios_group, sel, start, count_ad, &
+                                 "neighbors_xadj/array", neighbors_xadj)
+
+  start(1) = local_dim_neighbors_adjncy * myrank
+  count_ad(1) = num_neighbors_all
+  sel_num = sel_num+1
+  sel => selections(sel_num)
+  call set_selection_boundingbox(sel, start, count_ad)
+  call read_adios_schedule_array(myadios_file, myadios_group, sel, start, count_ad, &
+                                 "neighbors_adjncy/array", neighbors_adjncy)
+
 
   !---------------------------------------------------------------.
   ! Perform the reads and close the ADIOS 'external_mesh.bp' file |

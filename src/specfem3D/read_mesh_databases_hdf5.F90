@@ -160,6 +160,8 @@
   integer, dimension(0:NPROC-1) :: offset_num_colors_elastic
   integer, dimension(0:NPROC-1) :: offset_nspec_ab
   integer, dimension(0:NPROC-1) :: offset_nglob_ab
+  integer, dimension(0:NPROC-1) :: offset_neighbors_xadj
+  integer, dimension(0:NPROC-1) :: offset_neighbors_adjncy
 
   ! user output
   if (myrank == 0) then
@@ -201,6 +203,10 @@
 
     call h5_read_dataset_collect_hyperslab("offset_nspec_ab",offset_nspec_ab, (/0/), if_col)
     call h5_read_dataset_collect_hyperslab("offset_nglob_ab",offset_nglob_ab, (/0/), if_col)
+
+    ! mesh adjacency
+    call h5_read_dataset_collect_hyperslab("offset_neighbors_xadj",offset_neighbors_xadj, (/0/), if_col)
+    call h5_read_dataset_collect_hyperslab("offset_neighbors_adjncy",offset_neighbors_adjncy, (/0/), if_col)
 
     ! info about external mesh simulation
     dsetname = "nspec"
@@ -1609,6 +1615,31 @@
   call bcast_all_i_for_database(nfaces_surface, 1)
   call bcast_all_l_for_database(ispec_is_surface_external_mesh(1), size(ispec_is_surface_external_mesh))
   call bcast_all_l_for_database(iglob_is_surface_external_mesh(1), size(iglob_is_surface_external_mesh))
+
+  ! for mesh adjacency
+  if (I_should_read_the_database) then
+    dsetname = "num_neighbors_all"
+    call h5_read_dataset_scalar_collect_hyperslab(dsetname, num_neighbors_all, (/myrank/), if_col)
+  endif
+  call bcast_all_i_for_database(num_neighbors_all, 1)
+
+  allocate(neighbors_adjncy(num_neighbors_all),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1666')
+  allocate(neighbors_xadj(NSPEC_AB + 1),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1667')
+  if (ier /= 0) stop 'error allocating array for mesh adjacency'
+  neighbors_adjncy(:) = 0; neighbors_xadj(:) = 0
+
+  if (I_should_read_the_database) then
+    dsetname = "neighbors_xadj"
+    call h5_read_dataset_collect_hyperslab(dsetname, neighbors_xadj, &
+            (/sum(offset_neighbors_xadj(0:myrank-1))/), if_col)
+    dsetname = "neighbors_adjncy"
+    call h5_read_dataset_collect_hyperslab(dsetname, neighbors_adjncy, &
+            (/sum(offset_neighbors_adjncy(0:myrank-1))/), if_col)
+  endif
+  call bcast_all_i_for_database(neighbors_xadj(1), size(neighbors_xadj))
+  call bcast_all_i_for_database(neighbors_adjncy(1), size(neighbors_adjncy))
 
   ! done reading database
   if (I_should_read_the_database) then

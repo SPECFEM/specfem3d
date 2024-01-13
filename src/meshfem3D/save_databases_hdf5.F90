@@ -96,10 +96,11 @@
   integer, dimension(8) ::  nspec_interface
 
   integer :: ndef,nundef
+  integer :: icount_mat
   integer :: mat_id,domain_id
   ! there was a potential bug here if nspec is big
-  integer,dimension(:,:),allocatable            :: material_index
-  character(len=MAX_STRING_LEN), dimension(6,1) :: undef_mat_prop
+  integer,dimension(:,:),allocatable                     :: material_index
+  character(len=MAX_STRING_LEN), dimension(6,NMATERIALS) :: undef_mat_prop
 
   ! MPI variables
   integer :: info, comm
@@ -221,13 +222,16 @@
   endif
 
   ! writes out defined materials
+  icount_mat = 0
   do i = 1,NMATERIALS
     ! material properties format: #rho  #vp  #vs  #Q_Kappa  #Q_mu  #anisotropy_flag  #domain_id  #material_id
     domain_id = int(material_properties(i,7))
     mat_id = int(material_properties(i,8))
     if (mat_id > 0) then
+      ! counter
+      icount_mat = icount_mat + 1
       ! pad dummy zeros to fill up 17 entries
-      mat_prop(:,i) = 0.d0
+      mat_prop(:,icount_mat) = 0.d0
       select case(domain_id)
       case (IDOMAIN_ACOUSTIC,IDOMAIN_ELASTIC)
         ! material properties format:
@@ -237,7 +241,7 @@
         !   rho,vp,vs,Q_Kappa,Q_mu,anisotropy_flag,material_domain_id
         !
         ! skipping mat_id, not needed
-        mat_prop(1:7,i) = material_properties(i,1:7)
+        mat_prop(1:7,icount_mat) = material_properties(i,1:7)
       case (IDOMAIN_POROELASTIC)
         ! material properties format:
         !#(1)rho_s #(2)rho_f #(3)phi #(4)tort #(5)eta #(6)0 #(7)domain_id #(8)mat_id
@@ -245,47 +249,54 @@
         !
         ! output format for xgenerate_database (same as for cubit/trelis inputs):
         !   rhos,rhof,phi,tort,eta,0,material_domain_id,kxx,kxy,kxz,kyy,kyz,kzz,kappas,kappaf,kappafr,mufr
-        mat_prop(1:7,i) = material_properties(i,1:7)
+        mat_prop(1:7,icount_mat) = material_properties(i,1:7)
         ! skipping mat_id, not needed
-        mat_prop(8:17,i) = material_properties(i,9:18)
+        mat_prop(8:17,icount_mat) = material_properties(i,9:18)
       end select
     endif
   enddo
+  ! checks
+  if (icount_mat /= ndef) stop 'Error matching number of defined materials in save_databases_hdf5'
 
   ! writes out undefined materials
+  icount_mat = 0
   do i = 1,NMATERIALS
     domain_id = int(material_properties(i,7))
     mat_id = int(material_properties(i,8))
     if (mat_id < 0) then
+      ! counter
+      icount_mat = icount_mat + 1
       ! format:
       ! #material_id #type-keyword #domain-name #tomo-filename #tomo_id #domain_id
       ! format example tomography: -1 tomography elastic tomography_model.xyz 0 2
-      undef_mat_prop(:,:) = ''
+      undef_mat_prop(:,icount_mat) = ''
       ! material id
-      write(undef_mat_prop(1,1),*) mat_id
+      write(undef_mat_prop(1,icount_mat),*) mat_id
       ! keyword/domain/filename
-      undef_mat_prop(2,1) = material_properties_undef(i,1)  ! type-keyword : tomography/interface
-      undef_mat_prop(3,1) = material_properties_undef(i,2)  ! domain-name  : acoustic/elastic/poroelastic
-      undef_mat_prop(4,1) = material_properties_undef(i,3)  ! tomo-filename: tomography_model**.xyz
+      undef_mat_prop(2,icount_mat) = material_properties_undef(i,1)  ! type-keyword : tomography/interface
+      undef_mat_prop(3,icount_mat) = material_properties_undef(i,2)  ! domain-name  : acoustic/elastic/poroelastic
+      undef_mat_prop(4,icount_mat) = material_properties_undef(i,3)  ! tomo-filename: tomography_model**.xyz
       ! checks consistency between domain-name and domain_id
       select case (domain_id)
       case (IDOMAIN_ACOUSTIC)
-        if (trim(undef_mat_prop(3,1)) /= 'acoustic') stop 'Error in undef_mat_prop acoustic domain'
+        if (trim(undef_mat_prop(3,icount_mat)) /= 'acoustic') stop 'Error in undef_mat_prop acoustic domain'
       case (IDOMAIN_ELASTIC)
-        if (trim(undef_mat_prop(3,1)) /= 'elastic')  stop 'Error in undef_mat_prop elastic domain'
+        if (trim(undef_mat_prop(3,icount_mat)) /= 'elastic')  stop 'Error in undef_mat_prop elastic domain'
       case (IDOMAIN_POROELASTIC)
-        if (trim(undef_mat_prop(3,1)) /= 'poroelastic')  stop 'Error in undef_mat_prop poroelastic domain'
+        if (trim(undef_mat_prop(3,icount_mat)) /= 'poroelastic')  stop 'Error in undef_mat_prop poroelastic domain'
       end select
       ! default name if none given
-      if (trim(undef_mat_prop(4,1)) == "") undef_mat_prop(4,1) = 'tomography_model.xyz'
+      if (trim(undef_mat_prop(4,icount_mat)) == "") undef_mat_prop(4,1) = 'tomography_model.xyz'
       ! default tomo-id (unused)
-      write(undef_mat_prop(5,1),*) 0
+      write(undef_mat_prop(5,icount_mat),*) 0
       ! domain-id
-      write(undef_mat_prop(6,1),*) domain_id
+      write(undef_mat_prop(6,icount_mat),*) domain_id
       ! debug
-      !print *,'undef mat: ',undef_mat_prop
+      !print *,'undef mat: ',icount_mat,'***'//undef_mat_prop(1,icount_mat)//'***'
     endif
   enddo
+  ! checks
+  if (icount_mat /= nundef) stop 'Error matching number of undefined materials in save_databases_hdf5'
 
   ! share the offset info
   !

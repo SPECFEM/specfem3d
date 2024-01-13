@@ -18,7 +18,8 @@ options:\newline
  \indent (2) set in the \texttt{DATA/Par\_file} the model parameter \texttt{MODEL
 = default}, define the negative \texttt{material\_ID} identifier for
 each element in the file \texttt{MESH/materials\_file} and use the
-following format in the file \texttt{MESH/nummaterial\_velocity\_file}
+following format in the file \newline
+\texttt{MESH/nummaterial\_velocity\_file}
 when using CUBIT to construct your mesh (see also section \ref{subsec:Exporting-the-Mesh}):
 \begin{verbatim}
 domain_ID material_ID tomography elastic file_name 1
@@ -90,20 +91,27 @@ or
 {\small
 \begin{verbatim}
 # data record format: anelastic isotropic model
-x y z   vp    vs    rho Qp  Qs
+x y z   vp    vs    rho    Qp    Qs
 ..
 \end{verbatim}
 }
 \noindent
-where  \texttt{x}, \texttt{y}, \texttt{z} are the grid point position, \texttt{vp}, \texttt{vs} and \texttt{rho} the P- and S-wave speeds and density, and \texttt{Qp} and \texttt{Qs} the quality factors for P- and S-wave speeds. The quality factors are optional and can be omitted for purely elastic models (the tomography routine will recognize both formats). Internally, the quality factors will be converted to bulk and shear attenuation values,
+where  \texttt{x}, \texttt{y}, \texttt{z} are the grid point position, \texttt{vp}, \texttt{vs} and \texttt{rho} the P- and S-wave speeds and density, and \texttt{Qp} and \texttt{Qs} the quality factors for P- and S-wave speeds. The quality factors are optional and can be omitted for purely elastic models (the tomography routine will recognize both formats).\newline
+
+
+\noindent
+Internally, the quality factors will be converted to bulk and shear attenuation values,
 $Q_{\kappa}$ and $Q_{\mu}$ respectively \citep{AnHa78}.
-Note that Qmu is always equal to Qs, but Qkappa is in general not equal to Qp. To convert one to the other see \texttt{doc/note\_on\_Qkappa\_versus\_Qp.pdf} and \texttt{utils/small\_utilities/attenuation/conversion\_from\_Qkappa\_Qmu\_to\_Qp\_Qs\_from\_Dahlen\_Tromp\_959\_960.f90}.
+Note that Qmu is always equal to Qs, but Qkappa is in general not equal to Qp.
+To convert one to the other see \texttt{doc/note\_on\_Qkappa\_versus\_Qp.pdf}. There is also a source code file\newline \texttt{conversion\_from\_Qkappa\_Qmu\_to\_Qp\_Qs\_from\_Dahlen\_Tromp\_959\_960.f90}
+provided in folder \texttt{utils/small\_utilities/attenuation/}.
 For simulations with attenuation, please note that the Vp- and Vs-velocities of your model are given for a reference
 frequency. To change this reference frequency, you change the value
 of \texttt{ATTENUATION\_f0\_REFERENCE} defined (in Hz) in input file \texttt{DATA/Par\_file}.\newline
 
+\noindent
 The code uses a constant $Q$ quality factor, write(IMAIN,*) "but approximated based on a series of Zener standard linear solids (SLS).
-The approximation is thus performed in a given frequency band determined based on that \texttt{ATTENUATION\_f0\_REFERENCE} reference frequency.
+The approximation is thus performed in a given frequency band determined based on that \texttt{ATTENUATION\_f0\_REFERENCE} reference frequency.\newline
 
 %fig%
 \begin{figure}[htbp]
@@ -122,12 +130,31 @@ SPACING\_Y, SPACING\_Z should be in the units of the constructed mesh
 \end{figure}
 
 
+\noindent
 The user can implement his own interpolation algorithm for the tomography
-model by changing the routine \texttt{model\_tomography.f90} located
+model by changing the routines in file \texttt{model\_tomography.f90} located
 in the \texttt{src/generate\_databases/} directory. Moreover, for
 models that involve both fully defined materials and a tomography
 description, the \texttt{nummaterial\_velocity\_file} has multiple
-lines each with the corresponding suitable format described above.
+lines each with the corresponding suitable format described above.\newline
+
+
+\noindent
+Finally, the tomography file can have as many comment lines starting with a hash sign "\#" as you like.
+In case you want to provide a tomography file with regular gridded lon/lat/depth coordinates instead of x/y/z,
+you can add a comment line like this into the header section of the file:
+{\small
+\begin{verbatim}
+# coordinate format   : lon / lat / depth
+\end{verbatim}
+}
+\noindent
+This can be helpful when working with a simulation setup for a specific local region using a corresponding UTM-projection (and topography).
+In such cases, it is more convenient to use lon/lat/depth coordinates instead of UTM coordinates directly.\newline
+As an example for how to create such a tomography file, a python script \texttt{run\_convert\_IRIS\_EMC\_netCDF\_2\_tomo.py} is provided in
+folder \texttt{utils/scripts/} to extract a tomography file from an \href{https://ds.iris.edu/ds/products/emc-earthmodels/}{IRIS EMC model}
+that gets provided in netCDF format.
+
 
 %==============
 
@@ -141,7 +168,7 @@ The example in Figure~\ref{fig:tomography_file} is for an external tomography fi
 %
 and the file \texttt{tomography\_model.xyz} will need to reside in \texttt{DATA/}. All entries in the second column of \texttt{materials\_file} will be \texttt{-1}, which means that each element in the mesh will be interpolated according to the values in \texttt{tomography\_model.xyz}.\newline
 
-In some cases it may be desirable to have an external tomography model that is described in more than one file. For example, in cases like southern California, the length scale of variation in the structure of the wave speed model is much shorter in the sedimentary basin models within the upper 15~km. Therefore one might want to use an external tomography file that is sampled with, say, $\Delta x = 1000$~m, $\Delta y = 1000$~m, and $\Delta z = 250$~m in the uppermost 15~km, and then use $\Delta x = 2000$~m, $\Delta y = 2000$~m, and $\Delta z = 1000$~m below a depth of 15~km. If these intervals are chosen appropriately, then it will result in a pair of external tomography file that is much smaller than the alternative of having a single file with the fine discretization. In this case  \texttt{nummaterial\_velocity\_file} is
+In some cases it may be desirable to have an external tomography model that is described in more than one file. For example, in cases like Southern California, the length scale of variation in the structure of the wave speed model is much shorter in the sedimentary basin models within the upper 15~km. Therefore one might want to use an external tomography file that is sampled with, say, $\Delta x = 1000$~m, $\Delta y = 1000$~m, and $\Delta z = 250$~m in the uppermost 15~km, and then use $\Delta x = 2000$~m, $\Delta y = 2000$~m, and $\Delta z = 1000$~m below a depth of 15~km. If these intervals are chosen appropriately, then it will result in a pair of external tomography file that is much smaller than the alternative of having a single file with the fine discretization. In this case  \texttt{nummaterial\_velocity\_file} is
 %
 \begin{verbatim}
 2  -1 tomography elastic file_above_15km.xyz 1
@@ -176,7 +203,10 @@ Output to this routine consists of:
 \item [{\texttt{rho,vp,vs}}] isotropic model parameters for density $\rho$
 ($kg/m^{3}$), $v_{p}$ ($m/s$) and $v_{s}$ ($m/s$)
 \item [{\texttt{qkappa\_atten,qmu\_atten}}] Bulk and shear wave quality factor: $0<Q_{\kappa,\mu}<9000$.
-Note that Qmu is always equal to Qs, but Qkappa is in general not equal to Qp. To convert one to the other see \texttt{doc/note\_on\_Qkappa\_versus\_Qp.pdf} and \texttt{utils/small\_utilities/attenuation/conversion\_from\_Qkappa\_Qmu\_to\_Qp\_Qs\_from\_Dahlen\_Tromp\_959\_960.f90}.
+Note that Qmu is always equal to Qs, but Qkappa is in general not equal to Qp. To convert one to the other see\newline
+\texttt{doc/note\_on\_Qkappa\_versus\_Qp.pdf} and source code file\newline
+\texttt{conversion\_from\_Qkappa\_Qmu\_to\_Qp\_Qs\_from\_Dahlen\_Tromp\_959\_960.f90}\newline
+in folder \texttt{utils/small\_utilities/attenuation}.
 \item [{\texttt{iflag\_aniso}}] anisotropic model flag, $0$ indicating
 no anisotropy or $1$ using anisotropic model parameters as defined
 in routine file \texttt{model\_aniso.f90}
@@ -251,7 +281,9 @@ We also assume that any dimensional value inside SEP header files is given in me
 that binary files are single precision floating point numbers stored in little endian format.
 There is currently only support for \texttt{vp}, \texttt{vs} and \texttt{rho} variables.\newline
 
-An example demonstrating the use SEP models is given in:
-\texttt{EXAMPLES/applications/meshfem3D\_examples/sep\_bathymetry}.
+An example demonstrating the use of SEP models is given in:\newline
+\texttt{EXAMPLES/applications/meshfem3D\_examples/sep\_bathymetry}.\newline
 
 
+\noindent
+Please consider adding improvements and/or new model implementations to this package - feel free to contribute!

@@ -69,6 +69,9 @@
   use generate_databases_par, only: ispec_is_surface_external_mesh,iglob_is_surface_external_mesh, &
     nfaces_surface
 
+  ! mesh adjacency
+  use generate_databases_par, only: neighbors_xadj,neighbors_adjncy,num_neighbors_all
+
   use create_regions_mesh_ext_par
 
   use adios_helpers_mod
@@ -106,9 +109,10 @@
              num_colors_inner_acoustic_wmax, num_colors_outer_elastic_wmax, &
              num_colors_inner_elastic_wmax, &
              nglob_ocean_wmax, nglob_xy_wmax, nspec_aniso_wmax, &
-             max_nibool_interfaces_ext_mesh_wmax
+             max_nibool_interfaces_ext_mesh_wmax, &
+             num_neighbors_all_wmax
 
-  integer, parameter :: num_vars = 41
+  integer, parameter :: num_vars = 42
   integer, dimension(num_vars) :: max_global_values
 
   ! number of unique global nodes
@@ -200,6 +204,8 @@
   max_global_values(39) = 0 ! dummy for future use
   max_global_values(40) = nspec_aniso
   max_global_values(41) = nspec_irregular
+  max_global_values(42) = num_neighbors_all   ! for mesh adjacency
+
 
   ! calling wrapper instead to compile without mpi
   call max_allreduce_i(max_global_values,num_vars)
@@ -245,6 +251,7 @@
   ! idummy                            = max_global_values(39) ! for future use
   nspec_aniso_wmax                    = max_global_values(40)
   nspec_irreg_wmax                    = max_global_values(41)
+  num_neighbors_all_wmax              = max_global_values(42) ! for mesh adjacency
 
   ! save arrays for the solver to run.
   !-----------------------------------.
@@ -610,6 +617,15 @@
   local_dim = nglob_wmax
   call define_adios_global_array1D(myadios_group, group_size_inc,local_dim, '', &
                                    STRINGIFY_VAR(iglob_is_surface_external_mesh))
+
+  ! for mesh adjacency
+  call define_adios_scalar(myadios_group, group_size_inc, '',STRINGIFY_VAR(num_neighbors_all))
+  local_dim = nspec_wmax + 1
+  call define_adios_global_array1D(myadios_group, group_size_inc,local_dim, '', &
+                                   STRINGIFY_VAR(neighbors_xadj))
+  local_dim = num_neighbors_all_wmax
+  call define_adios_global_array1D(myadios_group, group_size_inc,local_dim, '', &
+                                   STRINGIFY_VAR(neighbors_adjncy))
 
   ! user output
   if (myrank == 0) then
@@ -1023,6 +1039,16 @@
   local_dim = nglob_wmax
   call write_adios_global_1d_array(myadios_file, myadios_group, myrank, sizeprocs, local_dim, &
                                    STRINGIFY_VAR(iglob_is_surface_external_mesh))
+
+  ! mesh adjacency
+  call write_adios_scalar(myadios_file, myadios_group, STRINGIFY_VAR(num_neighbors_all))
+
+  local_dim = nspec_wmax + 1
+  call write_adios_global_1d_array(myadios_file, myadios_group, myrank, sizeprocs, local_dim, &
+                                   STRINGIFY_VAR(neighbors_xadj))
+  local_dim = num_neighbors_all_wmax
+  call write_adios_global_1d_array(myadios_file, myadios_group, myrank, sizeprocs, local_dim, &
+                                   STRINGIFY_VAR(neighbors_adjncy))
 
   !----------------------------------.
   ! Perform the actual write to disk |

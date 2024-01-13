@@ -62,6 +62,9 @@ blender_img_resolution_Y = 1600
 # cycles rendering (for better glass effect of buildings)
 use_cycles_renderer = False
 
+## transparent sea-level plane
+use_transparent_sea_level_plane = False
+
 ###############################################################################################
 
 # Constants
@@ -1161,6 +1164,7 @@ def get_mesh_elevation_at_origin():
 def save_blender_scene(title="",animation=False,close_up_view=False):
     global blender_img_resolution_X,blender_img_resolution_Y
     global use_cycles_renderer
+    global use_transparent_sea_level_plane
 
     ## blender scene setup
     print("Setting up blender scene...")
@@ -1240,10 +1244,28 @@ def save_blender_scene(title="",animation=False,close_up_view=False):
 
     # Set the object's material to white
     mat = bpy.data.materials.new(name="White")
-    if close_up_view:
-        mat.diffuse_color = (0.8, 0.8, 0.8, 1)  # similar as background color to have an infinite background
+    # adds transparency to the plane
+    if use_transparent_sea_level_plane:
+        # Set the material to use a Principled BSDF shader
+        mat.use_nodes = True
+        principled_bsdf = mat.node_tree.nodes.get('Principled BSDF')
+        # color
+        if close_up_view:
+            principled_bsdf.inputs["Base Color"].default_value = (0.8, 0.8, 0.8, 1)
+        else:
+            principled_bsdf.inputs["Base Color"].default_value = (0.135, 0.135, 0.135, 1) # gray for better contrast
+        # Set the shader to be transparent
+        principled_bsdf.inputs['Alpha'].default_value = 0.6  # Set the alpha to control transparency
+        # Set the blend mode to 'Alpha Blend'
+        mat.blend_method = 'BLEND'
+        # Set the shadow mode to 'Alpha Hashed'
+        mat.shadow_method = 'HASHED'
     else:
-        mat.diffuse_color = (0.135, 0.135, 0.135, 1)  # gray for better contrast
+        if close_up_view:
+            mat.diffuse_color = (0.8, 0.8, 0.8, 1)  # similar as background color to have an infinite background
+        else:
+            mat.diffuse_color = (0.135, 0.135, 0.135, 1)  # gray for better contrast
+
     plane_object.data.materials.append(mat)
 
     # text object
@@ -1610,7 +1632,7 @@ def plot_with_blender(vtk_file="",image_title="",colormap=0,color_max=None,build
 
 def usage():
     print("usage: ./plot_with_blender.py [--vtk_file=file] [--title=my_mesh_name] [--colormap=val] [--color-max=val] [--buildings=file]")
-    print("                              [--with-cycles/--no-cycles]  [--help]")
+    print("                              [--with-cycles/--no-cycles] [--closeup] [--small] [--anim] [--help]")
     print("  with")
     print("     --vtk_file                - input mesh file (.vtk, .vtu, .inp)")
     print("     --title                   - title text (added to image rendering)")
@@ -1621,6 +1643,8 @@ def usage():
     print("     --color-max               - fixes maximum value of colormap for moviedata to val, e.g., 1.e-7)")
     print("     --buildings               - mesh file (.ply) with buildings to visualize for the area")
     print("     --with-cycles/--no-cycles - turns on/off CYCLES renderer (default is off, using BLENDER_EEVEE)")
+    print("     --closeup                 - sets camera view closer to center of model")
+    print("     --transparent-sea-level   - turns on transparency for sea-level plane")
     print("     --small                   - turns on small images size (400x600px) for preview")
     print("     --anim                    - turns on movie animation (dive-in and rotation)")
     print("     --help                    - this help for usage...")
@@ -1665,6 +1689,8 @@ if __name__ == '__main__':
             blender_img_resolution_Y = 400
         elif "--title=" in arg:
             image_title = arg.split('=')[1]
+        elif "--transparent-sea-level" in arg:
+            use_transparent_sea_level_plane = True
         elif "--vtk_file=" in arg:
             vtk_file = arg.split('=')[1]
         elif i >= 8:

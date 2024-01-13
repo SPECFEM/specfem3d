@@ -2,9 +2,9 @@
  **** Specfem 3-D Solver - MPI version f90 ****
  **********************************************
 
- Running Git package version of the code: 3.0.0
- which is Git undefined in the case of old tar ball builds
- dating undefined in the case of old tar ball builds
+ Running Git package version of the code: 4.1.0
+ which is Git unknown
+ dating unknown
 
 
 
@@ -30,11 +30,20 @@
  Reading mesh databases...
    reads binary mesh files: proc***_external_mesh.bin
    from directory         : ./OUTPUT_FILES/DATABASES_MPI
+
+   simulation w/ acoustic    domain:  F
+   simulation w/ elastic     domain:  T
+   simulation w/ poroelastic domain:  F
+
+   slice 0 has:
+   number of elements acoustic   :           0
+   number of elements elastic    :        5760
+   number of elements poroelastic:           0
    done
 
- total acoustic elements    :           0
- total elastic elements     :       23040
- total poroelastic elements :           0
+   total acoustic elements    :           0
+   total elastic elements     :       23040
+   total poroelastic elements :           0
 
  Mesh resolution:
 
@@ -83,12 +92,12 @@
  *** Max/min ratio =    1.20000303
 
  *** Minimum period resolved =   0.325520813
- *** Maximum suggested time step =    7.75289582E-03
+ *** Maximum suggested time step =    7.74999987E-03
 
  *** for DT :    8.0000000000000002E-003
  *** Max stability for wave velocities =   0.515936255
 
- Elapsed time for checking mesh resolution in seconds =    7.9550000000000003E-003
+ Elapsed time for checking mesh resolution in seconds =    2.6890000000000000E-003
  saving VTK files for Courant number and minimum period
 
 
@@ -98,16 +107,16 @@
 
 
  kd-tree:
-   total data points:         5760
-   theoretical   number of nodes:        11516
-                tree memory size:   0.351440430     MB
-   actual        number of nodes:        11519
-                tree memory size:   0.351531982     MB
-   maximum depth   :           14
-   creation timing :    2.14999914E-03 (s)
+   total data points:       155520
+   theoretical   number of nodes:       311032
+                tree memory size:    9.49194336     MB
+   actual        number of nodes:       311039
+                tree memory size:    9.49215698     MB
+   maximum depth   :           19
+   creation timing :    2.29109973E-02 (s)
 
 
- sources:           7
+ sources:            7
 
  ********************
   locating sources
@@ -124,13 +133,14 @@
                   in elastic domain
 
    using moment tensor source:
-     xi coordinate of source in that element:    1.7599999999999973E-002
+     xi coordinate of source in that element:    1.7600000000000011E-002
      eta coordinate of source in that element:   0.39263950920061519
      gamma coordinate of source in that element:    1.0000000000000000
 
    source time function:
      using Ricker source time function
-     Ricker frequency:    5.0000000000000000       Hz
+     using a source of dominant frequency    5.0000000000000000
+
      time shift:    0.0000000000000000       seconds
 
    magnitude of the source:
@@ -164,13 +174,14 @@
                   in elastic domain
 
    using moment tensor source:
-     xi coordinate of source in that element:    1.7600000000000022E-002
-     eta coordinate of source in that element:   0.39263950920061547
-     gamma coordinate of source in that element:  -0.33333333333333320
+     xi coordinate of source in that element:    1.7600000000005857E-002
+     eta coordinate of source in that element:   0.39263950920061513
+     gamma coordinate of source in that element:  -0.33333333333333359
 
    source time function:
      using Ricker source time function
-     Ricker frequency:    5.0000000000000000       Hz
+     using a source of dominant frequency    5.0000000000000000
+
      time shift:    0.0000000000000000       seconds
 
    magnitude of the source:
@@ -182,19 +193,19 @@
              latitude:    8696.0000000000000
             longitude:    8443.0000000000000
 
-                x:    8443.0000000000000
+                x:    8443.0000000000018
                 y:    8696.0000000000000
             depth:    1.0000000000000000       km
    topo elevation:    0.0000000000000000
 
    position of the source that will be used:
 
-                x:    8443.0000000000000
+                x:    8443.0000000000018
                 y:    8696.0000000000000
             depth:    1.0000000000000000       km
                 z:   -1000.0000000000000
 
-   error in location of the source:    0.00000000      m
+   error in location of the source:    1.81898940E-12  m
 
 
 
@@ -204,13 +215,14 @@
                   in elastic domain
 
    using moment tensor source:
-     xi coordinate of source in that element:    1.7599999999999973E-002
-     eta coordinate of source in that element:   0.39263950920061513
+     xi coordinate of source in that element:    1.7600000000000133E-002
+     eta coordinate of source in that element:   0.39263950920061536
      gamma coordinate of source in that element:   0.33333333333333298
 
    source time function:
      using Ricker source time function
-     Ricker frequency:    5.0000000000000000       Hz
+     using a source of dominant frequency    5.0000000000000000
+
      time shift:    0.0000000000000000       seconds
 
    magnitude of the source:
@@ -240,17 +252,18 @@
 
  source #            4
    source located in slice            0
-                  in element         2702
+                  in element         3278
                   in elastic domain
 
    using moment tensor source:
-     xi coordinate of source in that element:    1.7599999999999973E-002
-     eta coordinate of source in that element:   0.39263950920061519
-     gamma coordinate of source in that element:    1.0000000000000000
+     xi coordinate of source in that element:    1.7600000000000011E-002
+     eta coordinate of source in that element:   0.39263950920061513
+     gamma coordinate of source in that element:   -1.0000000000000000
 
    source time function:
      using Ricker source time function
-     Ricker frequency:    5.0000000000000000       Hz
+     using a source of dominant frequency    5.0000000000000000
+
      time shift:    0.0000000000000000       seconds
 
    magnitude of the source:
@@ -284,13 +297,14 @@
                   in elastic domain
 
    using moment tensor source:
-     xi coordinate of source in that element:    1.7600000000000022E-002
-     eta coordinate of source in that element:   0.39263950920061541
-     gamma coordinate of source in that element:  -0.33333333333333459
+     xi coordinate of source in that element:    1.7600000000000036E-002
+     eta coordinate of source in that element:   0.39263950920060819
+     gamma coordinate of source in that element:  -0.33333333333333154
 
    source time function:
      using Ricker source time function
-     Ricker frequency:    5.0000000000000000       Hz
+     using a source of dominant frequency    5.0000000000000000
+
      time shift:    0.0000000000000000       seconds
 
    magnitude of the source:
@@ -311,10 +325,10 @@
 
                 x:    8443.0000000000000
                 y:    8696.0000000000000
-            depth:    4.0000000000000009       km
-                z:   -4000.0000000000009
+            depth:    4.0000000000000000       km
+                z:   -4000.0000000000000
 
-   error in location of the source:    9.09494702E-13  m
+   error in location of the source:    0.00000000      m
 
 
 
@@ -324,13 +338,14 @@
                   in elastic domain
 
    using moment tensor source:
-     xi coordinate of source in that element:    1.7599999999999973E-002
-     eta coordinate of source in that element:   0.39263950920061513
-     gamma coordinate of source in that element:   0.33333333333333476
+     xi coordinate of source in that element:    1.7600000000000133E-002
+     eta coordinate of source in that element:   0.39263950920061536
+     gamma coordinate of source in that element:   0.33333333333333504
 
    source time function:
      using Ricker source time function
-     Ricker frequency:    5.0000000000000000       Hz
+     using a source of dominant frequency    5.0000000000000000
+
      time shift:    0.0000000000000000       seconds
 
    magnitude of the source:
@@ -343,18 +358,18 @@
             longitude:    8443.0000000000000
 
                 x:    8443.0000000000000
-                y:    8696.0000000000018
+                y:    8696.0000000000000
             depth:    5.0000000000000000       km
    topo elevation:    0.0000000000000000
 
    position of the source that will be used:
 
                 x:    8443.0000000000000
-                y:    8696.0000000000018
-            depth:    5.0000000000000000       km
-                z:   -5000.0000000000000
+                y:    8696.0000000000000
+            depth:    4.9999999999999991       km
+                z:   -4999.9999999999991
 
-   error in location of the source:    1.81898940E-12  m
+   error in location of the source:    9.09494702E-13  m
 
 
 
@@ -364,13 +379,14 @@
                   in elastic domain
 
    using moment tensor source:
-     xi coordinate of source in that element:    1.7600000000000022E-002
-     eta coordinate of source in that element:   0.39263950920060847
-     gamma coordinate of source in that element:  -0.33333333333333165
+     xi coordinate of source in that element:    1.7600000000000036E-002
+     eta coordinate of source in that element:   0.39263950920061513
+     gamma coordinate of source in that element:  -0.33333333333333476
 
    source time function:
      using Ricker source time function
-     Ricker frequency:    5.0000000000000000       Hz
+     using a source of dominant frequency    5.0000000000000000
+
      time shift:    0.0000000000000000       seconds
 
    magnitude of the source:
@@ -391,10 +407,10 @@
 
                 x:    8443.0000000000000
                 y:    8696.0000000000000
-            depth:    5.7999999999999980       km
-                z:   -5799.9999999999982
+            depth:    5.7999999999999998       km
+                z:   -5800.0000000000000
 
-   error in location of the source:    1.81898940E-12  m
+   error in location of the source:    0.00000000      m
 
 
 
@@ -406,7 +422,7 @@
  maximum error in location of the sources:    1.81898940E-12  m
 
 
- Elapsed time for detection of sources in seconds =    2.7329999999999854E-003
+ Elapsed time for detection of sources in seconds =    1.3100000000000056E-003
 
  End of source detection - done
 
@@ -442,7 +458,7 @@
                        in element         5582
                        in elastic domain
       at coordinates:
-      xi    =    1.7599999999999973E-002
+      xi    =    1.7600000000000011E-002
       eta   =   0.39263950920061519
       gamma =    1.0000000000000000
       rotation matrix:
@@ -455,11 +471,14 @@
       z:    0.0000000000000000
 
 
+
  maximum error in location of all the receivers:    0.00000000      m
 
- Elapsed time for receiver detection in seconds =    9.5850000000000102E-003
+ Elapsed time for receiver detection in seconds =    2.1359999999999990E-003
 
  End of receiver detection - done
+
+ found a total of            7  receivers in all the slices
 
 
                 3  adjoint component trace files found in all slices
@@ -468,7 +487,7 @@
 
    Total number of simulation steps (NSTEP)                       =         1000
    writing out seismograms at every NTSTEP_BETWEEN_OUTPUT_SEISMOS =         1000
-   number of subsampling steps for seismograms (subsamp_seismos)  =            1
+   number of subsampling steps for seismograms                    =            1
    Total number of samples for seismograms                        =         1000
 
    maximum number of local receivers is            7  in slice            0
@@ -481,7 +500,8 @@
    size of maximum adjoint source array =    1.14440918E-02 MB
                                         =    1.11758709E-05 GB
 
- found a total of            7  receivers in all the slices
+
+ Total number of samples for seismograms =         1000
 
  Using            7  point sources
 
@@ -516,16 +536,16 @@
    fused array done
    bandwidth test (STREAM TRIAD):
       memory accesses =    13.2443275     MB
-      timing  min/max =    1.36200001E-03 s /    1.69399998E-03 s
-      timing      avg =    1.50809996E-03 s
-      bandwidth       =    8.57629681     GB/s
+      timing  min/max =    4.71000007E-04 s /    4.87000012E-04 s
+      timing      avg =    4.78600006E-04 s
+      bandwidth       =    27.0244751     GB/s
       with force_vectorization:
-      timing  min/max =    1.43499998E-03 s /    1.74400001E-03 s
-      timing      avg =    1.61679997E-03 s
-      bandwidth       =    7.99969912     GB/s
+      timing  min/max =    3.67000001E-04 s /    3.88999993E-04 s
+      timing      avg =    3.75000003E-04 s
+      bandwidth       =    34.4904366     GB/s
 
 
- Elapsed time for preparing timerun in seconds =    6.8311999999999984E-002
+ Elapsed time for preparing timerun in seconds =    2.1096000000000004E-002
 
  ************
   time loop
@@ -543,18 +563,18 @@
 
  Time step #            5
  Time:  -0.208000004      seconds
- Elapsed time in seconds =   0.22176899999999999
+ Elapsed time in seconds =    7.2772000000000003E-002
  Elapsed time in hh:mm:ss =      0 h 00 m 00 s
- Mean elapsed time per time step in seconds =    4.43538018E-02
- Max norm displacement vector U in all slices (m) =    1.94722578E-16
+ Mean elapsed time per time step in seconds =    1.45544000E-02
+ Max norm displacement vector U in all slices (m) =    1.94722591E-16
  Time steps done =            5  out of         1000
  Time steps remaining =          995
- Estimated remaining time in seconds =    44.1320305
- Estimated remaining time in hh:mm:ss =      0 h 00 m 44 s
- Estimated total run time in seconds =    44.3538017
- Estimated total run time in hh:mm:ss =      0 h 00 m 44 s
+ Estimated remaining time in seconds =    14.4816284
+ Estimated remaining time in hh:mm:ss =      0 h 00 m 14 s
+ Estimated total run time in seconds =    14.5544004
+ Estimated total run time in hh:mm:ss =      0 h 00 m 14 s
  We have done   0.500000000     % of that
- The run will finish approximately on (in local time): Fri Jul 02, 2021 14:54
+ The run will finish approximately on (in local time): Sat Jan 13, 2024 11:15
  ************************************************************
  **** BEWARE: the above time estimates are not very reliable
  **** because fewer than 100 iterations have been performed
@@ -562,160 +582,162 @@
 
  Time step #          100
  Time:   0.551999986      seconds
- Elapsed time in seconds =    6.0956599999999996
- Elapsed time in hh:mm:ss =      0 h 00 m 06 s
- Mean elapsed time per time step in seconds =    6.09566011E-02
- Max norm displacement vector U in all slices (m) =    3.71283425E-15
+ Elapsed time in seconds =    1.7256810000000000
+ Elapsed time in hh:mm:ss =      0 h 00 m 01 s
+ Mean elapsed time per time step in seconds =    1.72568094E-02
+ Max norm displacement vector U in all slices (m) =    3.71283382E-15
  Time steps done =          100  out of         1000
  Time steps remaining =          900
- Estimated remaining time in seconds =    54.8609390
- Estimated remaining time in hh:mm:ss =      0 h 00 m 54 s
- Estimated total run time in seconds =    60.9566002
- Estimated total run time in hh:mm:ss =      0 h 01 m 00 s
+ Estimated remaining time in seconds =    15.5311289
+ Estimated remaining time in hh:mm:ss =      0 h 00 m 15 s
+ Estimated total run time in seconds =    17.2568092
+ Estimated total run time in hh:mm:ss =      0 h 00 m 17 s
  We have done    10.0000000     % of that
- The run will finish approximately on (in local time): Fri Jul 02, 2021 14:54
+ The run will finish approximately on (in local time): Sat Jan 13, 2024 11:15
 
  Time step #          200
  Time:    1.35200000      seconds
- Elapsed time in seconds =    12.558211000000000
- Elapsed time in hh:mm:ss =      0 h 00 m 12 s
- Mean elapsed time per time step in seconds =    6.27910569E-02
- Max norm displacement vector U in all slices (m) =    2.08720205E-15
+ Elapsed time in seconds =    3.4613999999999998
+ Elapsed time in hh:mm:ss =      0 h 00 m 03 s
+ Mean elapsed time per time step in seconds =    1.73070002E-02
+ Max norm displacement vector U in all slices (m) =    2.08720184E-15
  Time steps done =          200  out of         1000
  Time steps remaining =          800
- Estimated remaining time in seconds =    50.2328453
- Estimated remaining time in hh:mm:ss =      0 h 00 m 50 s
- Estimated total run time in seconds =    62.7910538
- Estimated total run time in hh:mm:ss =      0 h 01 m 02 s
+ Estimated remaining time in seconds =    13.8456001
+ Estimated remaining time in hh:mm:ss =      0 h 00 m 13 s
+ Estimated total run time in seconds =    17.3069992
+ Estimated total run time in hh:mm:ss =      0 h 00 m 17 s
  We have done    20.0000000     % of that
- The run will finish approximately on (in local time): Fri Jul 02, 2021 14:54
+ The run will finish approximately on (in local time): Sat Jan 13, 2024 11:15
 
  Time step #          300
  Time:    2.15199995      seconds
- Elapsed time in seconds =    19.473509000000000
- Elapsed time in hh:mm:ss =      0 h 00 m 19 s
- Mean elapsed time per time step in seconds =    6.49116933E-02
- Max norm displacement vector U in all slices (m) =    1.67042986E-15
+ Elapsed time in seconds =    5.1956280000000001
+ Elapsed time in hh:mm:ss =      0 h 00 m 05 s
+ Mean elapsed time per time step in seconds =    1.73187591E-02
+ Max norm displacement vector U in all slices (m) =    1.67042997E-15
  Time steps done =          300  out of         1000
  Time steps remaining =          700
- Estimated remaining time in seconds =    45.4381866
- Estimated remaining time in hh:mm:ss =      0 h 00 m 45 s
- Estimated total run time in seconds =    64.9116974
- Estimated total run time in hh:mm:ss =      0 h 01 m 04 s
+ Estimated remaining time in seconds =    12.1231318
+ Estimated remaining time in hh:mm:ss =      0 h 00 m 12 s
+ Estimated total run time in seconds =    17.3187599
+ Estimated total run time in hh:mm:ss =      0 h 00 m 17 s
  We have done    30.0000000     % of that
- The run will finish approximately on (in local time): Fri Jul 02, 2021 14:54
+ The run will finish approximately on (in local time): Sat Jan 13, 2024 11:15
 
  Time step #          400
  Time:    2.95199990      seconds
- Elapsed time in seconds =    26.612946000000001
- Elapsed time in hh:mm:ss =      0 h 00 m 26 s
- Mean elapsed time per time step in seconds =    6.65323660E-02
- Max norm displacement vector U in all slices (m) =    1.37444267E-15
+ Elapsed time in seconds =    6.9660719999999996
+ Elapsed time in hh:mm:ss =      0 h 00 m 06 s
+ Mean elapsed time per time step in seconds =    1.74151808E-02
+ Max norm displacement vector U in all slices (m) =    1.37444288E-15
  Time steps done =          400  out of         1000
  Time steps remaining =          600
- Estimated remaining time in seconds =    39.9194183
- Estimated remaining time in hh:mm:ss =      0 h 00 m 39 s
- Estimated total run time in seconds =    66.5323639
- Estimated total run time in hh:mm:ss =      0 h 01 m 06 s
+ Estimated remaining time in seconds =    10.4491081
+ Estimated remaining time in hh:mm:ss =      0 h 00 m 10 s
+ Estimated total run time in seconds =    17.4151802
+ Estimated total run time in hh:mm:ss =      0 h 00 m 17 s
  We have done    40.0000000     % of that
- The run will finish approximately on (in local time): Fri Jul 02, 2021 14:54
+ The run will finish approximately on (in local time): Sat Jan 13, 2024 11:15
 
  Time step #          500
  Time:    3.75200009      seconds
- Elapsed time in seconds =    33.715239000000004
- Elapsed time in hh:mm:ss =      0 h 00 m 33 s
- Mean elapsed time per time step in seconds =    6.74304813E-02
- Max norm displacement vector U in all slices (m) =    1.19551480E-15
+ Elapsed time in seconds =    8.7074400000000001
+ Elapsed time in hh:mm:ss =      0 h 00 m 08 s
+ Mean elapsed time per time step in seconds =    1.74148809E-02
+ Max norm displacement vector U in all slices (m) =    1.19551511E-15
  Time steps done =          500  out of         1000
  Time steps remaining =          500
- Estimated remaining time in seconds =    33.7152405
- Estimated remaining time in hh:mm:ss =      0 h 00 m 33 s
- Estimated total run time in seconds =    67.4304810
- Estimated total run time in hh:mm:ss =      0 h 01 m 07 s
+ Estimated remaining time in seconds =    8.70744038
+ Estimated remaining time in hh:mm:ss =      0 h 00 m 08 s
+ Estimated total run time in seconds =    17.4148808
+ Estimated total run time in hh:mm:ss =      0 h 00 m 17 s
  We have done    50.0000000     % of that
- The run will finish approximately on (in local time): Fri Jul 02, 2021 14:54
+ The run will finish approximately on (in local time): Sat Jan 13, 2024 11:16
 
  Time step #          600
  Time:    4.55200005      seconds
- Elapsed time in seconds =    41.075575000000001
- Elapsed time in hh:mm:ss =      0 h 00 m 41 s
- Mean elapsed time per time step in seconds =    6.84592947E-02
- Max norm displacement vector U in all slices (m) =    1.06289548E-15
+ Elapsed time in seconds =    10.445504000000000
+ Elapsed time in hh:mm:ss =      0 h 00 m 10 s
+ Mean elapsed time per time step in seconds =    1.74091738E-02
+ Max norm displacement vector U in all slices (m) =    1.06289538E-15
  Time steps done =          600  out of         1000
  Time steps remaining =          400
- Estimated remaining time in seconds =    27.3837166
- Estimated remaining time in hh:mm:ss =      0 h 00 m 27 s
- Estimated total run time in seconds =    68.4592896
- Estimated total run time in hh:mm:ss =      0 h 01 m 08 s
+ Estimated remaining time in seconds =    6.96366930
+ Estimated remaining time in hh:mm:ss =      0 h 00 m 06 s
+ Estimated total run time in seconds =    17.4091740
+ Estimated total run time in hh:mm:ss =      0 h 00 m 17 s
  We have done    60.0000000     % of that
- The run will finish approximately on (in local time): Fri Jul 02, 2021 14:53
+ The run will finish approximately on (in local time): Sat Jan 13, 2024 11:16
 
  Time step #          700
  Time:    5.35200024      seconds
- Elapsed time in seconds =    48.331457000000000
- Elapsed time in hh:mm:ss =      0 h 00 m 48 s
- Mean elapsed time per time step in seconds =    6.90449402E-02
+ Elapsed time in seconds =    12.178993999999999
+ Elapsed time in hh:mm:ss =      0 h 00 m 12 s
+ Mean elapsed time per time step in seconds =    1.73985623E-02
  Max norm displacement vector U in all slices (m) =    1.08119171E-15
  Time steps done =          700  out of         1000
  Time steps remaining =          300
- Estimated remaining time in seconds =    20.7134819
- Estimated remaining time in hh:mm:ss =      0 h 00 m 20 s
- Estimated total run time in seconds =    69.0449371
- Estimated total run time in hh:mm:ss =      0 h 01 m 09 s
+ Estimated remaining time in seconds =    5.21956873
+ Estimated remaining time in hh:mm:ss =      0 h 00 m 05 s
+ Estimated total run time in seconds =    17.3985634
+ Estimated total run time in hh:mm:ss =      0 h 00 m 17 s
  We have done    70.0000000     % of that
- The run will finish approximately on (in local time): Fri Jul 02, 2021 14:53
+ The run will finish approximately on (in local time): Sat Jan 13, 2024 11:16
 
  Time step #          800
  Time:    6.15199995      seconds
- Elapsed time in seconds =    56.123152000000005
- Elapsed time in hh:mm:ss =      0 h 00 m 56 s
- Mean elapsed time per time step in seconds =    7.01539367E-02
+ Elapsed time in seconds =    13.915160999999999
+ Elapsed time in hh:mm:ss =      0 h 00 m 13 s
+ Mean elapsed time per time step in seconds =    1.73939504E-02
  Max norm displacement vector U in all slices (m) =    8.36111622E-16
  Time steps done =          800  out of         1000
  Time steps remaining =          200
- Estimated remaining time in seconds =    14.0307884
- Estimated remaining time in hh:mm:ss =      0 h 00 m 14 s
- Estimated total run time in seconds =    70.1539383
- Estimated total run time in hh:mm:ss =      0 h 01 m 10 s
+ Estimated remaining time in seconds =    3.47879028
+ Estimated remaining time in hh:mm:ss =      0 h 00 m 03 s
+ Estimated total run time in seconds =    17.3939514
+ Estimated total run time in hh:mm:ss =      0 h 00 m 17 s
  We have done    80.0000000     % of that
- The run will finish approximately on (in local time): Fri Jul 02, 2021 14:53
+ The run will finish approximately on (in local time): Sat Jan 13, 2024 11:16
 
  Time step #          900
  Time:    6.95200014      seconds
- Elapsed time in seconds =    63.719605999999999
- Elapsed time in hh:mm:ss =      0 h 01 m 03 s
- Mean elapsed time per time step in seconds =    7.07995594E-02
- Max norm displacement vector U in all slices (m) =    7.72270484E-16
+ Elapsed time in seconds =    15.646271000000000
+ Elapsed time in hh:mm:ss =      0 h 00 m 15 s
+ Mean elapsed time per time step in seconds =    1.73847452E-02
+ Max norm displacement vector U in all slices (m) =    7.72270643E-16
  Time steps done =          900  out of         1000
  Time steps remaining =          100
- Estimated remaining time in seconds =    7.07995605
- Estimated remaining time in hh:mm:ss =      0 h 00 m 07 s
- Estimated total run time in seconds =    70.7995605
- Estimated total run time in hh:mm:ss =      0 h 01 m 10 s
+ Estimated remaining time in seconds =    1.73847461
+ Estimated remaining time in hh:mm:ss =      0 h 00 m 01 s
+ Estimated total run time in seconds =    17.3847446
+ Estimated total run time in hh:mm:ss =      0 h 00 m 17 s
  We have done    90.0000000     % of that
- The run will finish approximately on (in local time): Fri Jul 02, 2021 14:54
+ The run will finish approximately on (in local time): Sat Jan 13, 2024 11:16
 
  Time step #         1000
  Time:    7.75199986      seconds
- Elapsed time in seconds =    72.567746000000000
- Elapsed time in hh:mm:ss =      0 h 01 m 12 s
- Mean elapsed time per time step in seconds =    7.25677460E-02
+ Elapsed time in seconds =    17.380008000000000
+ Elapsed time in hh:mm:ss =      0 h 00 m 17 s
+ Mean elapsed time per time step in seconds =    1.73800085E-02
  Max norm displacement vector U in all slices (m) =    5.93170132E-16
  Time steps done =         1000  out of         1000
  Time steps remaining =            0
  Estimated remaining time in seconds =    0.00000000
  Estimated remaining time in hh:mm:ss =      0 h 00 m 00 s
- Estimated total run time in seconds =    72.5677490
- Estimated total run time in hh:mm:ss =      0 h 01 m 12 s
+ Estimated total run time in seconds =    17.3800087
+ Estimated total run time in hh:mm:ss =      0 h 00 m 17 s
  We have done    100.000000     % of that
 
-
- Total number of time steps done:         1000
- Writing the seismograms in parallel took   0.238148004      seconds
+ Writing the seismograms
+ Total number of time steps written:         1000
+ Writing the seismograms in parallel took    4.23839986E-02  seconds
 
  Time loop finished. Timing info:
- Total elapsed time in seconds =    72.898846000000006
- Total elapsed time in hh:mm:ss =      0 h 01 m 12 s
+ Total elapsed time in seconds =    17.439821999999999
+ Total elapsed time in hh:mm:ss =      0 h 00 m 17 s
+
+ finalizing simulation
 
  End of the simulation
 

@@ -72,6 +72,8 @@
   if (.not. INVERSE_FWI_FULL_PROBLEM) then
     deallocate(xyz_midpoints)
     deallocate(anchor_iax,anchor_iay,anchor_iaz)
+    ! no need to keep mesh adjacency after point searches
+    deallocate(neighbors_xadj,neighbors_adjncy)
     if (.not. DO_BRUTE_FORCE_POINT_SEARCH) call setup_free_kdtree()
   endif
 
@@ -1873,14 +1875,35 @@
 
   implicit none
   integer :: ier,ispec,iglob
+  ! determines tree points
+  logical :: use_midpoints_only
+  integer :: inodes,i,j,k
 
   ! checks if anything to do
   if (DO_BRUTE_FORCE_POINT_SEARCH) return
 
   ! kdtree search
 
-  ! set number of tree nodes
-  kdtree_num_nodes = NSPEC_AB
+  ! determines tree size
+  if (NSPEC_AB > 1000000) then
+    ! high-resolution mesh
+    ! only midpoints for search, should be sufficient to get accurate location
+    use_midpoints_only = .true.
+  else
+    ! low-resolution mesh
+    ! uses element's inner points
+    use_midpoints_only = .false.
+  endif
+
+  ! sets total number of tree points
+  if (use_midpoints_only) then
+    ! small tree size
+    kdtree_num_nodes = NSPEC_AB
+  else
+    ! uses all internal GLL points for search tree
+    ! internal GLL points ( 2 to NGLLX-1 )
+    kdtree_num_nodes = NSPEC_AB * (NGLLX-2)*(NGLLY-2)*(NGLLZ-2)
+  endif
 
   ! allocates tree arrays
   allocate(kdtree_nodes_location(NDIM,kdtree_num_nodes),stat=ier)
@@ -1898,17 +1921,49 @@
   kdtree_nodes_index(:) = 0
   kdtree_nodes_location(:,:) = 0.0
 
-  ! fills kd-tree arrays
-  do ispec = 1,NSPEC_AB
-    ! adds node index ( index points to same ispec for all internal GLL points)
-    kdtree_nodes_index(ispec) = ispec
+  ! adds tree nodes
+  inodes = 0
+  if (use_midpoints_only) then
+    ! fills kd-tree arrays
+    do ispec = 1,NSPEC_AB
+      ! counts nodes
+      inodes = inodes + 1
+      if (inodes > kdtree_num_nodes) stop 'Error index inodes bigger than kdtree_num_nodes'
 
-    ! adds node location (of midpoint)
-    iglob = ibool(MIDX,MIDY,MIDZ,ispec)
-    kdtree_nodes_location(1,ispec) = xstore(iglob)
-    kdtree_nodes_location(2,ispec) = ystore(iglob)
-    kdtree_nodes_location(3,ispec) = zstore(iglob)
-  enddo
+      ! adds node index ( index points to same ispec for all internal GLL points)
+      kdtree_nodes_index(ispec) = ispec
+
+      ! adds node location (of midpoint)
+      iglob = ibool(MIDX,MIDY,MIDZ,ispec)
+      kdtree_nodes_location(1,ispec) = xstore(iglob)
+      kdtree_nodes_location(2,ispec) = ystore(iglob)
+      kdtree_nodes_location(3,ispec) = zstore(iglob)
+    enddo
+  else
+    ! all internal GLL points
+    do ispec = 1,NSPEC_AB
+      do k = 2,NGLLZ-1
+        do j = 2,NGLLY-1
+          do i = 2,NGLLX-1
+            iglob = ibool(i,j,k,ispec)
+
+            ! counts nodes
+            inodes = inodes + 1
+            if (inodes > kdtree_num_nodes) stop 'Error index inodes bigger than kdtree_num_nodes'
+
+            ! adds node index (index points to same ispec for all internal GLL points)
+            kdtree_nodes_index(inodes) = ispec
+
+            ! adds node location
+            kdtree_nodes_location(1,inodes) = xstore(iglob)
+            kdtree_nodes_location(2,inodes) = ystore(iglob)
+            kdtree_nodes_location(3,inodes) = zstore(iglob)
+          enddo
+        enddo
+      enddo
+    enddo
+  endif
+  if (inodes /= kdtree_num_nodes) stop 'Error index inodes does not match kdtree_num_nodes'
 
   ! creates kd-tree for searching
   ! serial way

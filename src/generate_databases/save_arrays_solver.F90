@@ -62,6 +62,9 @@
   use generate_databases_par, only: ispec_is_surface_external_mesh,iglob_is_surface_external_mesh, &
     nfaces_surface
 
+  ! mesh adjacency
+  use generate_databases_par, only: neighbors_xadj,neighbors_adjncy,num_neighbors_all
+
   use create_regions_mesh_ext_par
 
   use shared_parameters, only: ADIOS_FOR_MESH,HDF5_ENABLED
@@ -383,6 +386,11 @@
   write(IOUT) nfaces_surface
   write(IOUT) ispec_is_surface_external_mesh
   write(IOUT) iglob_is_surface_external_mesh
+
+  ! mesh adjacency
+  write(IOUT) num_neighbors_all
+  write(IOUT) neighbors_xadj
+  write(IOUT) neighbors_adjncy
 
   ! stamp for checking i/o
   itest = 9995

@@ -5,6 +5,11 @@ dnl
 dnl autoreconf -i
 dnl
 dnl You must have recent versions of Autoconf and Automake installed.
+dnl
+dnl using AC_CANONICAL_HOST required to provide config.sub and config.guess in this package.
+dnl to update these config.sub and config.guess files, a script is provided here:
+dnl ./utils/infos/update_config.sub_and_config.guess.sh
+dnl
 
 ############################################################
 
