@@ -31,10 +31,10 @@
 ! setups mesh adjacency array to search element neighbors for point searches
 
   use constants, only: myrank, &
-    NDIM,NGLLX,NGLLY,NGLLZ,MIDX,MIDY,MIDZ,IMAIN,CUSTOM_REAL, &
+    NDIM,NGLLX,NGLLY,NGLLZ,MIDX,MIDY,MIDZ,IMAIN,CUSTOM_REAL,MAX_STRING_LEN, &
     DO_BRUTE_FORCE_POINT_SEARCH
 
-  use generate_databases_par, only: NSPEC_AB,NGLOB_AB,ibool
+  use generate_databases_par, only: NSPEC_AB,NGLOB_AB,ibool,NPROC,prname
 
   use create_regions_mesh_ext_par, only: xstore => xstore_unique, ystore => ystore_unique, zstore => zstore_unique
 
@@ -45,6 +45,8 @@
     kdtree_nodes_location,kdtree_nodes_index,kdtree_num_nodes, &
     kdtree_count_nearest_n_neighbors,kdtree_get_nearest_n_neighbors, &
     kdtree_search_index,kdtree_search_num_nodes
+
+  use fault_generate_databases, only: ANY_FAULT_IN_THIS_PROC
 
   implicit none
 
@@ -103,6 +105,12 @@
   !       to enlarge the search of neighboring elements.
   logical, parameter :: ADD_NEIGHBOR_OF_NEIGHBORS = .true.
 
+  ! debugging
+  character(len=MAX_STRING_LEN) :: filename
+  integer,dimension(:),allocatable :: tmp_num_neighbors
+  logical,parameter :: DEBUG_VTK_OUTPUT = .false.
+
+  ! user output
   if (myrank == 0) then
     write(IMAIN,*)
     write(IMAIN,*) '     mesh adjacency:'
@@ -503,19 +511,6 @@
       if (num_neighbor_neighbors > num_neighbor_neighbors_max) num_neighbor_neighbors_max = num_neighbor_neighbors
     endif
 
-    ! checks if neighbors were found
-    if (num_neighbors == 0 .and. NSPEC_AB > 1) then
-      print *,'Error: rank ',myrank,' - element ',ispec_ref,'has no neighbors!'
-      print *,'  element midpoint location: ',xyz_target(:)
-      print *,'  maximum element size     : ',elemsize_max_glob
-      print *,'  typical search distance  : ',maximal_elem_size_squared
-      print *,'  kdtree search            : ',use_kdtree_search
-      if (use_kdtree_search) &
-        print *,'  kd-tree r_search         : ',r_search
-      print *,'  search elements          : ',num_elements
-      call exit_MPI(myrank,'Error adjacency invalid')
-    endif
-
     ! statistics
     if (num_neighbors > num_neighbors_max) num_neighbors_max = num_neighbors
     if (ielem_counter > num_elements_actual_max) num_elements_actual_max = ielem_counter
@@ -541,7 +536,56 @@
   deallocate(flag_topological)
   deallocate(mask_ispec)
   deallocate(ibool_corner)
-  deallocate(xyz_midpoints)
+
+  ! debug: for vtk output
+  if (DEBUG_VTK_OUTPUT) then
+    ! number of neighbors
+    allocate(tmp_num_neighbors(NSPEC_AB),stat=ier)
+    if (ier /= 0) stop 'Error allocating tmp_num_neighbors array'
+    ! fills temporary array
+    do ispec_ref = 1,NSPEC_AB
+      ! gets number of neighbors
+      num_neighbors = neighbors_xadj(ispec_ref+1) - neighbors_xadj(ispec_ref)
+      tmp_num_neighbors(ispec_ref) = num_neighbors
+    enddo
+    filename = trim(prname) // 'mesh_neighbors'
+    call write_VTK_data_elem_i(NSPEC_AB,NGLOB_AB,xstore,ystore,zstore,ibool,tmp_num_neighbors,filename)
+    if (myrank == 0) then
+      write(IMAIN,*) '     written file: ',trim(filename)//'.vtk'
+      call flush_IMAIN()
+    endif
+    deallocate(tmp_num_neighbors)
+  endif
+
+  ! check if element has neighbors
+  ! note: in case of a fault in this slice (splitting nodes) and/or scotch paritioning
+  !       it can happen that an element has no neighbors
+  if (NPROC == 1 .and. (.not. ANY_FAULT_IN_THIS_PROC)) then
+    ! checks if neighbors were found
+    do ispec_ref = 1,NSPEC_AB
+      ! gets number of neighbors
+      num_neighbors = neighbors_xadj(ispec_ref+1) - neighbors_xadj(ispec_ref)
+
+      ! element should have neighbors, otherwise mesh is probably invalid
+      if (num_neighbors == 0 .and. NSPEC_AB > 1) then
+        ! midpoint
+        iglob = ibool(MIDX,MIDY,MIDZ,ispec_ref)
+        xyz_target(1) = xstore(iglob)
+        xyz_target(2) = ystore(iglob)
+        xyz_target(3) = zstore(iglob)
+        ! error info
+        print *,'Error: rank ',myrank,' - element ',ispec_ref,'has no neighbors!'
+        print *,'  element midpoint location: ',xyz_target(:)
+        print *,'  maximum element size     : ',elemsize_max_glob
+        print *,'  typical search distance  : ',maximal_elem_size_squared
+        print *,'  kdtree search            : ',use_kdtree_search
+        if (use_kdtree_search) &
+          print *,'  kd-tree r_search         : ',r_search
+        print *,'  maximum search elements  : ',num_elements_max
+        call exit_MPI(myrank,'Error adjacency invalid')
+      endif
+    enddo
+  endif
 
   ! total number of neighbors
   num_neighbors_all = inum_neighbor
@@ -557,6 +601,7 @@
 
   ! frees temporary array
   deallocate(tmp_adjncy)
+  deallocate(xyz_midpoints)
 
   if (use_kdtree_search) then
     ! frees current tree memory

@@ -226,8 +226,8 @@ $O/generate_databases.gen.o: $O/adios_manager.shared_adios_module.o
 ## LTS
 $O/lts_generate_databases.gen.o: $O/fault_generate_databases.gen.o
 
-## kdtree
-$O/setup_mesh_adjacency.gen.o: $O/search_kdtree.shared.o
+## kdtree & faults dependency
+$O/setup_mesh_adjacency.gen.o: $O/search_kdtree.shared.o $O/fault_generate_databases.gen.o
 
 
 #######################################
