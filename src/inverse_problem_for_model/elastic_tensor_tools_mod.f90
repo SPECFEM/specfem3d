@@ -1564,7 +1564,7 @@ contains
   do i = 1, n
      lambda(i) = as(i,i)
   enddo
-  call sort_eigenvalues_eigenvectors(lambda,vector,n)
+  call sort_eigenvalues(lambda,vector,n)
 
 
   contains
@@ -1621,7 +1621,9 @@ contains
 
     end subroutine jacobi_rotate
 
-    subroutine sort_eigenvalues_eigenvectors(lambda,vector,n)
+    subroutine sort_eigenvalues(lambda,vector,n)
+
+    ! sorts eigenvalues and eigenvectors
 
       integer(kind=kindsi), intent(in) :: n
       real(kind=dp), dimension(n),   intent(inout) :: lambda ! eigenvalues
@@ -1637,7 +1639,7 @@ contains
          endif
       enddo
 
-    end subroutine sort_eigenvalues_eigenvectors
+    end subroutine sort_eigenvalues
 
     subroutine myswap(a,b,n)
 
