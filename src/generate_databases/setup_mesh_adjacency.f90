@@ -220,8 +220,7 @@
 
     ! user output
     if (myrank == 0) then
-      write(IMAIN,*) '     using kd-tree search radius = ',sngl(r_search)
-      write(IMAIN,*)
+      write(IMAIN,*) '     using kd-tree search radius             = ',sngl(r_search)
       call flush_IMAIN()
     endif
 
@@ -530,6 +529,17 @@
       deallocate(kdtree_search_index)
     endif
 
+    ! user output progress
+    if (myrank == 0) then
+      if (mod(ispec_ref,max(NSPEC_AB/10,1)) == 0) then
+        tCPU = wtime() - time1
+        ! elapsed
+        write(IMAIN,*) "    ",int(ispec_ref/(max(NSPEC_AB/10,1)) * 10)," %", &
+                       " - elapsed time:",sngl(tCPU),"s"
+        ! flushes file buffer for main output file (IMAIN)
+        call flush_IMAIN()
+      endif
+    endif
   enddo ! ispec_ref
 
   ! frees temporary array
@@ -646,11 +656,12 @@
   if (myrank == 0) then
     ! elapsed time since beginning of neighbor detection
     tCPU = wtime() - time1
+    write(IMAIN,*)
     write(IMAIN,*) '     maximum search elements                                      = ',num_elements_max
     write(IMAIN,*) '     maximum of actual search elements (after distance criterion) = ',num_elements_actual_max
     write(IMAIN,*)
     write(IMAIN,*) '     estimated maximum element size            = ',elemsize_max_glob
-    write(IMAIN,*) '     maximum distance between neighbor centers = ',sqrt(dist_squared_max)
+    write(IMAIN,*) '     maximum distance between neighbor centers = ',real(sqrt(dist_squared_max),kind=CUSTOM_REAL)
     if (use_kdtree_search) then
       if (sqrt(dist_squared_max) > r_search - 0.5*elemsize_max_glob) then
         write(IMAIN,*) '***'
@@ -665,7 +676,7 @@
     endif
     write(IMAIN,*) '     total number of neighbors           = ',num_neighbors_all
     write(IMAIN,*)
-    write(IMAIN,*) '     Elapsed time for detection of neighbors in seconds = ',tCPU
+    write(IMAIN,*) '     Elapsed time for detection of neighbors in seconds = ',sngl(tCPU)
     write(IMAIN,*)
     call flush_IMAIN()
   endif
