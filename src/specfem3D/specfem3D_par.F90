@@ -170,6 +170,9 @@ module specfem_par
   double precision, dimension(:,:), allocatable :: hpxir_store,hpetar_store,hpgammar_store
   double precision, dimension(:,:,:), allocatable :: nu_rec
 
+  ! hash key for STATIONS infos
+  character(len=32) :: stations_hashsum = ''
+
   ! location storage for inverse problem damping
   double precision, dimension(:), allocatable :: x_target_station,y_target_station,z_target_station
 

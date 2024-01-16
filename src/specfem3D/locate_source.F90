@@ -703,7 +703,7 @@
   if (myrank == 0) then
     tCPU = wtime() - tstart
     write(IMAIN,*)
-    write(IMAIN,*) 'Elapsed time for detection of sources in seconds = ',tCPU
+    write(IMAIN,*) 'Elapsed time for detection of sources in seconds = ',sngl(tCPU)
     write(IMAIN,*)
     write(IMAIN,*) 'End of source detection - done'
     write(IMAIN,*)
