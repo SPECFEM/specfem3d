@@ -588,10 +588,10 @@
   !  c0 = int(z'98BADCFE',kind=4)
   !  d0 = int(z'10325476',kind=4)
   !else
-    a0 = int(z'01234567',kind=4)
-    b0 = int(z'89ABCDEF',kind=4)
-    c0 = int(z'FEDCBA98',kind=4)
-    d0 = int(z'76543210',kind=4)
+    a0 = int(z'01234567')
+    b0 = int(z'89ABCDEF')
+    c0 = int(z'FEDCBA98')
+    d0 = int(z'76543210')
   !endif
 
   do irec = 1,nrec
