@@ -267,7 +267,9 @@ def get_topo(lon_min,lat_min,lon_max,lat_max):
     # for example: region = (12.35, 41.8, 12.65, 42.0)
     region = (lon_min, lat_min, lon_max, lat_max)
 
+    print("*******************************")
     print("get topo:")
+    print("*******************************")
     print("  region: ",region)
     print("")
 
@@ -283,8 +285,8 @@ def get_topo(lon_min,lat_min,lon_max,lat_max):
     name = 'ptopo-DEM.tif'
     filename = dir + '/' + name
 
-    print("current directory:",dir)
-    print("topo file name   :",filename)
+    print("  current directory:",dir)
+    print("  topo file name   :",filename)
     print("")
 
     ## get topo file
@@ -372,7 +374,7 @@ def get_topo(lon_min,lat_min,lon_max,lat_max):
             else:
                 print("Error invalid SRTM_type " + SRTM_type)
                 sys.exit(1)
-        print("> ",cmd)
+        print("  > ",cmd)
         status = subprocess.call(cmd, shell=True)
         check_status(status)
 
@@ -384,7 +386,7 @@ def get_topo(lon_min,lat_min,lon_max,lat_max):
         else:
             # older version < 5.3
             cmd = 'gmt grdconvert ' + gridfile + ' ' + filename + '=gd:Gtiff'
-        print("> ",cmd)
+        print("  > ",cmd)
         status = subprocess.call(cmd, shell=True)
         check_status(status)
         print("")
@@ -393,15 +395,15 @@ def get_topo(lon_min,lat_min,lon_max,lat_max):
         print("Error invalid SRTM_type " + SRTM_type)
         sys.exit(1)
 
-    print("GMT:")
+    print("  GMT:")
     print("  region  : ",gmt_region)
     print("  interval: ",gmt_interval)
     print("")
 
     # topography info
     cmd = 'gmt grdinfo ' + filename
-    print("topography file info:")
-    print("> ",cmd)
+    print("  topography file info:")
+    print("  > ",cmd)
     status = subprocess.call(cmd, shell=True)
     check_status(status)
     print("")
@@ -409,8 +411,8 @@ def get_topo(lon_min,lat_min,lon_max,lat_max):
     # hillshade
     gif_file = filename + '.hillshaded.gif'
     cmd = 'gdaldem hillshade ' + filename + ' ' + gif_file + ' -of GTiff'
-    print("hillshade figure:")
-    print("> ",cmd)
+    print("  hillshade figure:")
+    print("  > ",cmd)
     status = subprocess.call(cmd, shell=True)
     check_status(status)
     print("")
@@ -426,14 +428,14 @@ def get_topo(lon_min,lat_min,lon_max,lat_max):
     # uses region specified from grid file
     gridfile = 'ptopo.sampled.grd'
     cmd = 'gmt grdsample ' + filename + ' ' + gmt_interval + ' -G' + gridfile
-    print("resampling topo data")
-    print("> ",cmd)
+    print("  resampling topo data")
+    print("  > ",cmd)
     status = subprocess.call(cmd, shell=True)
     check_status(status)
     print("")
 
     cmd = 'gmt grdinfo ' + gridfile
-    print("> ",cmd)
+    print("  > ",cmd)
     status = subprocess.call(cmd, shell=True)
     check_status(status)
     print("")
@@ -441,16 +443,16 @@ def get_topo(lon_min,lat_min,lon_max,lat_max):
     # converts to xyz format
     xyz_file = 'ptopo.xyz'
     cmd = 'gmt grd2xyz ' + gridfile + ' > ' + xyz_file
-    print("converting to xyz")
-    print("> ",cmd)
+    print("  converting to xyz")
+    print("  > ",cmd)
     status = subprocess.call(cmd, shell=True)
     check_status(status)
     print("")
 
     # gif
     cmd = 'gdaldem hillshade ' + xyz_file + ' ' + xyz_file + '.hillshaded1.gif -of GTiff'
-    print("creating gif-image ...")
-    print("> ",cmd)
+    print("  creating gif-image ...")
+    print("  > ",cmd)
     status = subprocess.call(cmd, shell=True)
     check_status(status)
     print("")
@@ -462,20 +464,20 @@ def get_topo(lon_min,lat_min,lon_max,lat_max):
     gmt_interval2 = '-I' + str(incr_dx/10.0) + '/' + str(incr_dx/10.0)
 
     cmd = 'gmt blockmean ' + gmt_interval2 + ' ' + xyz_file + ' ' + gmt_region + ' > ' + mean_file
-    print("mesh interpolation")
-    print("> ",cmd)
+    print("  mesh interpolation")
+    print("  > ",cmd)
     status = subprocess.call(cmd, shell=True)
     check_status(status)
     cmd = 'mv -v ptopo.xyz ptopo.xyz.org; mv -v ptopo.mean.xyz ptopo.xyz'
-    print("> ",cmd)
+    print("  > ",cmd)
     status = subprocess.call(cmd, shell=True)
     check_status(status)
     print("")
 
     # gif
     cmd = 'gdaldem hillshade ' + xyz_file + ' ' + xyz_file + '.hillshaded2.gif -of GTiff'
-    print("creating gif-image ...")
-    print("> ",cmd)
+    print("  creating gif-image ...")
+    print("  > ",cmd)
     status = subprocess.call(cmd, shell=True)
     check_status(status)
     print("")
@@ -492,11 +494,13 @@ def get_topo(lon_min,lat_min,lon_max,lat_max):
 def plot_map(gmt_region,gridfile="ptopo.sampled.grd"):
     global datadir
 
+    print("*******************************")
     print("plotting map ...")
+    print("*******************************")
 
     # current directory
     dir = os.getcwd()
-    print("current directory:",dir)
+    print("  current directory:",dir)
     print("")
 
     #cmd = 'cd ' + datadir + '/' + ';'
@@ -520,14 +524,14 @@ def plot_map(gmt_region,gridfile="ptopo.sampled.grd"):
     cmd += 'gmt psbasemap -O -R -J -Ba1g1:"Map": -P -V  >> ' + ps_file + ';'
     status = subprocess.call(cmd, shell=True)
     check_status(status)
-    print("map plotted in file: ",ps_file)
+    print("  map plotted in file: ",ps_file)
 
     # imagemagick converts ps to pdf
     cmd = 'convert ' + ps_file + ' ' + pdf_file
-    print("> ",cmd)
+    print("  > ",cmd)
     status = subprocess.call(cmd, shell=True)
     check_status(status)
-    print("map plotted in file: ",pdf_file)
+    print("  map plotted in file: ",pdf_file)
     print("")
     return
 
@@ -540,7 +544,9 @@ def create_AVS_file():
     global utm_zone
     global gmt_region
 
+    print("*******************************")
     print("creating AVS border file ...")
+    print("*******************************")
 
     # current directory
     dir = os.getcwd()
@@ -552,7 +558,7 @@ def create_AVS_file():
     cmd = 'gmt pscoast ' + gmt_region + ' -Dh -W -M > ' + name + ';'
     status = subprocess.call(cmd, shell=True)
     check_status(status)
-    print("GMT segment file plotted in file: ",name)
+    print("  GMT segment file plotted in file: ",name)
 
     # note: GMT segment file has format
     # > Shore Bin # .., Level ..
@@ -561,13 +567,17 @@ def create_AVS_file():
     # > Shore Bin # .., Level ..
     #   ..
 
-    print("Getting boundaries from file %s ..." % name)
+    print("  Getting boundaries from file %s ..." % name)
 
     # reads gmt boundary file
     with open(name,'r') as f:
         content = f.readlines()
 
-    if len(content) == 0: sys.exit("Error no file content")
+    if len(content) == 0:
+        print("")
+        print("  INFO: no boundaries in file")
+        print("")
+        return
 
     # counts segments and points
     numsegments = 0
@@ -580,8 +590,8 @@ def create_AVS_file():
             # point
             numpoints += 1
 
-    print("There are %i contours" % numsegments)
-    print("There are %i data points" % numpoints)
+    print("  There are %i contours" % numsegments)
+    print("  There are %i data points" % numpoints)
 
     # read the GMT file to get the number of individual line segments
     currentelem = 0
@@ -600,7 +610,7 @@ def create_AVS_file():
             previous_was_comment = 0
 
     num_individual_lines = currentelem
-    print("There are %i individual line segments" % num_individual_lines)
+    print("  There are %i individual line segments" % num_individual_lines)
 
 
     avsfile = "AVS_boundaries_utm.inp"
@@ -690,7 +700,7 @@ def create_AVS_file():
         for currentpoint in range(1,numpoints+1):
             f.write("%i 255.\n" % (currentpoint))
 
-    print("see file: %s" % avsfile)
+    print("  see file: %s" % avsfile)
     print("")
     return
 
@@ -704,7 +714,9 @@ def topo_extract(filename):
 
     # ./topo_extract.sh ptopo.mean.xyz
     #cmd = './topo_extract.sh ptopo.mean.xyz'
+    print("*******************************")
     print("extracting interface data for xmeshfem3D ...")
+    print("*******************************")
 
     import numpy
 
@@ -718,7 +730,7 @@ def topo_extract(filename):
 
     # statistics
     cmd = 'gmt gmtinfo ' + filename
-    print("> ",cmd)
+    print("  > ",cmd)
     status = subprocess.call(cmd, shell=True)
     check_status(status)
     print("")
@@ -726,13 +738,13 @@ def topo_extract(filename):
     # cleanup
     cmd = 'rm -f ' + file1 + ';'
     cmd += 'rm -f ' + file2 + ';'
-    print("> ",cmd)
+    print("  > ",cmd)
     status = subprocess.call(cmd, shell=True)
     check_status(status)
     print("")
 
     # reads in lon/lat/elevation
-    print("reading file " + filename + " ...")
+    print("  reading file " + filename + " ...")
     data = numpy.loadtxt(filename)
     #debug
     #print(data)
@@ -749,17 +761,17 @@ def topo_extract(filename):
             f.write("%f\n" % (elevation[i] * toposcale - toposhift) )
 
     print("")
-    print("check: ",file1,file2)
+    print("  check: ",file1,file2)
     print("")
 
     cmd = 'gmt gmtinfo ' + file1 + ';'
     cmd += 'gmt gmtinfo ' + file2 + ';'
-    print("> ",cmd)
+    print("  > ",cmd)
     status = subprocess.call(cmd, shell=True)
     check_status(status)
     print("")
 
-    print("number of points along x (NXI) and y (NETA)")
+    print("  number of points along x (NXI) and y (NETA):")
     x0 = data[0,0]
     y0 = data[0,1]
     i0 = 1
@@ -779,7 +791,7 @@ def topo_extract(filename):
       if dx < 0.0:
           ii = i + 1
           if nx > 0 and ii - i0 != nx:
-              print("non-regular nx: ",nx,ii-i0,"on line ",i+1)
+              print("  non-regular nx: ",nx,ii-i0,"on line ",i+1)
           nx = ii - i0
           ny += 1
           deltay = y - y0
@@ -790,17 +802,17 @@ def topo_extract(filename):
 
     ii = len(data) + 1
     if nx > 0 and ii - i0 != nx:
-        print("non-regular nx: ",nx,ii-i0,"on line ",ii)
+        print("  non-regular nx: ",nx,ii-i0,"on line ",ii)
     nx = ii - i0
     ny += 1
-    print("--------------------------------------------")
-    print("NXI  = ",nx)
-    print("NETA = ",ny)
-    print("xmin/xmax = ",xmin,xmax)
-    print("ymin/ymax = ",ymin,ymax)
-    print("deltax = ",deltax,"average = ",(xmax-xmin)/(nx-1))
-    print("deltay = ",deltay,"average = ",(ymax-ymin)/(ny-1))
-    print("--------------------------------------------")
+    print("  --------------------------------------------")
+    print("  NXI  = ",nx)
+    print("  NETA = ",ny)
+    print("  xmin/xmax = ",xmin,xmax)
+    print("  ymin/ymax = ",ymin,ymax)
+    print("  deltax = ",deltax,"average = ",(xmax-xmin)/(nx-1))
+    print("  deltay = ",deltay,"average = ",(ymax-ymin)/(ny-1))
+    print("  --------------------------------------------")
     print("")
     return nx,ny,deltax,deltay
 
@@ -828,9 +840,12 @@ def update_Mesh_Par_file(dir,lon_min,lat_min,lon_max,lat_max,nx,ny,dx,dy,xyz_fil
     path = dir + '/' + 'DATA/meshfem3D_files/'
     os.chdir(path)
 
+    print("*******************************")
     print("updating Mesh_Par_file ...")
+    print("*******************************")
     print("  working directory: ",os.getcwd())
-    print("  min lon/lat = ",lon_min,lat_min," max lon/lat = ",lon_max,lat_max)
+    print("  min lon/lat      : ",lon_min,"/",lat_min)
+    print("  max lon/lat      : ",lon_max,"/",lat_max)
     print("")
 
     cmd = 'echo "";'
@@ -843,7 +858,7 @@ def update_Mesh_Par_file(dir,lon_min,lat_min,lon_max,lat_max,nx,ny,dx,dy,xyz_fil
     cmd += 'sed -i "s:^LONGITUDE_MIN .*:LONGITUDE_MIN                   = ' + str(lon_min) + ':" Mesh_Par_file' + ';'
     cmd += 'sed -i "s:^LONGITUDE_MAX .*:LONGITUDE_MAX                   = ' + str(lon_max) + ':" Mesh_Par_file' + ';'
     cmd += 'sed -i "s:^UTM_PROJECTION_ZONE .*:UTM_PROJECTION_ZONE             = ' + str(utm_zone) + ':" Mesh_Par_file' + ';'
-    print("> ",cmd)
+    print("  > ",cmd)
     status = subprocess.call(cmd, shell=True)
     check_status(status)
     print("")
@@ -879,7 +894,7 @@ def update_Mesh_Par_file(dir,lon_min,lat_min,lon_max,lat_max,nx,ny,dx,dy,xyz_fil
     cmd += 'echo "";'
     line = '.false. ' + str(nxi) + ' ' + str(neta) + ' ' + str(lon) + ' ' + str(lat) + ' ' + str(dxi) + ' ' + str(deta)
     cmd += 'sed -i "s:^.false. .*:' + line + ':g" interfaces.dat' + ';'
-    print("> ",cmd)
+    print("  > ",cmd)
     status = subprocess.call(cmd, shell=True)
     check_status(status)
     print("")
@@ -891,12 +906,12 @@ def update_Mesh_Par_file(dir,lon_min,lat_min,lon_max,lat_max,nx,ny,dx,dy,xyz_fil
     cmd = 'rm -f ' + xyz_file1 + ' ' + xyz_file2 + ';'
     cmd += 'ln -s ' + topodir + '/' + xyz_file1 + ';'
     cmd += 'ln -s ' + topodir + '/' + xyz_file2 + ';'
-    print("> ",cmd)
+    print("  > ",cmd)
     status = subprocess.call(cmd, shell=True)
     check_status(status)
     print("")
 
-    print("file updated: %s/Mesh_Par_file" % path)
+    print("  file updated: %s/Mesh_Par_file" % path)
     print("")
 
     return
@@ -914,18 +929,20 @@ def update_Par_file(dir):
     path = dir + '/' + 'DATA/'
     os.chdir(path)
 
+    print("*******************************")
     print("updating Par_file ...")
+    print("*******************************")
     print("  working directory: ",os.getcwd())
     print("  utm_zone = ",utm_zone)
     print("")
 
     cmd = 'sed -i "s:^UTM_PROJECTION_ZONE .*:UTM_PROJECTION_ZONE             = ' + str(utm_zone) + ':" Par_file' + ';'
-    print("> ",cmd)
+    print("  > ",cmd)
     status = subprocess.call(cmd, shell=True)
     check_status(status)
     print("")
 
-    print("file updated: %s/Par_file" % path)
+    print("  file updated: %s/Par_file" % path)
     print("")
 
     return
@@ -1206,12 +1223,24 @@ def setup_simulation(lon_min,lat_min,lon_max,lat_max):
     global datadir
     global utm_zone
     global incr_dx,toposhift,toposcale
+
+    print("")
+    print("*******************************")
+    print("setup simulation topography")
+    print("*******************************")
+    print("")
+    print("  topo                  : ",SRTM_type)
+    print("  grid sampling interval: ",incr_dx,"(deg) ",incr_dx * math.pi/180.0 * 6371.0, "(km)")
+    print("  topo down shift       : ",toposhift)
+    print("  topo down scaling     : ",toposcale)
+    print("")
+
     # current directory
     dir = os.getcwd()
 
     # creates data directory
     cmd = 'mkdir -p ' + datadir
-    print("> ",cmd)
+    print("  > ",cmd)
     status = subprocess.call(cmd, shell=True)
     check_status(status)
     print("")
@@ -1219,11 +1248,7 @@ def setup_simulation(lon_min,lat_min,lon_max,lat_max):
     # change working directory to ./topo_data/
     path = dir + '/' + datadir
     os.chdir(path)
-    print("working directory: ",os.getcwd())
-    print("  topo                  : ",SRTM_type)
-    print("  grid sampling interval: ",incr_dx,"(deg) ",incr_dx * math.pi/180.0 * 6371.0, "(km)")
-    print("  topo down shift       : ",toposhift)
-    print("  topo down scaling     : ",toposcale)
+    print("  working directory     : ",os.getcwd())
     print("")
 
     # check min/max is given in correct order
@@ -1241,12 +1266,16 @@ def setup_simulation(lon_min,lat_min,lon_max,lat_max):
     xyz_file = get_topo(lon_min,lat_min,lon_max,lat_max)
 
     ## UTM zone
+    print("*******************************")
+    print("determining UTM coordinates...")
+    print("*******************************")
+
     midpoint_lat = (lat_min + lat_max)/2.0
     midpoint_lon = (lon_min + lon_max)/2.0
 
     utm_zone = utm.latlon_to_zone_number(midpoint_lat,midpoint_lon)
-    print("region midpoint lat/lon: %f / %f " %(midpoint_lat,midpoint_lon))
-    print("UTM zone: %d" % utm_zone)
+    print("  region midpoint lat/lon: %f / %f " %(midpoint_lat,midpoint_lon))
+    print("  UTM zone: %d" % utm_zone)
     print("")
 
     # converting to utm
@@ -1268,11 +1297,15 @@ def setup_simulation(lon_min,lat_min,lon_max,lat_max):
     nx,ny,dx,dy = topo_extract(xyz_file)
 
     # creates parameter files
+    # main Par_file
     update_Par_file(dir)
+
+    # mesher Mesh_Par_file
     update_Mesh_Par_file(dir,lon_min,lat_min,lon_max,lat_max,nx,ny,dx,dy,xyz_file)
 
     print("")
     print("topo output in directory: ",datadir)
+    print("")
     print("all done")
     print("")
     return
@@ -1287,7 +1320,7 @@ def usage():
     # default increment in km
     incr_dx_km = incr_dx * math.pi/180.0 * 6371.0
 
-    print("usage: ./run_get_simulation_topography.py lon_min lat_min lon_max lat_max [SRTM] [incr_dx] [toposhift] [toposcale]")
+    print("usage: ./run_get_simulation_topography.py lon_min lat_min lon_max lat_max [--SRTM=SRTM] [--dx=incr_dx] [--toposhift=toposhift] [--toposcale=toposcale]")
     print("   where")
     print("       lon_min lat_min lon_max lat_max - region given by points: left bottom right top")
     print("                                         for example: 12.35 42.0 12.65 41.8 (Rome)")
@@ -1304,34 +1337,41 @@ def usage():
     print("       toposhift                       - (optional) topography shift for 2nd interface (in m)")
     print("                                         to shift original topography downwards [default %f m]" % toposhift)
     print("       toposcale                       - (optional) scalefactor to topography for shifted 2nd interface (e.g., 0.1) [default %f]" %toposcale)
-    return
+    sys.exit(1)
 
 if __name__ == '__main__':
     # gets arguments
     if len(sys.argv) < 5:
         usage()
-        sys.exit(1)
+
     else:
         lon_min = float(sys.argv[1])
         lat_min = float(sys.argv[2])
         lon_max = float(sys.argv[3])
         lat_max = float(sys.argv[4])
 
-        # type: 'low' == SRTM 90m / 'high' == SRTM 30m / else e.g. 'etopo' == topo30 (30-arc seconds)
-        if len(sys.argv) >= 6:
-            SRTM_type = sys.argv[5]
-
-        # GMT grid sampling interval
-        if len(sys.argv) >= 7:
-            incr_dx = float(sys.argv[6])
-
-        # topography shift for 2nd interface
-        if len(sys.argv) == 8:
-            toposhift = float(sys.argv[7])
-
-        # topography scalefactor
-        if len(sys.argv) == 9:
-            toposcale = float(sys.argv[8])
+        i = 0
+        for arg in sys.argv:
+            #print("argument "+str(i)+": " + arg)
+            # get arguments
+            if "--help" in arg:
+                usage()
+            elif "--SRTM=" in arg:
+                # type: 'low' == SRTM 90m / 'high' == SRTM 30m / else e.g. 'etopo' == topo30 (30-arc seconds)
+                SRTM_type = arg.split('=')[1]
+            elif "--dx=" in arg:
+                # GMT grid sampling interval
+                incr_dx = float(arg.split('=')[1])
+            elif "--toposhift=" in arg:
+                # topography shift for 2nd interface
+                toposhift = float(arg.split('=')[1])
+            elif "--toposcale=" in arg:
+                # topography scalefactor
+                toposcale = float(arg.split('=')[1])
+            elif i >= 5:
+                print("argument not recognized: ",arg)
+                usage()
+            i += 1
 
     # logging
     cmd = " ".join(sys.argv)
