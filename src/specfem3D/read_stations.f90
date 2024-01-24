@@ -581,18 +581,33 @@
   do i = 1,64
     K(i) = floor(2**32 * dabs(dsin((i-1) + 1.d0)))
   enddo
-  ! (the original MD5 algorithm seems to use big endian initializations)
+
+  ! magic numbers: the original MD5 algorithm seems to use big endian initializations
   !if (is_big_endian) then
   !  a0 = int(z'67452301',kind=4)
   !  b0 = int(z'EFCDAB89',kind=4)
   !  c0 = int(z'98BADCFE',kind=4)
   !  d0 = int(z'10325476',kind=4)
   !else
-    a0 = int(z'01234567')
-    b0 = int(z'89ABCDEF')
-    c0 = int(z'FEDCBA98')
-    d0 = int(z'76543210')
+  !  a0 = int(z'01234567')
+  !  b0 = int(z'89ABCDEF')
+  !  c0 = int(z'FEDCBA98')
+  !  d0 = int(z'76543210')
   !endif
+  ! note: using gfortran versions <= 9 will return a compilation error for these boz-initializations:
+  !       "Error: Arithmetic overflow converting INTEGER(16) to INTEGER(4) .."
+  !       thus, instead of
+  !          b0 = int(z'89ABCDEF')  or  b0 = int(z'89ABCDEF',kind=4)
+  !       one could split it and use
+  !          b0 = ior(ishft(int(z'89AB'), 16), int(z'CDEF'))
+  !       or
+  !          b0 = transfer(int(z'89ABCDEF',kind=8),b0)
+  !       these hexadecimals all fit into a 32-bit representation, and therefore the transfer() function
+  !       should return valid results.
+  a0 = transfer(int(z'01234567',kind=8),a0)
+  b0 = transfer(int(z'89ABCDEF',kind=8),b0)
+  c0 = transfer(int(z'FEDCBA98',kind=8),c0)
+  d0 = transfer(int(z'76543210',kind=8),d0)
 
   do irec = 1,nrec
     single_station_line(:) = ''

@@ -968,7 +968,7 @@
 
 ! special routine for meshfem3D with simpler mesh arrays
 
-  use constants, only: CUSTOM_REAL,MAX_STRING_LEN,NGNOD_EIGHT_CORNERS,IOUT_VTK
+  use constants, only: CUSTOM_REAL,MAX_STRING_LEN,IOUT_VTK
 
   implicit none
 
