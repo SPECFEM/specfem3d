@@ -32,7 +32,7 @@
 
   use constants
 
-  use specfem_par, only: USE_SOURCES_RECEIVERS_Z,SUPPRESS_UTM_PROJECTION,INVERSE_FWI_FULL_PROBLEM,SU_FORMAT, &
+  use specfem_par, only: USE_SOURCES_RECEIVERS_Z,SUPPRESS_UTM_PROJECTION,INVERSE_FWI_FULL_PROBLEM, &
                          ibool,myrank,NSPEC_AB,NGLOB_AB, &
                          xstore,ystore,zstore, &
                          nrec,islice_selected_rec,ispec_selected_rec, &
@@ -113,6 +113,7 @@
     if (USE_SOURCES_RECEIVERS_Z) then
       write(IMAIN,*) 'using sources/receivers Z:'
       write(IMAIN,*) '  (depth) becomes directly (z) coordinate'
+      write(IMAIN,*)
     endif
     call flush_IMAIN()
 
@@ -132,8 +133,10 @@
   call read_stations(rec_filename)
 
   ! checks if station locations already available
-  if (SU_FORMAT .and. (.not. INVERSE_FWI_FULL_PROBLEM) ) then
-    call read_stations_SU_from_previous_run(is_done_stations)
+  if (.not. INVERSE_FWI_FULL_PROBLEM) then
+    ! reads stations_info.bin if available in OUTPUT_FILES/ folder
+    call read_stations_from_previous_run(is_done_stations)
+
     ! check if done
     if (is_done_stations) then
       ! user output
@@ -141,7 +144,7 @@
         ! elapsed time since beginning of mesh generation
         tCPU = wtime() - tstart
         write(IMAIN,*)
-        write(IMAIN,*) 'Elapsed time for receiver detection in seconds = ',tCPU
+        write(IMAIN,*) 'Elapsed time for receiver detection in seconds = ',sngl(tCPU)
         write(IMAIN,*)
         write(IMAIN,*) 'End of receiver detection - done'
         write(IMAIN,*)
@@ -317,7 +320,7 @@
       endif
 
       ! limits user output if too many receivers
-      if (nrec < 1000 .and. (.not. SU_FORMAT )) then
+      if (nrec < 1000) then
 
         ! receiver info
         write(IMAIN,*)
@@ -432,11 +435,11 @@
     close(IOUT_SU)
 
     ! stores station infos for later runs
-    if (SU_FORMAT) call write_stations_SU_for_next_run(x_found,y_found,z_found)
+    call write_stations_for_next_run(x_found,y_found,z_found)
 
     ! elapsed time since beginning of mesh generation
     tCPU = wtime() - tstart
-    write(IMAIN,*) 'Elapsed time for receiver detection in seconds = ',tCPU
+    write(IMAIN,*) 'Elapsed time for receiver detection in seconds = ',sngl(tCPU)
     write(IMAIN,*)
     write(IMAIN,*) 'End of receiver detection - done'
     write(IMAIN,*)

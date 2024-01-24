@@ -75,6 +75,29 @@ DEGREE_TO_RAD = PI / 180.0
 mesh_scale_factor = 1.0
 mesh_origin = [0.0,0.0,0.0]
 
+# baseline shift for buildings (to move above SPECFEM mesh)
+shift_building_baseline = 0.0  # 0.0==no-shift default, or e.g. --shift-building-baseline=0.0005
+
+# rendering output
+suppress_renderer_output = False
+
+# animation
+use_animation_dive_in = True
+use_animation_rotation = True
+
+# camera positioning
+camera_elevation_offset = 0.15
+camera_y_offset = -0.7
+camera_angle_depth_degree = 75.0
+
+# center point to focus camera view on
+x_center = 0.0
+y_center = 0.0
+z_center = 0.0
+
+# elevation at center point
+z_elevation = 0.0
+
 
 # class to avoid long stdout output by renderer
 # see: https://stackoverflow.com/questions/24277488/in-python-how-to-capture-the-stdout-from-a-c-shared-library-to-a-variable/29834357
@@ -109,6 +132,7 @@ def convert_vtk_to_obj(vtk_file,colormap=0,color_max=None):
     # check file
     if len(vtk_file) == 0:
         print("Error: no vtk file specified...")
+        usage()
         sys.exit(1)
 
     if not os.path.exists(vtk_file):
@@ -971,6 +995,9 @@ def create_blender_setup(obj_file=""):
 
 
 def add_blender_buildings(buildings_file=""):
+    """
+    adds buildings given by input .ply file
+    """
     global mesh_origin,mesh_scale_factor
     global use_cycles_renderer
 
@@ -1043,6 +1070,13 @@ def add_blender_buildings(buildings_file=""):
         # Update the mesh with the modified vertices
         bm.to_mesh(mesh)
         bm.free()
+
+    # baseline shift
+    if shift_building_baseline != 0.0:
+        print("  shifting buildings up: factor = ",shift_building_baseline)
+        print("                          in m  = ",shift_building_baseline / mesh_scale_factor)
+        print("")
+        obj.location = (0, 0, shift_building_baseline)
 
     # Create a new material
     mat = bpy.data.materials.new('buildingsMaterial')
@@ -1118,18 +1152,16 @@ def add_blender_buildings(buildings_file=""):
     print("  blender buildings mesh done")
     print("")
 
-def get_mesh_elevation_at_origin():
+
+def get_mesh_elevation(point_of_interest):
+    """
+    determines elevation of object (obj) at a given point by ray intersection
+    """
     # gets vtk mesh object
     obj = bpy.data.objects['output']
     if obj == None:
-        print("Error: no mesh object in blender available, exiting...")
-        sys.exit(1)
-
-    # object is a mesh
-    mesh = obj.data
-
-    # Define the point of interest (X, Y, Z coordinates)
-    point_of_interest = Vector((0.0, 0.0, 0.0))  # origin
+        print("Info: no mesh object in blender available to determine elevation...")
+        return None
 
     # Define the origin of the ray (above the mesh)
     ray_origin = Vector((point_of_interest.x, point_of_interest.y, 10.0))  # Adjust the Z coordinate as needed
@@ -1148,43 +1180,50 @@ def get_mesh_elevation_at_origin():
 
     if success:
         # Get the elevation (Z coordinate) of the mesh at the point of interest
-        elevation = location.z
-        print("  mesh elevation at origin = ", elevation)
-        print("")
+        return location.z
+    else:
+        return None
+
+
+def get_mesh_elevation_at_origin():
+    """
+    determines elevation of mesh at origin/center point
+    """
+    global x_center,y_center,z_center
+
+    print("    origin center            = {} / {} / {}".format(x_center,y_center,z_center))
+
+    # Define the point of interest (X, Y, Z coordinates)
+    point = Vector((x_center, y_center, z_center))  # origin
+
+    # get elevation
+    elevation = get_mesh_elevation(point)
+
+    # checks if valid
+    if not elevation is None:
+        # got an elevation
+        print("    mesh elevation at origin = ", elevation)
     else:
         # sets a default height
         elevation = 0.1
-        print("  mesh elevation at origin: no intersection found")
-        print("                            setting default = ",elevation)
-        print("")
+        print("    mesh elevation at origin: no intersection found")
+        print("                              setting default = ",elevation)
 
     return elevation
 
+def add_camera(title="",close_up_view=False):
+    """
+    adds camera object
+    """
+    global x_center,y_center,z_center
+    global camera_y_offset,camera_elevation_offset,camera_angle_depth_degree
+    global z_elevation
 
-def save_blender_scene(title="",animation=False,close_up_view=False):
-    global blender_img_resolution_X,blender_img_resolution_Y
-    global use_cycles_renderer
-    global use_transparent_sea_level_plane
-
-    ## blender scene setup
-    print("Setting up blender scene...")
-    print("")
-
-    # determine elevation from mesh at origin point to position the camera
-    elevation = get_mesh_elevation_at_origin()
-
-    # elevation offset for camera positioning
-    elevation_offset = 0.15
-    camera_angle_depth_degree = 75.0
-    if title == 'Lauterbrunnen' or title == 'Zermatt':
-        elevation_offset = 0.25
-        camera_angle_depth_degree = 70.0
+    print("  adding camera")
 
     # gets scene
     scene = bpy.context.scene
 
-    ## camera
-    print("  adding camera")
     # adds camera position
     bpy.ops.object.camera_add(enter_editmode=False, align='VIEW')
     # current object
@@ -1192,11 +1231,96 @@ def save_blender_scene(title="",animation=False,close_up_view=False):
     cam.name = "Camera"   #cam = bpy.data.objects["Camera"]
     scene.camera = cam
 
+    # clip range
+    # note: our objects are scaled between [-1,1].
+    #       a clip end plane around 10 should be sufficient to cover the whole area.
+    #       for the clip start, it is more challenging as choosing a value below 0.1 will lead to depth Z-buffer artifacts.
+    #       to avoid this, for an overview scene, the default value of 0.1 is good, when zooming in into close-up views,
+    #       a clip start around 0.01 is usually better, otherwise the front of the scene will be cut-off.
+    scene.camera.data.clip_start = 0.1    # blender default: 0.1
+    scene.camera.data.clip_end = 10.0     # blender default: 1000
+    #scene.camera.data.lens = 70.0
+
+    # determine elevation from mesh at origin point to position the camera
+    z_elevation = get_mesh_elevation_at_origin()
+
+    # elevation offset for camera positioning
+    camera_elevation_offset = 0.15
+    camera_y_offset = -0.7
+    camera_angle_depth_degree = 75.0
+
+    # specifics
+    if title == 'Lauterbrunnen' or title == 'Zermatt':
+        print("    camera setup for Lauterbrunnen/Zermatt")
+        camera_elevation_offset = 0.25
+        camera_angle_depth_degree = 70.0
+
+    # center point to focus camera view on
+    x_center = 0.0
+    y_center = 0.0
+    z_center = 0.0
+
+    ## Rome colosseum
+    if title == "Rome":
+        print("    camera setup for Rome")
+        camera_elevation_offset = 0.0018
+        camera_y_offset = -0.013
+        camera_angle_depth_degree = 82.0
+        # use colosseum position as center of views
+        if 1 == 1:
+            # colosseum: N 41.890258 E 12.492335
+            #            33 T -> utm 291957.383 4640632.710
+            x_center_utm = 291957.383; y_center_utm = 4640632.710
+            # need to translate and scale the UTM position to place it within the scene
+            point = Vector((x_center_utm, y_center_utm, 0.0))
+            translation_vector = Vector(mesh_origin)
+            point -= translation_vector
+            point *= mesh_scale_factor
+            # set center position
+            x_center = point.x
+            y_center = point.y
+        else:
+            # directly from using cursor position in blender
+            x_center = -0.01251
+            y_center = -0.2263
+        z_center = 0.0018
+
+        # get elevation at x/y position
+        point = Vector((x_center, y_center, 0.0))  # origin
+        center_elevation = get_mesh_elevation(point)
+        if not center_elevation is None:
+            z_elevation = center_elevation
+        else:
+            z_elevation = 0.001
+
+        #cam.location = (-0.02251, -0.24362, 0.00632)
+        #cam.rotation_euler = (83.401 * DEGREE_TO_RAD, 0.000133 * DEGREE_TO_RAD, -28.0 * DEGREE_TO_RAD)
+
+        # metallic material for buildings
+        if not use_cycles_renderer:
+            if 'buildingsMaterial' in bpy.data.materials.keys():
+                mat = bpy.data.materials['buildingsMaterial']
+                nodes = mat.node_tree.nodes
+                mat_node = nodes['Glossy BSDF']
+                mat_node.inputs['Roughness'].default_value = 0.25  # shinier, more metallic
+                print("      using metallic buildings")
+
     if close_up_view:
         ## close-up view
-        print("  camera location relative to mesh elevation: ",elevation)
+        # adjust clip range
+        scene.camera.data.clip_start = 0.01
+        #scene.camera.data.clip_end = 10.0
+        #scene.camera.data.lens = 70.0
+        # camera location
+        x_cam = x_center
+        y_cam = y_center + camera_y_offset
+        z_cam = z_center + z_elevation + camera_elevation_offset
+        print("    close-up scene")
+        print("    center point   : x/y/z = {:.6f} / {:.6f} / {:.6f}".format(x_center,y_center,z_center))
+        print("    camera location: x/y/z = {:.6f} / {:.6f} / {:.6f}".format(x_cam,y_cam,z_cam))
+        print("    camera location relative to mesh elevation: ",z_elevation)
         # Set camera translation
-        scene.camera.location = (0, -0.7, elevation + elevation_offset)
+        scene.camera.location = (x_cam,y_cam,z_cam)
         # Set camera rotation in euler angles
         scene.camera.rotation_mode = 'XYZ'
         scene.camera.rotation_euler = (camera_angle_depth_degree * DEGREE_TO_RAD, 0, 0)
@@ -1204,15 +1328,26 @@ def save_blender_scene(title="",animation=False,close_up_view=False):
         scene.camera.data.angle = float(30.0 * DEGREE_TO_RAD)
     else:
         ## overview
+        # camera location
+        x_cam = x_center
+        y_cam = y_center - 4.0
+        z_cam = z_center + 4.0
+        print("    overview scene")
+        print("    center point   : x/y/z = {:.6f} / {:.6f} / {:.6f}".format(x_center,y_center,z_center))
+        print("    camera location: x/y/z = {:.6f} / {:.6f} / {:.6f}".format(x_cam,y_cam,z_cam))
         # Set camera translation
-        scene.camera.location = (0, -4, 4)
+        scene.camera.location = (x_cam,y_cam,z_cam)
         # Set camera rotation in euler angles
         scene.camera.rotation_mode = 'XYZ'
         scene.camera.rotation_euler = (44.0 * DEGREE_TO_RAD, 0, 0)
         # Set camera fov in degrees
         scene.camera.data.angle = float(30.0 * DEGREE_TO_RAD)
 
-    ## light
+
+def add_light():
+    """
+    adds a light to the scene
+    """
     print("  adding light")
     # adds sun position
     bpy.ops.object.light_add(type='AREA')
@@ -1234,7 +1369,13 @@ def save_blender_scene(title="",animation=False,close_up_view=False):
     light.data.size = 0.1
     light.data.use_contact_shadow = True  # Enable contact shadows
 
-    ## background plane
+
+def add_plane(close_up_view=False):
+    """
+    adds a plane at sea-level
+    """
+    global use_transparent_sea_level_plane
+
     print("  adding sea-level plane")
     # Create a mesh plane (to capture shadows and indicate sea level)
     bpy.ops.mesh.primitive_plane_add(size=10, enter_editmode=False, location=(0, 0, 0))
@@ -1246,6 +1387,7 @@ def save_blender_scene(title="",animation=False,close_up_view=False):
     mat = bpy.data.materials.new(name="White")
     # adds transparency to the plane
     if use_transparent_sea_level_plane:
+        print("    using transparent sea-level")
         # Set the material to use a Principled BSDF shader
         mat.use_nodes = True
         principled_bsdf = mat.node_tree.nodes.get('Principled BSDF')
@@ -1268,7 +1410,11 @@ def save_blender_scene(title="",animation=False,close_up_view=False):
 
     plane_object.data.materials.append(mat)
 
-    # text object
+
+def add_title(title=""):
+    """
+    adds a title text
+    """
     if len(title) > 0:
         print("  adding text object:")
         print("    title = ",title)
@@ -1300,10 +1446,18 @@ def save_blender_scene(title="",animation=False,close_up_view=False):
 
         text_object.data.materials.append(text_material)
 
-    # save scene and render options
+def set_scene():
+    """
+    sets scene options
+    """
+    global blender_img_resolution_X,blender_img_resolution_Y
+    global use_cycles_renderer
+
     print("")
-    print("  saving blender scene...")
-    print("")
+    print("  setting scene options")
+
+    # gets scene
+    scene = bpy.context.scene
 
     # renderer options
     if use_cycles_renderer:
@@ -1361,239 +1515,336 @@ def save_blender_scene(title="",animation=False,close_up_view=False):
     # sets white background color
     bpy.data.worlds["World"].node_tree.nodes["Background"].inputs[0].default_value = (1, 1, 1, 1)
 
-    print("  renderer: ",scene.render.engine)
+    print("    renderer: ",scene.render.engine)
     print("")
 
-    if animation:
-        print("animation:")
 
-        # initializes frames
-        number_of_keyframes = 0
-        total_frames = 0
+def render_animation():
+    """
+    renders a movie animation
+    """
+    global use_animation_dive_in,use_animation_rotation
+    global suppress_renderer_output
+    global camera_elevation_offset,camera_y_offset,camera_angle_depth_degree
+    global z_elevation
 
-        start_frame = -1
-        end_frame = -1
+    print("animation:")
 
-        scene.frame_start = -1
-        scene.frame_end = -1
+    # gets scene
+    scene = bpy.context.scene
 
-        ## dive-in keyframes
-        if 1 == 1:
-            # setup keyframes
-            number_of_keyframes += 4
-            keyframe_interval = 20
+    # initializes frames
+    number_of_keyframes = 0
+    total_frames = 0
 
-            total_frames = (number_of_keyframes-1) * keyframe_interval
+    start_frame = -1
+    end_frame = -1
 
-            print("  dive-in:")
-            print("    keyframe interval      = ",keyframe_interval)
-            print("    number of keyframes    = ",number_of_keyframes)
-            print("")
+    scene.frame_start = -1
+    scene.frame_end = -1
 
-            # define a frame timeline
+    ## dive-in keyframes
+    if use_animation_dive_in:
+        # setup keyframes
+        number_of_keyframes += 4
+        keyframe_interval = 20
+
+        total_frames = (number_of_keyframes-1) * keyframe_interval
+
+        print("  dive-in:")
+        print("    keyframe interval      = ",keyframe_interval)
+        print("    number of keyframes    = ",number_of_keyframes)
+        print("")
+
+        # define a frame timeline
+        start_frame = 0
+        inter_frame_1 = keyframe_interval
+        inter_frame_2 = 2*keyframe_interval
+        end_frame   = total_frames
+
+        scene.frame_start = start_frame
+        scene.frame_end = end_frame
+
+        # moves camera
+        cam = bpy.data.objects["Camera"]
+
+        # 1. start frame
+        cam.keyframe_insert("location", frame=start_frame)        # (0, -4, 4)
+        cam.keyframe_insert("rotation_euler", frame=start_frame)  # (44.0 * DEGREE_TO_RAD, 0, 0)
+
+        # 2. intermediate frame
+        cam.location = (0, -2.5, 1)
+        cam.rotation_euler = (60.0 * DEGREE_TO_RAD, 0, 0)
+        cam.keyframe_insert("location", frame=inter_frame_1)
+        cam.keyframe_insert("rotation_euler", frame=inter_frame_1)
+        # adjust clip range
+        cam.data.clip_start = 0.1
+        cam.data.keyframe_insert("clip_start", frame=inter_frame_1)
+        #cam.data.clip_end = 10.0
+        #cam.data.keyframe_insert("clip_end", frame=inter_frame_1)
+
+        # 3. intermediate frame
+        x_cam = 0
+        y_cam = -1.2
+        z_cam = z_center + z_elevation + camera_elevation_offset
+        cam.location = (x_cam, y_cam, z_cam)
+        cam.rotation_euler = (camera_angle_depth_degree * DEGREE_TO_RAD, 0, 0)
+        cam.keyframe_insert("location", frame=inter_frame_2)
+        cam.keyframe_insert("rotation_euler", frame=inter_frame_2)
+        # adjust clip range
+        cam.data.clip_start = 0.01
+        cam.data.keyframe_insert("clip_start", frame=inter_frame_2)
+        #cam.data.clip_end = 10.0
+        #cam.data.keyframe_insert("clip_end", frame=inter_frame_2)
+
+        # 4. end frame
+        x_cam = x_center
+        y_cam = y_center + camera_y_offset
+        z_cam = z_center + z_elevation + camera_elevation_offset
+        cam.location = (x_cam, y_cam, z_cam) # Ending position
+        cam.rotation_euler = (camera_angle_depth_degree * DEGREE_TO_RAD, 0, 0)
+        cam.keyframe_insert("location", frame=end_frame)
+        cam.keyframe_insert("rotation_euler", frame=end_frame)
+
+    ## rotation
+    if use_animation_rotation:
+        # appends frames for rotation
+        frames = 60  # Number of frames for the animation
+        keyframe_interval = 5
+        number_of_keyframes += frames
+
+        total_frames += frames * keyframe_interval
+
+        print("  rotation:")
+        print("    keyframe interval      = ",keyframe_interval)
+        print("    number of keyframes    = ",frames)
+        print("")
+
+        if start_frame == -1:
             start_frame = 0
-            inter_frame_1 = keyframe_interval
-            inter_frame_2 = 2*keyframe_interval
-            end_frame   = total_frames
-
-            scene.frame_start = start_frame
-            scene.frame_end = end_frame
-
-            # moves camera
-            cam = bpy.data.objects["Camera"]
-
-            # start frame
-            cam.keyframe_insert("location", frame=start_frame)        # (0, -4, 4)
-            cam.keyframe_insert("rotation_euler", frame=start_frame)  # (44.0 * DEGREE_TO_RAD, 0, 0)
-
-            # intermediate frame
-            cam.location = (0, -2.5, 1)
-            cam.rotation_euler = (60.0 * DEGREE_TO_RAD, 0, 0)
-            cam.keyframe_insert("location", frame=inter_frame_1)
-            cam.keyframe_insert("rotation_euler", frame=inter_frame_1)
-
-            # intermediate frame
-            cam.location = (0, -1.2, elevation + elevation_offset)
-            cam.rotation_euler = (camera_angle_depth_degree * DEGREE_TO_RAD, 0, 0)
-            cam.keyframe_insert("location", frame=inter_frame_2)
-            cam.keyframe_insert("rotation_euler", frame=inter_frame_2)
-
-            # end frame
-            cam.location = (0, -0.7, elevation + elevation_offset)  # Ending position
-            cam.rotation_euler = (camera_angle_depth_degree * DEGREE_TO_RAD, 0, 0)
-            cam.keyframe_insert("location", frame=end_frame)
-            cam.keyframe_insert("rotation_euler", frame=end_frame)
-
-        ## rotation
-        if 1 == 1:
-            # appends frames for rotation
-            frames = 60  # Number of frames for the animation
-            keyframe_interval = 5
-            number_of_keyframes += frames
-
-            total_frames += frames * keyframe_interval
-
-            print("  rotation:")
-            print("    keyframe interval      = ",keyframe_interval)
-            print("    number of keyframes    = ",frames)
-            print("")
-
-            if start_frame == -1:
-                start_frame = 0
-            else:
-                start_frame = end_frame + 1 * keyframe_interval
-
-            if end_frame == -1:
-                end_frame = total_frames
-            else:
-                end_frame = total_frames + 1 * keyframe_interval
-
-            # updates end frame count
-            scene.frame_end = end_frame
-
-            # Set the rotation parameters
-            rotation_degrees = 360  # Total rotation in degrees
-
-            # moves camera around the z-axis
-            cam = bpy.data.objects['Camera']
-
-            #if scene.frame_start == -1:
-            #    # add start frame
-            #    scene.frame_start = start_frame
-            #    # start frame
-            #    cam.keyframe_insert("location", frame=start_frame)        # (0, -4, 4)
-            #    cam.keyframe_insert("rotation_euler", frame=start_frame)  # (44.0 * DEGREE_TO_RAD, 0, 0)
-
-            # camera offset from z-axis
-            x_0 = cam.location[0]
-            y_0 = cam.location[1]
-            z_0 = cam.location[2]
-
-            offset_distance = (x_0**2 + y_0**2)**0.5
-            angle_0 = atan2(y_0,x_0)
-
-            # Set keyframes for rotation
-            for frame in range(0,frames+1):
-                angle = angle_0 + radians(frame * (rotation_degrees / frames))
-
-                # Calculate camera position around the Z-axis
-                x = offset_distance * cos(angle)
-                y = offset_distance * sin(angle)
-                camera_location = Vector((x, y, z_0))  # Maintain Z position
-
-                # Set camera rotation towards the origin
-                look_at = Vector((0, 0, elevation))  # Origin point on mesh
-                direction = look_at - camera_location
-                rot_quat = direction.to_track_quat('-Z', 'Y')  # Point -Z axis to direction
-                camera_rotation = rot_quat.to_euler()
-
-                # there seems to be a problem with frame interpolation when the angles going past 2 PI, i.e,
-                # having the angle set between [-pi,pi] from the to_euler() output and interpolating a step
-                # between +pi to -pi. to avoid we always increase the angle going from [0,2pi[
-                #
-                # in our case here, we change & increase only the third euler angle, while the first 2 stay fixed
-                # when the camera rotates around the z-axis.
-                if camera_rotation[2] < 0: camera_rotation[2] += 2.0 * PI
-
-                frame_number = start_frame + frame * keyframe_interval
-                scene.frame_set(frame_number)
-
-                # Set camera location and keyframe for each frame
-                cam.rotation_euler = camera_rotation
-                cam.location = camera_location
-
-                cam.keyframe_insert("location", frame=frame_number)
-                cam.keyframe_insert("rotation_euler", frame=frame_number)
-
-                #print("frame: ",frame,frame_number,"angle",angle,cam.location,"rotation",cam.rotation_euler)
-
-        print("  total number of keyframes = ",number_of_keyframes)
-        print("  total number of frames    = ",total_frames)
-        print("")
-
-        # smoothing move
-        #for fcurve in cam.animation_data.action.fcurves:
-        #    for keyframe_point in fcurve.keyframe_points:
-        #        keyframe_point.interpolation = 'LINEAR'
-
-        # render settings
-        # see: https://docs.blender.org/api/current/bpy.types.FFmpegSettings.html#bpy.types.FFmpegSettings
-        # ffmpeg
-        scene.render.image_settings.file_format = 'FFMPEG'   # 'AVI_JPEG', 'FFMPEG'
-        # codec
-        scene.render.ffmpeg.codec = 'H264'                  # compression: 'MPEG4', 'H264'
-        #scene.render.ffmpeg.constant_rate_factor = 'HIGH'
-        scene.render.ffmpeg.format = 'MPEG4'                # output file container format
-        # frames per second (blender default is 24)
-        scene.render.fps = 20
-
-        # user output
-        print("  movie fps                    = ",scene.render.fps)
-        print("  movie format                 = ",scene.render.ffmpeg.format )
-        print("")
-
-        # output movie
-        name = './out.anim'
-        filename = name + '.mp4'
-        scene.render.filepath = filename
-        scene.render.use_file_extension = False
-
-        # timing
-        tic = time.perf_counter()
-
-        # redirect stdout to null
-        print("rendering animation: {} ...".format(filename))
-        # to avoid long stdout output by the renderer:
-        #    Fra:1 Mem:189.14M (Peak 190.26M) | Time:00:00.68 | Syncing Sun
-        #    Fra:1 Mem:189.14M (Peak 190.26M) | Time:00:00.68 | Syncing Camera
-        #  ..
-        suppress = False
-        with SuppressStream(sys.stdout,suppress):
-            # render animation
-            bpy.ops.render.render(animation=True)
-        print("  written to: ",filename)
-        print("")
-
-        # timing
-        toc = time.perf_counter()
-        if toc - tic < 100.0:
-            print("elapsed time for animation render is {:0.4f} seconds\n".format(toc - tic))
         else:
-            min = int((toc-tic)/60.0)
-            sec = (toc - tic) - min * 60
-            print("elapsed time for animation render is {} min {:0.4f} sec\n".format(min,sec))
+            start_frame = end_frame + 1 * keyframe_interval
 
+        if end_frame == -1:
+            end_frame = total_frames
+        else:
+            end_frame = total_frames + 1 * keyframe_interval
+
+        # updates end frame count
+        scene.frame_end = end_frame
+
+        # Set the rotation parameters
+        rotation_degrees = 360  # Total rotation in degrees
+
+        # moves camera around the z-axis
+        cam = bpy.data.objects['Camera']
+
+        #if scene.frame_start == -1:
+        #    # add start frame
+        #    scene.frame_start = start_frame
+        #    # start frame
+        #    cam.keyframe_insert("location", frame=start_frame)        # (0, -4, 4)
+        #    cam.keyframe_insert("rotation_euler", frame=start_frame)  # (44.0 * DEGREE_TO_RAD, 0, 0)
+
+        # camera offset from z-axis
+        x_0 = cam.location[0]
+        y_0 = cam.location[1]
+        z_0 = cam.location[2]
+
+        offset_distance = ((x_0-x_center)**2 + (y_0-y_center)**2)**0.5
+        angle_0 = atan2(y_0-y_center,x_0-x_center)
+
+        # adjust clip range since rotations will be done after dive-in in more close-up views
+        # to check if we zoomed in, we will use the camera's z-position which for an overview is set to +4
+        if z_0 < 2.0:
+            cam.data.clip_start = 0.01
+            #cam.data.clip_end = 10.0
+
+        # Set keyframes for rotation
+        for frame in range(0,frames+1):
+            angle = angle_0 + radians(frame * (rotation_degrees / frames))
+
+            # Calculate camera position around the Z-axis
+            x = offset_distance * cos(angle)
+            y = offset_distance * sin(angle)
+
+            # rotate around center location
+            x += x_center
+            y += y_center
+
+            # new camera position
+            camera_location = Vector((x, y, z_0))  # Maintain Z position
+
+            # Set camera rotation towards the origin
+            look_at = Vector((x_center, y_center, z_center + z_elevation))  # Origin point on mesh
+
+            # gets camera rotation angle
+            direction = look_at - camera_location
+            rot_quat = direction.to_track_quat('-Z', 'Y')  # Point -Z axis to direction
+            camera_rotation = rot_quat.to_euler()
+
+            # there seems to be a problem with frame interpolation when the angles going past 2 PI, i.e,
+            # having the angle set between [-pi,pi] from the to_euler() output and interpolating a step
+            # between +pi to -pi. to avoid we always increase the angle going from [0,2pi[
+            #
+            # in our case here, we change & increase only the third euler angle, while the first 2 stay fixed
+            # when the camera rotates around the z-axis.
+            if camera_rotation[2] < 0.0: camera_rotation[2] += 2.0 * PI
+
+            # checks difference in current camera rotation and new target rotation
+            # makes sure that z-angle always increases from one frame to another,
+            # otherwise the linear interpolation will between frames will lead to weird results
+            if cam.rotation_euler[2] > camera_rotation[2]: camera_rotation[2] += 2.0 * PI
+
+            # info
+            if frame == 0:
+                print("    initial frame: camera angles = {:.2f} / {:.2f} / {:.2f} ".format(np.rad2deg(camera_rotation.x),
+                                np.rad2deg(camera_rotation.y),np.rad2deg(camera_rotation.z)))
+                print("")
+
+            frame_number = start_frame + frame * keyframe_interval
+            scene.frame_set(frame_number)
+
+            # Set camera location and keyframe for each frame
+            cam.rotation_euler = camera_rotation
+            cam.location = camera_location
+
+            cam.keyframe_insert("location", frame=frame_number)
+            cam.keyframe_insert("rotation_euler", frame=frame_number)
+
+            #debug
+            #print("frame: ",frame,frame_number,"angle",angle,cam.location,"rotation",cam.rotation_euler)
+
+    print("  total number of keyframes = ",number_of_keyframes)
+    print("  total number of frames    = ",total_frames)
+    print("")
+
+    # smoothing move
+    #for fcurve in cam.animation_data.action.fcurves:
+    #    for keyframe_point in fcurve.keyframe_points:
+    #        keyframe_point.interpolation = 'LINEAR'
+
+    # render settings
+    # see: https://docs.blender.org/api/current/bpy.types.FFmpegSettings.html#bpy.types.FFmpegSettings
+    # ffmpeg
+    scene.render.image_settings.file_format = 'FFMPEG'   # 'AVI_JPEG', 'FFMPEG'
+    # codec
+    scene.render.ffmpeg.codec = 'H264'                  # compression: 'MPEG4', 'H264'
+    #scene.render.ffmpeg.constant_rate_factor = 'HIGH'
+    scene.render.ffmpeg.format = 'MPEG4'                # output file container format
+    # frames per second (blender default is 24)
+    scene.render.fps = 20
+
+    # user output
+    print("  movie fps                    = ",scene.render.fps)
+    print("  movie format                 = ",scene.render.ffmpeg.format )
+    print("")
+
+    # output movie
+    name = './out.anim'
+    filename = name + '.mp4'
+    scene.render.filepath = filename
+    scene.render.use_file_extension = False
+
+    # timing
+    tic = time.perf_counter()
+
+    # redirect stdout to null
+    print("rendering animation: {} ...".format(filename))
+    print("")
+    # to avoid long stdout output by the renderer:
+    #    Fra:1 Mem:189.14M (Peak 190.26M) | Time:00:00.68 | Syncing Sun
+    #    Fra:1 Mem:189.14M (Peak 190.26M) | Time:00:00.68 | Syncing Camera
+    #  ..
+    suppress = suppress_renderer_output
+    with SuppressStream(sys.stdout,suppress):
+        # render animation
+        bpy.ops.render.render(animation=True)
+    print("  written to: ",filename)
+    print("")
+
+    # timing
+    toc = time.perf_counter()
+    if toc - tic < 100.0:
+        print("elapsed time for animation render is {:0.4f} seconds\n".format(toc - tic))
     else:
-        # output image
-        scene.render.image_settings.file_format = 'JPEG'   # 'PNG'
-        name = './out'
-        filename = name + '.jpg'
-        scene.render.filepath = filename
-        scene.render.use_file_extension = False
+        min = int((toc-tic)/60.0)
+        sec = (toc - tic) - min * 60
+        print("elapsed time for animation render is {} min {:0.4f} sec\n".format(min,sec))
 
-        # timing
-        tic = time.perf_counter()
 
-        # redirect stdout to null
-        print("  rendering image: {} ...".format(filename))
-        # to avoid long stdout output by the renderer:
-        #    Fra:1 Mem:462.85M (Peak 462.85M) | Time:00:00.04 | ..
-        #  ..
-        suppress = False
-        with SuppressStream(sys.stdout,suppress):
-            # Render Scene and store the scene
-            bpy.ops.render.render(write_still=True)
-        print("  written to: ",filename)
-        print("")
+def render_image():
+    """
+    renders a single image
+    """
+    global suppress_renderer_output
 
-        # timing
-        toc = time.perf_counter()
-        if toc - tic < 100.0:
-            print("elapsed time for image render is {:0.4f} seconds\n".format(toc - tic))
-        else:
-            min = int((toc-tic)/60.0)
-            sec = (toc - tic) - min * 60
-            print("elapsed time for image render is {} min {:0.4f} sec\n".format(min,sec))
+    print("image:")
+
+    # gets scene
+    scene = bpy.context.scene
+
+    # output image
+    scene.render.image_settings.file_format = 'JPEG'   # 'PNG'
+    name = './out'
+    filename = name + '.jpg'
+    scene.render.filepath = filename
+    scene.render.use_file_extension = False
+
+    # timing
+    tic = time.perf_counter()
+
+    # redirect stdout to null
+    print("  rendering image: {} ...".format(filename))
+    print("")
+    # to avoid long stdout output by the renderer:
+    #    Fra:1 Mem:462.85M (Peak 462.85M) | Time:00:00.04 | ..
+    #  ..
+    suppress = suppress_renderer_output
+    with SuppressStream(sys.stdout,suppress):
+        # Render Scene and store the scene
+        bpy.ops.render.render(write_still=True)
+    print("  written to: ",filename)
+    print("")
+
+    # timing
+    toc = time.perf_counter()
+    if toc - tic < 100.0:
+        print("elapsed time for image render is {:0.4f} seconds\n".format(toc - tic))
+    else:
+        min = int((toc-tic)/60.0)
+        sec = (toc - tic) - min * 60
+        print("elapsed time for image render is {} min {:0.4f} sec\n".format(min,sec))
+
+
+def render_blender_scene(title="",animation=False,close_up_view=False):
+
+    ## blender scene setup
+    print("Setting up blender scene...")
+    print("")
+
+    ## camera
+    add_camera(title,close_up_view)
+
+    ## light
+    add_light()
+
+    ## background plane
+    add_plane(close_up_view)
+
+    # text object
+    add_title(title)
+
+    # save scene and render options
+    set_scene()
+
+    # rendering
+    if animation:
+      # movie rendering
+      render_animation()
+    else:
+      # image rendering
+      render_image()
 
     # save blend file
     dir = os.getcwd()
@@ -1627,12 +1878,12 @@ def plot_with_blender(vtk_file="",image_title="",colormap=0,color_max=None,build
     add_blender_buildings(buildings_file)
 
     # save blender scene
-    save_blender_scene(image_title,animation,close_up_view)
+    render_blender_scene(image_title,animation,close_up_view)
 
 
 def usage():
     print("usage: ./plot_with_blender.py [--vtk_file=file] [--title=my_mesh_name] [--colormap=val] [--color-max=val] [--buildings=file]")
-    print("                              [--with-cycles/--no-cycles] [--closeup] [--small] [--anim] [--help]")
+    print("                              [--with-cycles/--no-cycles] [--closeup] [--small] [--anim] [--suppress] [--help]")
     print("  with")
     print("     --vtk_file                - input mesh file (.vtk, .vtu, .inp)")
     print("     --title                   - title text (added to image rendering)")
@@ -1646,7 +1897,9 @@ def usage():
     print("     --closeup                 - sets camera view closer to center of model")
     print("     --transparent-sea-level   - turns on transparency for sea-level plane")
     print("     --small                   - turns on small images size (400x600px) for preview")
-    print("     --anim                    - turns on movie animation (dive-in and rotation)")
+    print("     --shift-buildings         - moves buildings up, e.g., a factor 0.0005 (default is no shift==0.0)")
+    print("     --anim                    - turns on movie animation (dive-in and rotation by default, use --no-rotation or --no-dive-in to turn off)")
+    print("     --suppress                - suppress renderer output (default is off)")
     print("     --help                    - this help for usage...")
     sys.exit(1)
 
@@ -1684,9 +1937,17 @@ if __name__ == '__main__':
             use_cycles_renderer = True
         elif "--no-cycles" in arg:
             use_cycles_renderer = False
+        elif "--no-dive-in" in arg:
+            use_animation_dive_in = False
+        elif "--no-rotation" in arg:
+            use_animation_rotation = False
         elif "--small" in arg:
             blender_img_resolution_X = 600
             blender_img_resolution_Y = 400
+        elif "--shift-buildings" in arg:
+            shift_building_baseline = float(arg.split('=')[1])
+        elif "--suppress" in arg:
+            suppress_renderer_output = True
         elif "--title=" in arg:
             image_title = arg.split('=')[1]
         elif "--transparent-sea-level" in arg:

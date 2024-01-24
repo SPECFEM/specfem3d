@@ -208,6 +208,18 @@ def read_dxf_file(filename,index):
     # model space info
     msp = doc.modelspace()
 
+    # query all entity types available in the model space
+    entity_types = []
+    for e in msp:
+        if not e.dxftype() in entity_types:
+            entity_types.append(e.dxftype())
+
+    print("  model space entity types:")
+    print("  ",entity_types)
+    print("")
+
+    # query lines
+    # we will need polyfaces to convert 3D objects
     num_lines = len(msp.query("LINE"))
     num_polylines = len(msp.query("POLYLINE"))
     num_lwpolylines = len(msp.query("LWPOLYLINE"))
@@ -294,12 +306,12 @@ def convert_coordinates_LV95_to_UTM(mesh):
                                                                  east_lon_degree=orig_lon,
                                                                  north_lat_degree=orig_lat))
     utm_code = utm_crs_list[0].code
-    utm_epsg_code = "EPSG:{}".format(utm_code)
+    utm_epsg = "EPSG:{}".format(utm_code)
 
-    print("  UTM code:", utm_epsg_code)
+    print("  UTM code:", utm_epsg)
 
     # direct transformation from LV95 to UTM zone
-    transformer_to_utm = Transformer.from_crs("EPSG:2056", utm_epsg_code)
+    transformer_to_utm = Transformer.from_crs("EPSG:2056", utm_epsg)
 
     #debug
     #print(transformer_to_utm)

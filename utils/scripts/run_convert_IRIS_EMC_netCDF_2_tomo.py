@@ -167,7 +167,7 @@ use_replace_missing_values_with_average = True
 use_surface_elevation = False
 
 # create JPEG figure of surface elevation (if surface elevation is used)
-create_surface_elevation_figure = False
+create_surface_elevation_figure = True
 
 # VTK file of model for visualization
 create_vtk_file_output = True
@@ -473,14 +473,32 @@ def read_data_array(var_name,model_data):
     """
     reads in variable data as numpy array
     """
+    global depth_index,lat_index,lon_index
     global use_replace_missing_values_with_average
 
     # gets variable data array
     var_array = np.array(model_data.variables[var_name])
 
+    # determines indexing (which index for which dimension)
+    # needed also to get index of depth for the data array averaging
+    depth_index,lat_index,lon_index = get_array_indexing(var_name,var_array,model_data,depth_index,lat_index,lon_index,ndepths,nlats,nlons)
+
     # replaces missing values
     if use_replace_missing_values_with_average:
-        var_array = replace_missing_values_with_average(var_name,var_array,model_data)
+        # gets missing value
+        # checks if there is a missing value specified for the array
+        has_missing_val = True
+        try:
+            missing_val = model_data.variables[var_name].missing_value
+        except:
+            # array has no missing value specified
+            has_missing_val = False
+
+        # fill missing values
+        if has_missing_val:
+            var_array = replace_missing_values_with_average(var_name,var_array,model_data)
+        else:
+            print("  ",var_name," model has no missing values specified")
 
     return var_array
 
@@ -497,11 +515,13 @@ def replace_missing_values_with_average(var_name,var_array,model_data):
 
     print("  replace missing values for model parameter: ",var_name)
 
-    # gets index of depth for the data array
-    depth_index,lat_index,lon_index = get_array_indexing(var_name,var_array,model_data,depth_index,lat_index,lon_index,ndepths,nlats,nlons)
-
     # gets missing value
-    missing_val = model_data.variables[var_name].missing_value
+    try:
+        missing_val = model_data.variables[var_name].missing_value
+    except:
+        # array has no missing value specified
+        # we assume that there are no such and use a default missing value
+        missing_val = 99999.0
 
     var_array = fill_missing_data_with_average_values(var_array,missing_val,ndepths,depth_index)
 
@@ -840,8 +860,9 @@ def get_topo_DEM(region,res='low'):
 
     # show/write figure plot
     if create_surface_elevation_figure:
+        print("  creating surface elevation figure...")
         fig = pygmt.Figure()
-        fig.grdimage(grid=grid,
+        fig.grdimage(grid=topo_grid,
                      cmap="haxby",
                      projection="M10c",
                      frame=True,
@@ -1052,7 +1073,6 @@ def netCDF_2_tomo(input_file,UTM_zone=None,mesh_area=None,maximum_depth=None):
         print("  mesh_area    : ",mesh_area)
     if not maximum_depth is None:
         print("  maximum depth: ",maximum_depth)
-
     print("")
 
     # target mesh area min/max
@@ -1061,6 +1081,10 @@ def netCDF_2_tomo(input_file,UTM_zone=None,mesh_area=None,maximum_depth=None):
         mesh_lat_min = mesh_area[1]
         mesh_lon_max = mesh_area[2]
         mesh_lat_max = mesh_area[3]
+
+        print("  target mesh area: latitude  min/max = {} / {}".format(mesh_lat_min,mesh_lat_max))
+        print("                    longitude min/max = {} / {}".format(mesh_lon_min,mesh_lon_max))
+        print("")
 
         # check
         if mesh_lon_min > mesh_lon_max or mesh_lat_min > mesh_lat_max:
@@ -1094,8 +1118,14 @@ def netCDF_2_tomo(input_file,UTM_zone=None,mesh_area=None,maximum_depth=None):
     if 'geospatial_lat_min' in global_vars:
         model_lat_min = model_data.geospatial_lat_min
         model_lat_max = model_data.geospatial_lat_max
+        if model_data.geospatial_lat_resolution:
+            model_dlat = model_data.geospatial_lat_resolution
+
         model_lon_min = model_data.geospatial_lon_min
         model_lon_max = model_data.geospatial_lon_max
+        if model_data.geospatial_lon_resolution:
+            model_dlon = model_data.geospatial_lon_resolution
+
         model_depth_min = model_data.geospatial_vertical_min
         model_depth_max = model_data.geospatial_vertical_max
 
@@ -1145,32 +1175,86 @@ def netCDF_2_tomo(input_file,UTM_zone=None,mesh_area=None,maximum_depth=None):
 
     # tomo file needs regular spacing
     print("  checking regular spacing:")
+    # numerical tolerance in spacing increments
+    TOL_SPACING = 1.e-4
     # checks longitudes
     dx0 = x[1] - x[0]
     for i in range(1,nlons):
         dx = x[i] - x[i-1]
-        if dx != dx0:
+        if np.abs(dx - dx0) > TOL_SPACING:
             print("Error: irregular spacing in longitudes: ",i,dx,dx0,"step: ",x[i],x[i-1])
+            print("       using a tolerance ",TOL_SPACING)
+            print("       Please select an EMC model with regular spacing, exiting...")
             sys.exit(1)
-    dlon = dx0
+    if model_dlon:
+        dlon = model_dlon
+        if np.abs(dlon - dx0) > TOL_SPACING:
+            print("Error: irregular spacing in longitudes: ",dx0," instead of model specification: ",dlon)
+            print("       using a tolerance ",TOL_SPACING)
+            print("       Please select an EMC model with regular spacing, exiting...")
+            sys.exit(1)
+    else:
+        dlon = dx0
+    print("    has regular longitude spacing ",dlon,"(deg)")
 
     # checks latitudes
     dy0 = y[1] - y[0]
     for i in range(1,nlats):
         dy = y[i] - y[i-1]
-        if dy != dy0:
+        if np.abs(dy - dy0) > TOL_SPACING:
             print("Error: irregular spacing in latitudes: ",i,dy,dy0,"step: ",y[i],y[i-1])
+            print("       using a tolerance ",TOL_SPACING)
+            print("       Please select an EMC model with regular spacing, exiting...")
             sys.exit(1)
-    dlat = dy0
+    if model_dlat:
+        dlat = model_dlat
+        if np.abs(dlat - dy0) > TOL_SPACING:
+            print("Error: irregular spacing in latitudes: ",dy0," instead of model specification: ",dlat)
+            print("       using a tolerance ",TOL_SPACING)
+            print("       Please select an EMC model with regular spacing, exiting...")
+            sys.exit(1)
+    else:
+        dlat = dy0
+    print("    has regular latitude  spacing ",dlat,"(deg)")
 
     # checks depths
     dz0 = z[1] - z[0]
+    dz_increments = np.array([dz0])
+    has_irregular_depths = False
     for i in range(1,ndepths):
         dz = z[i] - z[i-1]
-        if dz != dz0:
-            print("Error: irregular spacing in depths: ",i,dz,dz0,"step: ",z[i],z[i-1])
-            sys.exit(1)
-    ddepth = dz0
+        if np.abs(dz - dz0) > TOL_SPACING:
+            has_irregular_depths = True
+            # adds increment to list of increments
+            if dz not in dz_increments:
+                dz_increments = np.append(dz_increments,dz)
+
+    if has_irregular_depths:
+        print("    has irregular depth   spacing (m): ",dz_increments)
+        # chooses minimum spacing
+        # Convert float numbers to integers (multiply by a common factor)
+        common_factor = 10.0
+        integer_numbers = np.round(dz_increments * common_factor).astype(int)
+        # greatest common divisor: numpy's gcd function calculates the GCD for all numbers (integers)
+        gcd = np.gcd.reduce(integer_numbers)
+
+        # regular depth increment (float)
+        ddepth = float(gcd / common_factor)
+
+        print("")
+        print("    tomography model will use a regular spacing: ",ddepth,"(m)")
+        print("    converting model depths to regular depths...")
+        # convert irregular depths to a regular gridding
+        # number of regular depth increments
+        ndepths_regular = np.round(z.max() / ddepth).astype(int) + 1
+        z_regular = np.linspace(z.min(),z.max(),ndepths_regular)
+
+    else:
+        # has regular spacing
+        ddepth = dz0
+        print("  has regular depth     spacing ",ddepth,"(km)")
+
+    print("")
     print("    dlon/dlat/ddepth = {} (deg) / {} (deg) / {} (km)".format(dlon,dlat,ddepth/1000.0))
     print("    spacing ok")
     print("")
@@ -1211,6 +1295,43 @@ def netCDF_2_tomo(input_file,UTM_zone=None,mesh_area=None,maximum_depth=None):
         print("Error: given model is incomplete for converting to a tomographic model with (vp,vs,rho) parameterization")
         sys.exit(1)
 
+
+    # checks if model range covers target region
+    if not mesh_area is None:
+        # latitude range
+        if mesh_lat_min > model_lat_min and mesh_lat_min < model_lat_max and \
+            mesh_lat_max > model_lat_min and mesh_lat_max < model_lat_max:
+            print("  target latitude range {} / {} within model range {} / {}".format(mesh_lat_min,mesh_lat_max,model_lat_min,model_lat_max))
+        else:
+            print("")
+            print("ERROR: target latitude range {} / {} outside model range {} / {}".format(mesh_lat_min,mesh_lat_max,model_lat_min,model_lat_max))
+            print("       nothing to extract...")
+            print("")
+            print("       Please make sure that the EMC model covers your target region, exiting...")
+            print("")
+            sys.exit(1)
+
+        # longitude range
+        if mesh_lon_min > model_lon_min and mesh_lon_min < model_lon_max and \
+            mesh_lon_max > model_lon_min and mesh_lon_max < model_lon_max:
+            print("  target longitude range {} / {} within model range {} / {}".format(mesh_lon_min,mesh_lon_max,model_lon_min,model_lon_max))
+        else:
+            print("")
+            print("ERROR: target longitude range {} / {} outside model range {} / {}".format(mesh_lon_min,mesh_lon_max,model_lon_min,model_lon_max))
+            print("       nothing to extract...")
+            print("")
+            print("       Please make sure that the EMC model covers your target mesh area, exiting...")
+            print("")
+            sys.exit(1)
+        print("")
+
+    # checks depth
+    if not maximum_depth is None:
+        if maximum_depth > model_depth_max:
+            print("WARNING: target maximum depth {} below model maximum depth {}".format(maximum_depth,model_depth_max))
+            print("         tomographic model output will be cut-off at model depth {}".format(model_depth_max))
+            print("")
+
     # fill missing values with average value from each depth
     if use_replace_missing_values_with_average:
         print("  replacing missing values with depth average")
@@ -1229,14 +1350,14 @@ def netCDF_2_tomo(input_file,UTM_zone=None,mesh_area=None,maximum_depth=None):
             # file output requires velocities in m/s
             # determines scaling factor
             # (based on vpv array, assuming all other velocity arrays have the same units)
-            if model_data.variables['vpv'].units == "km.s-1":
+            if model_data.variables['vpv'].units in ["km.s-1","km/s"]:
                 # given in km/s -> m/s
                 unit_scale = 1000
-            elif model_data.variables['vpv'].units == "m.s-1":
+            elif model_data.variables['vpv'].units in ["m.s-1","m/s"]:
                 # given in m/s
                 unit_scale = 1
             else:
-                print("Error: array has invalid unit ",model_data.variables['vpv'].units)
+                print("Error: vpv array has invalid unit ",model_data.variables['vpv'].units)
                 sys.exit(1)
             # scales velocities to m/s
             if unit_scale != 1:
@@ -1255,14 +1376,14 @@ def netCDF_2_tomo(input_file,UTM_zone=None,mesh_area=None,maximum_depth=None):
             # file output requires velocities in m/s
             # determines scaling factor
             # (based on vpv array, assuming all other velocity arrays have the same units)
-            if model_data.variables['vsv'].units == "km.s-1":
+            if model_data.variables['vsv'].units in ["km.s-1","km/s"]:
                 # given in km/s -> m/s
                 unit_scale = 1000
-            elif model_data.variables['vsv'].units == "m.s-1":
+            elif model_data.variables['vsv'].units in ["m.s-1","m/s"]:
                 # given in m/s
                 unit_scale = 1
             else:
-                print("Error: array has invalid unit ",model_data.variables['vpv'].units)
+                print("Error: vsv array has invalid unit ",model_data.variables['vsv'].units)
                 sys.exit(1)
             # scales velocities to m/s
             if unit_scale != 1:
@@ -1285,10 +1406,10 @@ def netCDF_2_tomo(input_file,UTM_zone=None,mesh_area=None,maximum_depth=None):
 
             # file output requires velocities in m/s
             # determines scaling factor
-            if model_data.variables['vp'].units == "km.s-1":
+            if model_data.variables['vp'].units in ["km.s-1","km/s"]:
                 # given in km/s -> m/s
                 unit_scale = 1000
-            elif model_data.variables['vp'].units == "m.s-1":
+            elif model_data.variables['vp'].units in ["m.s-1","m/s"]:
                 # given in m/s
                 unit_scale = 1
             else:
@@ -1306,10 +1427,10 @@ def netCDF_2_tomo(input_file,UTM_zone=None,mesh_area=None,maximum_depth=None):
 
             # file output requires velocities in m/s
             # determines scaling factor
-            if model_data.variables['vs'].units == "km.s-1":
+            if model_data.variables['vs'].units in ["km.s-1","km/s"]:
                 # given in km/s -> m/s
                 unit_scale = 1000
-            elif model_data.variables['vs'].units == "m.s-1":
+            elif model_data.variables['vs'].units in ["m.s-1","m/s"]:
                 # given in m/s
                 unit_scale = 1
             else:
@@ -1320,6 +1441,7 @@ def netCDF_2_tomo(input_file,UTM_zone=None,mesh_area=None,maximum_depth=None):
                 vs *= unit_scale
 
             model['vs'] = vs
+    print("")
 
 
     # parameter scaling
@@ -1339,19 +1461,19 @@ def netCDF_2_tomo(input_file,UTM_zone=None,mesh_area=None,maximum_depth=None):
 
         # file output requires density in kg/m^3
         # determines scaling factor
-        if model_data.variables['rho'].units == "g.cm-3":
+        if model_data.variables['rho'].units in ["g.cm-3","g/cm3"]:
             # given in g/cm^3 -> kg/m^3
             # rho [kg/m^3] = rho * 1000 [g/cm^3]
             unit_scale = 1000
-        elif model_data.variables['vp'].units == "kg.cm-3":
+        elif model_data.variables['rho'].units in ["kg.cm-3","kg/cm3"]:
             # given in kg/cm^3 -> kg/m^3
             # rho [kg/m^3] = rho * 1000000 [kg/cm^3]
             unit_scale = 1000000
-        elif model_data.variables['vp'].units == "kg.m-3":
+        elif model_data.variables['rho'].units in ["kg.m-3","kg/m3"]:
             # given in kg/m^3
             unit_scale = 1
         else:
-            print("Error: array has invalid unit ",model_data.variables['vp'].units)
+            print("Error: rho array has invalid unit ",model_data.variables['rho'].units)
             sys.exit(1)
         # converts density to default kg/m^3
         if unit_scale != 1:
@@ -1388,11 +1510,17 @@ def netCDF_2_tomo(input_file,UTM_zone=None,mesh_area=None,maximum_depth=None):
 
     # checks if depth given with respect to earth surface (or sea level)
     depth_descr = model_data.variables['depth'].long_name
+    # user info
+    print("depth:")
     if "below earth surface" in depth_descr:
-        # user info
-        print("depth:")
         print("  depth given with respect to earth surface")
-        print("")
+    elif "below sea level" in depth_descr:
+        print("  depth given with respect to sea level")
+    elif "below mean Earth radius of 6371 km" in depth_descr:
+        print("  depth given with respect to mean Earth radius of 6371 km")
+    else:
+        print("  description given: ",depth_descr)
+    print("")
 
     # elevation
     if use_surface_elevation:
@@ -1434,6 +1562,7 @@ def netCDF_2_tomo(input_file,UTM_zone=None,mesh_area=None,maximum_depth=None):
     # vtk file output
     if create_vtk_file_output:
         print("creating vtk file for visualization...")
+        print("")
 
         # Create points
         points = vtk.vtkPoints()
@@ -1481,6 +1610,13 @@ def netCDF_2_tomo(input_file,UTM_zone=None,mesh_area=None,maximum_depth=None):
     ndim_depths = 0
     ndim_lats = 0
     ndim_lons = 0
+
+    # switches depth array to loop over regular depths
+    if has_irregular_depths:
+        # original, irregular depth z-array
+        z_irreg = z.copy()
+        # switches z to regular depth z-array
+        z = z_regular
 
     # loops over depth
     for k, depth in enumerate(z):
@@ -1556,7 +1692,17 @@ def netCDF_2_tomo(input_file,UTM_zone=None,mesh_area=None,maximum_depth=None):
                 ijk = [0,0,0]
                 ijk[lat_index] = i
                 ijk[lon_index] = j
-                ijk[depth_index] = k
+
+                if has_irregular_depths:
+                    # find index in irregular depth array
+                    # Find the matching index of the depth value in the irregular z_irreg array
+                    k_irreg = np.max(np.where(z_irreg <= depth))
+                    ijk[depth_index] = k_irreg
+                else:
+                    # regular depth intervals, simply use index k from loop
+                    ijk[depth_index] = k
+
+                # gets tuple for array indexing
                 index = tuple(ijk)
 
                 # model parameters
@@ -1608,6 +1754,29 @@ def netCDF_2_tomo(input_file,UTM_zone=None,mesh_area=None,maximum_depth=None):
 
     print("")
     print("")
+    print("tomographic model statistics:")
+    print("  vp  min/max : {:.2f} / {:.2f} (m/s)".format(header_vp_min,header_vp_max))
+    print("  vs  min/max : {:.2f} / {:.2f} (m/s)".format(header_vs_min,header_vs_max))
+    print("  rho min/max : {:.2f} / {:.2f} (kg/m3)".format(header_rho_min,header_rho_max))
+    print("")
+
+    if header_vp_min <= 0.0:
+        print("WARNING: Vp has invalid entries with a minimum of zero!")
+        print("         The provided output model is likely invalid.")
+        print("         Please check with your inputs...")
+        print("")
+
+    if header_vs_min <= 0.0:
+        print("WARNING: Vs has entries with a minimum of zero!")
+        print("         The provided output model is likely invalid.")
+        print("         Please check with your inputs...")
+        print("")
+
+    if header_rho_min <= 0.0:
+        print("WARNING: Density has entries with a minimum of zero!")
+        print("         The provided output model is likely invalid.")
+        print("         Please check with your inputs...")
+        print("")
 
     # header infos
     header_dx = dlon        # increment x-direction for longitudes
