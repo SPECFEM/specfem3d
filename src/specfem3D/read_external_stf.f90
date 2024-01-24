@@ -44,12 +44,19 @@
   character(len=MAX_STRING_LEN),intent(in) :: external_source_time_function_filename
 
   ! local variables below
-  integer :: i,ier
+  integer :: i,ier,str_len
   real(kind=CUSTOM_REAL) :: stf_val
   character(len=256) :: line
 
   ! threshold value to issue a warning
   real(kind=CUSTOM_REAL),parameter :: SMALL_STF_VAL = 0.001
+
+  ! debug timing
+  !double precision :: tstart,tCPU
+  !double precision, external :: wtime
+
+  ! debug timing
+  !tstart = wtime()
 
   ! saftey check
   if (NSTEP /= NSTEP_STF) then
@@ -57,9 +64,48 @@
     stop 'Error invalid number of NSTEP_STF'
   endif
 
+  ! for STF file names like "***.bin" - ending with ".bin", we will read it in as a binary file instead of as an ASCII file
+  ! to enhance the speed for reading in many STF files in case.
+
+  ! check file ending
+  ! ".bin" for binary source time function files
+  str_len = len_trim(external_source_time_function_filename)
+  if (str_len > 4) then
+    if (external_source_time_function_filename(str_len-3:str_len) == ".bin") then
+      ! binary source time function file
+      ! format: can only have numbers, no comment lines
+      !         also, it must have the exact NSTEP length (and values) for the simulation as no further checks will be done
+      !
+      ! open binary file
+      open(IO_STF,file=trim(external_source_time_function_filename),form='unformatted',status='old',action='read',iostat=ier)
+      if (ier /= 0) then
+        print *,'Error could not open binary external source file: ',trim(external_source_time_function_filename)
+        stop 'Error opening binary external source time function file'
+      endif
+      read(IO_STF) user_source_time_function(:,isource)
+      close(IO_STF)
+
+      ! debug timing
+      !tCPU = wtime() - tstart
+      !print *,'debug: binary read source ',isource,' - elapsed time: ',sngl(tCPU),'s'
+
+      ! all done, no further checking (for speed)
+      return
+    endif
+  endif
+
   ! clear the array for that source
   user_source_time_function(:,isource) = 0._CUSTOM_REAL
 
+  ! ASCII source time function file
+  ! format: the ASCII source time function file can use a format like
+  !         # user comment
+  !         ! another user comment
+  !         stf_value1
+  !         stf_value2
+  !         ..
+  !         stf_valueNSTEP
+  !
   ! opens specified file
   open(IO_STF,file=trim(external_source_time_function_filename),status='old',action='read',iostat=ier)
   if (ier /= 0) then
@@ -161,6 +207,10 @@
 
   ! closes external STF file
   close(IO_STF)
+
+  ! debug timing
+  !tCPU = wtime() - tstart
+  !print *,'debug: ascii read source ',isource,' - elapsed time: ',sngl(tCPU),'s'
 
   end subroutine read_external_source_time_function
 

@@ -129,7 +129,7 @@ env:
     # example with openmp
     - TESTID=31 TESTCOV=0 TESTDIR=24 TESTFLAGS="--enable-vectorization --enable-openmp" CUDA=false
 
-    # regular element mesh
+    # regular element mesh w/ external source time function (STF)
     - TESTID=32 TESTCOV=0 TESTDIR=25 TESTFLAGS="--enable-vectorization" CUDA=false
 
     # adjoint simulation -- offline, checked on github
