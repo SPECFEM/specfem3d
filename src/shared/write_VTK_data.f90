@@ -963,7 +963,7 @@
 !
 !------------------------------------------------------------------------------------
 
-  subroutine write_VTK_data_elem_cr_meshfem(nspec,nglob,xstore_db,ystore_db,zstore_db,ibool, &
+  subroutine write_VTK_data_elem_cr_meshfem(nspec,nglob,NGLL,xstore_db,ystore_db,zstore_db,ibool, &
                                             elem_data,filename)
 
 ! special routine for meshfem3D with simpler mesh arrays
@@ -972,10 +972,10 @@
 
   implicit none
 
-  integer :: nspec,nglob
+  integer, intent(in) :: nspec,nglob,NGLL
 
   ! global coordinates
-  integer, dimension(NGNOD_EIGHT_CORNERS,NSPEC) :: ibool
+  integer,dimension(NGLL,NGLL,NGLL,nspec),intent(in) :: ibool
   double precision, dimension(nglob) :: xstore_db,ystore_db,zstore_db
 
   ! element flag array
@@ -1004,8 +1004,10 @@
   write(IOUT_VTK,'(a,i12,i12)') "CELLS ",nspec,nspec*9
   do ispec = 1,nspec
     write(IOUT_VTK,'(9i12)') 8, &
-                             ibool(1,ispec)-1,ibool(2,ispec)-1,ibool(4,ispec)-1,ibool(3,ispec)-1, &
-                             ibool(5,ispec)-1,ibool(6,ispec)-1,ibool(8,ispec)-1,ibool(7,ispec)-1
+                             ibool(1,1,1,ispec)-1,ibool(NGLL,1,1,ispec)-1, &
+                             ibool(NGLL,NGLL,1,ispec)-1,ibool(1,NGLL,1,ispec)-1, &
+                             ibool(1,1,NGLL,ispec)-1,ibool(NGLL,1,NGLL,ispec)-1, &
+                             ibool(NGLL,NGLL,NGLL,ispec)-1,ibool(1,NGLL,NGLL,ispec)-1
   enddo
   write(IOUT_VTK,*) ''
 

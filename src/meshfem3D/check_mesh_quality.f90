@@ -348,7 +348,7 @@
     endif
 
     ! vtk file output
-    call write_VTK_data_elem_cr_meshfem(nspec,nglob,x,y,z,ibool,tmp1,filename)
+    call write_VTK_data_elem_cr_meshfem(nspec,nglob,NGLLX_M,x,y,z,ibool,tmp1,filename)
 
     deallocate(tmp1)
   endif
