@@ -678,8 +678,7 @@ class mesh(mesh_tools):
             group1 = cubit.get_id_from_name("nh")
             result = cubit.get_group_nodes(group1)
             if len(result) != 27:
-                raise RuntimeError(
-                    'Error: hexes with less than 27 nodes, hex27 True')
+                raise RuntimeError('Error: hexes with less than 27 nodes, hex27 True')
             cubit.cmd('del group ' + str(group1))
         else:
             # linear elements hex8
@@ -700,11 +699,13 @@ class mesh(mesh_tools):
 
     def mat_parameter(self, properties):
         # print properties
-        # format nummaterials file: #material_domain_id #material_id #rho #vp
-        # #vs #Q_kappa #Q_mu #anisotropy_flag
-        flag = properties[1]
-        print('number of material:', flag)
-        if flag > 0:
+        # format nummaterials file:
+        # #material_domain_id #material_id #rho #vp #vs #Q_kappa #Q_mu #anisotropy_flag
+        mat_id = properties[1]
+        print('number of material:', mat_id)
+        # material id flag must be strictly positive or negative, but not equal to 0
+        if mat_id > 0:
+            # material defined
             vel = properties[2]
             print('  material:', properties[:])
             if properties[2] is None and type(vel) != str:
@@ -737,32 +738,32 @@ class mesh(mesh_tools):
                 # format: #material_domain_id #material_id #rho #vp #vs
                 # #Q_kappa #Q_mu #anisotropy_flag
                 txt = '%1i %3i %20f %20f %20f %20f %20f %2i\n' % (
-                    properties[0], properties[1], properties[4], properties[2],
+                    properties[0], mat_id, properties[4], properties[2],
                     properties[3], qk, qmu, ani)
             elif type(vel) != str and vel != 0.:
                 helpstring = "#material_domain_id #material_id #rho #vp #vs \
                     #Q_kappa #Q_mu #anisotropy"
                 txt = '%1i %3i %s \n' % (
-                    properties[0], properties[1], helpstring)
+                    properties[0], mat_id, helpstring)
             else:
                 helpstring = " -->       syntax: #material_domain_id \
                     #material_id #rho #vp #vs #Q_kappa #Q_mu #anisotropy"
-                txt = '%1i %3i %s %s\n' % (properties[0], properties[
-                                           1], properties[2], helpstring)
-        elif flag < 0:
+                txt = '%1i %3i %s %s\n' % (properties[0], mat_id, properties[2], helpstring)
+        elif mat_id < 0:
+            # material undefined, for tomography file
             if properties[2] == 'tomography':
-                txt = '%1i %3i %s %s\n' % (properties[0], properties[
-                                           1], properties[2], properties[3])
+                txt = '%1i %3i %s %s 1\n' % (properties[0], mat_id, properties[2], properties[3])
             elif properties[2] == 'interface':
                 txt = '%1i %3i %s %s %1i %1i\n' % (
-                    properties[0], properties[1], properties[2], properties[3],
+                    properties[0], mat_id, properties[2], properties[3],
                     properties[4], properties[5])
             else:
                 helpstring = " -->       syntax: #material_domain_id \
                     'tomography' #file_name "
-                txt = '%1i %3i %s %s \n' % (properties[0], properties[
-                                            1], properties[2], helpstring)
+                txt = '%1i %3i %s %s \n' % (properties[0], mat_id, properties[2], helpstring)
                 #
+        else:
+            raise RuntimeError('Error: material id must be strictly positive or negative, but not equal to 0')
         # info output
         print("material: ",txt)
         return txt
@@ -770,48 +771,44 @@ class mesh(mesh_tools):
     def nummaterial_write(self, nummaterial_name, placeholder=True):
         print('Writing ' + nummaterial_name + '.....')
         nummaterial = open(nummaterial_name, 'w')
+        if placeholder:
+            txt = '''# nummaterial_velocity_file - created by script cubit2specfem3d.py
+# format:
+#(1)domain_id #(2)material_id #(3)rho #(4)vp #(5)vs #(6)Q_k #(7)Q_mu #(8)ani
+#
+#  where
+#     domain_id          : 1=acoustic / 2=elastic / 3=poroelastic
+#     material_id        : POSITIVE integer identifier of material block
+#     rho                : density
+#     vp                 : P-velocity
+#     vs                 : S-velocity
+#     Q_k                : 9999 = no Q_kappa attenuation
+#     Q_mu               : 9999 = no Q_mu attenuation
+#     ani                : 0=no anisotropy/ 1,2,.. check with aniso_model.f90
+#
+# example:
+# 2   1 2300 2800 1500 9999.0 9999.0 0
+#
+# or
+#
+#(1)domain_id #(2)material_id  tomography elastic  #(3)filename #(4)positive
+#
+#  where
+#     domain_id : 1=acoustic / 2=elastic / 3=poroelastic
+#     material_id        : NEGATIVE integer identifier of material block
+#     filename           : filename of the tomography file
+#     positive           : a positive unique identifier
+#
+# example:
+# 2  -1 tomography elastic tomo.xyz 1
+#
+# materials
+'''
+            nummaterial.write(txt)
+        # writes block materials
         for block in self.block_mat:
             # name=cubit.get_exodus_entity_name('block',block)
             nummaterial.write(str(self.mat_parameter(self.material[block])))
-        if placeholder:
-            txt = '''
-
-
-
-! note: format of nummaterial_velocity_file must be
-
-
-! #(1)domain_id #(2)material_id #(3)rho #(4)vp #(5)vs #(6)Q_k #(7)Q_mu #(8)ani
-!
-! where
-!     domain_id          : 1=acoustic / 2=elastic / 3=poroelastic
-!     material_id        : POSITIVE integer identifier of material block
-!     rho                : density
-!     vp                 : P-velocity
-!     vs                 : S-velocity
-!     Q_k                : 9999 = no Q_kappa attenuation
-!     Q_mu               : 9999 = no Q_mu attenuation
-!     ani                : 0=no anisotropy/ 1,2,.. check with aniso_model.f90
-!
-!example:
-!2   1 2300 2800 1500 9999.0 9999.0 0
-
-!or
-
-! #(1)domain_id #(2)material_id  tomography elastic  #(3)filename #(4)positive
-!
-! where
-!     domain_id : 1=acoustic / 2=elastic / 3=poroelastic
-!     material_id        : NEGATIVE integer identifier of material block
-!     filename           : filename of the tomography file
-!     positive           : a positive unique identifier
-!
-!example:
-!2  -1 tomography elastic tomo.xyz 1
-
-
-'''
-            nummaterial.write(txt)
         nummaterial.close()
         print('Ok')
 
