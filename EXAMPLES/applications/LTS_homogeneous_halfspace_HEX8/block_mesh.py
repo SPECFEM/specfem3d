@@ -18,7 +18,7 @@ except:
 version = cubit.get_version()
 version_major = int(version.split(".")[0])
 version_minor = int(version.split(".")[1])
-print("cubit version: ",version)
+print("cubit version: ",version," - major: ",version_major," minor: ",version_minor)
 
 cubit.cmd('reset')
 cubit.cmd('brick x 134000 y 134000 z 60000')
@@ -31,18 +31,29 @@ cubit.cmd('volume 1 size '+str(elementsize))
 cubit.cmd('mesh volume 1')
 
 # refines single elements at topography surface
+# element at top surface in the middle of the mesh
 cubit.cmd('refine hex 161 numsplit 1 bias 1.0 depth 1')
 
 #cubit.cmd('draw volume all'
 #cubit.cmd('pause')
 
 # refines again single element at topography surface
-cubit.cmd('refine hex 489 numsplit 1 bias 1.0 depth 1')
+# element at top surface in the middle of the mesh
+if version_major >= 2023:
+    # cubit versions >= 2023.x
+    cubit.cmd('refine hex 422 numsplit 1 bias 1.0 depth 1')
+else:
+    # older cubit/trelis
+    cubit.cmd('refine hex 489 numsplit 1 bias 1.0 depth 1')
+
 cubit.cmd('draw volume all')
 
 
 
 #### End of meshing
+
+# adds path to scripts (if not setup yet)
+sys.path.append('../../../CUBIT_GEOCUBIT/geocubitlib')
 
 ## obsolete:
 #import boundary_definition
@@ -80,7 +91,10 @@ cubit2specfem3d.export2SPECFEM3D(SEMoutput)
 
 # screen shot
 # (could crash version < 16.4)
-if version_major >= 16 and version_minor >= 4:
+if version_major >= 2023:
+    cubit.cmd('view iso')
+    cubit.cmd('hardcopy "' + SEMoutput + '/block_mesh.png" png')
+elif version_major >= 16 and version_minor >= 4:
     cubit.cmd('view top')
     cubit.cmd('hardcopy "' + SEMoutput + '/block_mesh.png" png')
 
