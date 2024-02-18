@@ -75,7 +75,7 @@
       write(IMAIN,*) '  number of threads (per MPI process) = ', num_threads
       write(IMAIN,*)
       write(IMAIN,*) '  number of processors available      = ', num_procs
-      write(IMAIN,*) '  maximum number of threads available = ', num_procs
+      write(IMAIN,*) '  maximum number of threads available = ', max_threads
       write(IMAIN,*) '  dynamic thread adjustement          = ', is_dynamic
       !write(IMAIN,*) '  nested parallelism                  = ', is_nested
       write(IMAIN,*) '  maximum nested active levels        = ', max_active_levels

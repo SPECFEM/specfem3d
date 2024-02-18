@@ -3,16 +3,16 @@
 # downloads openstreetmap buildings and creates 3d mesh objects saved in .ply format
 #
 # required python modules:
-# - numpy
-# - scipy
-# - pygmt
-# - pyproj
-# - xarray
-# - osmnx
-# - geopandas
-# - trimesh
-# - rtree
-# - mapbox_earcut
+# - numpy          (numpy==1.26.3)
+# - scipy          (scipy-1.11.4)
+# - pygmt          (pygmt==0.10.0)
+# - pyproj         (pyproj==3.6.1)
+# - xarray         (xarray==2023.10.1)
+# - osmnx          (osmnx==1.8.1)
+# - geopandas      (geopandas==0.14.2)
+# - trimesh        (trimesh==4.0.10)
+# - rtree          (Rtree==1.2.0)
+# - mapbox_earcut  (mapbox-earcut==1.0.1)
 #
 #################################################################
 

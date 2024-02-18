@@ -76,9 +76,6 @@ AM_CONDITIONAL([COND_MPI], [test x"$want_mpi" = xyes])
 ### FORCE_VECTORIZATION
 ###
 
-## note: vectorization support has been removed by DK due to problems with Intel compilers (2016).
-##       enabling will have no effect.
-
 AC_ARG_ENABLE([vectorization],
     [AS_HELP_STRING([--enable-vectorization],
         [build FORCE_VECTORIZATION enabled version @<:@default=auto@:>@])],
