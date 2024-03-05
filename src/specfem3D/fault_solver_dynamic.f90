@@ -1824,10 +1824,10 @@ contains
   integer, intent(in) :: IIN_PAR
 
   integer :: nglob,ier
-  real(kind=CUSTOM_REAL) :: mus,mud,dc,C,T
-  integer :: nmus,nmud,ndc,nC,nForcedRup,weakening_kind
+  real(kind=CUSTOM_REAL) :: mus,mud,dc,p,C,T
+  integer :: nmus,nmud,ndc,np,nC,nForcedRup,weakening_kind
 
-  NAMELIST / SWF / mus,mud,dc,nmus,nmud,ndc,C,T,nC,nForcedRup,weakening_kind
+  NAMELIST / SWF / mus,mud,dc,p,nmus,nmud,ndc,np,C,T,nC,nForcedRup,weakening_kind
 
   nglob = size(mu)
 
@@ -1839,6 +1839,10 @@ contains
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 1371')
   ! critical slip distance (aka slip-weakening distance)
   allocate( f%Dc(nglob) ,stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1372')
+  ! power-law coefficient in Chambon, Schmittbuhl, and Corfdir (2006)
+  !                         tau_d + (tau_s - tau_d) / (1+slip/(p*dc))**p
+  allocate( f%p(nglob) ,stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 1372')
   ! fault state variable theta (magnitude of accumulated slip on fault)
   allocate( f%theta(nglob) ,stat=ier)
@@ -1856,12 +1860,14 @@ contains
   mus = 0.6_CUSTOM_REAL
   mud = 0.1_CUSTOM_REAL
   dc = 1.0_CUSTOM_REAL
+  p  = 0.0_CUSTOM_REAL
   C = 0.0_CUSTOM_REAL
   T = HUGEVAL
 
   nmus = 0
   nmud = 0
   ndc  = 0
+  np   = 0
   nC = 0
   nForcedRup = 0
   weakening_kind = 1
@@ -1871,6 +1877,7 @@ contains
   f%mus(:) = mus  ! static friction coefficient
   f%mud(:) = mud  ! dynamic friction coefficient
   f%Dc(:)  = dc   ! critical slip distance
+  f%p(:)   = p    ! power-law coefficient
   f%C(:)   = C    ! cohesion
   f%T(:)   = T    ! (forced) rupture time
   f%kind   = weakening_kind
@@ -1878,6 +1885,7 @@ contains
   call init_2d_distribution(f%mus,coord,IIN_PAR,nmus)
   call init_2d_distribution(f%mud,coord,IIN_PAR,nmud)
   call init_2d_distribution(f%Dc ,coord,IIN_PAR,ndc)
+  call init_2d_distribution(f%p  ,coord,IIN_PAR,np)
   call init_2d_distribution(f%C  ,coord,IIN_PAR,nC)
   call init_2d_distribution(f%T  ,coord,IIN_PAR,nForcedRup)
 
@@ -2000,15 +2008,20 @@ contains
   real(kind=CUSTOM_REAL) :: mu(size(f%theta))
 
   if (f%kind == 1) then
-    ! slip weakening law
-    !
-    ! for example: Galvez, 2014, eq. (8)
-    !              also Ida, 1973; Palmer & Rice 1973; Andrews 1976; ..
-    mu(:) = f%mus(:) - (f%mus(:)-f%mud(:)) * min(f%theta(:)/f%Dc(:), 1.0_CUSTOM_REAL)
+  ! slip weakening law.  For example: Galvez, 2014, eq. (8)
+  !              also Ida, 1973; Palmer & Rice 1973; Andrews 1976; ..
+      mu(:) = f%mus(:) - (f%mus(:)-f%mud(:)) * min(f%theta(:)/f%Dc(:), 1.0_CUSTOM_REAL)
+  else if (f%kind == 2) then
+  !-- exponential slip weakening:
+      mu(:) = f%mud(:) - (f%mud(:)-f%mus(:)) * exp(-f%theta(:)/f%Dc(:))
+  else if (f%kind == 3) then
+  !-- power law weakening. For example: Chambon, Schmittbuhl, and Corfdir (2006)
+  !                         tau_d + (tau_s - tau_d) / (1+slip/(p*dc))**p
+      mu(:) = f%mud(:) + (f%mus(:)-f%mud(:)) / (1+f%theta(:)/f%Dc(:)/f%p)**f%p
   else
-    !-- exponential slip weakening:
-    mu(:) = f%mud(:) - (f%mud(:)-f%mus(:)) * exp(-f%theta(:)/f%Dc(:))
+       stop 'slip weakening friciton: unknown friction kind'
   endif
+
 
   end function swf_mu
 

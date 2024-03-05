@@ -62,7 +62,7 @@ module fault_solver_common
     integer :: kind
     logical :: healing = .false.
     real(kind=CUSTOM_REAL), dimension(:), pointer :: Dc => null(), mus => null(), mud => null(), &
-                                                     theta => null(), T => null(), C => null()
+                                                     p => null(), theta => null(), T => null(), C => null()
   end type swf_type
 
   type twf_type
