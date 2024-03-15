@@ -1308,7 +1308,7 @@
   ! note: paraview float issues
   !
   !       instead of 'float' we could also use 'double' to avoid issues:
-  !       for real(kind=4) values, fortran's intrinsic tiny() and huge() function will give:
+  !       for real(kind=4) values, Fortran's intrinsic tiny() and huge() function will give:
   !         tiny/huge =    1.17549435E-38   3.40282347E+38
   !       paraview's float value range complains for values <= 1.e-39, thus tiny/huge limits should be ok.
   !
