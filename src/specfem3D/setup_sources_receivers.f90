@@ -1373,7 +1373,7 @@
     call flush_IMAIN()
 
     ! checks if receivers are available
-    if (maxrec == 0) then
+    if (maxrec == 0 .and. .not. INVERSE_FWI_FULL_PROBLEM) then
       print *,'Error: no receivers in slices found'
       print *,'Please check if stations in DATA/STATIONS are placed correctly.'
       call exit_MPI(myrank,'Error no receivers in slices found')
@@ -1409,7 +1409,7 @@
       call flush_IMAIN()
 
       ! check if adjoint stations are available
-      if (maxrec == 0) then
+      if (maxrec == 0 .and. .not. INVERSE_FWI_FULL_PROBLEM) then
         print *,'Error: no adjoint sources in slices found'
         print *,'Please check if adjoint stations in DATA/STATIONS_ADJOINT are placed correctly.'
         call exit_MPI(myrank,'Error no adjoint sources in slices found')
