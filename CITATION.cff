@@ -1,10 +1,10 @@
 cff-version: 1.2.0
 
 message: "If this software turns out to be helpful for your research, please cite both the article from preferred-citation and the software itself. More detailed citation suggestions can be found in the user manual."
-title: 'SPECFEM/specfem3d: SPECFEM3D v4.1.0'
-version: v4.1.0
-date-released: '2023-12-20'
-repository-code: https://github.com/SPECFEM/specfem3d/tree/v4.1.0
+title: 'SPECFEM/specfem3d: SPECFEM3D v4.1.1'
+version: v4.1.1
+date-released: '2024-03-15'
+repository-code: https://github.com/SPECFEM/specfem3d/tree/v4.1.1
 url: "https://github.com/SPECFEM/specfem3d"
 type: software
 identifiers:
