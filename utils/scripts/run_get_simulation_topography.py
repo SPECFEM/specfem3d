@@ -612,6 +612,8 @@ def create_AVS_file():
     num_individual_lines = currentelem
     print("  There are %i individual line segments" % num_individual_lines)
 
+    print("")
+    print("converting to .inp format:")
 
     avsfile = "AVS_boundaries_utm.inp"
     with open(avsfile,'w') as f:
@@ -680,9 +682,20 @@ def create_AVS_file():
             if line[0:1] == "#": continue
             #   get line marker (comment in file)
             if ">" in line:
-                currentline += 1
-                currentpoint += 1
-                previous_was_comment = 1
+                # check if previous was line was also a segment
+                # for example: there can be empty segment lines
+                #  > Shore Bin # 4748, Level 1
+                #  > Shore Bin # 4748, Level 1
+                #  > Shore Bin # 4748, Level 1
+                #  136.117036698   36.2541237507
+                #  136.121248188   36.2533302815
+                #  ..
+                if currentline > 0 and previous_was_comment :
+                    continue
+                else:
+                    currentline += 1
+                    currentpoint += 1
+                    previous_was_comment = 1
                 #print("processing contour %i named %s" % (currentline,line))
             else:
                 if previous_was_comment == 0:
@@ -699,6 +712,12 @@ def create_AVS_file():
         # create data values for the points
         for currentpoint in range(1,numpoints+1):
             f.write("%i 255.\n" % (currentpoint))
+
+    # check
+    if numpoints != currentpoint:
+        print("  WARNING:")
+        print("    possible format corruption: total number of points ",numpoints," should match last line point id ",currentpoint)
+        print("")
 
     print("  see file: %s" % avsfile)
     print("")
