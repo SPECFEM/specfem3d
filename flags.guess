@@ -113,15 +113,6 @@ case $my_FC in
         # useful to track loss of accuracy because of automatic double to single precision conversion:  -Wconversion  (this may generate many warnings...)
         OMP_FFLAGS="-fopenmp"
         ;;
-    g95|*/g95)
-        #
-        # g95 (free f95 compiler from http://www.g95.org )
-        #
-        DEF_FFLAGS="-fimplicit-none"
-        OPT_FFLAGS="-O"
-        DEBUG_FFLAGS="-g -O0 -fbounds-check -ftrace"
-        OMP_FFLAGS="" # support for OpenMP not available yet
-        ;;
     f90|*/f90)
         case $host_os in
             Linux)
@@ -134,7 +125,7 @@ case $my_FC in
                         OPT_FFLAGS="-O3"
                         DEBUG_FFLAGS=""
                         OMP_FFLAGS=""
-                    ;;
+                        ;;
                 esac
                 ;;
             irix)
