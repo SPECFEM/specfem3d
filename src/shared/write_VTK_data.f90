@@ -1254,7 +1254,7 @@
 
 ! saves vtk file for CUSTOM_REAL values
 
-  use constants, only: CUSTOM_REAL,MAX_STRING_LEN,IOUT_VTK,SIZE_DOUBLE
+  use constants, only: CUSTOM_REAL,MAX_STRING_LEN,IOUT_VTK
 
   implicit none
 
@@ -1305,26 +1305,33 @@
   write(IOUT_VTK,'(6i12)') (12,it = 1,ne)
   write(IOUT_VTK,*) ''
 
+  ! note: paraview float issues
+  !
+  !       instead of 'float' we could also use 'double' to avoid issues:
+  !       for real(kind=4) values, fortran's intrinsic tiny() and huge() function will give:
+  !         tiny/huge =    1.17549435E-38   3.40282347E+38
+  !       paraview's float value range complains for values <= 1.e-39, thus tiny/huge limits should be ok.
+  !
+  !       however, even when using single precision values the output range can go beyond these limits,
+  !       in particular for small values one can find outputs like '-2.04557346E-39' for single precision numbers.
+  !       paraview's vtk reader will then complain about the next number on the following line.
+  !
+  ! here, we will thus use the tiny/huge limits for both single and double precision data values, since we are using
+  ! this already for double.
+
   ! data values
   write(IOUT_VTK,'(a,i12)') "POINT_DATA ",np
   write(IOUT_VTK,'(a)') "SCALARS "//trim(var_name)//" float"
   write(IOUT_VTK,'(a)') "LOOKUP_TABLE default"
-  if (CUSTOM_REAL == SIZE_DOUBLE) then
-    ! double precision values
-    do i = 1,np
-      ! converts to float
-      val = real(total_dat(i),kind=4)
-      ! stay within boundaries of float values, otherwise paraview will complain
-      if (abs(val) < tiny(val)) val = sign(1.0,val) * tiny(val)
-      if (abs(val) > huge(val)) val = sign(1.0,val) * huge(val)
-      write(IOUT_VTK,*) val
-    enddo
-  else
-    ! single precision
-    do i = 1,np
-      write(IOUT_VTK,*) total_dat(i)
-    enddo
-  endif
+  ! limits values to paraview's float range
+  do i = 1,np
+    ! converts to float
+    val = real(total_dat(i),kind=4)
+    ! stay within boundaries of float values, otherwise paraview will complain
+    if (abs(val) < tiny(val)) val = sign(1.0,val) * tiny(val)
+    if (abs(val) > huge(val)) val = sign(1.0,val) * huge(val)
+    write(IOUT_VTK,*) val
+  enddo
   write(IOUT_VTK,*) ''
   close(IOUT_VTK)
 
@@ -1339,7 +1346,7 @@
 ! saves vtk file for CUSTOM_REAL values, writes out each element as unconnected finite elements
 ! (no shared global points). this visualizes sharp jumps/discontinuities from one element to another.
 
-  use constants, only: CUSTOM_REAL,MAX_STRING_LEN,IOUT_VTK,SIZE_DOUBLE
+  use constants, only: CUSTOM_REAL,MAX_STRING_LEN,IOUT_VTK
 
   implicit none
 
@@ -1399,28 +1406,18 @@
   write(IOUT_VTK,'(a,i12)') "POINT_DATA ",ne*8
   write(IOUT_VTK,'(a)') "SCALARS "//trim(var_name)//" float"
   write(IOUT_VTK,'(a)') "LOOKUP_TABLE default"
-  if (CUSTOM_REAL == SIZE_DOUBLE) then
-    ! double precision values
-    do ie = 1,ne
-      do j = 1,8
-        ! converts to float
-        i = total_dat_con(j,ie) + 1 ! needs to add +1 which has been removed before input
-        val = real(total_dat(i),kind=4)
-        ! stay within boundaries of float values, otherwise paraview will complain
-        if (abs(val) < tiny(val)) val = sign(1.0,val) * tiny(val)
-        if (abs(val) > huge(val)) val = sign(1.0,val) * huge(val)
-        write(IOUT_VTK,*) val
-      enddo
+  ! limits values to paraview's float range
+  do ie = 1,ne
+    do j = 1,8
+      ! converts to float
+      i = total_dat_con(j,ie) + 1 ! needs to add +1 which has been removed before input
+      val = real(total_dat(i),kind=4)
+      ! stay within boundaries of float values, otherwise paraview will complain
+      if (abs(val) < tiny(val)) val = sign(1.0,val) * tiny(val)
+      if (abs(val) > huge(val)) val = sign(1.0,val) * huge(val)
+      write(IOUT_VTK,*) val
     enddo
-  else
-    ! single precision
-    do ie = 1,ne
-      do j = 1,8
-        i = total_dat_con(j,ie) + 1 ! needs to add +1 which has been removed before input
-        write(IOUT_VTK,*) total_dat(i)
-      enddo
-    enddo
-  endif
+  enddo
   write(IOUT_VTK,*) ''
   close(IOUT_VTK)
 
