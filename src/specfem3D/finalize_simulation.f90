@@ -56,6 +56,7 @@
   ! user output
   if (myrank == 0) then
     write(IMAIN,*) 'finalizing simulation'
+    write(IMAIN,*)
     call flush_IMAIN()
   endif
   call synchronize_all()
