@@ -743,12 +743,12 @@
 
   call synchronize_all()
 
+  ! user output
   if (myrank == 0) then
-    write(IMAIN,*)
     if (SIMULATION_TYPE == 1 .or. SIMULATION_TYPE == 3) then
-      write(IMAIN,*) 'Total number of receivers = ', nrec
+      write(IMAIN,*) '  Total number of receivers = ', nrec
     else
-      write(IMAIN,*) 'Total number of adjoint sources = ', nrec
+      write(IMAIN,*) '  Total number of adjoint sources = ', nrec
     endif
     write(IMAIN,*)
     call flush_IMAIN()
@@ -870,8 +870,15 @@
 
             ! loops over file components E/N/Z
             do icomp = 1,NDIM
-              filename = OUTPUT_FILES(1:len_trim(OUTPUT_FILES))// &
-                       '/../SEM/'//trim(adj_source_file) // '.'// comp(icomp) // '.adj'
+              ! trace name
+              ! format: **net**.**sta**.**comp**.adj
+              !         example: DB.X01.HXX.adj
+              filename = trim(adj_source_file) // '.' // comp(icomp) // '.adj'
+
+              ! adds path to SEM/ folder relative to OUTPUT_FILES/
+              filename = OUTPUT_FILES(1:len_trim(OUTPUT_FILES))// '/../SEM/' // trim(filename)
+
+              ! reads in adjoint trace
               open(unit=IIN,file=trim(filename),status='old',action='read',iostat=ier)
               if (ier == 0) then
                 ! checks length of file
@@ -910,8 +917,8 @@
     call sum_all_i(nadj_files_found,nadj_files_found_tot)
     if (myrank == 0) then
       ! user output
-      write(IMAIN,*)
       write(IMAIN,*) '    ',nadj_files_found_tot,' adjoint component trace files found in all slices'
+      write(IMAIN,*)
       call flush_IMAIN()
 
       ! main process checks if any adjoint files found
@@ -1043,11 +1050,13 @@
   implicit none
 
   integer :: isource,ispec,ier
-  real(kind=CUSTOM_REAL) :: factor_source
+
   double precision, dimension(NGLLX) :: hxis,hpxis
   double precision, dimension(NGLLY) :: hetas,hpetas
   double precision, dimension(NGLLZ) :: hgammas,hpgammas
   double precision :: norm,comp_x,comp_y,comp_z
+  double precision :: factor_source
+
   double precision :: sizeval
   logical :: does_source_encoding
 
@@ -1131,6 +1140,7 @@
             comp_x = comp_dir_vect_source_E(isource)/norm
             comp_y = comp_dir_vect_source_N(isource)/norm
             comp_z = comp_dir_vect_source_Z_UP(isource)/norm
+
             call compute_arrays_source_forcesolution(sourcearray,hxis,hetas,hgammas,factor_source, &
                                                      comp_x,comp_y,comp_z,nu_source(:,:,isource))
           endif
@@ -1147,6 +1157,7 @@
               comp_y = comp_dir_vect_source_N(isource)/norm
               comp_z = comp_dir_vect_source_Z_UP(isource)/norm
               write(*,*) " DIPOLE FLUID ", comp_x, comp_y, comp_z
+
               call compute_arrays_source_forcesolution_fluid(ispec, sourcearray, hxis,hetas,hgammas,hpxis,hpetas,hpgammas, &
                                                              factor_source,comp_x,comp_y,comp_z,nu_source(:,:,isource))
             else
@@ -1158,6 +1169,7 @@
               comp_x = 1.0d0
               comp_y = 1.0d0
               comp_z = 1.0d0
+
               call compute_arrays_source_forcesolution(sourcearray,hxis,hetas,hgammas,factor_source, &
                                                        comp_x,comp_y,comp_z,nu_source(:,:,isource))
             endif
@@ -1178,13 +1190,13 @@
           if (ispec_is_acoustic(ispec)) then
             ! scalar moment of moment tensor values read in from CMTSOLUTION
             ! note: M0 by Dahlen and Tromp, eq. 5.91
-            factor_source = 1.0/sqrt(2.0) * sqrt( Mxx(isource)**2 + Myy(isource)**2 + Mzz(isource)**2 &
-                                                  + 2*( Myz(isource)**2 + Mxz(isource)**2 + Mxy(isource)**2) )
+            factor_source = 1.d0/sqrt(2.d0) * sqrt( Mxx(isource)**2 + Myy(isource)**2 + Mzz(isource)**2 &
+                                                  + 2.d0 * ( Myz(isource)**2 + Mxz(isource)**2 + Mxy(isource)**2) )
 
             ! scales source such that it would be equivalent to explosion source moment tensor,
             ! where Mxx=Myy=Mzz, others Mxy,.. = zero, in equivalent elastic media
             ! (and getting rid of 1/sqrt(2) factor from scalar moment tensor definition above)
-            factor_source = factor_source * sqrt(2.0) / sqrt(3.0)
+            factor_source = factor_source * sqrt(2.d0) / sqrt(3.d0)
 
             ! source encoding
             ! determines factor +/-1 depending on sign of moment tensor
@@ -1265,12 +1277,12 @@
   double precision :: hpxir(NGLLX), hpetar(NGLLY),hpgammar(NGLLZ)
 
   integer :: i,j,k,ispec
-  real(kind=CUSTOM_REAL) :: hxi,heta,hgamma
+  double precision :: hxi,heta,hgamma
   logical :: has_receiver_in_elastic_domain
 
   ! note: for adjoint simulations (SIMULATION_TYPE == 2),
   !         nrec_local     - is set to the number of sources (CMTSOLUTIONs), which act as "receiver" locations
-  !                          for storing seismograms or strains
+  !                          for storing receiver (hxir/..) arrays, seismograms or strains
   !
   !         nadj_rec_local - determines the number of adjoint sources, i.e., number of station locations (STATIONS_ADJOINT), which
   !                          act as sources to drive the adjoint wavefield
@@ -1282,9 +1294,6 @@
     do_save_seismograms = .true.
   endif
 
-  ! sets local receivers to zero if no seismogram needs to be saved
-  if (.not. do_save_seismograms) nrec_local = 0
-
   ! user output
   if (myrank == 0) then
     write(IMAIN,*) 'seismograms:'
@@ -1294,15 +1303,26 @@
       else
         write(IMAIN,*) '  seismograms written by all processes'
       endif
+      write(IMAIN,*)
+      write(IMAIN,*) '  Total number of simulation steps (NSTEP)                       = ',NSTEP
+      write(IMAIN,*) '  writing out seismograms at every NTSTEP_BETWEEN_OUTPUT_SEISMOS = ',NTSTEP_BETWEEN_OUTPUT_SEISMOS
+      write(IMAIN,*) '  number of subsampling steps for seismograms                    = ',NTSTEP_BETWEEN_OUTPUT_SAMPLE
+      write(IMAIN,*) '  Total number of samples for seismograms                        = ',NSTEP/NTSTEP_BETWEEN_OUTPUT_SAMPLE
+      write(IMAIN,*)
     else
       write(IMAIN,*) '  seismograms will not be saved'
     endif
     write(IMAIN,*)
-    write(IMAIN,*) '  Total number of simulation steps (NSTEP)                       = ',NSTEP
-    write(IMAIN,*) '  writing out seismograms at every NTSTEP_BETWEEN_OUTPUT_SEISMOS = ',NTSTEP_BETWEEN_OUTPUT_SEISMOS
-    write(IMAIN,*) '  number of subsampling steps for seismograms                    = ',NTSTEP_BETWEEN_OUTPUT_SAMPLE
-    write(IMAIN,*) '  Total number of samples for seismograms                        = ',NSTEP/NTSTEP_BETWEEN_OUTPUT_SAMPLE
-    write(IMAIN,*)
+    call flush_IMAIN()
+  endif
+
+  ! resets flags if no seismograms are needed
+  if (.not. do_save_seismograms) then
+    SAVE_SEISMOGRAMS_PRESSURE = .false.
+    SAVE_SEISMOGRAMS_DISPLACEMENT = .false.
+    SAVE_SEISMOGRAMS_VELOCITY = .false.
+    SAVE_SEISMOGRAMS_ACCELERATION = .false.
+    SAVE_SEISMOGRAMS_STRAIN = .false.
   endif
 
   ! checks SU_FORMAT output length
@@ -1345,16 +1365,25 @@
 
     ! outputs info
     write(IMAIN,*) '  maximum number of local receivers is ',maxrec,' in slice ',maxproc(1)
-    write(IMAIN,*) '  size of maximum seismogram array       = ', sngl(sizeval),'MB'
-    write(IMAIN,*) '                                         = ', sngl(sizeval/1024.d0),'GB'
+    if (do_save_seismograms) then
+      write(IMAIN,*) '  size of maximum seismogram array       = ', sngl(sizeval),'MB'
+      write(IMAIN,*) '                                         = ', sngl(sizeval/1024.d0),'GB'
+    endif
     write(IMAIN,*)
     call flush_IMAIN()
+
+    ! checks if receivers are available
+    if (maxrec == 0 .and. .not. INVERSE_FWI_FULL_PROBLEM) then
+      print *,'Error: no receivers in slices found'
+      print *,'Please check if stations in DATA/STATIONS are placed correctly.'
+      call exit_MPI(myrank,'Error no receivers in slices found')
+    endif
   endif
 
   ! adjoint sources
   if (SIMULATION_TYPE == 2 .or. SIMULATION_TYPE == 3) then
-    ! note: nadj_rec_local is the number of "adjoint sources". that is, local receiver locations which will act as adjoint source
-    !       locations.
+    ! note: nadj_rec_local is the number of "adjoint sources".
+    !       that is, local receiver locations which will act as adjoint source locations.
 
     ! gather from secondarys on main
     call gather_all_singlei(nadj_rec_local,tmp_rec_local_all,NPROC)
@@ -1369,6 +1398,7 @@
       ! source_adjoint size in MB
       !source_adjoint(NDIM,nadj_rec_local,NTSTEP_BETWEEN_READ_ADJSRC)
       sizeval = dble(maxrec) * dble(NDIM * NTSTEP_BETWEEN_READ_ADJSRC * CUSTOM_REAL / 1024. / 1024. )
+
       ! outputs info
       write(IMAIN,*) 'adjoint source arrays:'
       write(IMAIN,*) '  reading adjoint sources at every NTSTEP_BETWEEN_READ_ADJSRC = ',NTSTEP_BETWEEN_READ_ADJSRC
@@ -1377,13 +1407,21 @@
       write(IMAIN,*) '                                       = ', sngl(sizeval/1024.d0),'GB'
       write(IMAIN,*)
       call flush_IMAIN()
+
+      ! check if adjoint stations are available
+      if (maxrec == 0 .and. .not. INVERSE_FWI_FULL_PROBLEM) then
+        print *,'Error: no adjoint sources in slices found'
+        print *,'Please check if adjoint stations in DATA/STATIONS_ADJOINT are placed correctly.'
+        call exit_MPI(myrank,'Error no adjoint sources in slices found')
+      endif
     endif
   endif
 
   ! receivers: for forward/kernel simulations, receivers are determined by the STATIONS files,
   !            for pure adjoint simulations, CMT source locations become "receiver" locations.
   !
-  ! following arrays are used to handle seismograms at "receiver" locations
+  ! following arrays are used to handle stations at "receiver" locations,
+  ! needed for forward and kernel simulations
   !
   ! needs to be allocate for subroutine calls (even if nrec_local == 0)
   allocate(number_receiver_global(nrec_local),stat=ier)
@@ -1482,7 +1520,7 @@
   endif ! nrec_local > 0
 
   ! seismograms
-  if (nrec_local > 0) then
+  if (nrec_local > 0 .and. do_save_seismograms) then
     ! note: nrec_local is the number of local "receivers" for which we will store seismograms
     !
     ! allocate seismogram array
@@ -1630,7 +1668,7 @@
   if (SIMULATION_TYPE == 2 .or. SIMULATION_TYPE == 3) then
     ! adjoint source in this partitions
     if (nadj_rec_local > 0) then
-!! DK DK Aug 2018: added this because Lei Zhang may have detected a problem
+      ! added this because Lei Zhang may have detected a problem
       do irec_local = 1, nadj_rec_local
         irec = number_adjsources_global(irec_local)
         if (irec <= 0) stop 'Error invalid irec for local adjoint source'
@@ -1645,9 +1683,10 @@
               !print *,'hxi/heta/hgamma = ',hxi,heta,hgamma,irec_local,i,j,k
               ! checks if array values valid
               ! Lagrange interpolators shoud be between [-0.2,1.0]
-              if (abs(hxi) > 1.1 .or. abs(heta) > 1.1 .or. abs(hgamma) > 1.1) then
+              if (abs(hxi) > 1.1d0 .or. abs(heta) > 1.1d0 .or. abs(hgamma) > 1.1d0) then
                 print *,'ERROR: trying to use arrays hxir_adjstore/hetar_adjstore/hgammar_adjstore with irec_local = ', &
                         irec_local,' but these arrays are invalid!'
+                print *,'  invalid hxi/heta/hgamma = ',hxi,heta,hgamma
                 call exit_MPI_without_rank('ERROR: trying to use arrays hxir_adjstore/hetar_adjstore/hgammar_adjstore &
                                            &but these arrays are invalid!')
               endif

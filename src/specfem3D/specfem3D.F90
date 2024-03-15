@@ -269,6 +269,10 @@
 ! Evolution of the code:
 ! ---------------------
 !
+! version 4.1.1, March 2024:
+!   Hom Nath Gharti, Daniel Peter, Huihui Weng.
+!     mainly bug fix release; adds Brune STF; power-law slip weakening friction law
+!
 ! version 4.1, November 2023:
 !   Rahul Garg, Hom Nath Gharti, Masaru Nagaso, Elif Oral, Daniel Peter.
 !     HDF5 file IO support; local time stepping; strain seismograms; movie output for stresses;

@@ -1,10 +1,10 @@
 /* setup/config.h.in.  Generated from configure.ac by autoheader.  */
 
-/* Define to dummy `main' function (if any) required to link to the Fortran
+/* Define to dummy 'main' function (if any) required to link to the Fortran
    libraries. */
 #undef FC_DUMMY_MAIN
 
-/* Define if F77 and FC dummy `main' functions are identical. */
+/* Define if F77 and FC dummy 'main' functions are identical. */
 #undef FC_DUMMY_MAIN_EQ_F77
 
 /* Define to a macro mangling the given C identifier (in lower and upper
@@ -23,32 +23,32 @@
 /* Define to 1 if you have the <inttypes.h> header file. */
 #undef HAVE_INTTYPES_H
 
-/* Define to 1 if you have the `vtkCommon' library (-lvtkCommon). */
+/* Define to 1 if you have the 'vtkCommon' library (-lvtkCommon). */
 #undef HAVE_LIBVTKCOMMON
 
-/* Define to 1 if you have the `vtkDICOMParser' library (-lvtkDICOMParser). */
+/* Define to 1 if you have the 'vtkDICOMParser' library (-lvtkDICOMParser). */
 #undef HAVE_LIBVTKDICOMPARSER
 
-/* Define to 1 if you have the `vtkexpat' library (-lvtkexpat). */
+/* Define to 1 if you have the 'vtkexpat' library (-lvtkexpat). */
 #undef HAVE_LIBVTKEXPAT
 
-/* Define to 1 if you have the `vtkFiltering' library (-lvtkFiltering). */
+/* Define to 1 if you have the 'vtkFiltering' library (-lvtkFiltering). */
 #undef HAVE_LIBVTKFILTERING
 
-/* Define to 1 if you have the `vtkGenericFiltering' library
+/* Define to 1 if you have the 'vtkGenericFiltering' library
    (-lvtkGenericFiltering). */
 #undef HAVE_LIBVTKGENERICFILTERING
 
-/* Define to 1 if you have the `vtkGraphics' library (-lvtkGraphics). */
+/* Define to 1 if you have the 'vtkGraphics' library (-lvtkGraphics). */
 #undef HAVE_LIBVTKGRAPHICS
 
-/* Define to 1 if you have the `vtkRendering' library (-lvtkRendering). */
+/* Define to 1 if you have the 'vtkRendering' library (-lvtkRendering). */
 #undef HAVE_LIBVTKRENDERING
 
-/* Define to 1 if you have the `vtksys' library (-lvtksys). */
+/* Define to 1 if you have the 'vtksys' library (-lvtksys). */
 #undef HAVE_LIBVTKSYS
 
-/* Define to 1 if you have the `vtkzlib' library (-lvtkzlib). */
+/* Define to 1 if you have the 'vtkzlib' library (-lvtkzlib). */
 #undef HAVE_LIBVTKZLIB
 
 /* Define if you have POSIX threads libraries and header files. */
@@ -127,13 +127,13 @@
 /* Define SPECFEM3D version */
 #undef SPECFEM3D_VERSION
 
-/* Define to 1 if all of the C90 standard headers exist (not just the ones
+/* Define to 1 if all of the C89 standard headers exist (not just the ones
    required in a freestanding environment). This macro is provided for
    backward compatibility; new code need not use it. */
 #undef STDC_HEADERS
 
-/* Define to 1 if `lex' declares `yytext' as a `char *' by default, not a
-   `char[]'. */
+/* Define to 1 if 'lex' declares 'yytext' as a 'char *' by default, not a
+   'char[]'. */
 #undef YYTEXT_POINTER
 
 

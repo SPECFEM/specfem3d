@@ -134,13 +134,13 @@
     close(IOUT)
 
     write(IMAIN,*)
-    write(IMAIN,*) 'there are ',nrec_all,' stations in file ', trim(filename)
-    write(IMAIN,*) 'saving ',nrec_filtered,' stations inside the model in file ', trim(filtered_filename)
-    write(IMAIN,*) 'excluding ',nrec_all - nrec_filtered,' stations located outside the model'
+    write(IMAIN,*) '  there are ',nrec_all,' stations in file ', trim(filename)
+    write(IMAIN,*) '  saving ',nrec_filtered,' stations inside the model in file ' // trim(filtered_filename)
+    write(IMAIN,*) '  excluding ',nrec_all - nrec_filtered,' stations located outside the model'
     write(IMAIN,*)
 
     if (nrec_filtered < 1) then
-      write(IMAIN,*) 'error filtered stations:'
+      write(IMAIN,*) 'Error filtered stations:'
       write(IMAIN,*) '  simulation needs at least 1 station but got ',nrec_filtered
       write(IMAIN,*)
       write(IMAIN,*) '  check that stations in file '//trim(filename)//' are within'

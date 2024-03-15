@@ -220,7 +220,7 @@ if __name__ == '__main__':
     use_ascii = True
     # reads arguments
     #print("\nnumber of arguments: " + str(len(sys.argv)))
-    if len(sys.argv) < 1: usage()
+    if len(sys.argv) <= 1: usage()
 
     input_file = sys.argv[1]
     if len(sys.argv) == 3:

@@ -372,6 +372,8 @@
     if (USE_EXTERNAL_SOURCE_FILE) then
       ! gets external STF file name
       read(IIN,"(a)") string
+      ! suppress white spaces if any
+      string = adjustl(string)
       external_source_time_function_filename = trim(string)
       if (trim(external_source_time_function_filename) == 'REUSE' .or. &
          trim(external_source_time_function_filename) == 'Reuse' .or. &
@@ -380,12 +382,11 @@
         if (isource == 1) then
           stop 'Error: "reuse" option cannot be used for the first source!'
         endif
-        ishift=nint(t_shift(isource)/DT)
-        nright=NSTEP_STF-ishift
-        user_source_time_function(1:ishift,isource)=0.0_CUSTOM_REAL
-        user_source_time_function(ishift+1:NSTEP_STF,isource)=user_source_time_function(1:nright,1)
+        ishift = nint(t_shift(isource)/DT)
+        nright = NSTEP_STF - ishift
+        user_source_time_function(1:ishift,isource) = 0.0_CUSTOM_REAL
+        user_source_time_function(ishift+1:NSTEP_STF,isource) = user_source_time_function(1:nright,1)
       else
-
         ! reads in stf values
         call read_external_source_time_function(isource,user_source_time_function,external_source_time_function_filename)
       endif

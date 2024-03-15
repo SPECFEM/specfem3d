@@ -79,8 +79,9 @@
       ! open binary file
       open(IO_STF,file=trim(external_source_time_function_filename),form='unformatted',status='old',action='read',iostat=ier)
       if (ier /= 0) then
-        print *,'Error could not open binary external source file: ',trim(external_source_time_function_filename)
-        stop 'Error opening binary external source time function file'
+        print *,'Error: could not open external binary source file: ',trim(external_source_time_function_filename)
+        print *,'       for source index: ',isource
+        stop 'Error opening external binary source time function file'
       endif
       read(IO_STF) user_source_time_function(:,isource)
       close(IO_STF)
@@ -109,8 +110,9 @@
   ! opens specified file
   open(IO_STF,file=trim(external_source_time_function_filename),status='old',action='read',iostat=ier)
   if (ier /= 0) then
-    print *,'Error could not open external source file: ',trim(external_source_time_function_filename)
-    stop 'Error opening external source time function file'
+    print *,'Error: could not open external ASCII source file: ',trim(external_source_time_function_filename)
+    print *,'       for source index: ',isource
+    stop 'Error opening external ASCII source time function file'
   endif
 
   ! gets number of file entries
@@ -134,7 +136,8 @@
 
   ! checks
   if (i < 1) then
-    print *,'Error: External source time function file ',trim(trim(external_source_time_function_filename)),'has no valid data;'
+    print *,'Error: External ASCII source time function file ',trim(trim(external_source_time_function_filename)), &
+            'has no valid data;'
     print *,'       the number of time steps is < 1. Please check the file...'
     stop 'Error: the number of time steps in external_source_time_function_filename is < 1'
   endif
@@ -151,12 +154,12 @@
 
   ! checks number of time steps read
   if (i < NSTEP_STF) then
-    print *,'Problem when reading external source time file: ', trim(external_source_time_function_filename)
-    print *,'  number of time steps in the simulation = ',NSTEP_STF
+    print *,'Problem when reading external ASCII source time file: ', trim(external_source_time_function_filename)
+    print *,'  number of time steps in the simulation                  = ',NSTEP_STF
     print *,'  number of time steps read from the source time function = ',i
-    print *,'Please make sure that the number of time steps in the external source file read is greater or &
+    print *,'Please make sure that the number of time steps in the external ASCII source file read is greater or &
              &equal to the number of time steps in the simulation'
-    stop 'Error invalid number of time steps in external source time file'
+    stop 'Error invalid number of time steps in external ASCII source time file'
   endif
 
   ! read the time step used and check that it is the same as DT used for the code
@@ -175,12 +178,12 @@
       ! reads the STF values
       read(line,*,iostat=ier) stf_val
       if (ier /= 0) then
-        print *,'Problem when reading external source time file: ', trim(external_source_time_function_filename)
+        print *,'Problem when reading external ASCII source time file: ', trim(external_source_time_function_filename)
         print *,'Please check, file format should be: '
         print *,'  # DT-time-step-size'
         print *,'  # stf-value'
         print *,'  # ..'
-        stop 'Error reading external source time file with invalid format'
+        stop 'Error reading external ASCII source time file with invalid format'
       endif
 
       ! increases counter

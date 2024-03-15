@@ -36,13 +36,14 @@
 
   implicit none
 
-  integer :: ispec_selected_source
+  integer, intent(in) :: ispec_selected_source
 
-  real(kind=CUSTOM_REAL), dimension(NDIM,NGLLX,NGLLY,NGLLZ) :: sourcearray
-  double precision, dimension(NGLLX) :: hxis,hpxis
-  double precision, dimension(NGLLY) :: hetas,hpetas
-  double precision, dimension(NGLLZ) :: hgammas,hpgammas
-  double precision :: Mxx,Myy,Mzz,Mxy,Mxz,Myz
+  real(kind=CUSTOM_REAL), dimension(NDIM,NGLLX,NGLLY,NGLLZ), intent(out) :: sourcearray
+
+  double precision, dimension(NGLLX), intent(in) :: hxis,hpxis
+  double precision, dimension(NGLLY), intent(in) :: hetas,hpetas
+  double precision, dimension(NGLLZ), intent(in) :: hgammas,hpgammas
+  double precision, intent(in) :: Mxx,Myy,Mzz,Mxy,Mxz,Myz
 
   ! local parameters
   double precision :: xixd,xiyd,xizd,etaxd,etayd,etazd,gammaxd,gammayd,gammazd
@@ -112,14 +113,15 @@
     enddo
   enddo
 
-! calculate source array
+  ! calculate source array
   sourcearrayd(:,:,:,:) = ZERO
+
   do m = 1,NGLLZ
     do l = 1,NGLLY
       do k = 1,NGLLX
-        hlagrange_xi = hpxis(k)*hetas(l)*hgammas(m)
-        hlagrange_eta = hxis(k)*hpetas(l)*hgammas(m)
-        hlagrange_gamma = hxis(k)*hetas(l)*hpgammas(m)
+        hlagrange_xi    = hpxis(k) *  hetas(l) *  hgammas(m)
+        hlagrange_eta   =  hxis(k) * hpetas(l) *  hgammas(m)
+        hlagrange_gamma =  hxis(k) *  hetas(l) * hpgammas(m)
 
         ! gradient at source position
         dsrc_dx = hlagrange_xi * dxis_dx &
@@ -137,7 +139,6 @@
         sourcearrayd(1,k,l,m) = sourcearrayd(1,k,l,m) + (Mxx*dsrc_dx + Mxy*dsrc_dy + Mxz*dsrc_dz)
         sourcearrayd(2,k,l,m) = sourcearrayd(2,k,l,m) + (Mxy*dsrc_dx + Myy*dsrc_dy + Myz*dsrc_dz)
         sourcearrayd(3,k,l,m) = sourcearrayd(3,k,l,m) + (Mxz*dsrc_dx + Myz*dsrc_dy + Mzz*dsrc_dz)
-
       enddo
     enddo
   enddo
@@ -159,33 +160,39 @@
 
   implicit none
 
-  real(kind=CUSTOM_REAL) :: factor_source
-  real(kind=CUSTOM_REAL), dimension(NDIM,NGLLX,NGLLY,NGLLZ) :: sourcearray
-  double precision, dimension(NGLLX) :: hxis
-  double precision, dimension(NGLLY) :: hetas
-  double precision, dimension(NGLLZ) :: hgammas
-  double precision :: comp_x,comp_y,comp_z
-  double precision, dimension(NDIM,NDIM) :: nu_source
+  real(kind=CUSTOM_REAL), dimension(NDIM,NGLLX,NGLLY,NGLLZ), intent(out) :: sourcearray
+
+  double precision, dimension(NGLLX), intent(in) :: hxis
+  double precision, dimension(NGLLY), intent(in) :: hetas
+  double precision, dimension(NGLLZ), intent(in) :: hgammas
+  double precision, intent(in) :: factor_source
+  double precision, intent(in) :: comp_x,comp_y,comp_z
+  double precision, dimension(NDIM,NDIM), intent(in) :: nu_source
 
   ! local parameters
   integer :: i,j,k
   double precision :: hlagrange
+  double precision, dimension(NDIM,NGLLX,NGLLY,NGLLZ) :: sourcearrayd
 
   ! initializes
-  sourcearray(:,:,:,:) = 0._CUSTOM_REAL
+  sourcearrayd(:,:,:,:) = ZERO
 
   ! calculates source array for interpolated location
   do k = 1,NGLLZ
     do j = 1,NGLLY
       do i = 1,NGLLX
-        hlagrange = hxis(i) * hetas(j) * hgammas(k) * dble(factor_source)
+        hlagrange = hxis(i) * hetas(j) * hgammas(k)
+
         ! identical source array components in x,y,z-direction
-        sourcearray(:,i,j,k) =  hlagrange * ( nu_source(1,:) * comp_x + &
-                                              nu_source(2,:) * comp_y + &
-                                              nu_source(3,:) * comp_z )
+        sourcearrayd(:,i,j,k) =  factor_source * hlagrange * ( nu_source(1,:) * comp_x + &
+                                                               nu_source(2,:) * comp_y + &
+                                                               nu_source(3,:) * comp_z )
       enddo
     enddo
   enddo
+
+  ! distinguish between single and double precision for reals
+  sourcearray(:,:,:,:) = real(sourcearrayd(:,:,:,:), kind=CUSTOM_REAL)
 
   end subroutine compute_arrays_source_forcesolution
 
@@ -202,8 +209,8 @@
   implicit none
 
   ! input
-  integer :: irec_local
-  character(len=*) :: adj_source_file
+  integer, intent(in) :: irec_local
+  character(len=*), intent(in) :: adj_source_file
 
   ! local
   integer :: icomp, itime, ier, it_start, it_end, it_sub_adj
@@ -372,19 +379,21 @@
 
   implicit none
 
-  integer :: ispec_selected_source,ispec_irreg
+  integer, intent(in) :: ispec_selected_source
 
-  real(kind=CUSTOM_REAL), dimension(NDIM,NGLLX,NGLLY,NGLLZ) :: sourcearray
-  double precision, dimension(NGLLX) :: hxis,hpxis
-  double precision, dimension(NGLLY) :: hetas,hpetas
-  double precision, dimension(NGLLZ) :: hgammas,hpgammas
-  double precision, dimension(NDIM,NDIM) :: nu_source
-  double precision :: comp_x,comp_y,comp_z
-  real(kind=CUSTOM_REAL) :: factor_source
+  real(kind=CUSTOM_REAL), dimension(NDIM,NGLLX,NGLLY,NGLLZ), intent(out) :: sourcearray
+
+  double precision, dimension(NGLLX), intent(in) :: hxis,hpxis
+  double precision, dimension(NGLLY), intent(in) :: hetas,hpetas
+  double precision, dimension(NGLLZ), intent(in) :: hgammas,hpgammas
+  double precision, dimension(NDIM,NDIM), intent(in) :: nu_source
+  double precision, intent(in) :: comp_x,comp_y,comp_z
+  double precision, intent(in) :: factor_source
 
   double precision :: FX, FY, FZ
 
   ! local parameters
+  integer :: ispec_irreg
   double precision :: xixd,xiyd,xizd,etaxd,etayd,etazd,gammaxd,gammayd,gammazd
 
   ! source arrays
@@ -452,12 +461,13 @@
     enddo
   enddo
 
-  FX = factor_source *(nu_source(1,1)*comp_x + nu_source(1,2)*comp_y +  nu_source(1,3)*comp_z)
-  FY = factor_source *(nu_source(2,1)*comp_x + nu_source(2,2)*comp_y +  nu_source(2,3)*comp_z)
-  FZ = factor_source *(nu_source(3,1)*comp_x + nu_source(3,2)*comp_y +  nu_source(3,3)*comp_z)
+  FX = factor_source * (nu_source(1,1)*comp_x + nu_source(1,2)*comp_y +  nu_source(1,3)*comp_z)
+  FY = factor_source * (nu_source(2,1)*comp_x + nu_source(2,2)*comp_y +  nu_source(2,3)*comp_z)
+  FZ = factor_source * (nu_source(3,1)*comp_x + nu_source(3,2)*comp_y +  nu_source(3,3)*comp_z)
 
   ! calculate source array
   sourcearrayd(:,:,:,:) = ZERO
+
   do m = 1,NGLLZ
     do l = 1,NGLLY
       do k = 1,NGLLX
