@@ -453,7 +453,8 @@ contains
     double precision,       dimension(NGLLY)                                 :: hetas,hpetas
     double precision,       dimension(NGLLZ)                                 :: hgammas,hpgammas
     double precision                                                         :: norm,comp_x,comp_y,comp_z
-    real(kind=CUSTOM_REAL)                                                   :: factor
+    double precision                                                         :: factor
+
     ! compute Lagrange polynomials at the source location
     call lagrange_any(xi,NGLLX,xigll,hxis,hpxis)
     call lagrange_any(eta,NGLLY,yigll,hetas,hpetas)
@@ -463,22 +464,21 @@ contains
 
     case ('moment', 'shot')
        if (ispec_is_elastic(ispec)) then
-
-          factor = 1.0
+          ! CMT source
           call compute_arrays_source_cmt(ispec,interparray, &
-               hxis,hetas,hgammas,hpxis,hpetas,hpgammas, &
-               Mxx,Myy,Mzz,Mxy,Mxz,Myz)
+                                         hxis,hetas,hgammas,hpxis,hpetas,hpgammas, &
+                                         Mxx,Myy,Mzz,Mxy,Mxz,Myz)
 
        else if (ispec_is_acoustic(ispec)) then
           ! scalar moment of moment tensor values read in from CMTSOLUTION
           ! note: M0 by Dahlen and Tromp, eq. 5.91
-          factor = 1.0/sqrt(2.0) * sqrt( Mxx**2 + Myy**2 + Mzz**2 &
-               + 2*( Myz**2 + Mxz**2 + Mxy**2) )
+          factor = 1.d0/sqrt(2.d0) * sqrt( Mxx**2 + Myy**2 + Mzz**2 + 2.d0*(Myz**2 + Mxz**2 + Mxy**2) )
 
           ! scales source such that it would be equivalent to explosion source moment tensor,
           ! where Mxx=Myy=Mzz, others Mxy,.. = zero, in equivalent elastic media
           ! (and getting rid of 1/sqrt(2) factor from scalar moment tensor definition above)
-          factor = factor * sqrt(2.0) / sqrt(3.0)
+          factor = factor * sqrt(2.d0) / sqrt(3.d0)
+
           call compute_arrays_source_forcesolution(interparray,hxis,hetas,hgammas,factor,1.0d0,1.0d0,1.0d0,nu_source)
 
        else
@@ -506,8 +506,8 @@ contains
           write(*,*) 'ABORT INVERSION: POINT SOURCE IS NOT IN ELASTIC OR ACOUSTIC DOMAIN'
           stop
        endif
-       factor = sngl (factor_source)
-       call compute_arrays_source_forcesolution(interparray,hxis,hetas,hgammas,factor,comp_x,comp_y,comp_z,nu_source)
+
+       call compute_arrays_source_forcesolution(interparray,hxis,hetas,hgammas,factor_source,comp_x,comp_y,comp_z,nu_source)
 
     case default
        write(*,*) "Your source is not implemented in compute_source_coeff subroutine "
