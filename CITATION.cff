@@ -10,8 +10,7 @@ type: software
 identifiers:
   - type: doi
   - value: 10.5281/zenodo.10413988
-license:
-  - gpl-3.0-or-later
+license: "GPL-3.0"
 
 authors:
 - family-names: Komatitsch
