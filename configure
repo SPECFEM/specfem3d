@@ -8711,7 +8711,7 @@ ac_compiler_gnu=$ac_cv_cxx_compiler_gnu
   CPPFLAGS_save="$CPPFLAGS"
 
   if test "x$MPI_INC" = "x"; then
-    MPI_INC=`$MPIFC -showme:incdirs`
+    MPI_INC=`$MPICC -showme:incdirs`
   fi
   if test "x$MPI_INC" != "x"; then
         for i in $MPI_INC

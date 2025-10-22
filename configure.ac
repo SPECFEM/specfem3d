@@ -464,7 +464,7 @@ AC_LANG_POP(C)
 AS_IF([test "$want_mpi" = yes], [
     AS_BOX([MPI])
     # checks MPI include directory
-    CIT_MPI_INCDIR([$MPIFC])
+    CIT_MPI_INCDIR([$MPICC])
 ])
 
 ###
