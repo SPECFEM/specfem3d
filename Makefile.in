@@ -260,11 +260,19 @@ GENCODE_90 = -gencode=arch=compute_90,code=\"sm_90,compute_90\"
 # Radeon Instinct MI50:  --amdgpu-target=gfx906
 # Radeon Instinct MI100: --amdgpu-target=gfx908
 # Radeon Instinct MI210/250/250X: --amdgpu-target=gfx90a
+# Instinct MI300X/300A/325X: --amdgpu-target=gfx942
+# Instinct MI350X/355X: --amdgpu-target=gfx950
+
+
 GENCODE_AMD_MI8 = --amdgpu-target=gfx803
 GENCODE_AMD_MI25 = --amdgpu-target=gfx900
 GENCODE_AMD_MI50 = --amdgpu-target=gfx906
 GENCODE_AMD_MI100 = --amdgpu-target=gfx908
 GENCODE_AMD_MI250 = --amdgpu-target=gfx90a
+GENCODE_AMD_MI300 = --amdgpu-target=gfx942
+GENCODE_AMD_MI325 = --amdgpu-target=gfx942
+GENCODE_AMD_MI350 = --amdgpu-target=gfx950
+
 
 # default targets
 # AMD default MI50 & MI100
@@ -280,6 +288,9 @@ GENCODE_AMD_MI250 = --amdgpu-target=gfx90a
 @COND_HIP_TRUE@@COND_HIP_MI50_TRUE@GENCODE_HIP = $(GENCODE_AMD_MI50)    # --with-hip=MI50 ..
 @COND_HIP_TRUE@@COND_HIP_MI100_TRUE@GENCODE_HIP = $(GENCODE_AMD_MI100)  # --with-hip=MI100 ..
 @COND_HIP_TRUE@@COND_HIP_MI250_TRUE@GENCODE_HIP = $(GENCODE_AMD_MI250)  # --with-hip=MI250 ..
+@COND_HIP_TRUE@@COND_HIP_MI300_TRUE@GENCODE_HIP = $(GENCODE_AMD_MI300)  # --with-hip=MI300 ..
+@COND_HIP_TRUE@@COND_HIP_MI325_TRUE@GENCODE_HIP = $(GENCODE_AMD_MI325)  # --with-hip=MI300 ..
+@COND_HIP_TRUE@@COND_HIP_MI350_TRUE@GENCODE_HIP = $(GENCODE_AMD_MI350)  # --with-hip=MI350 ..
 
 @COND_HIP_TRUE@@COND_HIP_CUDA5_TRUE@GENCODE_HIP = $(GENCODE_35)         # --with-hip=cuda5 ..
 @COND_HIP_TRUE@@COND_HIP_CUDA6_TRUE@GENCODE_HIP = $(GENCODE_37)         # --with-hip=cuda6 ..
