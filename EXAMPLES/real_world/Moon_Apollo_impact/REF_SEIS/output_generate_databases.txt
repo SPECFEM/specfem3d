@@ -125,13 +125,13 @@
    number of target materials:            2
    target material ids       :            2           3
 
-   mesh dimensions                 :    302201.000     /   304128.312     /   100127.555
-   mesh origins                    :    68606.7031     /  -152295.188     /  -100000.000
-   mesh maximum extend             :    304128.312
+   domain dimensions               :    302201.000     /   304128.312     /   44767.5508
+   domain origins                  :    68606.7031     /  -152295.188     /  -44640.0000
+   domain maximum extend           :    304128.312
 
-   mesh minimum element size       :    667.939697     (m)
+   domain minimum element size     :    667.939697     (m)
    estimated minimum wavelength    :    834.924622     (m)
-   grid normalization factor       :    304128.312
+   normalization factor            :    304128.312
 
    perturbation distribution       : von Karman
    perturbation correlation factor :    5.00000000
@@ -142,8 +142,8 @@
    estimated number of grid points :          512
    FFT using number of grid points : N           =          512
    FFT using power of 2            : npower_of_2 =            9
+   FFT using memory size           :    512.000000     MB
    grid spacing                    : dx          =    595.163025     (m)
-   grid memory size                :    512.000000     MB
 
    wavenumbers: k min/max          =    6.27091360     /   1605.35388
                 dk increment       =    6.27091360
@@ -155,28 +155,29 @@
 
    starting 3D FFTs
 
-   perturbations: grid Nx/Ny/Nz =          508 /         512 /         169
-                  memory size   =    167.679688     MB
+   perturbations: global grid Nx/Ny/Nz =          509 /         512 /          77
+                  memory size   =    76.5488281     MB
 
    applying scaling: maximum amplitude =   0.40000000000000002
 
-   perturbations: min/max =  -0.399991184     /  0.391069293
-                  average =   -1.16128152E-09
+   perturbations (slice 0): min/max =  -0.368992329     /  0.355440706
+                            average =    4.88540682E-04
 
-   Elapsed time for perturbation setup in seconds =    18.2295113
+   Elapsed time for perturbation setup in seconds =    17.1371899
 
-   VTU file written: OUTPUT_FILES/perturbation_grid.vtu
+   saving perturbation grid...
+   VTU file written: ./DATABASES_MPI/proc000000_perturbation_grid.vtu
 
-               10  % - elapsed time:   1.27569996E-02 s
-               20  % - elapsed time:   2.52250005E-02 s
-               30  % - elapsed time:   3.71670015E-02 s
-               40  % - elapsed time:   4.87810001E-02 s
-               50  % - elapsed time:   6.03430010E-02 s
-               60  % - elapsed time:   7.21480027E-02 s
-               70  % - elapsed time:   8.56750011E-02 s
-               80  % - elapsed time:   9.89200026E-02 s
-               90  % - elapsed time:  0.112524003     s
-              100  % - elapsed time:  0.125644997     s
+               10  % - elapsed time:   1.25540001E-02 s
+               20  % - elapsed time:   2.54650004E-02 s
+               30  % - elapsed time:   3.85349989E-02 s
+               40  % - elapsed time:   5.07699996E-02 s
+               50  % - elapsed time:   6.30740002E-02 s
+               60  % - elapsed time:   7.54820034E-02 s
+               70  % - elapsed time:   8.77399966E-02 s
+               80  % - elapsed time:  0.100302003     s
+               90  % - elapsed time:  0.112709999     s
+              100  % - elapsed time:  0.125121996     s
 
    ...detecting acoustic-elastic-poroelastic surfaces
       total acoustic elements   :           0
@@ -213,22 +214,22 @@
       maximum number of elements per shared node      =           16
       node-to-element array memory required per slice =    32.8833618     (MB)
 
-               10  % - elapsed time:   2.35520005E-02 s
-               20  % - elapsed time:   5.37430011E-02 s
-               30  % - elapsed time:   8.67870003E-02 s
-               40  % - elapsed time:  0.117352001     s
-               50  % - elapsed time:  0.150852993     s
-               60  % - elapsed time:  0.181586996     s
-               70  % - elapsed time:  0.211651996     s
-               80  % - elapsed time:  0.226852000     s
-               90  % - elapsed time:  0.235583007     s
-              100  % - elapsed time:  0.243588999     s
+               10  % - elapsed time:   3.11340000E-02 s
+               20  % - elapsed time:   6.09939992E-02 s
+               30  % - elapsed time:   8.78869966E-02 s
+               40  % - elapsed time:  0.117748000     s
+               50  % - elapsed time:  0.147819996     s
+               60  % - elapsed time:  0.177922994     s
+               70  % - elapsed time:  0.208180994     s
+               80  % - elapsed time:  0.223324999     s
+               90  % - elapsed time:  0.231123000     s
+              100  % - elapsed time:  0.238732994     s
 
       maximum neighbors found per element =           37
           (maximum neighbor of neighbors) =          167
       total number of neighbors           =       907748
 
-      Elapsed time for detection of neighbors in seconds =   0.255811006
+      Elapsed time for detection of neighbors in seconds =   0.250923991
 
 
    ...saving mesh databases
@@ -263,8 +264,8 @@
 
 
  ********
- Model: P   velocity min,max =    749.789429       7540.00000
- Model: S   velocity min,max =    374.894745       4340.00000
+ Model: P   velocity min,max =    746.007202       7540.00000
+ Model: S   velocity min,max =    373.003601       4340.00000
 
  Model: Poisson's ratio min,max =   0.252267480      0.333333403
  ********
@@ -285,11 +286,11 @@
  *** Min element size =    667.939697
  *** Max/min ratio =    56.9153748
 
- *** Minimum period resolved =    16.5374680     (s)
- ***          (as frequency) =    6.04687482E-02 (Hz)
- *** Maximum suggested time step =    2.34999992E-02
+ *** Minimum period resolved =    16.5365238     (s)
+ ***          (as frequency) =    6.04722016E-02 (Hz)
+ *** Maximum suggested time step =    2.40000002E-02
 
- Elapsed time for checking mesh resolution in seconds =    8.9690000000004488E-003
+ Elapsed time for checking mesh resolution in seconds =    8.9019999999990773E-003
  saving VTK files for Courant number and minimum period
 
 
@@ -336,8 +337,8 @@
  smallest and largest possible floating-point numbers are:    1.17549435E-38   3.40282347E+38
 
 
- Elapsed time for mesh generation and buffer creation in seconds =    36.5953522
- Elapsed time for mesh generation and buffer creation in hh:mm:ss =    0 h 00 m 36 s
+ Elapsed time for mesh generation and buffer creation in seconds =    23.1259575
+ Elapsed time for mesh generation and buffer creation in hh:mm:ss =    0 h 00 m 23 s
 
  End of mesh generation
 
