@@ -1059,7 +1059,8 @@
   if (myrank == 0) then
     write(IMAIN,*)
     write(IMAIN,*) '  perturbations (slice 0): min/max = ',minval(perturbation_grid),'/',maxval(perturbation_grid)
-    write(IMAIN,*) '                           average = ',sum(perturbation_grid) / real(pert_Nx * pert_Ny * pert_Nz,kind=CUSTOM_REAL)
+    write(IMAIN,*) '                           average = ', &
+                   sum(perturbation_grid) / real(pert_Nx * pert_Ny * pert_Nz,kind=CUSTOM_REAL)
     write(IMAIN,*)
     ! timing
     tCPU = wtime() - time_start
