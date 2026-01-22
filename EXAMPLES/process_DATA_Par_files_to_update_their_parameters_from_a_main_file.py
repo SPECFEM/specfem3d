@@ -16,6 +16,7 @@ import collections
 # USER PARAMETERS
 
 # deprecated parameter names which have been renamed
+# format: <old_name> , <new_name>
 DEPRECATED_RENAMED_PARAMETERS = [ \
   ("ABSORBING_CONDITIONS", "STACEY_ABSORBING_CONDITIONS"), \
   ("ABSORB_INSTEAD_OF_FREE_SURFACE", "STACEY_INSTEAD_OF_FREE_SURFACE"), \
