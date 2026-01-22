@@ -545,7 +545,7 @@
   real,external :: psd_vonKarman_3D
 
   ! white noise (otherwise von Karman noise distribution)
-  logical :: USE_WHITE_NOISE = .false.
+  logical :: USE_WHITE_NOISE
   real(kind=CUSTOM_REAL),external :: get_random_perturbation_value
 
   ! for mesh interpolations
@@ -586,6 +586,8 @@
   if (SCATTERING_CORRELATION < TINYVAL) then
     ! set flag
     USE_WHITE_NOISE = .true.
+  else
+    USE_WHITE_NOISE = .false.
   endif
 
   ! user output
