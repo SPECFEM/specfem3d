@@ -440,7 +440,7 @@
   if (ier /= 0) stop 'Error rewinding nummaterial_velocity_file'
 
   ! reads in undefined material properties
-  print *, '  undefined materials: ',count_def_mat,' (interfaces/tomography models/..)'
+  print *, '  undefined materials: ',count_undef_mat,' (interfaces/tomography models/..)'
   do imat = 1,count_undef_mat
      !  undefined materials: have to be listed in decreasing order of material_id (start with -1, -2, etc...)
      !  format:

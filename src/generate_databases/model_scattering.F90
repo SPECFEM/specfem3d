@@ -43,18 +43,17 @@
   integer :: num_target_materials = 0
   logical :: USE_ALL_MATERIALS = .false.
 
-  ! white noise (otherwise von Karman noise distribution)
-  logical :: USE_WHITE_NOISE = .false.
-
   ! von Karman distribution
-  ! perturbation array (regular x/y/z grid)
+  ! perturbation array (regular x/y/z grid) for each process
   real(kind=CUSTOM_REAL), dimension(:,:,:),allocatable :: perturbation_grid
   integer :: pert_Nx,pert_Ny,pert_Nz
 
   ! normalized fft cube mesh extends in range [0,1]
   double precision, parameter :: grid_length = 1.d0   ! range [0,1]
 
-  ! for mesh interpolations
+  ! flag to use small grid cell sizes
+  logical, parameter :: USE_SMALLER_FFT_GRID_CELLS = .false.
+
   ! grid origin location, grid spacing
   double precision :: grid_origin_x,grid_origin_y,grid_origin_z
   double precision :: grid_dim_x,grid_dim_y,grid_dim_z
@@ -64,14 +63,15 @@
   double precision :: grid_normalization_factor       ! normalization factor
   double precision :: grid_lambda_min                 ! normalized estimated minimum wavelength
 
+  ! local (partial) grid dimensions for each process
+  double precision :: grid_xmin_proc,grid_ymin_proc,grid_zmin_proc
+  double precision :: grid_xmax_proc,grid_ymax_proc,grid_zmax_proc
+
   ! fft size
   integer :: grid_N
 
   ! note: not working yet, mesh point positions are determined on the fly and not yet known at the onset
   !       of velocity determination get_model() routine - todo for future use: shrink fft grid size per process
-  ! indexing of partial grid to cover single process slice
-  !integer :: part_grid_imin,part_grid_imax,part_grid_jmin,part_grid_jmax,part_grid_kmin,part_grid_kmax
-  !integer :: part_grid_size_i,part_grid_size_j,part_grid_size_k
 
   ! special functions
   ! log2 interface
@@ -313,6 +313,14 @@
     enddo
   endif
 
+  ! store local grid dimensions
+  grid_xmin_proc = x_min
+  grid_xmax_proc = x_max
+  grid_ymin_proc = y_min
+  grid_ymax_proc = y_max
+  grid_zmin_proc = z_min
+  grid_zmax_proc = z_max
+
   ! determine min/max on all processes
   x_min_all = HUGEVAL
   y_min_all = HUGEVAL
@@ -356,9 +364,9 @@
 
   ! user info
   if (myrank == 0) then
-    write(IMAIN,*) '  mesh dimensions                 : ',dim_x,'/',dim_y,'/',dim_z
-    write(IMAIN,*) '  mesh origins                    : ',x_min_all,'/',y_min_all,'/',z_min_all
-    write(IMAIN,*) '  mesh maximum extend             : ',dim_max
+    write(IMAIN,*) '  domain dimensions               : ',dim_x,'/',dim_y,'/',dim_z
+    write(IMAIN,*) '  domain origins                  : ',x_min_all,'/',y_min_all,'/',z_min_all
+    write(IMAIN,*) '  domain maximum extend           : ',dim_max
     write(IMAIN,*)
     call flush_IMAIN()
   endif
@@ -410,19 +418,26 @@
   elemsize_min_norm = real(elemsize_min / grid_normalization_factor, kind=CUSTOM_REAL)
 
   ! minimum grid cell size for FFT grid
-  grid_cell_size = elemsize_min_norm
-  ! or
-  ! average GLL point distance for grid estimate
-  !grid_cell_size = elemsize_min_norm / (NGLLX-1)
+  if (USE_SMALLER_FFT_GRID_CELLS) then
+    ! using smaller cell sizes (makes FFTs much more expensive)
+    ! at least half of the element size
+    grid_cell_size = 0.5d0 * elemsize_min_norm
+    ! or
+    ! average GLL point distance for grid estimate
+    !grid_cell_size = elemsize_min_norm / (NGLLX-1)
+  else
+    ! cell size ~ minimum element size
+    grid_cell_size = elemsize_min_norm
+  endif
 
   ! estimated minimum wavelength (assuming 5 grid points per wavelength), normalized
   grid_lambda_min = elemsize_min_norm / (NGLLX-1) * 5
 
   ! user output
   if (myrank == 0) then
-    write(IMAIN,*) '  mesh minimum element size       : ',elemsize_min,'(m)'
+    write(IMAIN,*) '  domain minimum element size     : ',elemsize_min,'(m)'
     write(IMAIN,*) '  estimated minimum wavelength    : ',sngl(grid_lambda_min * grid_normalization_factor),'(m)'
-    write(IMAIN,*) '  grid normalization factor       : ',sngl(grid_normalization_factor)
+    write(IMAIN,*) '  normalization factor            : ',sngl(grid_normalization_factor)
     write(IMAIN,*)
     call flush_IMAIN()
   endif
@@ -496,8 +511,8 @@
 
   subroutine generate_perturbations()
 
-  use constants, only: PI
-  use shared_parameters, only: SAVE_MESH_FILES
+  use constants, only: PI,TINYVAL,itag
+  use shared_parameters, only: SAVE_MESH_FILES,NPROC
 
   use model_scattering_par
 
@@ -511,6 +526,7 @@
   integer :: N,npower_of_2,index_k_lambda
   integer :: i,j,k,ik,ier
   double precision :: mb_size
+  double precision :: grid_dx_in_m
 
   ! complex array in double precision (must match with fft.f90 precision)
   integer, parameter :: CUSTOM_CMPLX = 8
@@ -528,6 +544,23 @@
   ! external function
   real,external :: psd_vonKarman_3D
 
+  ! white noise (otherwise von Karman noise distribution)
+  logical :: USE_WHITE_NOISE
+  real(kind=CUSTOM_REAL),external :: get_random_perturbation_value
+
+  ! for mesh interpolations
+  ! global perturbation array (for rank 0 only)
+  real(kind=CUSTOM_REAL), dimension(:,:,:),allocatable :: perturbation_grid_global
+  integer :: pert_Nx_global,pert_Ny_global,pert_Nz_global
+
+  ! local grids
+  integer :: pert_imin, pert_imax, pert_jmin, pert_jmax, pert_kmin, pert_kmax
+  ! local gathers
+  integer :: iproc,imin,imax,jmin,jmax,kmin,kmax,Nx,Ny,Nz
+  integer, dimension(9) :: pert_index_minmax
+  integer, dimension(9,0:NPROC-1) :: pert_index_minmax_all
+  real(kind=CUSTOM_REAL),dimension(:,:,:),allocatable :: tmp_slice
+
   ! timing
   double precision, external :: wtime
   double precision :: time_start,tCPU
@@ -536,7 +569,7 @@
   if (num_target_materials == 0) return
 
   ! white noise
-  ! in case correlation length is smaller than GLL point distance, we use white noise
+  ! in case correlation length is smaller than GLL point distance, we could use white noise
   !
   ! correlation length
   ! such that k * a ~ 1 (for correlation factor == 1)
@@ -548,81 +581,22 @@
   !   5 / (2.d0 * PI) * SCATTERING_CORRELATION < 1
   ! and
   !   SCATTERING_CORRELATION < 1 / 5 * 2 * PI ~ 1.25
-  ! let's use white noise for factors < 1
-  if (SCATTERING_CORRELATION < 1.0d0) then
+  !
+  ! for now, let's use white noise for factors == 0
+  if (SCATTERING_CORRELATION < TINYVAL) then
     ! set flag
     USE_WHITE_NOISE = .true.
-
-    ! user output
-    if (myrank == 0) then
-      write(IMAIN,*) '  perturbation distribution       : ','white noise (correlation factor < 1.0)'
-      write(IMAIN,*) '  perturbation correlation factor : ',sngl(SCATTERING_CORRELATION)
-      write(IMAIN,*) '  perturbation maximum amplitude  : ',sngl(SCATTERING_STRENGTH)
-      write(IMAIN,*)
-      call flush_IMAIN()
-    endif
-
-    ! no need for FFTs, just random number generation
-    !
-    ! initializes random number generator
-    ! seed with fixed value to make successive runs repeatable
-    call random_seed(size=num_seed)
-    allocate(myseed(num_seed))
-    myseed(1:num_seed) = 12345
-    call random_seed(put=myseed)
-
-    ! visualization output (for debugging)
-    if (SAVE_MESH_FILES .and. myrank == 0) then
-      ! file output of perturbation grid
-      !
-      ! note: this perturbation grid is not actually used and allocated for white noise perturbations.
-      !       the file output here is meant for debugging and visualization.
-
-      ! determines grid dimensions
-      ! next power of 2 for FFT
-      npower_of_2 = int(log2(grid_length / grid_cell_size)) + 1
-      N = 2**npower_of_2
-      ! limits minimum/maximum number of points for FFT
-      !if (N < 1024) N = 1024  ! number of minimum points along x-direction (power of 2 for fft) 2**(10)
-      !if (N < 512) N = 512    ! number of minimum points along x-direction (power of 2 for fft) 2**(9)
-      if (N < 256) N = 256    ! number of minimum points along x-direction (power of 2 for fft) 2**(8)
-      !if (N > 8192) N = 8192  ! number of maximum points along x-direction (power of 2 for fft) 2**(13)
-      !if (N > 4096) N = 4096  ! number of maximum points along x-direction (power of 2 for fft) 2**(12)
-      if (N > 2048) N = 2048  ! number of minimum points along x-direction (power of 2 for fft) 2**(11)
-      ! power of 2
-      npower_of_2 = ceiling(log2(real(N)))
-      ! for mesh interpolations (uses double precision values)
-      grid_dx       = grid_length / (N-1)  ! grid space increment, dx == dy == dz
-      ! for perturbation grid dimension
-      pert_Nx = int(grid_dim_x / grid_normalization_factor / grid_dx) + 1
-      pert_Ny = int(grid_dim_y / grid_normalization_factor / grid_dx) + 1
-      pert_Nz = int(grid_dim_z / grid_normalization_factor / grid_dx) + 1
-      ! make sure perturbation grid is not bigger than wavenumber distribution array
-      if (pert_Nx > N) pert_Nx = N
-      if (pert_Ny > N) pert_Ny = N
-      if (pert_Nz > N) pert_Nz = N
-
-      ! user output
-      if (myrank == 0) then
-        write(IMAIN,*) '  grid spacing                    : dx          = ',sngl(grid_dx * grid_normalization_factor),'(m)'
-        write(IMAIN,*) '  perturbations: grid Nx/Ny/Nz = ',pert_Nx,'/',pert_Ny,'/',pert_Nz
-        write(IMAIN,*)
-        call flush_IMAIN()
-      endif
-
-      ! output VTU file for visual inspection
-      call plot_grid_data()
-    endif
-
-    ! all done
-    return
+  else
+    USE_WHITE_NOISE = .false.
   endif
-
-  ! from here on, we generate noise with von Karman distribution
 
   ! user output
   if (myrank == 0) then
-    write(IMAIN,*) '  perturbation distribution       : ','von Karman'
+    if (USE_WHITE_NOISE) then
+      write(IMAIN,*) '  perturbation distribution       : ','white noise (correlation factor == 0.0)'
+    else
+      write(IMAIN,*) '  perturbation distribution       : ','von Karman'
+    endif
     write(IMAIN,*) '  perturbation correlation factor : ',sngl(SCATTERING_CORRELATION)
     write(IMAIN,*) '  perturbation maximum amplitude  : ',sngl(SCATTERING_STRENGTH)
     write(IMAIN,*)
@@ -634,9 +608,12 @@
 
   ! user output
   if (myrank == 0) then
-    write(IMAIN,*) '  FFT grid size (normalized)      : ',sngl(grid_length)
-    write(IMAIN,*) '  FFT grid cell size (normalized) : ',sngl(grid_cell_size)
-    call flush_IMAIN()
+    ! FFT
+    if (.not. USE_WHITE_NOISE) then
+      write(IMAIN,*) '  FFT grid size (normalized)      : ',sngl(grid_length)
+      write(IMAIN,*) '  FFT grid cell size (normalized) : ',sngl(grid_cell_size)
+      call flush_IMAIN()
+    endif
   endif
 
   ! next power of 2 for FFT
@@ -665,23 +642,95 @@
   grid_dx       = grid_length / (N-1)  ! grid space increment, dx == dy == dz
   grid_N        = N
 
+  ! grid space in m
+  grid_dx_in_m = grid_dx * grid_normalization_factor
+
   ! user output
   if (myrank == 0) then
-    write(IMAIN,*) '  FFT using number of grid points : N           = ',N
-    write(IMAIN,*) '  FFT using power of 2            : npower_of_2 = ',npower_of_2
-    ! memory required
-    mb_size = dble(N) * dble(N) * dble(N) * dble(CUSTOM_REAL) / 1024.d0 / 1024.d0
-    write(IMAIN,*) '  FFT using memory size           : ',sngl(mb_size),'MB'
-    write(IMAIN,*) '  grid spacing                    : dx          = ',sngl(grid_dx * grid_normalization_factor),'(m)'
+    ! FFT
+    if (.not. USE_WHITE_NOISE) then
+      write(IMAIN,*) '  FFT using number of grid points : N           = ',N
+      write(IMAIN,*) '  FFT using power of 2            : npower_of_2 = ',npower_of_2
+      ! memory required
+      mb_size = dble(N) * dble(N) * dble(N) * dble(CUSTOM_REAL) / 1024.d0 / 1024.d0
+      write(IMAIN,*) '  FFT using memory size           : ',sngl(mb_size),'MB'
+    endif
+    write(IMAIN,*) '  grid spacing                    : dx          = ',sngl(grid_dx_in_m),'(m)'
     write(IMAIN,*)
     call flush_IMAIN()
   endif
 
-  ! for perturbation grid dimension
-  pert_Nx = int(grid_dim_x / grid_normalization_factor / grid_dx) + 1
-  pert_Ny = int(grid_dim_y / grid_normalization_factor / grid_dx) + 1
-  pert_Nz = int(grid_dim_z / grid_normalization_factor / grid_dx) + 1
+  ! for global perturbation grid dimension (needed on rank 0)
+  pert_Nx_global = ceiling(grid_dim_x / grid_dx_in_m) + 1
+  pert_Ny_global = ceiling(grid_dim_y / grid_dx_in_m) + 1
+  pert_Nz_global = ceiling(grid_dim_z / grid_dx_in_m) + 1
+
   ! make sure perturbation grid is not bigger than wavenumber distribution array
+  if (pert_Nx_global > N) pert_Nx_global = N
+  if (pert_Ny_global > N) pert_Ny_global = N
+  if (pert_Nz_global > N) pert_Nz_global = N
+  ! ensure minimum size for valid grid if domain is very small (1x1x1)
+  if (pert_Nx_global < 1) pert_Nx_global = 1
+  if (pert_Ny_global < 1) pert_Ny_global = 1
+  if (pert_Nz_global < 1) pert_Nz_global = 1
+
+  ! for local (partial) perturbation grids on each process
+  pert_imin = int((grid_xmin_proc - grid_origin_x) / grid_dx_in_m) + 1
+  pert_imax = int((grid_xmax_proc - grid_origin_x) / grid_dx_in_m) + 1
+  pert_jmin = int((grid_ymin_proc - grid_origin_y) / grid_dx_in_m) + 1
+  pert_jmax = int((grid_ymax_proc - grid_origin_y) / grid_dx_in_m) + 1
+  pert_kmin = int((grid_zmin_proc - grid_origin_z) / grid_dx_in_m) + 1
+  pert_kmax = int((grid_zmax_proc - grid_origin_z) / grid_dx_in_m) + 1
+
+  ! add margin elements to extend local grids (such that they overlap on shared nodes to avoid interpolation artefacts)
+  pert_imin = pert_imin - 1
+  pert_jmin = pert_jmin - 1
+  pert_kmin = pert_kmin - 1
+
+  pert_imax = pert_imax + 1
+  pert_jmax = pert_jmax + 1
+  pert_kmax = pert_kmax + 1
+
+  ! handle egde cases
+  if (pert_imin < 1) pert_imin = 1
+  if (pert_jmin < 1) pert_jmin = 1
+  if (pert_kmin < 1) pert_kmin = 1
+
+  if (pert_imax < 1) pert_imax = 1
+  if (pert_jmax < 1) pert_jmax = 1
+  if (pert_kmax < 1) pert_kmax = 1
+
+  if (pert_imin > N) pert_imin = N
+  if (pert_jmin > N) pert_jmin = N
+  if (pert_kmin > N) pert_kmin = N
+
+  if (pert_imax > N) pert_imax = N
+  if (pert_jmax > N) pert_jmax = N
+  if (pert_kmax > N) pert_kmax = N
+
+  ! stay within global mesh extend
+  if (pert_imax > pert_Nx_global) pert_imax = pert_Nx_global
+  if (pert_jmax > pert_Ny_global) pert_jmax = pert_Ny_global
+  if (pert_kmax > pert_Nz_global) pert_kmax = pert_Nz_global
+
+  ! update local perturbation grid xmin/xmax/.. positions
+  grid_xmin_proc = grid_origin_x + (pert_imin-1) * grid_dx_in_m
+  grid_xmax_proc = grid_origin_x + (pert_imax-1) * grid_dx_in_m
+  grid_ymin_proc = grid_origin_y + (pert_jmin-1) * grid_dx_in_m
+  grid_ymax_proc = grid_origin_y + (pert_jmax-1) * grid_dx_in_m
+  grid_zmin_proc = grid_origin_z + (pert_kmin-1) * grid_dx_in_m
+  grid_zmax_proc = grid_origin_z + (pert_kmax-1) * grid_dx_in_m
+
+  ! total number of grid element for this slice
+  pert_Nx = pert_imax - pert_imin + 1
+  pert_Ny = pert_jmax - pert_jmin + 1
+  pert_Nz = pert_kmax - pert_kmin + 1
+
+  ! in case where a process might not own any target material regions
+  if (pert_Nx < 1) pert_Nx = 0
+  if (pert_Ny < 1) pert_Ny = 0
+  if (pert_Nz < 1) pert_Nz = 0
+
   if (pert_Nx > N) pert_Nx = N
   if (pert_Ny > N) pert_Ny = N
   if (pert_Nz > N) pert_Nz = N
@@ -707,11 +756,14 @@
 
   ! user output
   if (myrank == 0) then
-    write(IMAIN,*) '  wavenumbers: k min/max          = ',k_min,'/',k_max
-    write(IMAIN,*) '               dk increment       = ',dk
-    write(IMAIN,*) '               k lambda_min       = ',k_lambda
-    write(IMAIN,*) '               index k lambda_min = ',index_k_lambda
-    write(IMAIN,*)
+    ! FFT
+    if (.not. USE_WHITE_NOISE) then
+      write(IMAIN,*) '  wavenumbers: k min/max          = ',k_min,'/',k_max
+      write(IMAIN,*) '               dk increment       = ',dk
+      write(IMAIN,*) '               k lambda_min       = ',k_lambda
+      write(IMAIN,*) '               index k lambda_min = ',index_k_lambda
+      write(IMAIN,*)
+    endif
     write(IMAIN,*) '  correlation length              : ',a_corr
     write(IMAIN,*) '                       (in meters): ',sngl(a_corr * grid_normalization_factor),'(m)'
     write(IMAIN,*)
@@ -722,47 +774,6 @@
   if (myrank == 0) then
     ! only main process creates pertubation grid, then distributes it to all others
     ! to have the same perturbation grid for all processes.
-
-    ! 3D arrays
-    !allocate(freqs(N), wavenumbers_kx(N,N,N), wavenumbers_ky(N,N,N), wavenumbers_kz(N,N,N),stat=ier)
-    allocate(freqs(N),stat=ier)
-    if (ier /= 0) stop 'Error allocating wavenumbers arrays'
-
-    ! fft indexing
-    freqs(:) = 0.0
-    do i = 1,N
-      ! numpy-like
-      !if (i <= N/2+1) then
-      !  ! indices: 0,1,..,N/2
-      !  ik = i - 1
-      !else
-      !  ! indices: -N/2-1,-N/2-2,..,-1
-      !  ik = - (N - (i - 1))
-      !endif
-
-      ! here positive values only; will take conjugates later for second half of array (when calling to apply symmetries)
-      if (i <= N/2+1) then
-        ! indices: 0,1,..,N/2
-        ik = i - 1
-      else
-        ! indices: N/2-1,N/2-2,..,1
-        ik = N - (i - 1)
-      endif
-      freqs(i) = real(ik,kind=CUSTOM_REAL)     ! for d = 1.0/N: freqs = ik / (d*N) = ik / ((1.0 / N) * N) = ik / ( 1.0 ) = ik
-    enddo
-    ! debug
-    !print *,'debug: freqs ',freqs(:); print *
-    ! same as:
-    !freqs = (/0.0,(real(i,kind=CUSTOM_REAL),i=1,N/2)/)
-    !freqs = (/freqs(1:N/2+1),(real(i,kind=CUSTOM_REAL),i=N/2-1,1,-1)/)
-    !print *,'debug: new freqs ',freqs(:); print *
-    ! debug
-    !print *,'maximum wavenumber = ',maxval(freqs(:)) * dk ! maximum wavenumber
-
-    ! sets up helper array for FFTs
-    do i = 1,npower_of_2
-      mpow(i) = 2**(npower_of_2-i)
-    enddo
 
     ! initializes random number generator
     ! seed with fixed value to make successive runs repeatable
@@ -775,94 +786,151 @@
     !call random_number(rand_phase)
     !print *,'debug: rank ',myrank,'random number 1: ',rand_phase
 
-    ! wavenumber distribution (for FFTs)
-    allocate(kxyz_dist(N,N,N),stat=ier)
-    if (ier /= 0) stop 'Error allocating kxyz_dist array'
-    kxyz_dist(:,:,:) = cmplx(0.0,0.0)
+    ! FFT
+    if (.not. USE_WHITE_NOISE) then
+      ! 3D arrays
+      !allocate(freqs(N), wavenumbers_kx(N,N,N), wavenumbers_ky(N,N,N), wavenumbers_kz(N,N,N),stat=ier)
+      allocate(freqs(N),stat=ier)
+      if (ier /= 0) stop 'Error allocating wavenumbers arrays'
 
-    ! applies amplitudes, which follow defined power spectral density (psd), to random phases
-    do k = 1,N
-      do j = 1,N
-        do i = 1,N
-          ! wavenumbers
-          kx = freqs(i) * dk  ! (2.0 * np.pi * freqs[icol]) / L
-          ky = freqs(j) * dk  ! (2.0 * np.pi * freqs[irow]) / L
-          kz = freqs(k) * dk  ! (2.0 * np.pi * freqs[iz]) / L
+      ! fft indexing
+      freqs(:) = 0.0
+      do i = 1,N
+        ! numpy-like
+        !if (i <= N/2+1) then
+        !  ! indices: 0,1,..,N/2
+        !  ik = i - 1
+        !else
+        !  ! indices: -N/2-1,-N/2-2,..,-1
+        !  ik = - (N - (i - 1))
+        !endif
 
-          ! amplitudes w/ von Karman distribution
-          psd = psd_vonKarman_3D(a_corr,kx,ky,kz)
+        ! here positive values only; will take conjugates later for second half of array (when calling to apply symmetries)
+        if (i <= N/2+1) then
+          ! indices: 0,1,..,N/2
+          ik = i - 1
+        else
+          ! indices: N/2-1,N/2-2,..,1
+          ik = N - (i - 1)
+        endif
+        freqs(i) = real(ik,kind=CUSTOM_REAL)     ! for d = 1.0/N: freqs = ik / (d*N) = ik / ((1.0 / N) * N) = ik / ( 1.0 ) = ik
+      enddo
+      ! debug
+      !print *,'debug: freqs ',freqs(:); print *
+      ! same as:
+      !freqs = (/0.0,(real(i,kind=CUSTOM_REAL),i=1,N/2)/)
+      !freqs = (/freqs(1:N/2+1),(real(i,kind=CUSTOM_REAL),i=N/2-1,1,-1)/)
+      !print *,'debug: new freqs ',freqs(:); print *
+      ! debug
+      !print *,'maximum wavenumber = ',maxval(freqs(:)) * dk ! maximum wavenumber
 
-          ! random phase
-          call random_number(rand_phase)
-          ! range [0,2pi]
-          rand_phase = real(rand_phase * 2.d0 * PI,kind=CUSTOM_REAL)
-          k_random = cmplx( cos(rand_phase), sin(rand_phase) )
+      ! sets up helper array for FFTs
+      do i = 1,npower_of_2
+        mpow(i) = 2**(npower_of_2-i)
+      enddo
 
-          ! stores wavenumber distribution
-          kxyz_dist(i,j,k) = k_random * sqrt(psd)
+      ! wavenumber distribution (for FFTs)
+      allocate(kxyz_dist(N,N,N),stat=ier)
+      if (ier /= 0) stop 'Error allocating kxyz_dist array'
+      kxyz_dist(:,:,:) = cmplx(0.0,0.0)
+
+      ! applies amplitudes, which follow defined power spectral density (psd), to random phases
+      do k = 1,N
+        do j = 1,N
+          do i = 1,N
+            ! wavenumbers
+            kx = freqs(i) * dk  ! (2.0 * np.pi * freqs[icol]) / L
+            ky = freqs(j) * dk  ! (2.0 * np.pi * freqs[irow]) / L
+            kz = freqs(k) * dk  ! (2.0 * np.pi * freqs[iz]) / L
+
+            ! amplitudes w/ von Karman distribution
+            psd = psd_vonKarman_3D(a_corr,kx,ky,kz)
+
+            ! random phase
+            call random_number(rand_phase)
+            ! range [0,2pi]
+            rand_phase = real(rand_phase * 2.d0 * PI,kind=CUSTOM_REAL)
+            k_random = cmplx( cos(rand_phase), sin(rand_phase) )
+
+            ! stores wavenumber distribution
+            kxyz_dist(i,j,k) = k_random * sqrt(psd)
+          enddo
         enddo
       enddo
-    enddo
+      ! free memory
+      deallocate(freqs)
 
-    ! user output
-    write(IMAIN,*) '  starting 3D FFTs'
-    call flush_IMAIN()
+      ! user output
+      write(IMAIN,*) '  starting 3D FFTs'
+      call flush_IMAIN()
 
-    ! define symmetry conditions for 3D FFT
-    call fft_apply_3D_symmetry(kxyz_dist,N)
+      ! define symmetry conditions for 3D FFT
+      call fft_apply_3D_symmetry(kxyz_dist,N)
 
-    ! FFT arrays
-    ! example: 1D fft
-    !allocate(k_line(N),x_FFT(N),stat=ier)
-    !if (ier /= 0) stop 'Error allocating x_FFT array'
-    !k_line(:) = cmplx(0.0,0.0)
-    !x_FFT(:) = 0.0_CUSTOM_REAL
-    ! inverse Fourier transform
-    ! w/ 1D FFTs
-    !do k = 1,N
-    !  do j = 1,N
-    !    ! takes 1D line
-    !    k_line(:) = kxyz_dist(:,j,k)
-    !    ! pad negative k
-    !    do ii = 2, N/2
-    !      ! fills from N,N-1,..,N/2+2
-    !      k_line(N+2-ii) = conjg(k_line(ii))
-    !    enddo
-    !    ! 1D inverse FFT
-    !    call FFTinv(npower_of_2, k_line(:), 1.0_CUSTOM_REAL, dk, x_FFT(:), mpow) ! inverse FFT, outputs real array x_FFT
-    !
-    !    !call rspec(k_line(:),N/2)                                    ! restructuring
-    !    !call FFT(npower_of_2, k_line(:), -1.0_CUSTOM_REAL, dk, mpow) ! inverse FFT, outputs complex array k_line
-    !    !x_FFT(1:N) = real(k_line(1:N))                               ! takes the real part
-    !
-    !    ! stores perturbations array
-    !    perturbation_grid(:,j,k) = x_FFT(:)
-    !  enddo
-    !enddo
+      ! FFT arrays
+      ! example: 1D fft
+      !allocate(k_line(N),x_FFT(N),stat=ier)
+      !if (ier /= 0) stop 'Error allocating x_FFT array'
+      !k_line(:) = cmplx(0.0,0.0)
+      !x_FFT(:) = 0.0_CUSTOM_REAL
+      ! inverse Fourier transform
+      ! w/ 1D FFTs
+      !do k = 1,N
+      !  do j = 1,N
+      !    ! takes 1D line
+      !    k_line(:) = kxyz_dist(:,j,k)
+      !    ! pad negative k
+      !    do ii = 2, N/2
+      !      ! fills from N,N-1,..,N/2+2
+      !      k_line(N+2-ii) = conjg(k_line(ii))
+      !    enddo
+      !    ! 1D inverse FFT
+      !    call FFTinv(npower_of_2, k_line(:), 1.0_CUSTOM_REAL, dk, x_FFT(:), mpow) ! inverse FFT, outputs real array x_FFT
+      !
+      !    !call rspec(k_line(:),N/2)                                    ! restructuring
+      !    !call FFT(npower_of_2, k_line(:), -1.0_CUSTOM_REAL, dk, mpow) ! inverse FFT, outputs complex array k_line
+      !    !x_FFT(1:N) = real(k_line(1:N))                               ! takes the real part
+      !
+      !    ! stores perturbations array
+      !    perturbation_grid(:,j,k) = x_FFT(:)
+      !  enddo
+      !enddo
 
-    ! 3D FFT
-    call FFT_3D(N, npower_of_2, kxyz_dist, -1.0_CUSTOM_REAL, dk, mpow) ! inverse 3D FFT (zign == -1)
+      ! 3D FFT
+#ifdef USE_FFTW
+      call FFT_3D_FFTW(N, kxyz_dist, -1.0_CUSTOM_REAL)
+#else
+      call FFT_3D(N, npower_of_2, kxyz_dist, -1.0_CUSTOM_REAL, dk, mpow) ! inverse 3D FFT (zign == -1)
+#endif
+    endif
 
+    ! perturbations
     ! user output
     write(IMAIN,*)
-    write(IMAIN,*) '  perturbations: grid Nx/Ny/Nz = ',pert_Nx,'/',pert_Ny,'/',pert_Nz
+    write(IMAIN,*) '  perturbations: global grid Nx/Ny/Nz = ',pert_Nx_global,'/',pert_Ny_global,'/',pert_Nz_global
     ! memory required
-    mb_size = dble(pert_Nx) * dble(pert_Ny) * dble(pert_Nz) * dble(CUSTOM_REAL) / 1024.d0 / 1024.d0
+    mb_size = dble(pert_Nx_global) * dble(pert_Ny_global) * dble(pert_Nz_global) * dble(CUSTOM_REAL) / 1024.d0 / 1024.d0
     write(IMAIN,*) '                 memory size   = ',sngl(mb_size),'MB'
     write(IMAIN,*)
     call flush_IMAIN()
 
     ! perturbation grid array (for model perturbations)
-    allocate(perturbation_grid(pert_Nx,pert_Ny,pert_Nz),stat=ier)
-    if (ier /= 0) stop 'Error allocating perturbation_grid array'
-    perturbation_grid(:,:,:) = 0.0_CUSTOM_REAL
+    allocate(perturbation_grid_global(pert_Nx_global,pert_Ny_global,pert_Nz_global),stat=ier)
+    if (ier /= 0) stop 'Error allocating global perturbation_grid array'
+    perturbation_grid_global(:,:,:) = 0.0_CUSTOM_REAL
 
     ! stores real part
-    do k = 1,pert_Nz
-      do j = 1,pert_Ny
-        do i = 1,pert_Nx
-          ! stores perturbations array
-          perturbation_grid(i,j,k) = real(kxyz_dist(i,j,k),kind=CUSTOM_REAL)
+    do k = 1,pert_Nz_global
+      do j = 1,pert_Ny_global
+        do i = 1,pert_Nx_global
+          ! stores perturbations array values (in range [-1,1])
+          if (USE_WHITE_NOISE) then
+            ! white noise
+            perturbation_grid_global(i,j,k) = get_random_perturbation_value()
+          else
+            ! from FFTs (real part)
+            perturbation_grid_global(i,j,k) = real(kxyz_dist(i,j,k),kind=CUSTOM_REAL)
+          endif
         enddo
       enddo
     enddo
@@ -882,47 +950,119 @@
     !       mesh domain to cover with the grid perturbations. Still, we want the applied perturbations to have
     !       a zero mean and scaled such that the maximum perturbation becomes the scattering strength defined by the user.
     !
-    call get_grid_average_max(perturbation_grid,pert_Nx,pert_Ny,pert_Nz,val_avg,val_max)
+    call get_grid_average_max(perturbation_grid_global,pert_Nx_global,pert_Ny_global,pert_Nz_global,val_avg,val_max)
 
     ! makes sure it has a zero average
-    perturbation_grid(:,:,:) = perturbation_grid(:,:,:) - val_avg
+    perturbation_grid_global(:,:,:) = perturbation_grid_global(:,:,:) - val_avg
 
     ! normalizes to range [-1,1]
     if (val_max > 0.0_CUSTOM_REAL) then
-      perturbation_grid(:,:,:) = perturbation_grid(:,:,:) / val_max
+      perturbation_grid_global(:,:,:) = perturbation_grid_global(:,:,:) / val_max
     endif
 
     ! scales with maximum strength
-    perturbation_grid(:,:,:) = real(perturbation_grid(:,:,:) * SCATTERING_STRENGTH,kind=CUSTOM_REAL)
+    perturbation_grid_global(:,:,:) = perturbation_grid_global(:,:,:) * real(SCATTERING_STRENGTH,kind=CUSTOM_REAL)
 
     ! debug
     !print *,'scattering perturbation: min/max = ',minval(perturbation_grid),'/',maxval(perturbation_grid)
     !print *,'                         average = ',sum(perturbation_grid)/(N*N*N)
     !print *,'debug: loop done'
 
-    ! free memory
-    deallocate(freqs)
-    deallocate(kxyz_dist)
+    ! FFT
+    if (.not. USE_WHITE_NOISE) then
+      ! free memory
+      deallocate(kxyz_dist)
+    endif
   endif
 
+  ! synchronize all processes
   call synchronize_all()
 
-  ! allocates grid on secondary processes
-  if (myrank /= 0) then
-    ! perturbation grid array
-    allocate(perturbation_grid(pert_Nx,pert_Ny,pert_Nz),stat=ier)
-    if (ier /= 0) stop 'Error allocating perturbation_grid array'
-    perturbation_grid(:,:,:) = 0.0_CUSTOM_REAL
-  endif
+  ! distribute perturbation grid to all processes
+  ! allocates local perturbation grid on each process
+  allocate(perturbation_grid(pert_Nx,pert_Ny,pert_Nz),stat=ier)
+  if (ier /= 0) stop 'Error allocating perturbation_grid array'
+  perturbation_grid(:,:,:) = 0.0_CUSTOM_REAL
+
+  ! get dimensions from all processes
+  pert_index_minmax(1) = pert_imin
+  pert_index_minmax(2) = pert_imax
+  pert_index_minmax(3) = pert_jmin
+  pert_index_minmax(4) = pert_jmax
+  pert_index_minmax(5) = pert_kmin
+  pert_index_minmax(6) = pert_kmax
+  pert_index_minmax(7) = pert_Nx
+  pert_index_minmax(8) = pert_Ny
+  pert_index_minmax(9) = pert_Nz
+
+  ! gather all index bounds (on main process only)
+  pert_index_minmax_all(:,:) = 0
+  call gather_all_i(pert_index_minmax,9,pert_index_minmax_all,9,NPROC)
 
   ! main process distributes grid to all other arrays
-  call bcast_all_cr(perturbation_grid,pert_Nx * pert_Ny * pert_Nz)
+  if (myrank == 0) then
+    ! main process
+    ! setup own grid first
+    if (pert_Nx > 0 .and. pert_Ny > 0 .and. pert_Nz > 0) then
+      ! slice array portion
+      perturbation_grid(1:pert_Nx,1:pert_Ny,1:pert_Nz) = perturbation_grid_global(pert_imin:pert_imax, &
+                                                                                  pert_jmin:pert_jmax, &
+                                                                                  pert_kmin:pert_kmax)
+    endif
+
+    ! send partial grids to all other processes
+    do iproc = 1,NPROC-1
+      ! grid dimension of process
+      imin = pert_index_minmax_all(1,iproc)
+      imax = pert_index_minmax_all(2,iproc)
+      jmin = pert_index_minmax_all(3,iproc)
+      jmax = pert_index_minmax_all(4,iproc)
+      kmin = pert_index_minmax_all(5,iproc)
+      kmax = pert_index_minmax_all(6,iproc)
+      Nx = pert_index_minmax_all(7,iproc)
+      Ny = pert_index_minmax_all(8,iproc)
+      Nz = pert_index_minmax_all(9,iproc)
+      ! send slice
+      if (Nx > 0 .and. Ny > 0 .and. Nz > 0) then
+        ! temporary slice for sending
+        allocate(tmp_slice(Nx,Ny,Nz),stat=ier)
+        if (ier /= 0) stop 'Error allocating temporary slice array'
+        ! setup slice
+        tmp_slice(:,:,:) = perturbation_grid_global(imin:imax,jmin:jmax,kmin:kmax)
+        ! or explicit
+        !tmp_slice(:,:,:) = 0.0_CUSTOM_REAL
+        !do k = 1,Nz
+        !  do j = 1,Ny
+        !    do i = 1,Nx
+        !      tmp_slice(i,j,k) = perturbation_grid_global(imin+i-1,jmin+j-1,kmin+k-1)
+        !    enddo
+        !  enddo
+        !enddo
+
+        ! send to process iproc
+        call sendv_cr(tmp_slice,Nx*Ny*Nz,iproc,itag)
+
+        ! free memory
+        deallocate(tmp_slice)
+      endif
+    enddo
+
+    ! deallocate global grid on rank 0 after distribution
+    deallocate(perturbation_grid_global)
+  else
+    ! secondary process
+    ! receive slice from rank 0
+    if (pert_Nx > 0 .and. pert_Ny > 0 .and. pert_Nz > 0) then
+      call recvv_cr(perturbation_grid,pert_Nx*pert_Ny*pert_Nz,0,itag)
+    endif
+  endif
 
   ! user output
   if (myrank == 0) then
     write(IMAIN,*)
-    write(IMAIN,*) '  perturbations: min/max = ',minval(perturbation_grid),'/',maxval(perturbation_grid)
-    write(IMAIN,*) '                 average = ',sum(perturbation_grid)/ real(pert_Nx * pert_Ny * pert_Nz,kind=CUSTOM_REAL)
+    write(IMAIN,*) '  perturbations (slice 0): min/max = ',minval(perturbation_grid),'/',maxval(perturbation_grid)
+    write(IMAIN,*) '                           average = ', &
+                   sum(perturbation_grid) / real(pert_Nx * pert_Ny * pert_Nz,kind=CUSTOM_REAL)
     write(IMAIN,*)
     ! timing
     tCPU = wtime() - time_start
@@ -932,7 +1072,7 @@
   endif
 
   ! visualization output
-  if (SAVE_MESH_FILES .and. myrank == 0) then
+  if (SAVE_MESH_FILES) then
     ! output VTU file for visual inspection
     call plot_grid_data()
   endif
@@ -960,6 +1100,9 @@
   ! initializes
   val_avg = 0.0_CUSTOM_REAL
   val_max = 0.0_CUSTOM_REAL
+
+  ! checks if anything to do
+  if (Nx == 0 .or. Ny == 0 .or. Nz == 0) return
 
   ! in custom real
   !val_avg = sum(perturbation_grid) / real(pert_Nx * pert_Ny * pert_Nz, kind=CUSTOM_REAL)
@@ -996,7 +1139,6 @@
   function get_random_perturbation_value() result(pert_val)
 
   use constants, only: CUSTOM_REAL
-  use shared_parameters, only: SCATTERING_STRENGTH
 
   implicit none
   real(kind=CUSTOM_REAL) :: pert_val
@@ -1008,9 +1150,6 @@
   ! white noise between [-1,1]
   pert_val = 2.0_CUSTOM_REAL * rand_val - 1.0_CUSTOM_REAL
 
-  ! scale to target strength
-  pert_val = pert_val * real(SCATTERING_STRENGTH,kind=CUSTOM_REAL)
-
   end function get_random_perturbation_value
 
 !
@@ -1020,9 +1159,10 @@
   subroutine plot_grid_data()
 
   use constants, only: myrank,IMAIN,CUSTOM_REAL,MAX_STRING_LEN
+  use shared_parameters, only: LOCAL_PATH
 
-  use model_scattering_par, only: grid_origin_x,grid_origin_y,grid_origin_z, &
-    grid_dx,grid_normalization_factor,USE_WHITE_NOISE
+  use model_scattering_par, only: grid_xmin_proc,grid_ymin_proc,grid_zmin_proc, &
+    grid_dx,grid_normalization_factor
 
   use model_scattering_par, only: &
     array => perturbation_grid, &
@@ -1040,13 +1180,19 @@
   real(kind=CUSTOM_REAL),dimension(:,:),allocatable :: total_dat_xyz
   real(kind=CUSTOM_REAL) :: cell_size
   integer,dimension(:,:),allocatable :: total_dat_con
-  character(len=MAX_STRING_LEN) :: mesh_file,var_name
-
-  ! for white noise
-  real(kind=CUSTOM_REAL),external :: get_random_perturbation_value
-
   ! file output
-  character(len=MAX_STRING_LEN) :: name
+  character(len=MAX_STRING_LEN) :: mesh_file,var_name
+  character(len=MAX_STRING_LEN) :: prname
+
+  ! user output
+  if (myrank == 0) then
+    write(IMAIN,*) '  saving perturbation grid...'
+    call flush_IMAIN()
+  endif
+
+  ! each process plots out its own perturbation grid
+  ! checks if anything to do
+  if (Nx == 0 .or. Ny == 0 .or. Nz == 0) return
 
   ! regular grid
   np = Nx * Ny * Nz             ! total number of points
@@ -1079,17 +1225,12 @@
         if (np /= ixyz) stop 'Invalid grid point'
 
         ! array value
-        if (USE_WHITE_NOISE) then
-          ! random perturbation value
-          total_dat(np) = get_random_perturbation_value()
-        else
-          total_dat(np) = array(i,j,k)
-        endif
+        total_dat(np) = array(i,j,k)
 
         ! grid point position [-L/2,L/2]
-        total_dat_xyz(1,np) = real(grid_origin_x + (i-1) * cell_size,kind=CUSTOM_REAL)
-        total_dat_xyz(2,np) = real(grid_origin_y + (j-1) * cell_size,kind=CUSTOM_REAL)
-        total_dat_xyz(3,np) = real(grid_origin_z + (k-1) * cell_size,kind=CUSTOM_REAL)
+        total_dat_xyz(1,np) = real(grid_xmin_proc + (i-1) * cell_size,kind=CUSTOM_REAL)
+        total_dat_xyz(2,np) = real(grid_ymin_proc + (j-1) * cell_size,kind=CUSTOM_REAL)
+        total_dat_xyz(3,np) = real(grid_zmin_proc + (k-1) * cell_size,kind=CUSTOM_REAL)
       enddo
     enddo
   enddo
@@ -1128,8 +1269,9 @@
   enddo
 
   ! VTU binary format
-  name = 'perturbation_grid'
-  mesh_file = 'OUTPUT_FILES/' // trim(name) // '.vtu'
+  ! stores arrays in databases folder
+  call create_name_database(prname,myrank,LOCAL_PATH)
+  mesh_file = trim(prname) // 'perturbation_grid.vtu'
   var_name = 'val'
   call write_VTU_movie_data_binary(ne,np,total_dat_xyz,total_dat_con,total_dat,mesh_file,var_name)
 
@@ -1179,29 +1321,24 @@
   double precision :: gamma_interp_x,gamma_interp_y,gamma_interp_z
   double precision :: val1,val2,val3,val4,val5,val6,val7,val8
 
-  ! for white noise
-  real(kind=CUSTOM_REAL),external :: get_random_perturbation_value
-
   ! checks if anything to do
   if (num_target_materials == 0) return
 
-  ! check if we apply perturbation (to target materials only; target id 0 means to apply to all materials)
+  ! checks if we apply perturbation (to target materials only; target id 0 means to apply to all materials)
   if (.not. (any(target_material_ids(:) == imaterial_id) .or. USE_ALL_MATERIALS)) return
 
-  ! white noise
-  if (USE_WHITE_NOISE) then
-    ! get random perturbation
-    pert_val = get_random_perturbation_value()
-    ! apply perturbation to model parameters
-    call apply_perturbation(pert_val)
-    ! all done
-    return
-  endif
+  ! number of grid points (in x,y,z direction)
+  Nx = pert_Nx
+  Ny = pert_Ny
+  Nz = pert_Nz
+
+  ! checks if anything to do in this slice
+  if (Nx == 0 .or. Ny == 0 .or. Nz == 0) return
 
   ! determine spacing and cell for linear interpolation
-  offset_x = (xmesh - grid_origin_x) / grid_normalization_factor     ! position offset in mesh (normalized)
-  offset_y = (ymesh - grid_origin_y) / grid_normalization_factor
-  offset_z = (zmesh - grid_origin_z) / grid_normalization_factor
+  offset_x = (xmesh - grid_xmin_proc) / grid_normalization_factor     ! position offset in local mesh (normalized)
+  offset_y = (ymesh - grid_ymin_proc) / grid_normalization_factor
+  offset_z = (zmesh - grid_zmin_proc) / grid_normalization_factor
 
   spac_x = offset_x / grid_dx
   spac_y = offset_y / grid_dx
@@ -1219,11 +1356,6 @@
   ix = ix + 1
   iy = iy + 1
   iz = iz + 1
-
-  ! number of grid points (in x,y,z direction)
-  Nx = pert_Nx
-  Ny = pert_Ny
-  Nz = pert_Nz
 
   ! suppress edge effects for points outside of the model SPOSTARE DOPO
   if (ix < 1) then
@@ -1255,11 +1387,14 @@
 
   ! checks
   if (ix < 0 .or. iy < 0 .or. iz < 0) then
-    print *,'Error: scattering position has invalid index: '
+    print *,'Error: scattering position has invalid index in local perturbation grid:'
     print *,'  rank        : ',myrank
     print *,'  corner index: ',ix,iy,iz
     print *,'  location    : ',sngl(xmesh),sngl(ymesh),sngl(zmesh)
     print *,'  origin      : x/y/z = ',sngl(grid_origin_x),'/',sngl(grid_origin_y),'/',sngl(grid_origin_z)
+    print *,'  pertubation grid: min x/y/z  = ',sngl(grid_xmin_proc),'/',sngl(grid_ymin_proc),'/',sngl(grid_zmin_proc)
+    print *,'                    max x/y/z  = ',sngl(grid_xmax_proc),'/',sngl(grid_ymax_proc),'/',sngl(grid_zmax_proc)
+    print *,'                    Nx/Ny/Nz  = ',Nx,'/',Ny,'/',Nz
     call exit_MPI(myrank,'Error corner index in model_scattering routine')
   endif
 
@@ -1289,6 +1424,12 @@
   !if (myrank == 0) &
   !  print *,'debug: loc ',sngl(xmesh),sngl(ymesh),sngl(zmesh),'ixyz',ix,iy,iz, &
   !          'perturbation ',pert_val,'corners',val1,val2,val3,val4,val5,val6,val7,val8
+  !debug shared node location
+  !if (abs(xmesh-295257) < 1.d1 .and. abs(ymesh-(-152295.d0)) < 1.d1 .and. abs(zmesh-(-1346.64)) < 1.d1) then
+  !  print *,'debug: rank ',myrank,'x/y/z',xmesh,ymesh,zmesh,'ix/iy/iz',ix,iy,iz,'pert',pert_val, &
+  !        'spac',spac_x,spac_y,spac_z,'gamma',gamma_interp_x,gamma_interp_y,gamma_interp_z, &
+  !        'val',val1,val2,val3,val4,val5,val6,val7,val8
+  !endif
 
   ! apply perturbation to model parameters
   call apply_perturbation(pert_val)
@@ -1337,3 +1478,82 @@ contains
   end subroutine apply_perturbation
 
   end subroutine model_scattering_add_perturbations
+
+!
+!-------------------------------------------------------------------------------------------------
+!
+
+#ifdef USE_FFTW
+
+  subroutine FFT_3D_FFTW(N, array, zign)
+
+! uses FFTW version 3 library
+!
+! for compilation, modify Makefile:
+! ```
+!   FLAGS_CHECK = -DUSE_FFTW -O3 ..
+!   ..
+!   MPILIBS = -lfftw3 -L/opt/homebrew/lib ..
+!   ..
+! ```
+
+  use, intrinsic :: iso_c_binding
+  use constants, only: CUSTOM_REAL
+
+  implicit none
+
+  include 'fftw3.f03'
+
+  integer, parameter :: CUSTOM_CMPLX = 8
+
+  integer, intent(in) :: N
+  complex(kind=CUSTOM_CMPLX), dimension(N,N,N), intent(inout) :: array
+  real(kind=CUSTOM_REAL), intent(in) :: zign  ! +1 for forward, -1 for inverse
+
+  ! local parameters
+  integer :: ier
+  complex(kind=CUSTOM_CMPLX), dimension(:,:,:), allocatable :: array_in
+  ! FFTW plan
+  type(C_PTR) :: plan
+  integer(C_INT) :: fftw_direction
+
+  ! user info
+  print *,'***'
+  print *,'using FFTW library calls'
+  print *,'***'
+
+  ! Determine direction
+  if (zign > 0.0_CUSTOM_REAL) then
+    fftw_direction = FFTW_FORWARD   ! Forward FFT
+  else
+    fftw_direction = FFTW_BACKWARD  ! Inverse FFT
+  endif
+
+  ! Copy to avoid aliasing warning
+  allocate(array_in(N,N,N),stat=ier)
+  if (ier /= 0) stop 'Error allocating array_in'
+  array_in(:,:,:) = array(:,:,:)
+
+  ! Create plan for 3D complex-to-complex FFT
+  ! FFTW_ESTIMATE: quick planning, reasonable performance
+  ! Alternative: FFTW_MEASURE for better performance (takes longer to plan)
+  plan = fftw_plan_dft_3d(N, N, N, array_in, array, fftw_direction, FFTW_ESTIMATE)
+
+  ! Execute the FFT
+  call fftw_execute_dft(plan, array_in, array)
+
+  ! Cleanup
+  call fftw_destroy_plan(plan)
+
+  ! free temporary array
+  deallocate(array_in)
+
+  ! Note: FFTW inverse transform is unnormalized
+  ! Divide by N^3 for inverse transform if needed
+  if (zign < 0.0_CUSTOM_REAL) then
+    array = array / real(N*N*N, kind=CUSTOM_CMPLX)
+  endif
+
+  end subroutine FFT_3D_FFTW
+
+#endif

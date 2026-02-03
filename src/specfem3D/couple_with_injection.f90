@@ -243,6 +243,7 @@
   double precision, external :: wtime
 
   integer :: ier
+  integer,dimension(:), allocatable :: npt_local_per_proc
 
   !! for FK point for intialization injected wavefield
   real(kind=CUSTOM_REAL) :: Xmin_box, Xmax_box, Ymin_box, Ymax_box, Zmin_box, Zmax_box
@@ -341,14 +342,40 @@
     ! counts total number of (local) GLL points on absorbing boundary
     call count_num_boundary_points(num_abs_boundary_faces,abs_boundary_ispec,npt)
 
-    !! compute the bottom midle point of the domain
+    ! get coupling points from each process
+    allocate(npt_local_per_proc(0:NPROC-1),stat=ier)
+    if (ier /= 0) stop 'Error allocating npt_local_per_proc array'
+    npt_local_per_proc(:) = 0
 
-    !! VM VM dealocate in case of severals runs occurs in inverse_problem program
+    call gather_all_all_singlei(npt,npt_local_per_proc,NPROC)
+
+    ! assumed total number of boundary points
+    npoints_total = sum(npt_local_per_proc(:))
+
+    ! user output
+    if (myrank == 0) then
+      write(IMAIN,*) '  total number of coupling points         : ',npoints_total
+      write(IMAIN,*) '  maximum number of local coupling points : ',maxval(npt_local_per_proc)
+      write(IMAIN,*)
+      call flush_IMAIN()
+    endif
+    deallocate(npt_local_per_proc)
+
+    ! safety check
+    if (npoints_total == 0) then
+      print *,'Error: no coupling boundary points defined for this simulation!'
+      print *,'       Please check if mesh has absorbing boundaries setup properly to use COUPLE_WITH_INJECTION_TECHNIQUE'
+      call exit_MPI(myrank,'No coupling boundary points found')
+    endif
+
+    !! compute the bottom middle point of the domain
+
+    ! deallocate in case of severals runs occurs in inverse_problem program
     if (allocated(ipt_table)) deallocate(ipt_table)
     if (allocated(Veloc_FK))  deallocate(Veloc_FK)
     if (allocated(Tract_FK))  deallocate(Tract_FK)
 
-    !! allocate memory for FK solution
+    ! allocate memory for FK solution
     if (npt > 0) then
       allocate(ipt_table(NGLLSQUARE,num_abs_boundary_faces), stat=ier)
       if (ier /= 0) call exit_MPI_without_rank('error allocating array 2202')
@@ -380,6 +407,7 @@
       write(IMAIN,*) '    frequency step for F-K         = ', DF_FK,"(Hz)"
       write(IMAIN,*)
       write(IMAIN,*) '  total number of points on boundary = ',npt
+      write(IMAIN,*)
       call flush_IMAIN()
     endif
 
@@ -403,7 +431,7 @@
         print *,'Error: FK resampling rate ',NP_RESAMP,' is invalid for frequency sampling rate ',freq_sampling_fk
         print *,'       and the chosen simulation DT = ',deltat
         print *
-        print *,'       you could use a higher frequency sampling rate>',1./(deltat)
+        print *,'       you could use a higher frequency sampling rate >',1./(deltat)
         print *,'       (or increase the time stepping size DT if possible)'
       endif
       stop 'Invalid FK setting'
@@ -415,7 +443,7 @@
         print *,'Error: FK resampling rate ',NP_RESAMP,' is too high for frequency sampling rate ',freq_sampling_fk
         print *,'       and the chosen simulation DT = ',deltat
         print *
-        print *,'       you could use a higher frequency sampling rate>',1./(10000*deltat)
+        print *,'       you could use a higher frequency sampling rate >',1./(10000*deltat)
         print *,'       (or increase the time stepping size DT if possible)'
       endif
       stop 'Invalid FK setting'
@@ -437,6 +465,9 @@
                 ray_p, phi_FK, xx0, yy0, zz0, Tg, &
                 tt0, alpha_FK, beta_FK, rho_FK, h_FK, &
                 NF_FOR_STORING, NPOW_FOR_FFT, NP_RESAMP, DF_FK)
+    else
+      ! dummy
+      allocate(Veloc_FK(1,1,1),Tract_FK(1,1,1))
     endif
 
     call synchronize_all()
@@ -694,11 +725,13 @@
       write(8888,*) "# FK Velocity - data point"
       write(8888,*) "# point id      : ",ipt
       write(8888,*) "# point location: x/y/z = ",x_loc,y_loc,z_loc
+      write(8888,*) "# point param   : xi1/xim/bdlambdamu = ",xi1(ipt),xim(ipt),bdlambdamu(ipt)
       write(8888,*) "# line format   : #time #Vx #Vy #Vz"
 
       write(8889,*) "# FK Traction - data point"
       write(8889,*) "# point id      : ",ipt
       write(8889,*) "# point location: x/y/z = ",x_loc,y_loc,z_loc
+      write(8889,*) "# point param   : xi1/xim/bdlambdamu = ",xi1(ipt),xim(ipt),bdlambdamu(ipt)
       write(8889,*) "# line format   : #time #Tx #Ty #Tz"
 
       ! data
@@ -764,10 +797,10 @@
 !
 
   ! FK elastic + acoustic
-  subroutine FK(vp,vs,rho, H, nlayer, &
-                  Tg, ray_p, phi, x0, y0, z0, &
-                  t0, dt, npts,npt, &
-                  kpsv, NF_FOR_STORING, NPOW_FOR_FFT, NP_RESAMP, DF_FK)
+  subroutine FK(vp, vs, rho, H, nlayer, &
+                Tg, ray_p, phi, x0, y0, z0, &
+                t0, dt, npts, npt, &
+                kpsv, NF_FOR_STORING, NPOW_FOR_FFT, NP_RESAMP, DF_FK)
 
   use constants, only: myrank,CUSTOM_REAL,IMAIN,PI,TINYVAL,NGLLSQUARE
 
@@ -939,11 +972,14 @@
     mpow(i) = 2**(npow-i)
   enddo
 
+
   ! check if top layers are in fluid material
+  ! note: indexing assumes that last layer (nlayer) being the bottom, lower halfspace,
+  !       and the first layer (1) being at the top surface
   have_fluid_layer = .false.
   do j = nlayer,1,-1
     if (vs(j) < THRESHOLD_VS) then
-      ilayer_ac = j
+      ilayer_ac = j      ! bottom layer of acoustic layer(s)
       have_fluid_layer = .true.
       exit
     endif
@@ -973,14 +1009,26 @@
 
   ! compute temporary variables
   do i = 1,nlayer
+    ! P
+    ! see (A5): E_23 = -i nu_p / k = -i omega sqrt(1/alpha^2 - p^2) / k
+    !           factor eta_alpha = -i sqrt(1/alpha^2 - p^2)
     eta_alpha(i) = -cmplx(0,1) * sqrt( 1.0 / vp(i)**2 - ray_p**2 )
+
+    ! SV
+    ! see (A5): E_11 = -i nu_s / k = -i omega sqrt(1/beta^2 - p^2) / k
+    !           factor eta_beta = -i sqrt(1/beta^2 - p^2)
+    if (vs(i) < THRESHOLD_VS) then
+      eta_beta(i) = 0.
+    else
+      eta_beta(i) = -cmplx(0,1) * sqrt( 1.0 / vs(i)**2 - ray_p**2 )
+    endif
+
+    ! auxiliary variables
     gamma0(i) = 2.0 * vs(i)**2 * ray_p**2
     if (vs(i) < THRESHOLD_VS) then
       gamma1(i) = 0.
-      eta_beta(i) = 0.
     else
       gamma1(i) = 1.0 - 1.0/gamma0(i)
-      eta_beta(i) = -cmplx(0,1) * sqrt( 1.0 / vs(i)**2 - ray_p**2 )
     endif
   enddo
 
@@ -991,7 +1039,8 @@
   endif
 
   ! amplitude in half space
-  if (kpsv == 1) then  ! P-SV
+  if (kpsv == 1) then
+    ! P-SV
     C_3 = amplitude_fk * cmplx(0,1.) * ray_p * vp(nlayer)      ! amp. of incoming P in the bot. layer
     eta_p = sqrt(1.0/vp(nlayer)**2 - ray_p**2)                 ! vertical slowness for lower layer
     if (myrank == 0) write(IMAIN,*) '  Incoming P : C_3,  ray_p, eta = ', C_3, ray_p, eta_p
@@ -1004,9 +1053,14 @@
     if (myrank == 0 ) write(IMAIN,*) '  Incoming S :  C_1,  ray_p, eta = ', C_1, ray_p, eta_s
   endif
 
-  !E matrix
-  ! initializes matrix
+  ! pre-computed factor for half-space (layer with index nlayer)
   two_mul = 2.0 * rho(nlayer) * vs(nlayer) * vs(nlayer)
+
+  ! note: vertical incident (p=0) is not handled in Tong et al. explanations.
+  if (abs(ray_p) < 1.e-15) stop 'Invalid ray parameter p (cannot be zero) in FK() routine'
+
+  ! E matrix
+  ! initializes matrix
   E_mat(:,:) = (1.0,0.0)
 
   ! Tong et al. (2014), appendix (A10) E_0:
@@ -1029,12 +1083,17 @@
     om = 2.0 * PI * fvec(ii)
 
     ! apply propagation matrix in elastic layers
-    N_mat = E_mat
+    N_mat(:,:) = E_mat(:,:)
+
+    ! note: indexing assumes that last layer (nlayer) being the bottom, lower halfspace,
+    !       and the first layer (1) being at the top surface
     ilayer = 1
     if (have_fluid_layer) ilayer = ilayer_ac + 1
+
     do i = nlayer-1,ilayer,-1
       call fk_propagator_psv(om,eta_alpha(i),eta_beta(i),rho(i), &
-                            vs(i),H(i),ray_p,gamma1(i),Pmat)
+                             vs(i),H(i),ray_p,gamma1(i),Pmat)
+      ! resulting matrix
       N_mat = matmul(Pmat,N_mat) * gamma0(i)
     enddo
 
@@ -1043,14 +1102,16 @@
       Qmat_I(:,:) = 0.0_CUSTOM_CMPLX
       Qmat_I(1,1) = cmplx(1.0,0.0,kind=CUSTOM_CMPLX)
       Qmat_I(2,2) = cmplx(1.0,0.0,kind=CUSTOM_CMPLX)
+      ! note: assumes that ilayer_ac is the bottom layer of acoustic layers
       do j = ilayer_ac,1,-1
-        call fk_propagator_ac(om,eta_alpha(j),rho(j),H(j),ray_p,Qmat(:,:))
+        call fk_propagator_ac(om,eta_alpha(j),rho(j),H(j),ray_p,Qmat)
+        ! resulting matrix
         Qmat_I = matmul(Qmat,Qmat_I)
       enddo
       Qmat = Qmat_I
     endif
 
-    !determine coefs in half space
+    ! determine coefs in half space
     if (.not. have_fluid_layer) then
       ! inverse matrix
       a = N_mat(3,2); b = N_mat(3,4); c = N_mat(4,2); d = N_mat(4,4)
@@ -1137,6 +1198,7 @@
 
         ! find which layer this point is in
         if (ispec_is_elastic(ispec)) then
+          ! elastic element
           if (zz(ipt) <= 0.0) then
             ! in lower half space
             G_mat(:,:) = (0.0,0.0)
@@ -1155,15 +1217,22 @@
             N_mat = matmul(E_mat,G_mat)
           else
             ! in layers
+            ! determines layer in which the point lies
+            ! note: indexing assumes that last layer (nlayer) being the bottom, lower halfspace,
+            !       and the first layer (1) being at the top surface
             ilayer = nlayer
             do j = nlayer-1 , 1 , -1
               if (zz(ipt) <= sum(H(j:nlayer-1))) then
                 ilayer = j; exit
               endif
             enddo
+
             if (have_fluid_layer .and. ilayer <= ilayer_ac) then
-              print *,'points cannot in acoustic domain'
-              print *,zz(ipt) + Z_REF_for_FK, zz(ipt),sum(H(ilayer_ac+1:nlayer-1))
+              print *,'Error: point cannot be in acoustic domain'
+              print *,'  z = ',zz(ipt),'z_ref = ',zz(ipt) + Z_REF_for_FK,'H_layers = ', sum(H(ilayer_ac+1:nlayer-1))
+              print *,'  layer = ',ilayer,'ilayer_ac',ilayer_ac,'nlayer = ',nlayer
+              print *,'  H = ',H(:)
+              print *,'exiting...'
               stop
             endif
 
@@ -1175,11 +1244,12 @@
             do j = nlayer-1,ilayer,-1
               if ( j > ilayer) then
                 call fk_propagator_psv(om,eta_alpha(j),eta_beta(j),rho(j), &
-                                        vs(j),H(j),ray_p,gamma1(j),Pmat)
+                                       vs(j),H(j),ray_p,gamma1(j),Pmat)
               else
                 call fk_propagator_psv(om,eta_alpha(j),eta_beta(j),rho(j), &
-                                    vs(j),height,ray_p,gamma1(j),Pmat)
+                                       vs(j),height,ray_p,gamma1(j),Pmat)
               endif
+              ! resulting matrix
               N_mat = gamma0(j) * matmul(Pmat,N_mat)
             enddo
           endif ! endif (zz(ipt) <= 0.0)
@@ -1203,22 +1273,39 @@
             field_f(ii,5) = stf_coeff * om * ray_p * tzz_f                                ! T_zz
           endif
 
-        else if (ispec_is_acoustic(ispec)) then ! acoustic
-          ! in this case, points should be in fluid layers
-          ilayer = ilayer_ac + 1
-          do j = ilayer_ac + 1 , 1 , -1
-            if (zz(ipt) <= sum(H(j:nlayer-1))) then
-              ilayer = j; exit
+        else if (ispec_is_acoustic(ispec)) then
+          ! acoustic element
+          if (nlayer == 1 .and. ilayer_ac == 1) then
+            ! single acoustic layer (nlayer=1 and ilayer_ac=1)
+            ! in this case, all points are within the single acoustic half-space.
+            ilayer = 1
+            height = zz(ipt)  ! Point's coordinate relative to the top of the acoustic half-space (z = 0 in FK system)
+          else
+            ! multi-layered acoustic models
+            ! in this case, points should be in fluid layers
+            ! determines layer in which the point lies
+            ! note: indexing assumes that last layer (ilayer_ac) being the bottom acoustic layer,
+            !       and the first layer (1) being at the top surface
+            ilayer = ilayer_ac + 1
+            do j = ilayer_ac + 1 , 1 , -1
+              if (zz(ipt) <= sum(H(j:nlayer-1))) then
+                ilayer = j; exit
+              endif
+            enddo
+            height = zz(ipt) - sum(H(ilayer+1:nlayer-1))
+
+            ! checks position
+            if (height < 0.) then
+              print *,'Error: please check, point is in the air'
+              print *,'  z = ',zz(ipt),'z_ref = ',zz(ipt) + Z_REF_for_FK,'H_layers = ',sum(H(ilayer+1:nlayer-1))
+              print *,'  layer = ',ilayer,'ilayer_ac',ilayer_ac,'nlayer = ',nlayer
+              print *,'  H = ',H(:)
+              print *,'exiting...'
+              stop
             endif
-          enddo
-          height = zz(ipt) - sum(H(ilayer+1:nlayer-1))
-          if (height < 0 ) then
-            print *,'please check, some points is in the air'
-            print *,zz(ipt),zz(ipt) + Z_REF_for_FK,sum(H(ilayer+1:nlayer-1))
-            stop
           endif
 
-          ! propagate to this point
+          ! propagate to this point - acoustic layers
           Qmat_I(:,:) = 0.0_CUSTOM_CMPLX
           Qmat_I(1,1) = cmplx(1.0,0.0,kind=CUSTOM_CMPLX)
           Qmat_I(2,2) = cmplx(1.0,0.0,kind=CUSTOM_CMPLX)
@@ -1228,18 +1315,23 @@
             else
               call fk_propagator_ac(om,eta_alpha(j),rho(j),height,ray_p,Qmat(:,:))
             endif
+            ! resulting matrix
             Qmat_I = matmul(Qmat,Qmat_I)
           enddo
           Qmat = Qmat_I
 
-          ! propagation to this point
+          ! propagation to this point - elastic layers
           N_mat(:,:) = E_mat(:,:)
           do j = nlayer-1,ilayer_ac+1,-1
-            call fk_propagator_psv(om,eta_alpha(j),eta_beta(j), &
-                                  rho(j),vs(j),H(j),ray_p,gamma1(j),Pmat)
+            call fk_propagator_psv(om,eta_alpha(j),eta_beta(j),rho(j), &
+                                   vs(j),H(j),ray_p,gamma1(j),Pmat)
+            ! resulting matrix
             N_mat = gamma0(j) * matmul(Pmat,N_mat)
           enddo
+
+          !! zz(ipt) is the height of point with respect to the lower layer
           bot_vec = matmul(N_mat,bot_vec)
+
           bot_vec(4) = -bot_vec(4) ! P = - \sigma_zz
           bot_vec(1) = bot_vec(2) ! uz
           bot_vec(2) = bot_vec(4) ! P / k
@@ -1269,7 +1361,7 @@
         field_f(nf+2-ii,:) = conjg(field_f(ii,:))
       enddo
 
-        !! inverse fast fourier transform
+      ! inverse fast fourier transform
       field(:,:) = 0.0
       do j = 1, nvar
         ! inverse FFT
@@ -1319,6 +1411,7 @@
         call compute_spline_coef_to_store(tmp_t1, npts2, tmp_t2, tmp_c)
         veloc_FK(3,ipt,1:NF_FOR_STORING) = tmp_t2(1:NF_FOR_STORING)
 
+        ! traction -> chi_dot
         tmp_t1(:) = field(:,3)
         call compute_spline_coef_to_store(tmp_t1, npts2, tmp_t2, tmp_c)
         do j = 1,3
@@ -1333,7 +1426,7 @@
           sigma_rt = 0.0
           sigma_rz = field(lpts,4)
           sigma_zz = field(lpts,5)
-          sigma_tt = bdlambdamu(ipt)*(sigma_rr+sigma_zz)
+          sigma_tt = bdlambdamu(ipt) * (sigma_rr + sigma_zz)
           sigma_tz = 0.0
 
           Txx_tmp = sigma_rr * cos(phi) * cos(phi) + sigma_tt * sin(phi) * sin(phi)
@@ -1344,9 +1437,9 @@
           Tzz_tmp = sigma_zz
 
           !! store directly the traction
-          Tract_FK(1,ipt,lpts) = Txx_tmp*nmx(ipt) +  Txy_tmp*nmy(ipt) +  Txz_tmp*nmz(ipt)
-          Tract_FK(2,ipt,lpts) = Txy_tmp*nmx(ipt) +  Tyy_tmp*nmy(ipt) +  Tyz_tmp*nmz(ipt)
-          Tract_FK(3,ipt,lpts) = Txz_tmp*nmx(ipt) +  Tyz_tmp*nmy(ipt) +  Tzz_tmp*nmz(ipt)
+          Tract_FK(1,ipt,lpts) = Txx_tmp * nmx(ipt) +  Txy_tmp * nmy(ipt) +  Txz_tmp * nmz(ipt)
+          Tract_FK(2,ipt,lpts) = Txy_tmp * nmx(ipt) +  Tyy_tmp * nmy(ipt) +  Tyz_tmp * nmz(ipt)
+          Tract_FK(3,ipt,lpts) = Txz_tmp * nmx(ipt) +  Tyz_tmp * nmy(ipt) +  Tzz_tmp * nmz(ipt)
         enddo
 
         !! store undersamped version of tractions FK solution
@@ -1406,29 +1499,51 @@
 
   end subroutine FK
 
+!
+!-------------------------------------------------------------------------------------------------
+!
 
+  subroutine fk_propagator_psv(om,eta_alpha,eta_beta,rho,vs,H,ray_p,gamma1,Pmat)
 
-
-subroutine fk_propagator_psv(om,eta_alpha,eta_beta,rho,vs, &
-    H,ray_p,gamma1,Pmat)
   use specfem_par, only: CUSTOM_REAL
   implicit none
 
   integer, parameter                       :: CUSTOM_CMPLX = 8
-  real(kind=CUSTOM_REAL),intent(in)        :: om , rho,vs, ray_p,H
+  real(kind=CUSTOM_REAL),intent(in)        :: om,rho,vs,ray_p,H
   complex(kind=CUSTOM_CMPLX),intent(in)    :: eta_beta,eta_alpha,gamma1
   complex(kind=CUSTOM_CMPLX),intent(out)   :: Pmat(4,4)
-  complex(kind=CUSTOM_CMPLX)               :: c1,ca,sa, xa, ya,c2,cb,sb,xb,yb
-  complex(kind=CUSTOM_CMPLX)               :: g1,g1_sq, mul,nu_al,nu_be,two_mul
+  complex(kind=CUSTOM_CMPLX)               :: c1,ca,sa,xa,ya,c2,cb,sb,xb,yb
+  complex(kind=CUSTOM_CMPLX)               :: g1,g1_sq,mul,nu_al,nu_be,two_mul
 
   ! compute propagation matrix
+
+  ! factor nu_al = -i nu_p = -i omega sqrt(1/alpha^2 - p^2)
+  !                        = omega (-i sqrt(1/alpha^2 - p^2)
+  !                        = omega (eta_alpha)
   nu_al = om * eta_alpha
+
+  ! factor nu_be = -i nu_s = -i omega sqrt(1/beta^2 - p^2)
+  !                        = omega (-i sqrt(1/beta^2 - p^2)
+  !                        = omega (eta_beta)
   nu_be = om * eta_beta
+
+  ! matrix variables
+  ! C_alpha = cos(nu_p h) = cos( omega sqrt(1/alpha^2 - p^2) h )
+  ! S_alpha = -sin(nu_p h) = -sin( omega sqrt(1/alpha^2 - p^2) h )
+  ! with nu_p h = omega sqrt(1/alpha^2 - p^2) h
+  !
+  ! note: there might be some sign conflict and confusion between sin and sinh in the definition after (A9) of Tong et al.
+  !       instead of S_alpha = -sin(nu_p h) as stated in the paper, here sa becomes [i sin(nu_p h)] as imaginary number.
+  !
   c1 = nu_al * H
   ca = (exp(c1) + exp(-c1))/2.0
   sa = (exp(c1) - exp(-c1))/2.0     ! imaginary part
   xa = eta_alpha * sa / ray_p
   ya = ray_p * sa / eta_alpha
+
+  ! C_beta = cos(nu_s h) = cos( omega sqrt(1/beta^2 - p^2) h )
+  ! S_beta = -sin(nu_s h) = -sin( omega sqrt(1/beta^2 - p^2) h )
+  ! with nu_s h = omega sqrt(1/beta^2 - p^2) h
   c2 = nu_be * H
   cb = (exp(c2) + exp(-c2))/2.0  ! cos(nu_s h)
   sb = (exp(c2) - exp(-c2))/2.0  ! sin(nu_s h) imaginary part
@@ -1449,18 +1564,21 @@ subroutine fk_propagator_psv(om,eta_alpha,eta_beta,rho,vs, &
   !     P_layer(1,4) = (cb - ca)/(2*mul)          ! misses factor 1/k
   Pmat(1,3) = (ya - xb) / two_mul
   Pmat(1,4) = (cb - ca) / two_mul
+
   Pmat(2,1) = xa - g1*yb
   Pmat(2,2) = cb - g1*ca
   !org: P_layer(2,3) = (ca - cb)/(2*mul)          ! misses factor 1/k
   !     P_layer(2,4) = (yb - xa)/(2*mul)          ! misses factor 1/k
   Pmat(2,3) = (ca - cb) / two_mul
   Pmat(2,4) = (yb - xa) / two_mul
+
   !org: P_layer(3,1) = 2*mul * (xa - g1**2 * yb)  ! misses factor k
   !     P_layer(3,2) = 2*mul * g1 * (cb - ca)     ! misses factor k
   Pmat(3,1) = two_mul * (xa - g1_sq * yb)
   Pmat(3,2) = two_mul * g1 * (cb - ca)
   Pmat(3,3) = ca - g1*cb
   Pmat(3,4) = g1*yb - xa
+
   !org: P_layer(4,1) = 2*mul * g1 * (ca - cb)     ! misses factor k
   !     P_layer(4,2) = 2*mul * (xb - g1**2 * ya)  ! misses factor k
   Pmat(4,1) = two_mul * g1 * (ca - cb)
@@ -1468,10 +1586,14 @@ subroutine fk_propagator_psv(om,eta_alpha,eta_beta,rho,vs, &
   Pmat(4,3) = g1*ya - xb
   Pmat(4,4) = cb - g1*ca
 
-end subroutine fk_propagator_psv
+  end subroutine fk_propagator_psv
 
-subroutine fk_propagator_ac(om,eta_alpha,rho, &
-    H,ray_p,Qmat)
+!
+!-------------------------------------------------------------------------------------------------
+!
+
+  subroutine fk_propagator_ac(om,eta_alpha,rho,H,ray_p,Qmat)
+
   use specfem_par, only: CUSTOM_REAL
   implicit none
 
@@ -1482,16 +1604,25 @@ subroutine fk_propagator_ac(om,eta_alpha,rho, &
   complex(kind=CUSTOM_CMPLX)               :: c1,ca,sa
   complex(kind=CUSTOM_CMPLX)               :: nu_al
 
+  ! factor nu_al = -i nu_p = -i omega sqrt(1/alpha^2 - p^2)
+  !                        = omega (-i sqrt(1/alpha^2 - p^2)
+  !                        = omega (eta_alpha)
   nu_al = om * eta_alpha
+
+  ! matrix variables
+  ! C_alpha = cos(nu_p h) = cos( omega sqrt(1/alpha^2 - p^2) h )
+  ! S_alpha = -sin(nu_p h) = -sin( omega sqrt(1/alpha^2 - p^2) h )
+  ! with nu_p h = omega sqrt(1/alpha^2 - p^2) h
   c1 = nu_al * H
   ca = (exp(c1) + exp(-c1))/2.0
   sa = (exp(c1) - exp(-c1))/2.0     ! imaginary part
+
   Qmat(1,1) = ca
   Qmat(2,2) = ca
   Qmat(1,2) = -sa * eta_alpha * ray_p / rho! missing k
   Qmat(2,1) = sa * rho / (ray_p  * eta_alpha)
 
-end subroutine fk_propagator_ac
+  end subroutine fk_propagator_ac
 
 !
 !-------------------------------------------------------------------------------------------------
@@ -2872,6 +3003,13 @@ contains
     call exit_MPI(myrank,'Invalid number of boundary points found')
   endif
 
+  ! safety check
+  if (npoints_total == 0) then
+    print *,'Error: no coupling boundary points defined for this simulation!'
+    print *,'       Please check if mesh has absorbing boundaries setup properly to use COUPLE_WITH_INJECTION_TECHNIQUE'
+    call exit_MPI(myrank,'No coupling boundary points found')
+  endif
+
   ! user output
   if (myrank == 0) then
     write(IMAIN,*) '  interpolating time series:'
@@ -4105,9 +4243,9 @@ contains
 
     ! B-spline approximation
     veloc_inj(:,:) = cs1 * Veloc_FK(:,:,iim1) + cs2 * Veloc_FK(:,:,ii) + &
-                    cs3 * Veloc_FK(:,:,iip1) + cs4 * Veloc_FK(:,:,iip2)
+                     cs3 * Veloc_FK(:,:,iip1) + cs4 * Veloc_FK(:,:,iip2)
     tract_inj(:,:) = cs1 * Tract_FK(:,:,iim1) + cs2 * Tract_FK(:,:,ii) + &
-                    cs3 * Tract_FK(:,:,iip1) + cs4 * Tract_FK(:,:,iip2)
+                     cs3 * Tract_FK(:,:,iip1) + cs4 * Tract_FK(:,:,iip2)
   end select
 
   ! copy injection_fields to device

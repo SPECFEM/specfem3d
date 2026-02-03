@@ -48,24 +48,24 @@ For this region, a nice model seems to be [FWEA23](https://ds.iris.edu/ds/produc
 
     We will first setup the topography surface and tomographic model for meshing our region.
     In this example folder, we provide a bash script `setup_model.sh` to setup these model files.
-  
+
     Just run the setup script with the default target region:
     ```
     > ./setup_model.sh
     ```
-  
+
     This might take a while to complete and download the rather large EMC model file.
     Note that we added additional interfaces at 100km and 6km depth to facilitate the meshing with doubling layers.
-  
+
     Furthermore, USGS provides a global [Vs30 model and data](https://earthquake.usgs.gov/data/vs30/) set.
     The script will download and extract a corresponding Vs30-interface for our region.
-  
-  
+
+
 2. **Wave simulation**:
 
     After you have completed the mesh setup, you can run the in-house mesher `xmeshfem3D` and `xgenerate_databases` to create the spectral-element mesh of our region.
     The seismic wave propagation solver `xspecfem3D` then creates the needed movie data files for our visualization.
-  
+
     To run the simulation, just type:
     ```
     > ./run_this_example.sh
@@ -89,17 +89,17 @@ For this region, a nice model seems to be [FWEA23](https://ds.iris.edu/ds/produc
     NTSTEP_BETWEEN_FRAMES           = 100
     HDUR_MOVIE                      = 0.0
     ```
-  
+
     To visualize the corresponding output data (`OUTPUT_FILES/moviedata***`), we can create movie snapshot files as `OUTPUT_FILES/AVS_*.inp` files:
     ```
     > ./xcreate_movie_files.sh
     ```
-  
+
     Similar for the shakemap, we can plot the peak-ground velocity (PGV) values by
     ```
     > ./xcreate_shakemap.sh 2
     ```
-  
+
     You can use for example [Paraview](https://www.paraview.org) to look at the created `OUTPUT_FILEs/AVS_movie*.inp` files.
 
 

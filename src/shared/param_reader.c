@@ -68,6 +68,15 @@
 #include <regex.h>
 #include <time.h>
 
+// strcasecmp is non-standard C function
+// for windows
+#ifdef _WIN32
+#include <string.h>
+#define strcasecmp _stricmp
+#else // assuming POSIX or BSD compliant system
+#include <strings.h>
+#endif
+
 #ifndef LINE_MAX
 #define LINE_MAX 255
 #endif
@@ -114,7 +123,7 @@ FC_FUNC_(param_open,PARAM_OPEN)(char * filename, int * length, int * ierr)
     fncopy[blank - fncopy] = '\0';
   }
   if ((fid = fopen(fncopy, "r")) == NULL) {
-    // DK DK purposely suppressed this for NUMBER_OF_SIMULTANEOUS_RUNS     printf("Can't open '%s'\n", fncopy);
+// purposely suppressed this      printf("Can't open '%s'\n", fncopy);
     *ierr = 1;
     return;
   }
@@ -213,7 +222,8 @@ FC_FUNC_(param_read,PARAM_READ)(char * string_read, int * string_read_len, char 
     keyword = strndup(line+parameter[1].rm_so, parameter[1].rm_eo-parameter[1].rm_so);
 
     // If the keyword is not the one we're looking for, check the next line.
-    if (strcmp(keyword, namecopy2) != 0) {
+    // (case-insensitive comparison)
+    if (strcasecmp(keyword, namecopy2) != 0) {
       free(keyword);
       continue;
     }

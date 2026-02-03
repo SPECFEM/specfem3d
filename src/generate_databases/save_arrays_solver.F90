@@ -1034,6 +1034,13 @@
     ! coupling points on boundary
     num_coupling_points = num_abs_boundary_faces * NGLLSQUARE
 
+    ! user output
+    if (myrank == 0) then
+      write(IMAIN,*) '       number of coupling faces  (slice 0) = ',num_abs_boundary_faces
+      write(IMAIN,*) '       number of coupling points (slice 0) = ',num_coupling_points
+      call flush_IMAIN()
+    endif
+
     ! get local coupling points
     allocate(coupling_points(6,num_coupling_points),stat=ier)
     if (ier /= 0) stop 'Error allocating coupling points array'
@@ -1087,7 +1094,7 @@
     ! main process saves all coupling points
     if (myrank == 0) then
       ! user output
-      write(IMAIN,*) '       total number of coupling points = ',num_coupling_points_total
+      write(IMAIN,*) '       total number of coupling points     = ',num_coupling_points_total
       call flush_IMAIN()
 
       ! opens file
@@ -1161,6 +1168,16 @@
     ! stores boundary information into DATABASES_MPI/ directory
     ! with a corresponding file (absorb_ds) for each process
 
+    ! coupling points on boundary
+    num_coupling_points = num_abs_boundary_faces * NGLLSQUARE
+
+    ! user output
+    if (myrank == 0) then
+      write(IMAIN,*) '       number of coupling faces  (slice 0) = ',num_abs_boundary_faces
+      write(IMAIN,*) '       number of coupling points (slice 0) = ',num_coupling_points
+      call flush_IMAIN()
+    endif
+
     ! stores boundary files
     filename = prname(1:len_trim(prname))//'absorb_dsm'
     open(IOUT,file=filename(1:len_trim(filename)),status='unknown',form='unformatted',iostat=ier)
@@ -1181,30 +1198,47 @@
     ! write an ascii file for instaseis input
     filename = prname(1:len_trim(prname))//'normal.txt'
     open(IOUT,file=filename(1:len_trim(filename)),status='unknown',iostat=ier)
-    write(IOUT, *) ' number of points :', num_abs_boundary_faces*NGLLSQUARE
-
+    write(IOUT, *) ' number of points :', num_coupling_points
     do iface = 1,num_abs_boundary_faces
        ispec = abs_boundary_ispec(iface)
        if (ispec_is_elastic(ispec)) then
           do igll = 1,NGLLSQUARE
-
              ! gets local indices for GLL point
              i = abs_boundary_ijk(1,igll,iface)
              j = abs_boundary_ijk(2,igll,iface)
              k = abs_boundary_ijk(3,igll,iface)
-
              iglob = ibool(i,j,k,ispec)
-
+             ! normal
              nx = abs_boundary_normal(1,igll,iface)
              ny = abs_boundary_normal(2,igll,iface)
              nz = abs_boundary_normal(3,igll,iface)
-
+             ! file output
              write(IOUT,'(6f25.10)') xstore_unique(iglob), ystore_unique(iglob), zstore_unique(iglob), nx, ny, nz
-
           enddo
        endif
     enddo
     close(IOUT)
+
+    ! for user output
+    ! get coupling points from each process
+    if (NPROC > 1) then
+      nb_points_per_proc(:) = 0
+      call gather_all_singlei(num_coupling_points,nb_points_per_proc,NPROC)
+    endif
+
+    ! total number of points
+    if (NPROC > 1) then
+      num_coupling_points_total = sum(nb_points_per_proc(:))
+    else
+      num_coupling_points_total = num_coupling_points
+    endif
+
+    ! main process saves all coupling points
+    if (myrank == 0) then
+      ! user output
+      write(IMAIN,*) '       total number of coupling points     = ',num_coupling_points_total
+      call flush_IMAIN()
+    endif
 
   end select
 
