@@ -431,7 +431,7 @@
         print *,'Error: FK resampling rate ',NP_RESAMP,' is invalid for frequency sampling rate ',freq_sampling_fk
         print *,'       and the chosen simulation DT = ',deltat
         print *
-        print *,'       you could use a higher frequency sampling rate>',1./(deltat)
+        print *,'       you could use a higher frequency sampling rate >',1./(deltat)
         print *,'       (or increase the time stepping size DT if possible)'
       endif
       stop 'Invalid FK setting'
@@ -443,7 +443,7 @@
         print *,'Error: FK resampling rate ',NP_RESAMP,' is too high for frequency sampling rate ',freq_sampling_fk
         print *,'       and the chosen simulation DT = ',deltat
         print *
-        print *,'       you could use a higher frequency sampling rate > ',1./(10000*deltat)
+        print *,'       you could use a higher frequency sampling rate >',1./(10000*deltat)
         print *,'       (or increase the time stepping size DT if possible)'
       endif
       stop 'Invalid FK setting'
@@ -1279,7 +1279,7 @@
             ! single acoustic layer (nlayer=1 and ilayer_ac=1)
             ! in this case, all points are within the single acoustic half-space.
             ilayer = 1
-            height = zz(ipt)  ! Point's coordinate relative to the top of the acoustic half-space (z=0 in FK system)
+            height = zz(ipt)  ! Point's coordinate relative to the top of the acoustic half-space (z = 0 in FK system)
           else
             ! multi-layered acoustic models
             ! in this case, points should be in fluid layers
