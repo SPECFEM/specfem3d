@@ -29,6 +29,7 @@
 
 #include "mesh_constants_gpu.h"
 #include "prepare_constants_cuda.h"
+#include <string.h>
 
 #ifdef USE_CUDA
 #ifdef USE_OLDER_CUDA4_GPU
