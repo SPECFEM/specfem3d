@@ -784,20 +784,10 @@ jobs:
       shell: bash
 
 
-  # intermediate group
-  exampleChecks-A:
-    needs: [linuxTest_0,linuxTest_1,linuxTest_2,linuxTest_3,linuxTest_4,
-            linuxTest_5a,linuxTest_5b,linuxTest_6a,linuxTest_6b,
-            linuxTest_7,linuxTest_8,linuxTest_9,linuxTest_10]
-    runs-on: ubuntu-latest
-    steps:
-    - run: echo "example tests group A passed"
-
-
   linuxTest_11:
     name: Test 11 - coupling FK
     runs-on: ubuntu-latest
-    needs: [exampleChecks-A]
+    needs: [compilationChecks]
 
     steps:
     - uses: actions/checkout@v4
@@ -821,7 +811,7 @@ jobs:
   linuxTest_12:
     name: Test 12 - homogeneous halfspace
     runs-on: ubuntu-latest
-    needs: [exampleChecks-A]
+    needs: [compilationChecks]
 
     steps:
     - uses: actions/checkout@v4
@@ -845,7 +835,7 @@ jobs:
   linuxTest_13:
     name: Test 13 - poroelastic
     runs-on: ubuntu-latest
-    needs: [exampleChecks-A]
+    needs: [compilationChecks]
 
     steps:
     - uses: actions/checkout@v4
@@ -869,7 +859,7 @@ jobs:
   linuxTest_14:
     name: Test 14 - PML elastic
     runs-on: ubuntu-latest
-    needs: [exampleChecks-A]
+    needs: [compilationChecks]
 
     steps:
     - uses: actions/checkout@v4
@@ -893,7 +883,7 @@ jobs:
   linuxTest_15:
     name: Test 15 - PML acoustic
     runs-on: ubuntu-latest
-    needs: [exampleChecks-A]
+    needs: [compilationChecks]
 
     steps:
     - uses: actions/checkout@v4
@@ -917,7 +907,7 @@ jobs:
   linuxTest_16:
     name: Test 16 - waterlayered halfspace
     runs-on: ubuntu-latest
-    needs: [exampleChecks-A]
+    needs: [compilationChecks]
 
     steps:
     - uses: actions/checkout@v4
@@ -941,7 +931,7 @@ jobs:
   linuxTest_17:
     name: Test 17 - tomographic model
     runs-on: ubuntu-latest
-    needs: [exampleChecks-A]
+    needs: [compilationChecks]
 
     steps:
     - uses: actions/checkout@v4
@@ -965,7 +955,7 @@ jobs:
   linuxTest_18:
     name: Test 18 - cavity
     runs-on: ubuntu-latest
-    needs: [exampleChecks-A]
+    needs: [compilationChecks]
 
     steps:
     - uses: actions/checkout@v4
@@ -989,7 +979,7 @@ jobs:
   linuxTest_19:
     name: Test 19 - sep bathymetry
     runs-on: ubuntu-latest
-    needs: [exampleChecks-A]
+    needs: [compilationChecks]
 
     steps:
     - uses: actions/checkout@v4
@@ -1013,7 +1003,7 @@ jobs:
   linuxTest_20:
     name: Test 20 - socal1D HDF5 I/O
     runs-on: ubuntu-latest
-    needs: [exampleChecks-A]
+    needs: [compilationChecks]
 
     steps:
     - uses: actions/checkout@v4
@@ -1042,7 +1032,7 @@ jobs:
   linuxTest_21:
     name: Test 21 - meshfem3D simple model w/ ADIOS2
     runs-on: ubuntu-latest
-    needs: [exampleChecks-A]
+    needs: [compilationChecks]
 
     steps:
     - uses: actions/checkout@v4
@@ -1070,7 +1060,7 @@ jobs:
   linuxTest_22:
     name: Test 22 - coupling SPECFEM
     runs-on: ubuntu-latest
-    needs: [exampleChecks-A]
+    needs: [compilationChecks]
 
     steps:
     - uses: actions/checkout@v4
@@ -1091,6 +1081,14 @@ jobs:
       run: ./.github/scripts/run_tests.sh
       shell: bash
 
+  # intermediate group
+  exampleChecks-A:
+    needs: [linuxTest_0,linuxTest_1,linuxTest_2,linuxTest_3,linuxTest_4,
+            linuxTest_5a,linuxTest_5b,linuxTest_6a,linuxTest_6b,
+            linuxTest_7,linuxTest_8,linuxTest_9,linuxTest_10]
+    runs-on: ubuntu-latest
+    steps:
+    - run: echo "example tests group A passed"
 
   # intermediate group
   exampleChecks-B:
@@ -1105,7 +1103,7 @@ jobs:
   linuxCoverageTests:
     name: Coverage tests - ID ${{ matrix.testid }}
     runs-on: ubuntu-latest
-    needs: [exampleChecks-B]
+    needs: [exampleChecks-A,exampleChecks-B]
 
     strategy:
       fail-fast: false
@@ -1154,14 +1152,14 @@ jobs:
       env:
         TESTCOV: true
         TESTDIR: ${{ matrix.testdir }}
-        #TESTID: ${{ matrix.testid }}  # not used yet
+        TESTID: ${{ matrix.testid }}
       run: ./.github/scripts/run_tests.sh
       shell: bash
 
     - name: Run extra coverage examples
       env:
         TESTCOV: true
-        #TESTID: ${{ matrix.testid }}  # not used yet
+        TESTID: ${{ matrix.testid }}
       run: ./.github/scripts/run_coverage.sh
       shell: bash
 
@@ -1177,7 +1175,10 @@ jobs:
       shell: bash
 
     - name: Upload coverage to Codecov
-      uses: codecov/codecov-action@v4
+      if: ${{ github.repository == 'SPECFEM/specfem3d' }}
+      uses: codecov/codecov-action@v5
+      env:
+        CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
       with:
         fail_ci_if_error: true
         verbose: true
