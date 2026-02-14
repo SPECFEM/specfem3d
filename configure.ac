@@ -119,6 +119,7 @@ AM_CONDITIONAL([COND_CUDA9], [test x"$want_cuda" = xcuda9])
 AM_CONDITIONAL([COND_CUDA10], [test x"$want_cuda" = xcuda10])
 AM_CONDITIONAL([COND_CUDA11], [test x"$want_cuda" = xcuda11])
 AM_CONDITIONAL([COND_CUDA12], [test x"$want_cuda" = xcuda12])
+AM_CONDITIONAL([COND_CUDA13], [test x"$want_cuda" = xcuda13])
 
 # cuda linking for cuda 5x and 6x and 7x and 8x and ..
 AM_CONDITIONAL([COND_CUDA_PLUS],
@@ -130,7 +131,8 @@ AM_CONDITIONAL([COND_CUDA_PLUS],
      -o "$want_cuda" = cuda9 \
      -o "$want_cuda" = cuda10 \
      -o "$want_cuda" = cuda11 \
-     -o "$want_cuda" = cuda12 \]
+     -o "$want_cuda" = cuda12 \
+     -o "$want_cuda" = cuda13 \]
 )
 
 ## HIP
@@ -156,6 +158,7 @@ AM_CONDITIONAL([COND_HIP_CUDA9], [test x"$want_hip" = xcuda9])
 AM_CONDITIONAL([COND_HIP_CUDA10], [test x"$want_hip" = xcuda10])
 AM_CONDITIONAL([COND_HIP_CUDA11], [test x"$want_hip" = xcuda11])
 AM_CONDITIONAL([COND_HIP_CUDA12], [test x"$want_hip" = xcuda12])
+AM_CONDITIONAL([COND_HIP_CUDA13], [test x"$want_hip" = xcuda13])
 
 ###
 ### OpenMP

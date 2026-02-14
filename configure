@@ -748,6 +748,8 @@ COND_VTK_FALSE
 COND_VTK_TRUE
 COND_OMP_FALSE
 COND_OMP_TRUE
+COND_HIP_CUDA13_FALSE
+COND_HIP_CUDA13_TRUE
 COND_HIP_CUDA12_FALSE
 COND_HIP_CUDA12_TRUE
 COND_HIP_CUDA11_FALSE
@@ -784,6 +786,8 @@ COND_HIP_FALSE
 COND_HIP_TRUE
 COND_CUDA_PLUS_FALSE
 COND_CUDA_PLUS_TRUE
+COND_CUDA13_FALSE
+COND_CUDA13_TRUE
 COND_CUDA12_FALSE
 COND_CUDA12_TRUE
 COND_CUDA11_FALSE
@@ -3526,6 +3530,14 @@ else
   COND_CUDA12_FALSE=
 fi
 
+ if test x"$want_cuda" = xcuda13; then
+  COND_CUDA13_TRUE=
+  COND_CUDA13_FALSE='#'
+else
+  COND_CUDA13_TRUE='#'
+  COND_CUDA13_FALSE=
+fi
+
 
 # cuda linking for cuda 5x and 6x and 7x and 8x and ..
  if test "$want_cuda" = cuda4 \
@@ -3537,6 +3549,7 @@ fi
      -o "$want_cuda" = cuda10 \
      -o "$want_cuda" = cuda11 \
      -o "$want_cuda" = cuda12 \
+     -o "$want_cuda" = cuda13 \
 ; then
   COND_CUDA_PLUS_TRUE=
   COND_CUDA_PLUS_FALSE='#'
@@ -3692,6 +3705,14 @@ fi
 else
   COND_HIP_CUDA12_TRUE='#'
   COND_HIP_CUDA12_FALSE=
+fi
+
+ if test x"$want_hip" = xcuda13; then
+  COND_HIP_CUDA13_TRUE=
+  COND_HIP_CUDA13_FALSE='#'
+else
+  COND_HIP_CUDA13_TRUE='#'
+  COND_HIP_CUDA13_FALSE=
 fi
 
 
@@ -12376,6 +12397,10 @@ if test -z "${COND_CUDA12_TRUE}" && test -z "${COND_CUDA12_FALSE}"; then
   as_fn_error $? "conditional \"COND_CUDA12\" was never defined.
 Usually this means the macro was only invoked conditionally." "$LINENO" 5
 fi
+if test -z "${COND_CUDA13_TRUE}" && test -z "${COND_CUDA13_FALSE}"; then
+  as_fn_error $? "conditional \"COND_CUDA13\" was never defined.
+Usually this means the macro was only invoked conditionally." "$LINENO" 5
+fi
 if test -z "${COND_CUDA_PLUS_TRUE}" && test -z "${COND_CUDA_PLUS_FALSE}"; then
   as_fn_error $? "conditional \"COND_CUDA_PLUS\" was never defined.
 Usually this means the macro was only invoked conditionally." "$LINENO" 5
@@ -12446,6 +12471,10 @@ Usually this means the macro was only invoked conditionally." "$LINENO" 5
 fi
 if test -z "${COND_HIP_CUDA12_TRUE}" && test -z "${COND_HIP_CUDA12_FALSE}"; then
   as_fn_error $? "conditional \"COND_HIP_CUDA12\" was never defined.
+Usually this means the macro was only invoked conditionally." "$LINENO" 5
+fi
+if test -z "${COND_HIP_CUDA13_TRUE}" && test -z "${COND_HIP_CUDA13_FALSE}"; then
+  as_fn_error $? "conditional \"COND_HIP_CUDA13\" was never defined.
 Usually this means the macro was only invoked conditionally." "$LINENO" 5
 fi
 if test -z "${COND_OMP_TRUE}" && test -z "${COND_OMP_FALSE}"; then

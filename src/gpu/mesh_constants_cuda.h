@@ -107,6 +107,14 @@
 #undef USE_LAUNCH_BOUNDS
 #endif
 
+#ifdef GPU_DEVICE_Blackwell
+// specifics see: https://docs.nvidia.com/cuda/blackwell-tuning-guide/index.html
+// register file size 64k 32-bit registers per SM
+// shared memory size 228KB per SM (for compute capability 10.0) or 128KB per SM (for compute capability 12.0)
+// maximum registers 255 per thread
+#undef USE_LAUNCH_BOUNDS
+#endif
+
 /* ----------------------------------------------------------------------------------------------- */
 
 // CUDA specifics
