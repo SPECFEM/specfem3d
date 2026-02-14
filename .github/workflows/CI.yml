@@ -786,8 +786,9 @@ jobs:
 
   # intermediate group
   exampleChecks-A:
-    needs: [linuxTest_0,linuxTest_1,linuxTest_2,linuxTest_3,linuxTest_4,linuxTest_5a,linuxTest_5b, \
-            linuxTest_6a,linuxTest_6b,linuxTest_7,linuxTest_8,linuxTest_9,linuxTest_10 ]
+    needs: [linuxTest_0,linuxTest_1,linuxTest_2,linuxTest_3,linuxTest_4,
+            linuxTest_5a,linuxTest_5b,linuxTest_6a,linuxTest_6b,
+            linuxTest_7,linuxTest_8,linuxTest_9,linuxTest_10]
     runs-on: ubuntu-latest
     steps:
     - run: echo "example tests group A passed"
@@ -1093,8 +1094,8 @@ jobs:
 
   # intermediate group
   exampleChecks-B:
-    needs: [linuxTest_11,linuxTest_12,linuxTest_13,linuxTest_14,linuxTest_15, \
-            linuxTest_16,linuxTest_17,linuxTest_18,linuxTest_19,linuxTest_20, \
+    needs: [linuxTest_11,linuxTest_12,linuxTest_13,linuxTest_14,linuxTest_15,
+            linuxTest_16,linuxTest_17,linuxTest_18,linuxTest_19,linuxTest_20,
             linuxTest_21,linuxTest_22]
     runs-on: ubuntu-latest
     steps:
