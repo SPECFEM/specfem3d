@@ -115,6 +115,100 @@ if [ "${ADIOS2}" == "true" ]; then
   echo; echo "done ADIOS2"; echo
 fi
 
+# installs the CUDA toolkit
+if [ "${CUDA}" == "true" ]; then
+  # Linux environment
+  ## distribution from ubuntu 22.04
+  UBUNTU_VERSION=ubuntu2204
+
+  # CUDA_VERSION - specifies CUDA toolkit version
+  # http://developer.download.nvidia.com/compute/cuda/repos/
+  CUDA_VERSION=13.1.1-1
+
+  # default architecture amd64
+  CUDA_OS=x86_64
+  CUDA_ARCH=amd64
+  if [ "${RUNNER_ARCH}" == "arm64" ]; then
+    CUDA_OS=sbsa
+    CUDA_ARCH=arm64 # ARM
+  fi
+
+  echo "Installing CUDA library"
+  echo "CUDA version  : ${CUDA_VERSION}"
+  echo "UBUNTU version: ${UBUNTU_VERSION}"
+  echo "CUDA OS       : ${CUDA_OS}"
+  echo "CUDA arch     : ${CUDA_ARCH}"
+
+  # package needs key
+  # see: https://developer.nvidia.com/blog/updating-the-cuda-linux-gpg-repository-key/
+  # old:
+  #sudo apt-key adv --fetch-keys http://developer.download.nvidia.com/compute/cuda/repos/${UBUNTU_VERSION}/${CUDA_OS}/7fa2af80.pub
+  # new:
+  # manually add new key (not recommended):
+  #sudo apt-key adv --fetch-keys https://developer.download.nvidia.com/compute/cuda/repos/${UBUNTU_VERSION}/${CUDA_OS}/3bf863cc.pub
+  #echo
+  # gets packages
+  #INSTALLER=cuda-repo-${UBUNTU_VERSION}_${CUDA_VERSION}_${CUDA_ARCH}.deb
+  #wget http://developer.download.nvidia.com/compute/cuda/repos/${UBUNTU_VERSION}/${CUDA_OS}/${INSTALLER}
+  #sudo dpkg -i ${INSTALLER}
+  #echo
+  # (preferred) w/ new keyring package:
+  # see https://forums.developer.nvidia.com/t/notice-cuda-linux-repository-key-rotation/212772
+  # if it doesn't work yet with error:
+  #   E:Conflicting values set for option Signed-By regarding source
+  # remove outdated key:
+  sudo apt-key del 7fa2af80
+  sudo sed -i '/developer\.download\.nvidia\.com\/compute\/cuda\/repos/d' /etc/apt/sources.list
+  sudo rm -f /etc/apt/sources.d/cuda*.list
+  sudo rm -f /etc/apt/sources.list.d/cuda.list
+  sudo rm -f /etc/apt/sources.list.d/nvidia-ml.list
+  # for ubuntu1804/ppc64el ../$distro/$arch/.. becomes ../${UBUNTU_VERSION}/${CUDA_OS}/..
+  wget https://developer.download.nvidia.com/compute/cuda/repos/${UBUNTU_VERSION}/${CUDA_OS}/cuda-keyring_1.0-1_all.deb
+  sudo dpkg -i cuda-keyring_1.0-1_all.deb
+  echo
+
+  # update
+  echo "Updating libraries"
+  sudo apt-get update -qq
+  dpkg -l | grep cuda
+  export CUDA_APT=${CUDA_VERSION:0:4}  # version 13.1
+  export CUDA_APT=${CUDA_APT/./-}
+  echo "CUDA: ${CUDA_APT}"  # apt version 13-1 -> package name: cuda-compiler-13-1
+
+  # installs packages
+  CUDA_PACKAGES="cuda-drivers cuda-compiler-${CUDA_APT} cuda-cudart-dev-${CUDA_APT}"
+  echo "Installing ${CUDA_PACKAGES}"
+  sudo apt-get install -y --no-install-recommends ${CUDA_PACKAGES}
+  sudo apt-get clean
+  export CUDA_HOME=/usr/local/cuda-${CUDA_VERSION:0:4}    # version 13.1
+  export LD_LIBRARY_PATH=${CUDA_HOME}/lib64:${LD_LIBRARY_PATH}
+  export PATH=${CUDA_HOME}/bin:${PATH}
+  echo ""
+  nvcc --version
+  echo ""
+
+  ## OpenCL additionals
+  if [ "${OPENCL}" == "true" ]; then
+    echo "OpenCL installation"
+    #echo "dpkg toolkit:"
+    #dpkg -l | grep toolkit
+    #echo ""
+    #echo "dpkg opencl:"
+    #dpkg -l | grep opencl
+    #echo ""
+    #echo "apt-cache opencl:"
+    #apt-cache search opencl
+    # possible packages for OpenCL:
+    #sudo apt-get install -y --no-install-recommends cuda-toolkit-${CUDA_APT}
+    #sudo apt-get install opencl-headers
+    # for ppc64 architecture: to be able to compile/link OpenCL version
+    sudo apt-get install nvidia-opencl-dev
+    echo ""
+  fi
+else
+  export CUDA_HOME=""
+fi
+
 # MPI
 # github actions uses for Linux virtual machines a 2-core CPU environment
 # see: https://docs.github.com/en/actions/using-github-hosted-runners/about-github-hosted-runners#supported-runners-and-hardware-resources
