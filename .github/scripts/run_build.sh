@@ -16,6 +16,7 @@ echo
 echo "**********************************************************"
 echo
 echo "configuration test: TESTFLAGS=${TESTFLAGS} TESTNGLL=${TESTNGLL} TESTCOV=${TESTCOV}"
+echo "                    ADIOS2=${ADIOS2} HDF5=${HDF5} HIP=${HIP}"
 echo
 echo "**********************************************************"
 echo
@@ -93,7 +94,7 @@ if [ "${TESTCOV}" == "true" ]; then
     "${hdf[@]}" \
     "${hip[@]}" \
     "${flags[@]}" \
-    FLAGS_CHECK="-fprofile-arcs -ftest-coverage -O0" CFLAGS="-coverage -O0"
+    FLAGS_CHECK="-fprofile-arcs -ftest-coverage -O0" CFLAGS="-coverage -O0" \
     FC=gfortran MPIFC=mpif90 CC=gcc "$@"
 else
   if [ "$CUDA" == "true" ]; then

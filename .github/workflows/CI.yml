@@ -140,28 +140,6 @@ jobs:
     - name: make tests
       run: make tests
 
-  linuxCheck:
-    name: Test on ${{ matrix.os }}
-    runs-on: ${{ matrix.os }}
-    needs: changesCheck
-
-    strategy:
-      matrix:
-        os: [ubuntu-latest,ubuntu-22.04]
-
-    steps:
-    - uses: actions/checkout@v4
-
-    - name: Install packages
-      run: ./.github/scripts/run_install.sh
-      shell: bash
-
-    - name: configure
-      run: ./configure
-
-    - name: make
-      run: make -j4 all
-
 
   linuxCheck-Intel:
     name: Test Intel on ubuntu-22.04
@@ -429,6 +407,30 @@ jobs:
       run: |
         make tests
 
+
+  linuxCheck:
+    name: Test on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    needs: changesCheck
+
+    strategy:
+      matrix:
+        os: [ubuntu-latest,ubuntu-22.04]
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Install packages
+      run: ./.github/scripts/run_install.sh
+      shell: bash
+
+    - name: configure
+      run: ./configure
+
+    - name: make
+      run: make -j4 all
+
+
   linuxCheck-CUDA:
     name: Test on linux w/ CUDA
     runs-on: ubuntu-22.04
@@ -446,15 +448,23 @@ jobs:
     - name: Run build
       env:
         CUDA: true
-        TESTFLAGS: --with-mpi --enable-debug
+        TESTFLAGS: --with-mpi --enable-debug --with-cuda=cuda13
       run: ./.github/scripts/run_build.sh
       shell: bash
+
+
+  # intermediate group
+  compilationChecks:
+    needs: [linuxCheck,linuxCheck-CUDA]
+    runs-on: ubuntu-latest
+    steps:
+    - run: echo "compilation tests passed"
 
 
   linuxTest_0:
     name: Test 0 - make tests
     runs-on: ubuntu-latest
-    needs: [linuxCheck]
+    needs: [compilationChecks]
 
     steps:
     - uses: actions/checkout@v4
@@ -473,7 +483,7 @@ jobs:
   linuxTest_1:
     name: Test 1 - meshfem3D simple model
     runs-on: ubuntu-latest
-    needs: [linuxCheck]
+    needs: [compilationChecks]
 
     steps:
     - uses: actions/checkout@v4
@@ -497,7 +507,7 @@ jobs:
   linuxTest_2:
     name: Test 2 - fault tpv5
     runs-on: ubuntu-latest
-    needs: [linuxCheck]
+    needs: [compilationChecks]
 
     steps:
     - uses: actions/checkout@v4
@@ -521,7 +531,7 @@ jobs:
   linuxTest_3:
     name: Test 3 - layered halfspace
     runs-on: ubuntu-latest
-    needs: [linuxCheck]
+    needs: [compilationChecks]
 
     steps:
     - uses: actions/checkout@v4
@@ -546,7 +556,7 @@ jobs:
   linuxTest_4:
     name: Test 4 - small adjoint
     runs-on: ubuntu-latest
-    needs: [linuxCheck]
+    needs: [compilationChecks]
 
     steps:
     - uses: actions/checkout@v4
@@ -570,7 +580,7 @@ jobs:
   linuxTest_5a:
     name: Test 5a - kernel homogeneous acoustic
     runs-on: ubuntu-latest
-    needs: [linuxCheck]
+    needs: [compilationChecks]
 
     steps:
     - uses: actions/checkout@v4
@@ -593,7 +603,7 @@ jobs:
   linuxTest_5b:
     name: Test 5b - kernel homogeneous acoustic GPU HIP
     runs-on: ubuntu-latest
-    needs: [linuxCheck]
+    needs: [compilationChecks]
 
     steps:
     - uses: actions/checkout@v4
@@ -623,7 +633,7 @@ jobs:
   linuxTest_6a:
     name: Test 6a - kernel homogeneous halfspace
     runs-on: ubuntu-latest
-    needs: [linuxCheck]
+    needs: [compilationChecks]
 
     steps:
     - uses: actions/checkout@v4
@@ -646,7 +656,7 @@ jobs:
   linuxTest_6b:
     name: Test 6b - kernel homogeneous halfspace GPU HIP
     runs-on: ubuntu-latest
-    needs: [linuxCheck]
+    needs: [compilationChecks]
 
     steps:
     - uses: actions/checkout@v4
@@ -676,7 +686,7 @@ jobs:
   linuxTest_7:
     name: Test 7 - socal1D
     runs-on: ubuntu-latest
-    needs: [linuxCheck]
+    needs: [compilationChecks]
 
     steps:
     - uses: actions/checkout@v4
@@ -701,7 +711,7 @@ jobs:
   linuxTest_8:
     name: Test 8 - socal1D 1d_socal
     runs-on: ubuntu-latest
-    needs: [linuxCheck]
+    needs: [compilationChecks]
 
     steps:
     - uses: actions/checkout@v4
@@ -726,7 +736,7 @@ jobs:
   linuxTest_9:
     name: Test 9 - socal1D 1d_prem
     runs-on: ubuntu-latest
-    needs: [linuxCheck]
+    needs: [compilationChecks]
 
     steps:
     - uses: actions/checkout@v4
@@ -751,7 +761,7 @@ jobs:
   linuxTest_10:
     name: Test 10 - socal1D 1d_cascadia
     runs-on: ubuntu-latest
-    needs: [linuxCheck]
+    needs: [compilationChecks]
 
     steps:
     - uses: actions/checkout@v4
@@ -773,10 +783,20 @@ jobs:
       run: ./.github/scripts/run_tests.sh
       shell: bash
 
+
+  # intermediate group
+  exampleChecks-A:
+    needs: [linuxTest_0,linuxTest_1,linuxTest_2,linuxTest_3,linuxTest_4,linuxTest_5a,linuxTest_5b, \
+            linuxTest_6a,linuxTest_6b,linuxTest_7,linuxTest_8,linuxTest_9,linuxTest_10 ]
+    runs-on: ubuntu-latest
+    steps:
+    - run: echo "example tests group A passed"
+
+
   linuxTest_11:
     name: Test 11 - coupling FK
     runs-on: ubuntu-latest
-    needs: [linuxCheck]
+    needs: [exampleChecks-A]
 
     steps:
     - uses: actions/checkout@v4
@@ -800,7 +820,7 @@ jobs:
   linuxTest_12:
     name: Test 12 - homogeneous halfspace
     runs-on: ubuntu-latest
-    needs: [linuxCheck]
+    needs: [exampleChecks-A]
 
     steps:
     - uses: actions/checkout@v4
@@ -824,7 +844,7 @@ jobs:
   linuxTest_13:
     name: Test 13 - poroelastic
     runs-on: ubuntu-latest
-    needs: [linuxCheck]
+    needs: [exampleChecks-A]
 
     steps:
     - uses: actions/checkout@v4
@@ -848,7 +868,7 @@ jobs:
   linuxTest_14:
     name: Test 14 - PML elastic
     runs-on: ubuntu-latest
-    needs: [linuxCheck]
+    needs: [exampleChecks-A]
 
     steps:
     - uses: actions/checkout@v4
@@ -872,7 +892,7 @@ jobs:
   linuxTest_15:
     name: Test 15 - PML acoustic
     runs-on: ubuntu-latest
-    needs: [linuxCheck]
+    needs: [exampleChecks-A]
 
     steps:
     - uses: actions/checkout@v4
@@ -896,7 +916,7 @@ jobs:
   linuxTest_16:
     name: Test 16 - waterlayered halfspace
     runs-on: ubuntu-latest
-    needs: [linuxCheck]
+    needs: [exampleChecks-A]
 
     steps:
     - uses: actions/checkout@v4
@@ -920,7 +940,7 @@ jobs:
   linuxTest_17:
     name: Test 17 - tomographic model
     runs-on: ubuntu-latest
-    needs: [linuxCheck]
+    needs: [exampleChecks-A]
 
     steps:
     - uses: actions/checkout@v4
@@ -944,7 +964,7 @@ jobs:
   linuxTest_18:
     name: Test 18 - cavity
     runs-on: ubuntu-latest
-    needs: [linuxCheck]
+    needs: [exampleChecks-A]
 
     steps:
     - uses: actions/checkout@v4
@@ -968,7 +988,7 @@ jobs:
   linuxTest_19:
     name: Test 19 - sep bathymetry
     runs-on: ubuntu-latest
-    needs: [linuxCheck]
+    needs: [exampleChecks-A]
 
     steps:
     - uses: actions/checkout@v4
@@ -992,7 +1012,7 @@ jobs:
   linuxTest_20:
     name: Test 20 - socal1D HDF5 I/O
     runs-on: ubuntu-latest
-    needs: [linuxCheck]
+    needs: [exampleChecks-A]
 
     steps:
     - uses: actions/checkout@v4
@@ -1021,7 +1041,7 @@ jobs:
   linuxTest_21:
     name: Test 21 - meshfem3D simple model w/ ADIOS2
     runs-on: ubuntu-latest
-    needs: [linuxCheck]
+    needs: [exampleChecks-A]
 
     steps:
     - uses: actions/checkout@v4
@@ -1049,7 +1069,7 @@ jobs:
   linuxTest_22:
     name: Test 22 - coupling SPECFEM
     runs-on: ubuntu-latest
-    needs: [linuxCheck]
+    needs: [exampleChecks-A]
 
     steps:
     - uses: actions/checkout@v4
@@ -1070,10 +1090,21 @@ jobs:
       run: ./.github/scripts/run_tests.sh
       shell: bash
 
+
+  # intermediate group
+  exampleChecks-B:
+    needs: [linuxTest_11,linuxTest_12,linuxTest_13,linuxTest_14,linuxTest_15, \
+            linuxTest_16,linuxTest_17,linuxTest_18,linuxTest_19,linuxTest_20, \
+            linuxTest_21,linuxTest_22]
+    runs-on: ubuntu-latest
+    steps:
+    - run: echo "example tests group B passed"
+
+
   linuxCoverageTests:
     name: Coverage tests - ID ${{ matrix.testid }}
     runs-on: ubuntu-latest
-    needs: [linuxCheck]
+    needs: [exampleChecks-B]
 
     strategy:
       fail-fast: false
