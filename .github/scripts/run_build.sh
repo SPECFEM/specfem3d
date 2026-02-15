@@ -52,12 +52,24 @@ else
   hdf=()
 fi
 
+## CUDA
+if [ "${CUDA}" == "true" ]; then
+  echo
+  echo "enabling CUDA"
+  echo
+  cuda=(--with-cuda=cuda13 CUDA_LIB="${CUDA_HOME}/lib64" CUDA_INC="${CUDA_HOME}/include" \
+        CUDA_FLAGS="-Xcompiler -Wall,-Wno-unused-function,-Wno-unused-const-variable,-Wfatal-errors -g -G")
+else
+  cuda=()
+fi
+
 ## HIP
 if [ "${HIP}" == "true" ]; then
   echo
   echo "enabling HIP"
   echo
-  hip=(--with-hip HIPCC=g++ HIP_FLAGS="-O2 -g -std=c++17" HIP_PLATFORM=cpu HIP_INC=./external_libs/ROCm-HIP-CPU/include HIP_LIBS="-ltbb -lpthread -lstdc++")
+  hip=(--with-hip HIPCC=g++ HIP_PLATFORM=cpu HIP_INC=./external_libs/ROCm-HIP-CPU/include HIP_LIBS="-ltbb -lpthread -lstdc++" \
+       HIP_FLAGS="-O2 -g -std=c++17")
 else
   hip=()
 fi
@@ -92,30 +104,24 @@ if [ "${TESTCOV}" == "true" ]; then
   ./configure \
     "${adios[@]}" \
     "${hdf[@]}" \
+    "${cuda[@]}" \
     "${hip[@]}" \
     "${flags[@]}" \
     FLAGS_CHECK="-fprofile-arcs -ftest-coverage -O0" CFLAGS="-coverage -O0" \
-    FC=gfortran MPIFC=mpif90 CC=gcc "$@"
+    FC=${FC} MPIFC=${MPIFC} CC=${CC} "$@"
 else
   if [ "${CUDA}" == "true" ]; then
     echo "configuration: for cuda"
-    ./configure \
-      "${adios[@]}" \
-      "${hdf[@]}" \
-      "${hip[@]}" \
-      "${flags[@]}" \
-      CUDA_LIB="${CUDA_HOME}/lib64" CUDA_INC="${CUDA_HOME}/include" \
-      CUDA_FLAGS="-Xcompiler -Wall,-Wno-unused-function,-Wno-unused-const-variable,-Wfatal-errors -g -G" \
-      FC=${FC} MPIFC=${MPIFC} CC=${CC} "$@"
   else
     echo "configuration: default"
-    ./configure \
-      "${adios[@]}" \
-      "${hdf[@]}" \
-      "${hip[@]}" \
-      "${flags[@]}" \
-      FC=gfortran MPIFC=mpif90 CC=gcc "$@"
   fi
+  ./configure \
+    "${adios[@]}" \
+    "${hdf[@]}" \
+    "${cuda[@]}" \
+    "${hip[@]}" \
+    "${flags[@]}" \
+    FC=${FC} MPIFC=${MPIFC} CC=${CC} "$@"
 fi
 
 # checks

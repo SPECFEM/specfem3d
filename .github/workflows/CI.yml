@@ -448,14 +448,37 @@ jobs:
     - name: Run build
       env:
         CUDA: true
-        TESTFLAGS: --with-mpi --enable-debug --with-cuda=cuda13
+        TESTFLAGS: --with-mpi --enable-debug
+      run: ./.github/scripts/run_build.sh
+      shell: bash
+
+  linuxCheck-HIP:
+    name: Test on linux w/ HIP
+    runs-on: ubuntu-latest
+    needs: changesCheck
+
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        submodules: true      # needs submodule content in folder external_libs/ROCm-HIP-CPU/
+
+    - name: Install packages
+      env:
+        HIP: true
+      run: ./.github/scripts/run_install.sh
+      shell: bash
+
+    - name: Run build
+      env:
+        HIP: true
+        TESTFLAGS: --with-mpi --enable-debug
       run: ./.github/scripts/run_build.sh
       shell: bash
 
 
   # intermediate group
   compilationChecks:
-    needs: [linuxCheck,linuxCheck-CUDA]
+    needs: [linuxCheck,linuxCheck-CUDA,linuxCheck-HIP]
     runs-on: ubuntu-latest
     steps:
     - run: echo "compilation tests passed"
@@ -1158,13 +1181,6 @@ jobs:
       run: ./.github/scripts/run_coverage.sh
       shell: bash
 
-
-  linuxCoverageTests-Upload:
-    name: Coverage tests upload
-    runs-on: ubuntu-latest
-    needs: [linuxCoverageTests]
-
-    steps:
     - name: Generate gcov reports
       if: ${{ github.repository == 'SPECFEM/specfem3d' }}
       run: |
@@ -1195,6 +1211,3 @@ jobs:
         fail_ci_if_error: true
         verbose: true
         flags: coverage-testname-${{ matrix.testname }}
-
-    - name: all done
-      run: echo "tests passed"
