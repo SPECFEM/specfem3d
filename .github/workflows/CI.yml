@@ -1081,29 +1081,24 @@ jobs:
       run: ./.github/scripts/run_tests.sh
       shell: bash
 
-  # intermediate group
-  exampleChecks-A:
+  # intermediate workflow check
+  # leaves out linuxTest_5b and linuxTest_6b (kernel w/ HIP as they take longer than all others)
+  exampleChecks:
     needs: [linuxTest_0,linuxTest_1,linuxTest_2,linuxTest_3,linuxTest_4,
-            linuxTest_5a,linuxTest_5b,linuxTest_6a,linuxTest_6b,
-            linuxTest_7,linuxTest_8,linuxTest_9,linuxTest_10]
-    runs-on: ubuntu-latest
-    steps:
-    - run: echo "example tests group A passed"
-
-  # intermediate group
-  exampleChecks-B:
-    needs: [linuxTest_11,linuxTest_12,linuxTest_13,linuxTest_14,linuxTest_15,
+            linuxTest_5a,linuxTest_6a,
+            linuxTest_7,linuxTest_8,linuxTest_9,linuxTest_10,
+            linuxTest_11,linuxTest_12,linuxTest_13,linuxTest_14,linuxTest_15,
             linuxTest_16,linuxTest_17,linuxTest_18,linuxTest_19,linuxTest_20,
             linuxTest_21,linuxTest_22]
     runs-on: ubuntu-latest
     steps:
-    - run: echo "example tests group B passed"
+    - run: echo "example tests passed"
 
 
   linuxCoverageTests:
     name: Coverage tests - ID ${{ matrix.testid }}
     runs-on: ubuntu-latest
-    needs: [exampleChecks-A,exampleChecks-B]
+    needs: [exampleChecks]
 
     strategy:
       fail-fast: false
@@ -1163,7 +1158,15 @@ jobs:
       run: ./.github/scripts/run_coverage.sh
       shell: bash
 
+
+  linuxCoverageTests-Upload:
+    name: Coverage tests upload
+    runs-on: ubuntu-latest
+    needs: [linuxCoverageTests]
+
+    steps:
     - name: Generate gcov reports
+      if: ${{ github.repository == 'SPECFEM/specfem3d' }}
       run: |
         gcov --version
         echo `pwd`
@@ -1174,6 +1177,15 @@ jobs:
         find obj/ -iname '*.o' | sort | awk '{print "gcov -o obj/ "$1;}' | sh
       shell: bash
 
+    # code coverage:
+    # see script : https://github.com/codecov/codecov-bash/blob/master/codecov
+    # see example: https://github.com/codecov/example-fortran/blob/master/.travis.yml
+    #- name: Upload coverage to Codecov
+    #  if: ${{ github.repository == 'SPECFEM/specfem3d' }}
+    #  run: |
+    #    bash <(curl -s https://codecov.io/bash) -X gcov; fi
+    #  shell: bash
+
     - name: Upload coverage to Codecov
       if: ${{ github.repository == 'SPECFEM/specfem3d' }}
       uses: codecov/codecov-action@v5
@@ -1183,3 +1195,6 @@ jobs:
         fail_ci_if_error: true
         verbose: true
         flags: coverage-testname-${{ matrix.testname }}
+
+    - name: all done
+      run: echo "tests passed"
