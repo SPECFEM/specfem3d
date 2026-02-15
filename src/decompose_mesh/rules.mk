@@ -194,9 +194,16 @@ $O/fault_scotch.dec_module.o: $O/decompose_mesh_par.dec_module.o $O/search_kdtre
 # mpi version
 $O/program_decompose_mesh_mpi.mpidec.o: $O/shared_par.shared_module.o $O/module_mesh.dec.o $O/module_database.dec.o $O/module_partition.dec.o $(COND_MPI_OBJECTS)
 
-$O/module_database.dec.o : $O/shared_par.shared_module.o
-$O/module_partition.dec.o : $O/shared_par.shared_module.o $O/fault_scotch.dec_module.o $O/module_qsort.dec.o
-$O/module_mesh.dec.o : $O/shared_par.shared_module.o $O/fault_scotch.dec_module.o
+$O/module_database.dec.o: $O/shared_par.shared_module.o
+$O/module_partition.dec.o: $O/shared_par.shared_module.o $O/fault_scotch.dec_module.o $O/module_qsort.dec.o
+$O/module_mesh.dec.o: $O/shared_par.shared_module.o $O/fault_scotch.dec_module.o
+
+# partition_scotch.F90 needs to include scotchf.h (created when scotch gets compiled) for USE_SCOTCH
+ifeq ($(SCOTCH),yes)
+ ifeq (${USE_BUNDLED_SCOTCH},1)
+  $O/partition_scotch.dec.o: ${SCOTCH_DIR}/include/scotchf.h
+ endif
+endif
 
 #######################################
 

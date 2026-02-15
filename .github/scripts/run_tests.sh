@@ -8,6 +8,8 @@ if [ -f $HOME/.tmprc ]; then source $HOME/.tmprc; fi
 
 WORKDIR=`pwd`
 dir=${TESTDIR}
+TESTID=${TESTID:-}
+TESTCOV=${TESTCOV:-}
 
 # info
 echo "work directory: $WORKDIR"
@@ -169,6 +171,26 @@ fi
 if [ "$TESTDIR" == "EXAMPLES/applications/meshfem3D_examples/sep_bathymetry/" ]; then
   sed -i "s:^NSTEP .*:NSTEP    = 1000:" DATA/Par_file
 fi
+# serial/no-mpi coverage row
+if [ "$TESTDIR" == "EXAMPLES/applications/homogeneous_acoustic/" ]; then
+  sed -i "s:^NPROC .*:NPROC    = 1:" DATA/Par_file
+  sed -i "s:^NTSTEP_BETWEEN_OUTPUT_INFO .*:NTSTEP_BETWEEN_OUTPUT_INFO    = 20:" DATA/Par_file
+fi
+# inversion example coverage setup (travis parity)
+if [ "$TESTDIR" == "EXAMPLES/applications/inversion_examples/fwi_test_acoustic/" ]; then
+  sed -i "s:^NTSTEP_BETWEEN_OUTPUT_INFO .*:NTSTEP_BETWEEN_OUTPUT_INFO    = 500:" DATA/Par_file
+  # reduce mesh resolution for CI runtime
+  if [ -e DATA/meshfem3D_files/Mesh_Par_file.INIT ]; then sed -i "s:20:16:g" DATA/meshfem3D_files/Mesh_Par_file.INIT; fi
+  if [ -e DATA/meshfem3D_files/Mesh_Par_file.TRUE ]; then sed -i "s:20:16:g" DATA/meshfem3D_files/Mesh_Par_file.TRUE; fi
+  if [ -e DATA/meshfem3D_files/interfaces.dat ]; then sed -i "s:20:16:g" DATA/meshfem3D_files/interfaces.dat; fi
+  if [ -e DATA/inverse_problem/inversion_fwi.dat ]; then sed -i "s/Niter .*/Niter       : 1/" DATA/inverse_problem/inversion_fwi.dat; fi
+  if [ -e DATA/inverse_problem/acquisition.dat ]; then sed -i "s/NSTEP .*/NSTEP         : 100/" DATA/inverse_problem/acquisition.dat; fi
+fi
+
+# coverage runs use short steps
+if [ "$TESTCOV" == "true" ]; then
+  sed -i "s:^NSTEP .*:NSTEP    = 5:" DATA/Par_file
+fi
 
 ## HDF5 - i/o example
 if [ "${HDF5}" == "true" ]; then
@@ -221,11 +243,18 @@ echo `date`
 echo
 
 # seismogram comparison
-if [ "${DEBUG}" == "true" ] || [ "${RUN_KERNEL}" == "true" ]; then
+RUN_COMPARE=true
+# turn off for non-default runs
+if [ "${TESTCOV}" == "true" ]; then RUN_COMPARE=false; fi
+if [ "${DEBUG}" == "true" ]; then RUN_COMPARE=false; fi
+if [ "${RUN_KERNEL}" == "true" ]; then RUN_COMPARE=false; fi
+if [ "$TESTDIR" == "EXAMPLES/applications/inversion_examples/fwi_test_acoustic/" ]; then RUN_COMPARE=false; fi
+
+if [ "${RUN_COMPARE}" == "true" ]; then
+  my_test
+else
   # no comparisons
   :     # do nothing
-else
-  my_test
 fi
 # checks exit code
 if [[ $? -ne 0 ]]; then exit 1; fi

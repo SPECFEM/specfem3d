@@ -7,6 +7,7 @@
 if [ -f $HOME/.tmprc ]; then source $HOME/.tmprc; fi
 
 WORKDIR=`pwd`
+TESTCOV=${TESTCOV:-}
 
 # info
 echo "work directory: $WORKDIR"
@@ -14,7 +15,8 @@ echo `date`
 echo
 echo "**********************************************************"
 echo
-echo "configuration test: TESTFLAGS=${TESTFLAGS} TESTNGLL=${TESTNGLL}"
+echo "configuration test: TESTFLAGS=${TESTFLAGS} TESTNGLL=${TESTNGLL} TESTCOV=${TESTCOV}"
+echo "                    CUDA=${CUDA} HIP=${HIP} ADIOS2=${ADIOS2} HDF5=${HDF5}"
 echo
 echo "**********************************************************"
 echo
@@ -50,12 +52,24 @@ else
   hdf=()
 fi
 
+## CUDA
+if [ "${CUDA}" == "true" ]; then
+  echo
+  echo "enabling CUDA"
+  echo
+  cuda=(--with-cuda=cuda13 CUDA_LIB="${CUDA_HOME}/lib64" CUDA_INC="${CUDA_HOME}/include" \
+        CUDA_FLAGS="-Xcompiler -Wall,-Wno-unused-function,-Wno-unused-const-variable,-Wfatal-errors -g -G")
+else
+  cuda=()
+fi
+
 ## HIP
 if [ "${HIP}" == "true" ]; then
   echo
   echo "enabling HIP"
   echo
-  hip=(--with-hip HIPCC=g++ HIP_FLAGS="-O2 -g -std=c++17" HIP_PLATFORM=cpu HIP_INC=./external_libs/ROCm-HIP-CPU/include HIP_LIBS="-ltbb -lpthread -lstdc++")
+  hip=(--with-hip HIPCC=g++ HIP_PLATFORM=cpu HIP_INC=./external_libs/ROCm-HIP-CPU/include HIP_LIBS="-ltbb -lpthread -lstdc++" \
+       HIP_FLAGS="-O2 -g -std=c++17")
 else
   hip=()
 fi
@@ -80,12 +94,35 @@ echo
 # split TESTFLAGS into individual items
 set -- ${TESTFLAGS}
 
-./configure \
-"${adios[@]}" \
-"${hdf[@]}" \
-"${hip[@]}" \
-"${flags[@]}" \
-FC=gfortran MPIFC=mpif90 CC=gcc "$@"
+###########################################################
+# configuration & compilation
+###########################################################
+# configuration
+
+if [ "${TESTCOV}" == "true" ]; then
+  echo "configuration: for coverage"
+  ./configure \
+    "${adios[@]}" \
+    "${hdf[@]}" \
+    "${cuda[@]}" \
+    "${hip[@]}" \
+    "${flags[@]}" \
+    FLAGS_CHECK="-fprofile-arcs -ftest-coverage -O0" CFLAGS="-coverage -O0" \
+    FC=${FC} MPIFC=${MPIFC} CC=${CC} "$@"
+else
+  if [ "${CUDA}" == "true" ]; then
+    echo "configuration: for cuda"
+  else
+    echo "configuration: default"
+  fi
+  ./configure \
+    "${adios[@]}" \
+    "${hdf[@]}" \
+    "${cuda[@]}" \
+    "${hip[@]}" \
+    "${flags[@]}" \
+    FC=${FC} MPIFC=${MPIFC} CC=${CC} "$@"
+fi
 
 # checks
 if [[ $? -ne 0 ]]; then echo "configuration failed:"; cat config.log; echo ""; echo "exiting..."; exit 1; fi
@@ -97,6 +134,12 @@ fi
 
 # we output to console
 sed -i "s:IMAIN .*:IMAIN = ISTANDARD_OUTPUT:" setup/constants.h
+
+# inversion example
+if [ "$TESTDIR" == "EXAMPLES/applications/inversion_examples/fwi_test_acoustic/" ]; then
+  sed -i "s:IMAIN .*:IMAIN = 42:" setup/constants.h
+  sed -i "s:INVERSE_LOG_FILE .*:INVERSE_LOG_FILE = 6:" src/inverse_problem_for_model/inverse_problem_par.f90
+fi
 
 # compilation
 echo

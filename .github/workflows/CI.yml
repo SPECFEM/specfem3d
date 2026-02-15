@@ -140,28 +140,6 @@ jobs:
     - name: make tests
       run: make tests
 
-  linuxCheck:
-    name: Test on ${{ matrix.os }}
-    runs-on: ${{ matrix.os }}
-    needs: changesCheck
-
-    strategy:
-      matrix:
-        os: [ubuntu-latest,ubuntu-22.04]
-
-    steps:
-    - uses: actions/checkout@v4
-
-    - name: Install packages
-      run: ./.github/scripts/run_install.sh
-      shell: bash
-
-    - name: configure
-      run: ./configure
-
-    - name: make
-      run: make -j4 all
-
 
   linuxCheck-Intel:
     name: Test Intel on ubuntu-22.04
@@ -429,10 +407,87 @@ jobs:
       run: |
         make tests
 
+
+  linuxCheck:
+    name: Test on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    needs: changesCheck
+
+    strategy:
+      matrix:
+        os: [ubuntu-latest,ubuntu-22.04]
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Install packages
+      run: ./.github/scripts/run_install.sh
+      shell: bash
+
+    - name: configure
+      run: ./configure
+
+    - name: make
+      run: make -j4 all
+
+
+  linuxCheck-CUDA:
+    name: Test on linux w/ CUDA
+    runs-on: ubuntu-22.04
+    needs: changesCheck
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Install packages
+      env:
+        CUDA: true
+      run: ./.github/scripts/run_install.sh
+      shell: bash
+
+    - name: Run build
+      env:
+        CUDA: true
+        TESTFLAGS: --with-mpi --enable-debug
+      run: ./.github/scripts/run_build.sh
+      shell: bash
+
+  linuxCheck-HIP:
+    name: Test on linux w/ HIP
+    runs-on: ubuntu-latest
+    needs: changesCheck
+
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        submodules: true      # needs submodule content in folder external_libs/ROCm-HIP-CPU/
+
+    - name: Install packages
+      env:
+        HIP: true
+      run: ./.github/scripts/run_install.sh
+      shell: bash
+
+    - name: Run build
+      env:
+        HIP: true
+        TESTFLAGS: --with-mpi --enable-debug
+      run: ./.github/scripts/run_build.sh
+      shell: bash
+
+
+  # intermediate group
+  compilationChecks:
+    needs: [linuxCheck,linuxCheck-CUDA,linuxCheck-HIP]
+    runs-on: ubuntu-latest
+    steps:
+    - run: echo "compilation tests passed"
+
+
   linuxTest_0:
     name: Test 0 - make tests
     runs-on: ubuntu-latest
-    needs: [linuxCheck]
+    needs: [compilationChecks]
 
     steps:
     - uses: actions/checkout@v4
@@ -451,7 +506,7 @@ jobs:
   linuxTest_1:
     name: Test 1 - meshfem3D simple model
     runs-on: ubuntu-latest
-    needs: [linuxCheck]
+    needs: [compilationChecks]
 
     steps:
     - uses: actions/checkout@v4
@@ -475,7 +530,7 @@ jobs:
   linuxTest_2:
     name: Test 2 - fault tpv5
     runs-on: ubuntu-latest
-    needs: [linuxCheck]
+    needs: [compilationChecks]
 
     steps:
     - uses: actions/checkout@v4
@@ -499,7 +554,7 @@ jobs:
   linuxTest_3:
     name: Test 3 - layered halfspace
     runs-on: ubuntu-latest
-    needs: [linuxCheck]
+    needs: [compilationChecks]
 
     steps:
     - uses: actions/checkout@v4
@@ -524,7 +579,7 @@ jobs:
   linuxTest_4:
     name: Test 4 - small adjoint
     runs-on: ubuntu-latest
-    needs: [linuxCheck]
+    needs: [compilationChecks]
 
     steps:
     - uses: actions/checkout@v4
@@ -548,7 +603,7 @@ jobs:
   linuxTest_5a:
     name: Test 5a - kernel homogeneous acoustic
     runs-on: ubuntu-latest
-    needs: [linuxCheck]
+    needs: [compilationChecks]
 
     steps:
     - uses: actions/checkout@v4
@@ -571,7 +626,7 @@ jobs:
   linuxTest_5b:
     name: Test 5b - kernel homogeneous acoustic GPU HIP
     runs-on: ubuntu-latest
-    needs: [linuxCheck]
+    needs: [compilationChecks]
 
     steps:
     - uses: actions/checkout@v4
@@ -601,7 +656,7 @@ jobs:
   linuxTest_6a:
     name: Test 6a - kernel homogeneous halfspace
     runs-on: ubuntu-latest
-    needs: [linuxCheck]
+    needs: [compilationChecks]
 
     steps:
     - uses: actions/checkout@v4
@@ -624,7 +679,7 @@ jobs:
   linuxTest_6b:
     name: Test 6b - kernel homogeneous halfspace GPU HIP
     runs-on: ubuntu-latest
-    needs: [linuxCheck]
+    needs: [compilationChecks]
 
     steps:
     - uses: actions/checkout@v4
@@ -654,7 +709,7 @@ jobs:
   linuxTest_7:
     name: Test 7 - socal1D
     runs-on: ubuntu-latest
-    needs: [linuxCheck]
+    needs: [compilationChecks]
 
     steps:
     - uses: actions/checkout@v4
@@ -679,7 +734,7 @@ jobs:
   linuxTest_8:
     name: Test 8 - socal1D 1d_socal
     runs-on: ubuntu-latest
-    needs: [linuxCheck]
+    needs: [compilationChecks]
 
     steps:
     - uses: actions/checkout@v4
@@ -704,7 +759,7 @@ jobs:
   linuxTest_9:
     name: Test 9 - socal1D 1d_prem
     runs-on: ubuntu-latest
-    needs: [linuxCheck]
+    needs: [compilationChecks]
 
     steps:
     - uses: actions/checkout@v4
@@ -729,7 +784,7 @@ jobs:
   linuxTest_10:
     name: Test 10 - socal1D 1d_cascadia
     runs-on: ubuntu-latest
-    needs: [linuxCheck]
+    needs: [compilationChecks]
 
     steps:
     - uses: actions/checkout@v4
@@ -751,10 +806,11 @@ jobs:
       run: ./.github/scripts/run_tests.sh
       shell: bash
 
+
   linuxTest_11:
     name: Test 11 - coupling FK
     runs-on: ubuntu-latest
-    needs: [linuxCheck]
+    needs: [compilationChecks]
 
     steps:
     - uses: actions/checkout@v4
@@ -778,7 +834,7 @@ jobs:
   linuxTest_12:
     name: Test 12 - homogeneous halfspace
     runs-on: ubuntu-latest
-    needs: [linuxCheck]
+    needs: [compilationChecks]
 
     steps:
     - uses: actions/checkout@v4
@@ -802,7 +858,7 @@ jobs:
   linuxTest_13:
     name: Test 13 - poroelastic
     runs-on: ubuntu-latest
-    needs: [linuxCheck]
+    needs: [compilationChecks]
 
     steps:
     - uses: actions/checkout@v4
@@ -826,7 +882,7 @@ jobs:
   linuxTest_14:
     name: Test 14 - PML elastic
     runs-on: ubuntu-latest
-    needs: [linuxCheck]
+    needs: [compilationChecks]
 
     steps:
     - uses: actions/checkout@v4
@@ -850,7 +906,7 @@ jobs:
   linuxTest_15:
     name: Test 15 - PML acoustic
     runs-on: ubuntu-latest
-    needs: [linuxCheck]
+    needs: [compilationChecks]
 
     steps:
     - uses: actions/checkout@v4
@@ -874,7 +930,7 @@ jobs:
   linuxTest_16:
     name: Test 16 - waterlayered halfspace
     runs-on: ubuntu-latest
-    needs: [linuxCheck]
+    needs: [compilationChecks]
 
     steps:
     - uses: actions/checkout@v4
@@ -898,7 +954,7 @@ jobs:
   linuxTest_17:
     name: Test 17 - tomographic model
     runs-on: ubuntu-latest
-    needs: [linuxCheck]
+    needs: [compilationChecks]
 
     steps:
     - uses: actions/checkout@v4
@@ -922,7 +978,7 @@ jobs:
   linuxTest_18:
     name: Test 18 - cavity
     runs-on: ubuntu-latest
-    needs: [linuxCheck]
+    needs: [compilationChecks]
 
     steps:
     - uses: actions/checkout@v4
@@ -946,7 +1002,7 @@ jobs:
   linuxTest_19:
     name: Test 19 - sep bathymetry
     runs-on: ubuntu-latest
-    needs: [linuxCheck]
+    needs: [compilationChecks]
 
     steps:
     - uses: actions/checkout@v4
@@ -970,7 +1026,7 @@ jobs:
   linuxTest_20:
     name: Test 20 - socal1D HDF5 I/O
     runs-on: ubuntu-latest
-    needs: [linuxCheck]
+    needs: [compilationChecks]
 
     steps:
     - uses: actions/checkout@v4
@@ -999,7 +1055,7 @@ jobs:
   linuxTest_21:
     name: Test 21 - meshfem3D simple model w/ ADIOS2
     runs-on: ubuntu-latest
-    needs: [linuxCheck]
+    needs: [compilationChecks]
 
     steps:
     - uses: actions/checkout@v4
@@ -1027,7 +1083,7 @@ jobs:
   linuxTest_22:
     name: Test 22 - coupling SPECFEM
     runs-on: ubuntu-latest
-    needs: [linuxCheck]
+    needs: [compilationChecks]
 
     steps:
     - uses: actions/checkout@v4
@@ -1047,3 +1103,111 @@ jobs:
         TESTDIR: EXAMPLES/applications/small_example_coupling_SPECFEM_specfem/
       run: ./.github/scripts/run_tests.sh
       shell: bash
+
+  # intermediate workflow check
+  # leaves out linuxTest_5b and linuxTest_6b (kernel w/ HIP as they take longer than all others)
+  exampleChecks:
+    needs: [linuxTest_0,linuxTest_1,linuxTest_2,linuxTest_3,linuxTest_4,
+            linuxTest_5a,linuxTest_6a,
+            linuxTest_7,linuxTest_8,linuxTest_9,linuxTest_10,
+            linuxTest_11,linuxTest_12,linuxTest_13,linuxTest_14,linuxTest_15,
+            linuxTest_16,linuxTest_17,linuxTest_18,linuxTest_19,linuxTest_20,
+            linuxTest_21,linuxTest_22]
+    runs-on: ubuntu-latest
+    steps:
+    - run: echo "example tests passed"
+
+
+  linuxCoverageTests:
+    name: Coverage tests - ID ${{ matrix.testid }}
+    runs-on: ubuntu-latest
+    needs: [exampleChecks]
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+        - testid: 0
+          testdir: EXAMPLES/applications/homogeneous_acoustic/
+          testflags: --without-mpi
+        - testid: 1
+          testdir: EXAMPLES/applications/homogeneous_acoustic/
+          testflags: --with-mpi
+        - testid: 2
+          testdir: EXAMPLES/applications/homogeneous_halfspace_HEX8_elastic_no_absorbing/
+          testflags: --with-mpi
+        - testid: 3
+          testdir: EXAMPLES/applications/homogeneous_halfspace_HEX8_elastic_absorbing_Stacey_5sides/
+          testflags: --with-mpi
+        - testid: 4
+          testdir: EXAMPLES/applications/meshfem3D_examples/socal1D/
+          testflags: --with-mpi
+        - testid: 5
+          testdir: EXAMPLES/applications/inversion_examples/fwi_test_acoustic/
+          testflags: --with-mpi
+        - testid: 6
+          testdir: EXAMPLES/applications/layered_halfspace/
+          testflags: --with-mpi
+          testngll: 6
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Install packages
+      run: ./.github/scripts/run_install.sh
+      shell: bash
+
+    - name: Run build (coverage)
+      env:
+        TESTCOV: true
+        TESTDIR: ${{ matrix.testdir }}
+        TESTFLAGS: ${{ matrix.testflags }}
+        TESTNGLL: ${{ matrix.testngll }}
+      run: ./.github/scripts/run_build.sh
+      shell: bash
+
+    - name: Run base test (coverage)
+      env:
+        TESTCOV: true
+        TESTDIR: ${{ matrix.testdir }}
+        TESTID: ${{ matrix.testid }}
+      run: ./.github/scripts/run_tests.sh
+      shell: bash
+
+    - name: Run extra coverage examples
+      env:
+        TESTCOV: true
+        TESTID: ${{ matrix.testid }}
+      run: ./.github/scripts/run_coverage.sh
+      shell: bash
+
+    - name: Generate gcov reports
+      if: ${{ github.repository == 'SPECFEM/specfem3d' }}
+      run: |
+        gcov --version
+        echo `pwd`
+        ls -al obj/
+        # produces coverage reports (done manually because of different naming for source & object files)
+        find obj/ -iname '*.o' | sort | awk '{print "gcov -o obj/ "$1;}'
+        # executes gcov-commands
+        find obj/ -iname '*.o' | sort | awk '{print "gcov -o obj/ "$1;}' | sh
+      shell: bash
+
+    # code coverage:
+    # see script : https://github.com/codecov/codecov-bash/blob/master/codecov
+    # see example: https://github.com/codecov/example-fortran/blob/master/.travis.yml
+    #- name: Upload coverage to Codecov
+    #  if: ${{ github.repository == 'SPECFEM/specfem3d' }}
+    #  run: |
+    #    bash <(curl -s https://codecov.io/bash) -X gcov; fi
+    #  shell: bash
+
+    - name: Upload coverage to Codecov
+      if: ${{ github.repository == 'SPECFEM/specfem3d' }}
+      uses: codecov/codecov-action@v5
+      env:
+        CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+      with:
+        fail_ci_if_error: true
+        verbose: true
+        flags: coverage-testname-${{ matrix.testname }}
