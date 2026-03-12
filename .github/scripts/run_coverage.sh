@@ -56,7 +56,12 @@ run_simple() {
   # run
   ./run_this_example.sh
   if [[ $? -ne 0 ]]; then exit 1; fi
+
+  # cleanup
   mv -v DATA/Par_file.org DATA/Par_file
+  rm -rf OUTPUT_FILES/
+  if [ -e DATABASES_MPI ]; then rm -rf DATABASES_MPI/; fi
+
   cd "$WORKDIR"
 }
 
@@ -83,7 +88,13 @@ run_kernel() {
   # run
   ./run_this_example_kernel.sh
   if [[ $? -ne 0 ]]; then exit 1; fi
+
+  # cleanup
   mv -v DATA/Par_file.org DATA/Par_file
+  rm -rf OUTPUT_FILES/
+  if [ -e DATABASES_MPI ]; then rm -rf DATABASES_MPI/; fi
+  if [ -e SEM ]; then rm -rf SEM/; fi
+
   cd "$WORKDIR"
 }
 
@@ -113,8 +124,13 @@ run_serial() {
   # run
   ./run_this_example.sh
   if [[ $? -ne 0 ]]; then exit 1; fi
+
+  # cleanup
   mv -v DATA/Par_file.org DATA/Par_file
   if [ -e DATA/meshfem3D_files/Mesh_Par_file.org ]; then mv -v DATA/meshfem3D_files/Mesh_Par_file.org DATA/meshfem3D_files/Mesh_Par_file; fi
+  rm -rf OUTPUT_FILES/
+  if [ -e DATABASES_MPI ]; then rm -rf DATABASES_MPI/; fi
+
   cd "$WORKDIR"
 }
 

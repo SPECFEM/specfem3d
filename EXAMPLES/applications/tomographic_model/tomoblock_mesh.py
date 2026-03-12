@@ -18,7 +18,7 @@ if not found_lib:
 #print("")
 
 import cubit
-cubit.init([""])
+cubit.init(["-noecho","-nojournal"])
 
 # Creating the volumes
 cubit.cmd('reset')
@@ -49,8 +49,8 @@ boundary_definition.entities=['face']
 boundary_definition.define_bc(boundary_definition.entities,parallel=True)
 
 # sets the id of the volume block
-# (volume block starts at id 4)
-id_block = 4
+# (volume block starts at id 1)
+id_block = 1
 print("cubit block:")
 print("  volume block id = " + str(id_block))
 print("")
