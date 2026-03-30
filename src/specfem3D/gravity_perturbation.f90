@@ -326,13 +326,14 @@ contains
 
   subroutine gravity_timeseries()
 
+  use constants, only: GRAV
   use specfem_par, only: xstore, ystore, zstore, it, NGLOB_AB
   use specfem_par_elastic, only: displ
 
   implicit none
 
   ! local parameters
-  real(kind=CUSTOM_REAL),parameter :: G_const = 6.674e-11_CUSTOM_REAL
+  real(kind=CUSTOM_REAL),parameter :: G_const = GRAV
 
   real(kind=CUSTOM_REAL), dimension(NGLOB_AB) :: accEdV,accNdV,accZdV
   real(kind=CUSTOM_REAL) :: E_local,N_local,Z_local,E_all,N_all,Z_all

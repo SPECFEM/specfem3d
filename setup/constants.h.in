@@ -798,7 +798,18 @@
 !!
 !!-----------------------------------------------------------
 ! gravitational constant
-  double precision, parameter :: GRAV = 6.6723d-11
+!! in S.I. units i.e. in m3 kg-1 s-2, or equivalently in N.(m/kg)^2
+!! April 2014: switched to the 2010 Committee on Data for Science and Technology (CODATA) recommended value
+!! see e.g. http://www.physics.nist.gov/cgi-bin/cuu/Value?bg
+!! and http://en.wikipedia.org/wiki/Gravitational_constant
+!! double precision, parameter :: GRAV = 6.6723d-11
+!! double precision, parameter :: GRAV = 6.67430d-11  ! newer suggestion by CODATA 2018
+  double precision, parameter :: GRAV = 6.67384d-11  ! CODATA 2010
+
+! standard gravity (at the surface of the Earth)
+  double precision, parameter :: STANDARD_GRAVITY = 9.80665d0 ! in m.s-2
+
+!! PREM
 ! number of layers in PREM
   integer, parameter :: NR = 640
 ! R_EARTH is the radius of the bottom of the oceans (radius of Earth in m)

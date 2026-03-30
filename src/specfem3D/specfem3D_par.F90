@@ -230,6 +230,7 @@ module specfem_par
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY) :: wgllwgll_xy
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLZ) :: wgllwgll_xz
   real(kind=CUSTOM_REAL), dimension(NGLLY,NGLLZ) :: wgllwgll_yz
+  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ) :: wgll_cube
 
   ! arrays for Deville and force_vectorization
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ) :: wgllwgll_xy_3D,wgllwgll_xz_3D,wgllwgll_yz_3D
@@ -315,7 +316,6 @@ module specfem_par
 
   ! gravity
   real(kind=CUSTOM_REAL), dimension(:),allocatable :: minus_deriv_gravity,minus_g
-  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ) :: wgll_cube
 
   ! for surface or volume integral on whole domain
   double precision, dimension(:), allocatable   :: integral_vol, integral_boun

@@ -39,33 +39,26 @@
   implicit none
 
   ! local parameters
-  double precision RICB,RCMB,RTOPDDOUBLEPRIME, &
-    R80,R220,R400,R600,R670,R771,RMOHO,RMIDDLE_CRUST,ROCEAN
+  double precision :: RICB,RCMB,RTOPDDOUBLEPRIME,R80,R220,R400,R600,R670,R771,RMOHO,RMIDDLE_CRUST,ROCEAN
   double precision :: rspl_gravity(NR),gspl(NR),gspl2(NR)
-  double precision :: radius,g,dg ! radius_km
-  !double precision :: g_cmb_dble,g_icb_dble
+  double precision :: radius,g,dg
   double precision :: rho,drhodr,vp,vs,Qkappa,Qmu
-  integer :: nspl_gravity !int_radius
-  integer :: i,j,k,iglob,ier
+  integer :: nspl_gravity
+  integer :: iglob,ier
+  ! debugging
+  character(len=MAX_STRING_LEN) :: filename
 
   ! user output
-  if (myrank == 0) then
-    write(IMAIN,*) "preparing gravity"
-    call flush_IMAIN()
+  if (GRAVITY_INTEGRALS .or. GRAVITY) then
+    if (myrank == 0) then
+      write(IMAIN,*) "preparing gravity"
+      call flush_IMAIN()
+    endif
   endif
 
   ! for gravity perturbation calculations
   ! sets up arrays for gravity field
   call gravity_init()
-
-  ! sets up weights needed for integration of gravity
-  do k = 1,NGLLZ
-    do j = 1,NGLLY
-      do i = 1,NGLLX
-        wgll_cube(i,j,k) = sngl( wxgll(i)*wygll(j)*wzgll(k) )
-      enddo
-    enddo
-  enddo
 
   ! store g, rho and dg/dr=dg using normalized radius in lookup table every 100 m
   ! get density and velocity from PREM model using dummy doubling flag
@@ -76,32 +69,35 @@
     ! allocates gravity arrays
     allocate(minus_deriv_gravity(NGLOB_AB),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 2156')
+    minus_deriv_gravity(:) = 0.0_CUSTOM_REAL
+
     allocate(minus_g(NGLOB_AB), stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 2157')
     if (ier /= 0) stop 'error allocating gravity arrays'
+    minus_g(:) = 0.0_CUSTOM_REAL
 
     ! sets up spline table
     call make_gravity(nspl_gravity,rspl_gravity,gspl,gspl2, &
-                          ROCEAN,RMIDDLE_CRUST,RMOHO,R80,R220,R400,R600,R670, &
-                          R771,RTOPDDOUBLEPRIME,RCMB,RICB)
+                      ROCEAN,RMIDDLE_CRUST,RMOHO,R80,R220,R400,R600,R670, &
+                      R771,RTOPDDOUBLEPRIME,RCMB,RICB)
 
     ! pre-calculates gravity terms for all global points
     do iglob = 1,NGLOB_AB
-
       ! normalized radius ( zstore values given in m, negative values for depth)
       radius = ( R_EARTH + zstore(iglob) ) / R_EARTH
+
       call spline_evaluation(rspl_gravity,gspl,gspl2,nspl_gravity,radius,g)
 
       ! use PREM density profile to calculate gravity (fine for other 1D models)
       call model_prem_iso(radius,rho,drhodr,vp,vs,Qkappa,Qmu, &
-                        RICB,RCMB,RTOPDDOUBLEPRIME, &
-                        R600,R670,R220,R771,R400,R80,RMOHO,RMIDDLE_CRUST,ROCEAN)
+                          RICB,RCMB,RTOPDDOUBLEPRIME, &
+                          R600,R670,R220,R771,R400,R80,RMOHO,RMIDDLE_CRUST,ROCEAN)
 
-      dg = 4.0d0*rho - 2.0d0*g/radius
+      dg = 4.0d0 * rho - 2.0d0 * g / radius
 
       ! re-dimensionalize
-      g = g * R_EARTH*(PI*GRAV*RHOAV) ! in m / s^2 ( should be around 10 m/s^2)
-      dg = dg * R_EARTH*(PI*GRAV*RHOAV) / R_EARTH ! gradient d/dz g , in 1/s^2
+      g = g * R_EARTH*(PI*GRAV*RHOAV)                 ! in m / s^2 ( should be around 10 m/s^2)
+      dg = dg * R_EARTH*(PI*GRAV*RHOAV) / R_EARTH     ! gradient d/dz g , in 1/s^2
 
       minus_deriv_gravity(iglob) = - dg
       minus_g(iglob) = - g ! in negative z-direction
@@ -117,6 +113,18 @@
       !  print *,'minus_g..=',minus_g(iglob)
       !endif
     enddo
+
+    ! debug - file output
+    if (.true.) then
+      ! minus_g
+      write(filename,'(a,i6.6,a)') 'OUTPUT_FILES/proc',myrank,'_minus_g'
+      call write_VTK_wavefield_scalar(NSPEC_AB,NGLOB_AB,xstore,ystore,zstore,ibool,minus_g,filename)
+      print *,'written file: ',trim(filename)//'.vtk'
+      ! minus_deriv_gravity
+      write(filename,'(a,i6.6,a)') 'OUTPUT_FILES/proc',myrank,'_minus_deriv_gravity'
+      call write_VTK_wavefield_scalar(NSPEC_AB,NGLOB_AB,xstore,ystore,zstore,ibool,minus_deriv_gravity,filename)
+      print *,'written file: ',trim(filename)//'.vtk'
+    endif
 
   else
     ! allocates dummy gravity arrays

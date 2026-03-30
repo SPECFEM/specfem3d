@@ -45,30 +45,37 @@ the subdirectory \texttt{DATA}:\newline
 \item [{\texttt{SIMULATION\_TYPE}}] is set to 1 for forward simulations,
 2 for adjoint simulations (see Section \ref{sec:Adjoint-simulation-finite})
 and 3 for kernel simulations (see Section \ref{sec:Finite-Frequency-Kernels}).
+%
 \item [{\texttt{SAVE\_FORWARD}}] is only set to \texttt{.true.} for a forward
 simulation with the last frame of the simulation saved, as part of
 the finite-frequency kernel calculations (see Section \ref{sec:Finite-Frequency-Kernels}).
 For a regular forward simulation, leave \texttt{SIMULATION\_TYPE}
 and \texttt{SAVE\_FORWARD} at their default values.
+%
 \item [{\texttt{UTM\_PROJECTION\_ZONE}}] UTM projection zone in
 which your model resides, only valid when \texttt{SUPPRESS\_UTM\_PROJECTION} is \texttt{.false.}.
+%
 \item [{\texttt{SUPPRESS\_UTM\_PROJECTION}}] set to be \texttt{.false.}
 when your model range is specified in the geographical coordinates,
 and needs to be \texttt{.true.} when your model is specified in a
 cartesian coordinates. \noun{UTM projection zone in which your simulation
 region resides.}
+%
 \item [{\texttt{NPROC}}] The number of MPI processors, each one is assigned
 one slice of the whole mesh.
+%
 \item [{\texttt{NSTEP}}] The number of time steps of the simulation. This
 controls the length of the numerical simulation, i.e., twice the number
 of time steps requires twice as much CPU time. This feature is not
 used at the time of generating the distributed databases but is required
 for the solver, i.e., you may change this parameter after running
 \texttt{xgenerate\_databases}.
+%
 \item [{\texttt{DT}}] The length of each time step in seconds. This feature
 is not used at the time of generating the distributed databases but
 is required for the solver. Please see also Section~\ref{sec:Choosing-the-Time-Step}
 for further details.
+%
 \item [{\texttt{LTS\_MODE}}] Turning this flag on will use a local-time stepping scheme for the Newmark time scheme \citep{Rietmann2015,Rietmann2016}.
 It will re-distribute the mesh partitioning to balance out elements with similar local-time step sizes.
 This feature can help improve the time-to-solution when the mesh contains elements of various sizes,
@@ -86,6 +93,7 @@ bricks (27-node elements are not supported). \texttt{CUBIT} does not
 support HEX27 elements either (it can generate them, but they are
 flat, i.e. identical to HEX8). To generate HEX27 elements with curvature
 properly taken into account, you can use Gmsh \url{http://gmsh.info}
+%
 \item [{\texttt{MODEL}}] Must be set to one of the following:
 
 \begin{description}
@@ -157,11 +165,13 @@ the flag is on. If you want to model the effect of a fluid-solid model
 at short periods, then set this flag to \texttt{.false.} and mesh
 the fluid layer explicitly in your mesher, so that it is computed
 accurately and without this approximation.
+%
 \item [{\texttt{TOPOGRAPHY}}] This feature is only effective if \texttt{APPROXIMATE\_OCEAN\_LOAD}
 is set to \texttt{.true.}. Set to \texttt{.true.} if topography and
 bathymetry should be read in based upon the topography file specified
 in the main constants file \texttt{setup/constants.h} to evaluate elevations. If not set, elevations
 will be read from the numerical mesh.
+%
 \item [{\texttt{ATTENUATION}}] Set to \texttt{.true.} if attenuation should
 be incorporated. Turning this feature on increases the memory requirements
 significantly (roughly by a factor of~1.5), and is numerically fairly
@@ -176,18 +186,27 @@ Note that Qmu is always equal to Qs, but Qkappa is in general not equal to Qp.
 To convert one to the other see \texttt{doc/note\_on\_Qkappa\_versus\_Qp.pdf}
 and in folder \texttt{utils/small\_utilities/attenuation}, the tool
 \texttt{conversion\_from\_Qkappa\_Qmu\_to\_Qp\_Qs\_from\_Dahlen\_Tromp\_959\_960.f90}.
-
+%
 \item [{\texttt{ANISOTROPY}}] Set to \texttt{.true.} if you want to use
 an anisotropy model. Please see the file \texttt{model\_aniso.f90}
 in subdirectory \texttt{src/generate\_databases/} for the current
 implementation of anisotropic models.
+%
+\item [{\texttt{GRAVITY}}] Set to \texttt{.true.} if self-gravitation should
+be incorporated in the Cowling approximation \citep{KoTr02b,DaTr98}.
+Turning this feature on is relatively inexpensive, both from the perspective
+of memory requirements as well as in terms of computational speed.
+The gravitational acceleration is assumed to be constant and acts in vertical direction (z-axis).
+%
 \item [{\texttt{TOMOGRAPHY\_PATH}}] Directory in which the tomography files
 are stored for using external tomographic Earth models (please read
 Chapter \ref{cha:-Changing-the} and Section \ref{sec:Using-tomographic}
 `Using external tomographic Earth models' for further details.).
+%
 \item [{\texttt{USE\_OLSEN\_ATTENUATION}}] Set to \texttt{.true.} if you
 want to use the attenuation model that scaled from the S-wave speed
 model using Olsen's empirical relation (see \citet{OlDaBr03}).
+%
 \item [{\texttt{OLSEN\_ATTENUATION\_RATIO}}] Determines the Olsen's constant
 in Olsen's empirical relation (see \citet{OlDaBr03}).
 \end{description}
@@ -197,9 +216,11 @@ in Olsen's empirical relation (see \citet{OlDaBr03}).
 \begin{description}
 \item [{\texttt{PML\_CONDITIONS}}] Set to \texttt{.true.} to turn on C-PML
 boundary conditions for a regional simulation. Both fluids and elastic solids are supported.
+%
 \item [{\texttt{PML\_INSTEAD\_OF\_FREE\_SURFACE}}] Set to \texttt{.true.}
 to turn on C-PML boundary conditions on the top surface instead of
 the usual free surface.
+%
 \item [{\texttt{f0\_FOR\_PML}}] Determines the dominant frequency that
 will be used in the calculation of PML damping profiles;
 \red{This should be set to the same (or similar) dominant frequency as that of the
@@ -207,13 +228,16 @@ source that you will use in your simulation. It is \textbf{VERY IMPORTANT} to do
 absorbing conditions can become unstable.}
 If you plan to use a Dirac source, then use the dominant frequency of the source wavelet
 with which you plan to convolve your seismograms later on in post-processing.
+%
 \item [{\texttt{STACEY\_ABSORBING\_CONDITIONS}}] Set to \texttt{.true.}
 to turn on Clayton-Engquist absorbing boundary conditions (see \citet{KoTr99}).
 In almost all cases it is much better to use CPML absorbing layers
 (see the options above) and leave this flag to \texttt{.false.}.
+%
 \item [{\texttt{STACEY\_INSTEAD\_OF\_FREE\_SURFACE}}] Set to \texttt{.true.}
 to turn on absorbing boundary conditions on the top surface which
 by default constitutes a free surface of the model.
+%
 \item [{\texttt{BOTTOM\_FREE\_SURFACE}}]
 When STACEY\_ABSORBING\_CONDITIONS is set to .true. :
 absorbing conditions are defined in xmin, xmax, ymin, ymax and zmin
@@ -228,47 +252,57 @@ make zmin free surface instead of absorbing condition.
 create a ShakeMap\textregistered{}, e.g., a peak ground velocity map
 of the maximum absolute value of the two horizontal components of
 the velocity vector.
+%
 \item [{\texttt{MOVIE\_SURFACE}}] Set to \texttt{.false.}, unless you want
 to create a movie of seismic wave propagation on the Earth's surface.
 Turning this option on generates large output files. See Section~\ref{sec:Movies}
 for a discussion on the generation of movies. This feature is only
 relevant for the solver.
+%
 \item [{\texttt{MOVIE\_TYPE}}] Set this flag to 1 to show the top surface
 (tomography + oceans) only, to 2 to show all external faces of the
 mesh (i.e. topography + vertical edges + bottom) in shakemaps and
 surface movies.
+%
 \item [{\texttt{MOVIE\_VOLUME}}] Set to \texttt{.false.}, unless you want
 to create a movie of seismic wave propagation in the Earth's interior.
 Turning this option on generates huge output files. See Section~\ref{sec:Movies}
 for a discussion on the generation of movies. This feature is only
 relevant for the solver.
+%
 \item [{\texttt{SAVE\_DISPLACEMENT}}] Set this flag to \texttt{.true.}
 if you want to save the displacement instead of velocity for the movie
 frames.
+%
 \item [{\texttt{MOVIE\_VOLUME\_STRESS}}] Set this flag to \texttt{.true.}
 if you want to save the stress tensor for the volume movie.
 To activate this option, \texttt{MOVIE\_VOLUME} must be \texttt{.true.}.
 Please note that this option will generate huge outputs, because it will save six independent stress tensor components in the entire volume.
 This option is currently implemented only for the viscoelastic simulations.
+%
 \item [{\texttt{USE\_HIGHRES\_FOR\_MOVIES}}] Set this flag to \texttt{.true.}
 if you want to save the values at all the NGLL grid points for the
 movie frames.
+%
 \item [{\texttt{NTSTEP\_BETWEEN\_FRAMES}}] Determines the number of timesteps
 between movie frames. Typically you want to save a snapshot every
 100 timesteps. The smaller you make this number the more output will
 be generated! See Section~\ref{sec:Movies} for a discussion on the
 generation of movies. This feature is only relevant for the solver.
+%
 \item [{\texttt{HDUR\_MOVIE}}] Determines the half duration of the source
 time function for the movie simulations. When this parameter is set
 to be 0, a default half duration that corresponds to the accuracy
 of the simulation is provided. Otherwise, it adds this half duration
 to the half duration specified in the source file \texttt{CMTSOLUTION},
 thus simulates longer periods to make the movie images look smoother.
+%
 \item [{\texttt{SAVE\_MESH\_FILES}}] Set this flag to \texttt{.true.} to
 save \href{www.paraview.org}{ParaView} mesh files for
 subsequent viewing. Turning the flag on generates large (distributed)
 files in the \texttt{LOCAL\_PATH} directory. See Section~\ref{sec:Mesh-graphics}
 for a discussion of mesh viewing features.
+%
 \item [{\texttt{LOCAL\_PATH}}] Directory in which the distributed databases
 will be written. Generally one uses a directory on the local disk
 of the compute nodes, although on some machines these databases are
@@ -283,6 +317,7 @@ to see the (many) files generated by \texttt{xgenerate\_databases}.
 Please note that the \texttt{LOCAL\_PATH} directory should already
 contain the output files of the partitioner, i.e. from \texttt{xdecompose\_mesh}
 or \texttt{xmeshfem3D}.
+%
 \item [{\texttt{NTSTEP\_BETWEEN\_OUTPUT\_INFO}}] This parameter specifies
 the interval at which basic information about a run is written to
 the file system (\texttt{timestamp{*}} files in the \texttt{OUTPUT\_FILES}
@@ -315,6 +350,7 @@ source-time function.
 When using this option, by default the code can locate the force source
 anywhere between mesh points in order to honor its exact location; this
 is more precise than using the closest GLL mesh point, but it is also a bit slower.
+%
 \item [{\texttt{USE\_RICKER\_TIME\_FUNCTION}}] Turn this flag on to use
 a Ricker source-time function, i.e., the second derivative of a Gaussian, instead of the source-time functions
 set by default to represent a (tilted) \texttt{FORCESOLUTION} force
@@ -340,6 +376,7 @@ short half duration is defined to physically describe actions within
 the fluid. Otherwise, if a \texttt{FORCESOLUTION} force source is
 used, a (pseudo) Dirac delta source-time function is defined by default.
 Any other source-time function may then be obtained by convolution.
+%
 \item [{\texttt{PRINT\_SOURCE\_TIME\_FUNCTION}}] Turn this flag on to print
 information about the source-time function in the file \texttt{OUTPUT\_FILES/plot\_source\_time\_function.txt}.
 This feature is only relevant for the solver.
@@ -356,7 +393,7 @@ than requested) seismograms in this directory. On a fast machine set
 \texttt{NTSTEP\_BETWEEN\_OUTPUT\_SEISMOS} to a relatively high value
 to avoid writing to the seismograms too often. This feature is only
 relevant for the solver.
-
+%
 \item [{\texttt{NUMBER\_OF\_SIMULTANEOUS\_RUNS}}] adds the ability to run several calculations (several earthquakes)
 in an embarrassingly-parallel fashion from within the same run;
 this can be useful when using a very large supercomputer to compute
@@ -423,16 +460,22 @@ More precisely, the current kernel summing and smoothing routines work fine, wit
 %% ADIOS
 \item [\texttt{ADIOS\_ENABLED}] Turn this flag on to enable ADIOS. If set to \texttt{.false.}, subsequent ADIOS
 parameters will not be considered.
+%
 \item [\texttt{ADIOS\_FOR\_DATABASES}] Turn this flag on to use ADIOS for xmeshfem3D output and
 xgenerate\_database input.
+%
 \item [\texttt{ADIOS\_FOR\_MESH}]  Turn this flag on to use ADIOS for generated databases.
+%
 \item [\texttt{ADIOS\_FOR\_FORWARD\_ARRAYS}] Turn this flag on to read and write forward arrays using ADIOS.
+%
 \item [\texttt{ADIOS\_FOR\_KERNELS}] Turn this flag on to produce ADIOS kernels that can later be visualized with the ADIOS version of combine\_vol\_data.
 
 %% HDF5
 \item [\texttt{HDF5\_ENABLED}] Turn this flag on to enable HDF5 file I/O. If set to \texttt{.false.}, subsequent HDF5
 parameters will not be considered.
+%
 \item [\texttt{HDF5\_FOR\_MOVIES}] Turn this flag on to use HDF5 format for movie outputs.
+%
 \item [\texttt{HDF5\_IO\_NODES}] Setting this number >0 will allocate additional MPI processes specifically to handle
 the HDF5 file I/O in an asynchronous way.
 

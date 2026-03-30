@@ -132,6 +132,7 @@ inverse_problem_for_model_OBJECTS += \
 	$O/compute_forces_acoustic.spec.o \
 	$O/compute_forces_viscoelastic_calling_routine.spec.o \
 	$O/compute_forces_viscoelastic.spec.o \
+	$O/compute_element.spec.o \
 	$O/compute_element_att_memory.spec.o \
 	$O/compute_element_strain.spec.o \
 	$O/compute_forces_poro_fluid_part.spec.o \

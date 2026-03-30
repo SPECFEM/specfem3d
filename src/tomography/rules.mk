@@ -184,6 +184,7 @@ xmodel_update_SHARED_OBJECTS = \
 	$O/compute_add_sources_viscoelastic.spec.o \
 	$O/compute_adj_source_frechet.spec.o \
 	$O/compute_arrays_source.spec.o \
+	$O/compute_element.spec.o \
 	$O/compute_element_strain.spec.o \
 	$O/compute_gradient_in_acoustic.spec.o \
 	$O/compute_interpolated_dva.spec.o \
