@@ -1638,7 +1638,7 @@
 
 ! scalar wavefield output
 
-  use constants, only: CUSTOM_REAL,MAX_STRING_LEN,IOUT_VTK,NDIM,NGLLX,NGLLY,NGLLZ
+  use constants, only: CUSTOM_REAL,MAX_STRING_LEN,IOUT_VTK,NGLLX,NGLLY,NGLLZ
 
   implicit none
 

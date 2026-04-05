@@ -361,8 +361,6 @@
   real(kind=CUSTOM_REAL) :: c11,c12,c13,c14,c15,c16,c22,c23,c24,c25,c26, &
                             c33,c34,c35,c36,c44,c45,c46,c55,c56,c66
 
-  real(kind=CUSTOM_REAL), parameter :: FOUR_THIRDS = 4.0_CUSTOM_REAL / 3.0_CUSTOM_REAL
-
 #ifdef FORCE_VECTORIZATION
 ! in this vectorized version we have to assume that N_SLS == 3 in order to be able to unroll and thus suppress
 ! an inner loop that would otherwise prevent vectorization; this is safe in practice in all cases because N_SLS == 3
