@@ -40,7 +40,7 @@
                                          epsilondev_xz,epsilondev_yz,epsilon_trace_over_3, &
                                          backward_simulation)
 
-  use constants, only: CUSTOM_REAL,NGLLX,NGLLY,NGLLZ,NDIM,N_SLS,ONE_THIRD,FOUR_THIRDS, &
+  use constants, only: CUSTOM_REAL,NGLLX,NGLLY,NGLLZ,NDIM,N_SLS,ONE_THIRD, &
     m1,m2
 
   use shared_parameters, only: SIMULATION_TYPE, &
@@ -189,7 +189,7 @@
 !$OMP SHARED( &
 !$OMP num_elements,ibool, &
 !$OMP iphase,phase_ispec_inner_elastic, &
-!$OMP irregular_element_number,jacobian_regular,xix_regular, &
+!$OMP irregular_element_number,xix_regular, &
 !$OMP displ,veloc,accel, &
 !$OMP is_CPML,backward_simulation, &
 !$OMP IS_WAVEFIELD_DISCONTINUITY, &
@@ -203,26 +203,21 @@
 !$OMP c55store,c56store,c66store, &
 !$OMP factor_common,factor_common_kappa, &
 !$OMP COMPUTE_AND_STORE_STRAIN,ATTENUATION,ANISOTROPY,SIMULATION_TYPE, &
-!$OMP MOVIE_VOLUME_STRESS,do_save_coupling_wavefield, &
-!$OMP stress_xx,stress_yy,stress_zz,stress_xy,stress_xz,stress_yz, &
 !$OMP R_xx,R_yy,R_xy,R_xz,R_yz,R_trace, &
 !$OMP epsilondev_xx,epsilondev_yy,epsilondev_xy,epsilondev_xz,epsilondev_yz,epsilondev_trace,epsilon_trace_over_3, &
 !$OMP USE_LDDRK,R_xx_lddrk,R_yy_lddrk,R_xy_lddrk,R_xz_lddrk,R_yz_lddrk,R_trace_lddrk, &
 !$OMP NSPEC_AB,NSPEC_ATTENUATION_AB,NSPEC_ATTENUATION_AB_LDDRK,NSPEC_STRAIN_ONLY, &
 !$OMP SAVE_MOHO_MESH,dsdx_top,dsdx_bot,ispec2D_moho_top,ispec2D_moho_bot,is_moho_top,is_moho_bot, &
-!$OMP LTS_MODE,lts_type_compute_pelem,current_lts_elem,current_lts_boundary_elem &
+!$OMP LTS_MODE,lts_type_compute_pelem,current_lts_elem,current_lts_boundary_elem, &
+!$OMP minus_g,minus_deriv_gravity &
 !$OMP ) &
 !$OMP PRIVATE( &
 !$OMP ispec_p,ispec,ispec_irreg,i,j,k,l,iglob,ispec2D, &
 #ifdef FORCE_VECTORIZATION
 !$OMP ijk, &
 #endif
-!$OMP xixl,xiyl,xizl,etaxl,etayl,etazl,gammaxl,gammayl,gammazl,jacobianl,eta, &
+!$OMP xixl,xiyl,xizl,etaxl,etayl,etazl,gammaxl,gammayl,gammazl,eta, &
 !$OMP duxdxl,duxdyl,duxdzl,duydxl,duydyl,duydzl,duzdxl,duzdyl,duzdzl, &
-!$OMP duxdyl_plus_duydxl,duzdxl_plus_duxdzl,duzdyl_plus_duydzl, &
-!$OMP sigma_xx,sigma_yy,sigma_zz,sigma_xy,sigma_xz,sigma_yz,sigma_yx,sigma_zx,sigma_zy, &
-!$OMP c11,c12,c13,c14,c15,c16,c22,c23,c24,c25,c26,c33,c34,c35,c36,c44,c45,c46,c55,c56,c66, &
-!$OMP lambdal,mul,lambdalplus2mul,kappal, &
 !$OMP hp1,hp2,hp3,fac1,fac2,fac3, &
 !$OMP dummyx_loc,dummyy_loc,dummyz_loc, &
 !$OMP tempx1,tempx2,tempx3,tempy1,tempy2,tempy3,tempz1,tempz2,tempz3, &
@@ -234,13 +229,13 @@
 !$OMP duxdyl_plus_duydxl_att,duzdxl_plus_duxdzl_att,duzdyl_plus_duydzl_att, &
 !$OMP tempx1_att,tempx2_att,tempx3_att,tempy1_att,tempy2_att,tempy3_att,tempz1_att,tempz2_att,tempz3_att, &
 !$OMP epsilondev_trace_loc, epsilondev_xx_loc,epsilondev_yy_loc, epsilondev_xy_loc, epsilondev_xz_loc, epsilondev_yz_loc, &
-!$OMP R_trace_kappa_sum,R_xx_sum,R_yy_sum,templ &
+!$OMP templ,rho_s_h &
 !$OMP ) &
 !$OMP FIRSTPRIVATE( &
 !$OMP hprime_xx,hprime_xxT,hprimewgll_xxT,hprimewgll_xx, &
 !$OMP hprime_yy,hprime_yyT,hprimewgll_yy, &
 !$OMP hprime_zz,hprime_zzT,hprimewgll_zz, &
-!$OMP wgllwgll_yz_3D,wgllwgll_xz_3D,wgllwgll_xy_3D, &
+!$OMP wgllwgll_yz_3D,wgllwgll_xz_3D,wgllwgll_xy_3D,wgll_cube, &
 !$OMP alphaval,betaval,gammaval &
 !$OMP )
 

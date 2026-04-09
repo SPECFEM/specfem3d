@@ -99,7 +99,7 @@
   ! memory variables for attenuation
   ! memory variables R_ij are stored at the local rather than global level
   ! to allow for optimization of cache access by compiler
-  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,N_SLS,NSPEC_ATTENUATION),intent(in) :: R_xx,R_yy,R_xy,R_xz,R_yz
+  real(kind=CUSTOM_REAL), dimension(N_SLS,NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION),intent(in) :: R_xx,R_yy,R_xy,R_xz,R_yz
   real(kind=CUSTOM_REAL), dimension(N_SLS,NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION),intent(in) :: R_trace
 
   ! gravity
@@ -239,19 +239,22 @@
       ENDDO_LOOP_IJK
     else
       ! regular element
+      jacobianl = jacobian_regular
+      xixl = xix_regular
+
       DO_LOOP_IJK
         ! form dot product with test vector, non-symmetric form (which is useful in the case of PML)
-        tempx1(INDEX_IJK) = jacobian_regular * sigma_xx(INDEX_IJK) * xix_regular ! this goes to accel_x
-        tempy1(INDEX_IJK) = jacobian_regular * sigma_xy(INDEX_IJK) * xix_regular ! this goes to accel_y
-        tempz1(INDEX_IJK) = jacobian_regular * sigma_xz(INDEX_IJK) * xix_regular ! this goes to accel_z
+        tempx1(INDEX_IJK) = jacobianl * sigma_xx(INDEX_IJK) * xixl ! this goes to accel_x
+        tempy1(INDEX_IJK) = jacobianl * sigma_xy(INDEX_IJK) * xixl ! this goes to accel_y
+        tempz1(INDEX_IJK) = jacobianl * sigma_xz(INDEX_IJK) * xixl ! this goes to accel_z
 
-        tempx2(INDEX_IJK) = jacobian_regular * sigma_yx(INDEX_IJK) * xix_regular ! this goes to accel_x
-        tempy2(INDEX_IJK) = jacobian_regular * sigma_yy(INDEX_IJK) * xix_regular ! this goes to accel_y
-        tempz2(INDEX_IJK) = jacobian_regular * sigma_yz(INDEX_IJK) * xix_regular ! this goes to accel_z
+        tempx2(INDEX_IJK) = jacobianl * sigma_yx(INDEX_IJK) * xixl ! this goes to accel_x
+        tempy2(INDEX_IJK) = jacobianl * sigma_yy(INDEX_IJK) * xixl ! this goes to accel_y
+        tempz2(INDEX_IJK) = jacobianl * sigma_yz(INDEX_IJK) * xixl ! this goes to accel_z
 
-        tempx3(INDEX_IJK) = jacobian_regular * sigma_zx(INDEX_IJK) * xix_regular ! this goes to accel_x
-        tempy3(INDEX_IJK) = jacobian_regular * sigma_zy(INDEX_IJK) * xix_regular ! this goes to accel_y
-        tempz3(INDEX_IJK) = jacobian_regular * sigma_zz(INDEX_IJK) * xix_regular ! this goes to accel_z
+        tempx3(INDEX_IJK) = jacobianl * sigma_zx(INDEX_IJK) * xixl ! this goes to accel_x
+        tempy3(INDEX_IJK) = jacobianl * sigma_zy(INDEX_IJK) * xixl ! this goes to accel_y
+        tempz3(INDEX_IJK) = jacobianl * sigma_zz(INDEX_IJK) * xixl ! this goes to accel_z
       ENDDO_LOOP_IJK
     endif
   endif
@@ -274,7 +277,7 @@
                                    wgll_cube, &
                                    c11store,c12store,c13store,c14store,c15store,c16store,c22store, &
                                    c23store,c24store,c25store,c26store,c33store,c34store,c35store, &
-                                   c36store,c44store,c45store,c46store,c55store,c56store,c66store, &                                   
+                                   c36store,c44store,c45store,c46store,c55store,c56store,c66store, &
                                    ibool, &
                                    R_xx,R_yy,R_xy,R_xz,R_yz,R_trace, &
                                    tempx1,tempx2,tempx3,tempy1,tempy2,tempy3,tempz1,tempz2,tempz3, &
@@ -336,7 +339,7 @@
   ! memory variables for attenuation
   ! memory variables R_ij are stored at the local rather than global level
   ! to allow for optimization of cache access by compiler
-  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,N_SLS,NSPEC_ATTENUATION),intent(in) :: R_xx,R_yy,R_xy,R_xz,R_yz
+  real(kind=CUSTOM_REAL), dimension(N_SLS,NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION),intent(in) :: R_xx,R_yy,R_xy,R_xz,R_yz
   real(kind=CUSTOM_REAL), dimension(N_SLS,NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION),intent(in) :: R_trace
 
   ! gravity
@@ -502,19 +505,22 @@
       ENDDO_LOOP_IJK
     else
       ! regular element
+      jacobianl = jacobian_regular
+      xixl = xix_regular
+
       DO_LOOP_IJK
         ! form dot product with test vector, non-symmetric form (which is useful in the case of PML)
-        tempx1(INDEX_IJK) = jacobian_regular * sigma_xx(INDEX_IJK) * xix_regular ! this goes to accel_x
-        tempy1(INDEX_IJK) = jacobian_regular * sigma_xy(INDEX_IJK) * xix_regular ! this goes to accel_y
-        tempz1(INDEX_IJK) = jacobian_regular * sigma_xz(INDEX_IJK) * xix_regular ! this goes to accel_z
+        tempx1(INDEX_IJK) = jacobianl * sigma_xx(INDEX_IJK) * xixl ! this goes to accel_x
+        tempy1(INDEX_IJK) = jacobianl * sigma_xy(INDEX_IJK) * xixl ! this goes to accel_y
+        tempz1(INDEX_IJK) = jacobianl * sigma_xz(INDEX_IJK) * xixl ! this goes to accel_z
 
-        tempx2(INDEX_IJK) = jacobian_regular * sigma_yx(INDEX_IJK) * xix_regular ! this goes to accel_x
-        tempy2(INDEX_IJK) = jacobian_regular * sigma_yy(INDEX_IJK) * xix_regular ! this goes to accel_y
-        tempz2(INDEX_IJK) = jacobian_regular * sigma_yz(INDEX_IJK) * xix_regular ! this goes to accel_z
+        tempx2(INDEX_IJK) = jacobianl * sigma_yx(INDEX_IJK) * xixl ! this goes to accel_x
+        tempy2(INDEX_IJK) = jacobianl * sigma_yy(INDEX_IJK) * xixl ! this goes to accel_y
+        tempz2(INDEX_IJK) = jacobianl * sigma_yz(INDEX_IJK) * xixl ! this goes to accel_z
 
-        tempx3(INDEX_IJK) = jacobian_regular * sigma_zx(INDEX_IJK) * xix_regular ! this goes to accel_x
-        tempy3(INDEX_IJK) = jacobian_regular * sigma_zy(INDEX_IJK) * xix_regular ! this goes to accel_y
-        tempz3(INDEX_IJK) = jacobian_regular * sigma_zz(INDEX_IJK) * xix_regular ! this goes to accel_z
+        tempx3(INDEX_IJK) = jacobianl * sigma_zx(INDEX_IJK) * xixl ! this goes to accel_x
+        tempy3(INDEX_IJK) = jacobianl * sigma_zy(INDEX_IJK) * xixl ! this goes to accel_y
+        tempz3(INDEX_IJK) = jacobianl * sigma_zz(INDEX_IJK) * xixl ! this goes to accel_z
       ENDDO_LOOP_IJK
     endif
   endif
@@ -583,7 +589,7 @@
   ! local parameters
   ! for gravity
   real(kind=CUSTOM_REAL) :: rhol
-  
+
 !  double precision :: dphi,dtheta
 !  double precision :: radius,rho,minus_g,minus_dg
 !  double precision :: minus_g_over_radius,minus_dg_plus_g_over_radius

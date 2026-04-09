@@ -49,11 +49,9 @@
   character(len=MAX_STRING_LEN) :: filename
 
   ! user output
-  if (GRAVITY_INTEGRALS .or. GRAVITY) then
-    if (myrank == 0) then
-      write(IMAIN,*) "preparing gravity"
-      call flush_IMAIN()
-    endif
+  if (myrank == 0) then
+    write(IMAIN,*) "preparing gravity"
+    call flush_IMAIN()
   endif
 
   ! for gravity perturbation calculations
