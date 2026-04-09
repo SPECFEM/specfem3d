@@ -78,6 +78,9 @@
   ! for gravity
   use specfem_par, only: wgll_cube,minus_g,minus_deriv_gravity
 
+  ! movie
+  use specfem_par_movie, only: stress_xx,stress_yy,stress_zz,stress_xy,stress_xz,stress_yz
+
   ! PML
   use pml_par, only: is_CPML,NSPEC_CPML
 
@@ -88,6 +91,9 @@
 
   ! LTS
   use specfem_par_lts, only: lts_type_compute_pelem,current_lts_elem,current_lts_boundary_elem
+
+  ! element compute routines
+  use mod_element, only: compute_element_iso,compute_element_aniso
 
 #ifdef FORCE_VECTORIZATION
   use constants, only: NGLLCUBE
@@ -203,6 +209,7 @@
 !$OMP c55store,c56store,c66store, &
 !$OMP factor_common,factor_common_kappa, &
 !$OMP COMPUTE_AND_STORE_STRAIN,ATTENUATION,ANISOTROPY,SIMULATION_TYPE, &
+!$OMP stress_xx,stress_yy,stress_zz,stress_xy,stress_xz,stress_yz, &
 !$OMP R_xx,R_yy,R_xy,R_xz,R_yz,R_trace, &
 !$OMP epsilondev_xx,epsilondev_yy,epsilondev_xy,epsilondev_xz,epsilondev_yz,epsilondev_trace,epsilon_trace_over_3, &
 !$OMP USE_LDDRK,R_xx_lddrk,R_yy_lddrk,R_xy_lddrk,R_xz_lddrk,R_yz_lddrk,R_trace_lddrk, &
@@ -584,6 +591,7 @@
                                  c36store,c44store,c45store,c46store,c55store,c56store,c66store, &
                                  ibool, &
                                  R_xx,R_yy,R_xy,R_xz,R_yz,R_trace, &
+                                 stress_xx,stress_yy,stress_zz,stress_xy,stress_xz,stress_yz, &
                                  tempx1,tempx2,tempx3,tempy1,tempy2,tempy3,tempz1,tempz2,tempz3, &
                                  dummyx_loc,dummyy_loc,dummyz_loc)
     else
@@ -597,6 +605,7 @@
                                kappastore,mustore, &
                                ibool, &
                                R_xx,R_yy,R_xy,R_xz,R_yz,R_trace, &
+                               stress_xx,stress_yy,stress_zz,stress_xy,stress_xz,stress_yz, &
                                tempx1,tempx2,tempx3,tempy1,tempy2,tempy3,tempz1,tempz2,tempz3, &
                                dummyx_loc,dummyy_loc,dummyz_loc)
     endif

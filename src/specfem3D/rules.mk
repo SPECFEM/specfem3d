@@ -192,6 +192,7 @@ specfem3D_MODULES = \
 	$(FC_MODDIR)/io_server_hdf5.$(FC_MODEXT) \
 	$(FC_MODDIR)/image_pnm_par.$(FC_MODEXT) \
 	$(FC_MODDIR)/manager_adios.$(FC_MODEXT) \
+	$(FC_MODDIR)/mod_element.$(FC_MODEXT) \
 	$(FC_MODDIR)/pml_par.$(FC_MODEXT) \
 	$(FC_MODDIR)/specfem_par.$(FC_MODEXT) \
 	$(FC_MODDIR)/specfem_par_acoustic.$(FC_MODEXT) \
@@ -364,7 +365,7 @@ $O/write_output_ASDF.spec.o: $O/asdf_data.spec_module.o
 
 ## wavefield discontinuity
 $O/compute_forces_viscoelastic_calling_routine.spec.o: $O/wavefield_discontinuity_solver.spec.o
-$O/compute_forces_viscoelastic.spec.o: $O/wavefield_discontinuity_solver.spec.o
+$O/compute_forces_viscoelastic.spec.o: $O/wavefield_discontinuity_solver.spec.o $O/compute_element.spec.o
 $O/iterate_time.spec.o: $O/wavefield_discontinuity_solver.spec.o
 
 ## kdtree

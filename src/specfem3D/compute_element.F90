@@ -29,6 +29,17 @@
 ! and macros INDEX_IJK, DO_LOOP_IJK, ENDDO_LOOP_IJK defined in config.fh
 #include "config.fh"
 
+module mod_element
+
+  implicit none
+
+  private
+
+  public :: compute_element_iso
+  public :: compute_element_aniso
+
+contains
+
 
 !--------------------------------------------------------------------------------------------
 !
@@ -36,17 +47,18 @@
 !
 !--------------------------------------------------------------------------------------------
 
-  subroutine compute_element_iso(ispec,ispec_irreg, &
-                                 minus_g,minus_deriv_gravity,rho_s_H, &
-                                 xixstore,xiystore,xizstore,etaxstore,etaystore,etazstore, &
-                                 gammaxstore,gammaystore,gammazstore,jacobianstore, &
-                                 duxdxl,duxdyl,duxdzl,duydxl,duydyl,duydzl,duzdxl,duzdyl,duzdzl, &
-                                 wgll_cube, &
-                                 kappastore,mustore, &
-                                 ibool, &
-                                 R_xx,R_yy,R_xy,R_xz,R_yz,R_trace, &
-                                 tempx1,tempx2,tempx3,tempy1,tempy2,tempy3,tempz1,tempz2,tempz3, &
-                                 dummyx_loc,dummyy_loc,dummyz_loc)
+  pure subroutine compute_element_iso(ispec,ispec_irreg, &
+                                      minus_g,minus_deriv_gravity,rho_s_H, &
+                                      xixstore,xiystore,xizstore,etaxstore,etaystore,etazstore, &
+                                      gammaxstore,gammaystore,gammazstore,jacobianstore, &
+                                      duxdxl,duxdyl,duxdzl,duydxl,duydyl,duydzl,duzdxl,duzdyl,duzdzl, &
+                                      wgll_cube, &
+                                      kappastore,mustore, &
+                                      ibool, &
+                                      R_xx,R_yy,R_xy,R_xz,R_yz,R_trace, &
+                                      stress_xx,stress_yy,stress_zz,stress_xy,stress_xz,stress_yz, &
+                                      tempx1,tempx2,tempx3,tempy1,tempy2,tempy3,tempz1,tempz2,tempz3, &
+                                      dummyx_loc,dummyy_loc,dummyz_loc)
 
 ! isotropic element in viscoelastic domain
 
@@ -65,9 +77,6 @@
 
   ! PML
   use pml_par, only: is_CPML
-
-  ! movie
-  use specfem_par_movie, only: stress_xx,stress_yy,stress_zz,stress_xy,stress_xz,stress_yz
 
 #ifdef FORCE_VECTORIZATION
   use constants, only: NGLLCUBE
@@ -105,6 +114,10 @@
   ! gravity
   real(kind=CUSTOM_REAL),dimension(NGLOB),intent(in) :: minus_g,minus_deriv_gravity
   real(kind=CUSTOM_REAL), dimension(NDIM,NGLLX,NGLLY,NGLLZ),intent(inout) :: rho_s_H
+
+  ! movie
+  real(kind=CUSTOM_REAL),dimension(NGLLX,NGLLY,NGLLZ,NSPEC),intent(inout) :: &
+    stress_xx,stress_yy,stress_zz,stress_xy,stress_xz,stress_yz
 
   ! element info
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ),intent(inout) :: &
@@ -269,19 +282,20 @@
 !
 !--------------------------------------------------------------------------------------------
 
-  subroutine compute_element_aniso(ispec,ispec_irreg, &
-                                   minus_g,minus_deriv_gravity,rho_s_H, &
-                                   xixstore,xiystore,xizstore,etaxstore,etaystore,etazstore, &
-                                   gammaxstore,gammaystore,gammazstore,jacobianstore, &
-                                   duxdxl,duxdyl,duxdzl,duydxl,duydyl,duydzl,duzdxl,duzdyl,duzdzl, &
-                                   wgll_cube, &
-                                   c11store,c12store,c13store,c14store,c15store,c16store,c22store, &
-                                   c23store,c24store,c25store,c26store,c33store,c34store,c35store, &
-                                   c36store,c44store,c45store,c46store,c55store,c56store,c66store, &
-                                   ibool, &
-                                   R_xx,R_yy,R_xy,R_xz,R_yz,R_trace, &
-                                   tempx1,tempx2,tempx3,tempy1,tempy2,tempy3,tempz1,tempz2,tempz3, &
-                                   dummyx_loc,dummyy_loc,dummyz_loc)
+  pure subroutine compute_element_aniso(ispec,ispec_irreg, &
+                                        minus_g,minus_deriv_gravity,rho_s_H, &
+                                        xixstore,xiystore,xizstore,etaxstore,etaystore,etazstore, &
+                                        gammaxstore,gammaystore,gammazstore,jacobianstore, &
+                                        duxdxl,duxdyl,duxdzl,duydxl,duydyl,duydzl,duzdxl,duzdyl,duzdzl, &
+                                        wgll_cube, &
+                                        c11store,c12store,c13store,c14store,c15store,c16store,c22store, &
+                                        c23store,c24store,c25store,c26store,c33store,c34store,c35store, &
+                                        c36store,c44store,c45store,c46store,c55store,c56store,c66store, &
+                                        ibool, &
+                                        R_xx,R_yy,R_xy,R_xz,R_yz,R_trace, &
+                                        stress_xx,stress_yy,stress_zz,stress_xy,stress_xz,stress_yz, &
+                                        tempx1,tempx2,tempx3,tempy1,tempy2,tempy3,tempz1,tempz2,tempz3, &
+                                        dummyx_loc,dummyy_loc,dummyz_loc)
 
 ! fully anisotropic element in viscoelastic domain
 
@@ -302,9 +316,6 @@
 
   ! PML
   use pml_par, only: is_CPML
-
-  ! movie
-  use specfem_par_movie, only: stress_xx,stress_yy,stress_zz,stress_xy,stress_xz,stress_yz
 
 #ifdef FORCE_VECTORIZATION
   use constants, only: NGLLCUBE
@@ -345,6 +356,10 @@
   ! gravity
   real(kind=CUSTOM_REAL),dimension(NGLOB),intent(in) :: minus_g,minus_deriv_gravity
   real(kind=CUSTOM_REAL), dimension(NDIM,NGLLX,NGLLY,NGLLZ),intent(inout) :: rho_s_H
+
+  ! movie
+  real(kind=CUSTOM_REAL),dimension(NGLLX,NGLLY,NGLLZ,NSPEC),intent(inout) :: &
+    stress_xx,stress_yy,stress_zz,stress_xy,stress_xz,stress_yz
 
   ! element info
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ),intent(inout) :: &
@@ -538,7 +553,7 @@
 ! please leave this routine in this file, to help compilers inlining this function...
 !
 
-  subroutine compute_element_gravity(ispec,ispec_irreg,NSPEC,NGLOB,ibool, &
+  pure subroutine compute_element_gravity(ispec,ispec_irreg,NSPEC,NGLOB,ibool, &
                                           jacobianstore, wgll_cube, &
                                           minus_g,minus_deriv_gravity, &
                                           dummyx_loc,dummyy_loc,dummyz_loc, &
@@ -742,3 +757,5 @@
   ENDDO_LOOP_IJK
 
   end subroutine compute_element_gravity
+
+end module mod_element
