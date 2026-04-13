@@ -61,7 +61,7 @@ end module constants
 
 ! holds input parameters given in DATA/Par_file
 
-  use constants, only: MAX_STRING_LEN
+  use constants, only: MAX_STRING_LEN,STANDARD_GRAVITY
 
   implicit none
 
@@ -225,6 +225,11 @@ end module constants
 
   ! Moon's Lunar Projections (LTM/LPS) instead of UTM
   logical :: USE_LUNAR_PROJECTIONS = .false.
+
+  ! (optional) gravity min/max values
+  logical :: USE_GRAVITY_MINMAX = .false.
+  double precision :: GRAVITY_MINMAX_TOP = STANDARD_GRAVITY      ! default in m/s^2
+  double precision :: GRAVITY_MINMAX_BOTTOM = STANDARD_GRAVITY
 
   end module shared_input_parameters
 

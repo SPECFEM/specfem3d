@@ -368,9 +368,6 @@
   if (SIMULATION_TYPE /= 1 .and. SIMULATION_TYPE /= 2 .and. SIMULATION_TYPE /= 3) &
     call exit_mpi(myrank,'SIMULATION_TYPE can only be 1, 2, or 3')
 
-  ! gravity only on GPU supported
-  if (.not. GPU_MODE .and. GRAVITY) stop 'GRAVITY only supported in GPU mode'
-
   if (NGLLX /= NGLLY .or. NGLLY /= NGLLZ) stop 'Methods that can handle unstructured meshes require NGLLX = NGLLY = NGLLZ'
 
   ! absorbing surfaces

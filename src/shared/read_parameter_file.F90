@@ -222,6 +222,14 @@
       write(*,*)
     endif
 
+    ! (optional) gravity
+    call read_value_logical(USE_GRAVITY_MINMAX, 'USE_GRAVITY_MINMAX', ier); ier = 0
+    if (USE_GRAVITY_MINMAX) then
+      call read_value_double_precision(GRAVITY_MINMAX_TOP, 'GRAVITY_MINMAX_TOP', ier); ier = 0
+      call read_value_double_precision(GRAVITY_MINMAX_BOTTOM, 'GRAVITY_MINMAX_BOTTOM', ier); ier = 0
+    endif
+
+    ! attenuation
     call read_value_double_precision(ATTENUATION_f0_REFERENCE, 'ATTENUATION_f0_REFERENCE', ier)
     if (ier /= 0) then
       some_parameters_missing_from_Par_file = .true.
@@ -1449,6 +1457,11 @@
   call bcast_all_singlel(ATTENUATION)
   call bcast_all_singlel(ANISOTROPY)
   call bcast_all_singlel(GRAVITY)
+
+  ! (optional) gravity min/max
+  call bcast_all_singlel(USE_GRAVITY_MINMAX)
+  call bcast_all_singledp(GRAVITY_MINMAX_TOP)
+  call bcast_all_singledp(GRAVITY_MINMAX_BOTTOM)
 
   call bcast_all_singledp(ATTENUATION_f0_REFERENCE)
   call bcast_all_singledp(MIN_ATTENUATION_PERIOD)

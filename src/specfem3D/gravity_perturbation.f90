@@ -87,7 +87,7 @@ contains
   if (ier /= 0) then
     ! user output
     if (myrank == 0) then
-      write(IMAIN,*) '  no gravity simulation'
+      write(IMAIN,*) '  no gravity stations'
       call flush_IMAIN()
     endif
     ! nothing to do
@@ -102,7 +102,7 @@ contains
 
   ! user output
   if (myrank == 0) then
-    write(IMAIN,*) '  incorporating gravity simulation'
+    write(IMAIN,*) '  incorporating gravity field simulation'
     write(IMAIN,*) '    gravity stations: ',nstat
     call flush_IMAIN()
   endif

@@ -43,6 +43,10 @@
   double precision :: rspl_gravity(NR),gspl(NR),gspl2(NR)
   double precision :: radius,g,dg
   double precision :: rho,drhodr,vp,vs,Qkappa,Qmu
+  ! min/max
+  double precision :: ztop,zbottom,ztop_glob,zbottom_glob,zrange,height,factor
+  double precision, parameter :: ZERO_TOLERANCE = 1.d-12
+
   integer :: nspl_gravity
   integer :: iglob,ier
   ! debugging
@@ -64,6 +68,11 @@
   ! and that we can neglect the 3D model and use PREM every 100 m in all cases
   ! this is probably a rather reasonable assumption
   if (GRAVITY) then
+    if (myrank == 0) then
+      write(IMAIN,*) "  ...setting up gravity arrays"
+      call flush_IMAIN()
+    endif
+
     ! allocates gravity arrays
     allocate(minus_deriv_gravity(NGLOB_AB),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 2156')
@@ -74,54 +83,120 @@
     if (ier /= 0) stop 'error allocating gravity arrays'
     minus_g(:) = 0.0_CUSTOM_REAL
 
-    ! sets up spline table
-    call make_gravity(nspl_gravity,rspl_gravity,gspl,gspl2, &
-                      ROCEAN,RMIDDLE_CRUST,RMOHO,R80,R220,R400,R600,R670, &
-                      R771,RTOPDDOUBLEPRIME,RCMB,RICB)
+    if (USE_GRAVITY_MINMAX) then
+      ! gravitational acceleration specified by min/max values at top/bottom
+      if (myrank == 0) then
+        write(IMAIN,*) "  using gravitational acceleration from min/max specification:"
+        write(IMAIN,*) "    g at top              (m/s^2): ",sngl(GRAVITY_MINMAX_TOP)
+        write(IMAIN,*) "    g at bottom                  : ",sngl(GRAVITY_MINMAX_BOTTOM)
+        call flush_IMAIN()
+      endif
 
-    ! pre-calculates gravity terms for all global points
-    do iglob = 1,NGLOB_AB
-      ! normalized radius ( zstore values given in m, negative values for depth)
-      radius = ( R_EARTH + zstore(iglob) ) / R_EARTH
+      ! determines z-values for bottom/top of the mesh
+      zbottom = minval(zstore)
+      ztop = maxval(zstore)
+      call min_all_dp(zbottom,zbottom_glob)
+      call max_all_dp(ztop,ztop_glob)
+      zbottom = zbottom_glob
+      ztop = ztop_glob
 
-      call spline_evaluation(rspl_gravity,gspl,gspl2,nspl_gravity,radius,g)
+      if (myrank == 0) then
+        write(IMAIN,*) '    Zbottom and Ztop of the model: ',sngl(zbottom),'/',sngl(ztop)
+        call flush_IMAIN()
+      endif
 
-      ! use PREM density profile to calculate gravity (fine for other 1D models)
-      call model_prem_iso(radius,rho,drhodr,vp,vs,Qkappa,Qmu, &
-                          RICB,RCMB,RTOPDDOUBLEPRIME, &
-                          R600,R670,R220,R771,R400,R80,RMOHO,RMIDDLE_CRUST,ROCEAN)
+      ! mesh size
+      zrange = ztop - zbottom
 
-      dg = 4.0d0 * rho - 2.0d0 * g / radius
+      ! to avoid division by zero
+      if (abs(zrange) < ZERO_TOLERANCE) then
+        call exit_mpi(myrank,"Invalid mesh with zero z-height")
+      endif
 
-      ! re-dimensionalize
-      g = g * R_EARTH*(PI*GRAV*RHOAV)                 ! in m / s^2 ( should be around 10 m/s^2)
-      dg = dg * R_EARTH*(PI*GRAV*RHOAV) / R_EARTH     ! gradient d/dz g , in 1/s^2
+      ! linear increase of gravity
+      ! dg/dz
+      dg = (GRAVITY_MINMAX_TOP - GRAVITY_MINMAX_BOTTOM) / zrange
+      if (myrank == 0) then
+        write(IMAIN,*) '    dg  (vertical rate of change): ',sngl(dg)
+        call flush_IMAIN()
+      endif
 
-      minus_deriv_gravity(iglob) = - dg
-      minus_g(iglob) = - g ! in negative z-direction
+      ! pre-calculates gravity terms for all global points
+      do iglob = 1,NGLOB_AB
+        ! height (zstore values given in m)
+        height = zstore(iglob) - zbottom
+        ! normalized between [0,1]
+        factor = height / zrange
 
-      ! debug
-      !if (iglob == 1 .or. iglob == 1000 .or. iglob == 10000) then
-      !  ! re-dimensionalize
-      !  radius = radius * R_EARTH ! in m
-      !  vp = vp * R_EARTH*dsqrt(PI*GRAV*RHOAV)  ! in m / s
-      !  rho = rho  * RHOAV  ! in kg / m^3
-      !  print *,'gravity: radius=',radius,'g=',g,'depth=',radius-R_EARTH
-      !  print *,'vp=',vp,'rho=',rho,'kappa=',(vp**2) * rho
-      !  print *,'minus_g..=',minus_g(iglob)
-      !endif
-    enddo
+        ! gravitational acceleration (assumed to be in m / s^2)
+        ! linear increase from bottom to top
+        g = GRAVITY_MINMAX_BOTTOM + factor * (GRAVITY_MINMAX_TOP - GRAVITY_MINMAX_BOTTOM)
 
-    ! debug - file output
-    if (.true.) then
+        minus_deriv_gravity(iglob) = - dg
+        minus_g(iglob) = - g ! in negative z-direction
+
+        ! debug
+        !if (iglob == 1 .or. iglob == 1000 .or. iglob == 10000 .or. iglob == NGLOB_AB) then
+        !  print *,'gravity: iglob=',iglob,'height=',height,'g=',g,'dg=',dg,'factor=',factor
+        !endif
+      enddo
+
+    else
+      ! gravity acceleration for PREM
+      if (myrank == 0) then
+        write(IMAIN,*) "  using gravitational acceleration from PREM"
+        call flush_IMAIN()
+      endif
+
+      ! sets up spline table
+      call make_gravity(nspl_gravity,rspl_gravity,gspl,gspl2, &
+                        ROCEAN,RMIDDLE_CRUST,RMOHO,R80,R220,R400,R600,R670, &
+                        R771,RTOPDDOUBLEPRIME,RCMB,RICB)
+
+      ! pre-calculates gravity terms for all global points
+      do iglob = 1,NGLOB_AB
+        ! normalized radius ( zstore values given in m, negative values for depth)
+        radius = ( R_EARTH + zstore(iglob) ) / R_EARTH
+
+        call spline_evaluation(rspl_gravity,gspl,gspl2,nspl_gravity,radius,g)
+
+        ! use PREM density profile to calculate gravity (fine for other 1D models)
+        call model_prem_iso(radius,rho,drhodr,vp,vs,Qkappa,Qmu, &
+                            RICB,RCMB,RTOPDDOUBLEPRIME, &
+                            R600,R670,R220,R771,R400,R80,RMOHO,RMIDDLE_CRUST,ROCEAN)
+
+        dg = 4.0d0 * rho - 2.0d0 * g / radius
+
+        ! re-dimensionalize
+        g = g * R_EARTH*(PI*GRAV*RHOAV)                 ! in m / s^2 ( should be around 10 m/s^2)
+        dg = dg * R_EARTH*(PI*GRAV*RHOAV) / R_EARTH     ! gradient d/dz g , in 1/s^2
+
+        minus_deriv_gravity(iglob) = - dg
+        minus_g(iglob) = - g ! in negative z-direction
+
+        ! debug
+        !if (iglob == 1 .or. iglob == 1000 .or. iglob == 10000 .or. iglob == NGLOB_AB) then
+        !  ! re-dimensionalize
+        !  radius = radius * R_EARTH ! in m
+        !  print *,'gravity: iglob=',iglob,'radius=',radius,'depth=',radius-R_EARTH,'g=',g,'dg=',dg
+        !  vp = vp * R_EARTH*dsqrt(PI*GRAV*RHOAV)  ! in m / s
+        !  rho = rho  * RHOAV  ! in kg / m^3
+        !  print *,'vp=',vp,'rho=',rho,'kappa=',(vp**2) * rho
+        !  print *,'minus_g..=',minus_g(iglob)
+        !endif
+      enddo
+    endif
+
+    ! file output
+    if (SAVE_MESH_FILES) then
       ! minus_g
-      write(filename,'(a,i6.6,a)') 'OUTPUT_FILES/proc',myrank,'_minus_g'
+      filename = prname(1:len_trim(prname)) // 'minus_g'
       call write_VTK_wavefield_scalar(NSPEC_AB,NGLOB_AB,xstore,ystore,zstore,ibool,minus_g,filename)
-      print *,'written file: ',trim(filename)//'.vtk'
+      write(IMAIN,*) '  written to: ',trim(filename)//'.vtk'
       ! minus_deriv_gravity
-      write(filename,'(a,i6.6,a)') 'OUTPUT_FILES/proc',myrank,'_minus_deriv_gravity'
+      filename = prname(1:len_trim(prname)) // 'minus_deriv_gravity'
       call write_VTK_wavefield_scalar(NSPEC_AB,NGLOB_AB,xstore,ystore,zstore,ibool,minus_deriv_gravity,filename)
-      print *,'written file: ',trim(filename)//'.vtk'
+      write(IMAIN,*) '  written to: ',trim(filename)//'.vtk'
     endif
 
   else
