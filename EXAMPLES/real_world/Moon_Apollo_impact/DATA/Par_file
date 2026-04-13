@@ -23,7 +23,7 @@ UTM_PROJECTION_ZONE             = 20
 SUPPRESS_UTM_PROJECTION         = .false.
 
 # number of MPI processors
-NPROC                           = 8 
+NPROC                           = 8
 
 # time step parameters
 NSTEP                           = 20000
@@ -63,7 +63,7 @@ NGNOD                           = 8
 #   1d_prem,1d_socal,1d_cascadia
 # 3D models available are:
 #   aniso,external,gll,salton_trough,tomo,SEP,coupled,...
-MODEL                           = moon_default 
+MODEL                           = moon_default
 
 # path for external tomographic models files
 TOMOGRAPHY_PATH                 = ./DATA/tomo_files/
@@ -100,7 +100,7 @@ SCATTERING_STRENGTH             = 0.4d0
 # correlation factor
 SCATTERING_CORRELATION          = 5.d0
 # list of material ids to apply scattering perturbations (0 == for all materials)
-SCATTERING_MATERIAL_IDS         = 2,3 
+SCATTERING_MATERIAL_IDS         = 2,3
 
 #-----------------------------------------------------------
 #
@@ -117,7 +117,7 @@ PML_CONDITIONS                  = .false.
 PML_INSTEAD_OF_FREE_SURFACE     = .false.
 
 # C-PML dominant frequency
-f0_FOR_PML                      = 1.0 
+f0_FOR_PML                      = 1.0
 
 # parameters used to rotate C-PML boundary conditions by a given angle (not completed yet)
 # ROTATE_PML_ACTIVATE           = .false.
@@ -328,9 +328,9 @@ SAVE_MOHO_MESH                  = .false.
 #
 #-----------------------------------------------------------
 COUPLE_WITH_INJECTION_TECHNIQUE = .false.
-INJECTION_TECHNIQUE_TYPE        = 3   # 1 = DSM, 2 = AxiSEM, 3 = FK
+INJECTION_TECHNIQUE_TYPE        = 3   # 1 = DSM, 2 = AxiSEM, 3 = FK, 4 = SPECFEM
 MESH_A_CHUNK_OF_THE_EARTH       = .false.
-TRACTION_PATH                   = dummy 
+TRACTION_PATH                   = dummy
 FKMODEL_FILE                    = FKmodel
 RECIPROCITY_AND_KH_INTEGRAL     = .false.   # does not work yet
 

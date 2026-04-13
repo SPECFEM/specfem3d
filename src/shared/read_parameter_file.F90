@@ -434,16 +434,14 @@
       write(*,*)
     endif
 
-    ! read two flags in CMT + FORCE simulation
-    call read_value_logical(USE_CMT_AND_FORCE_SOURCE, 'USE_CMT_AND_FORCE_SOURCE', ier)
-    ier = 0
+    ! (optional) read two flags in CMT + FORCE simulation
+    call read_value_logical(USE_CMT_AND_FORCE_SOURCE, 'USE_CMT_AND_FORCE_SOURCE', ier); ier = 0
     if (USE_CMT_AND_FORCE_SOURCE) then
       ! write(*,'(a)') 'cmt + force simulation is enabled'
       USE_FORCE_POINT_SOURCE  = .true.
     endif
 
-    call read_value_logical(USE_BINARY_SOURCE_FILE, 'USE_BINARY_SOURCE_FILE', ier)
-    ier = 0
+    call read_value_logical(USE_BINARY_SOURCE_FILE, 'USE_BINARY_SOURCE_FILE', ier); ier = 0
     if (.not. USE_CMT_AND_FORCE_SOURCE) USE_BINARY_SOURCE_FILE = .false.  ! binary file is disabled
 
     call read_value_logical(USE_RICKER_TIME_FUNCTION, 'USE_RICKER_TIME_FUNCTION', ier)
@@ -711,9 +709,8 @@
 
     !-------------------------------------------------------
 
-    ! prescribed wavefield discontinuity on an interface
-    ! if these parameters do not exist in Par_file, then wavefield
-    ! is not switched on by default
+    ! (optional) prescribed wavefield discontinuity on an interface
+    ! if these parameters do not exist in Par_file, then wavefield is not switched on by default
     call read_value_logical(IS_WAVEFIELD_DISCONTINUITY, 'IS_WAVEFIELD_DISCONTINUITY', ier); ier = 0
     if (IS_WAVEFIELD_DISCONTINUITY) write(*,'(a)') 'wavefield discontinuity enabled'
 
