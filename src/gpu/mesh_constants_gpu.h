@@ -462,7 +462,6 @@ typedef struct mesh_ {
   int compute_and_store_strain;
 
   int approximate_hess_kl;
-  int use_mesh_coloring_gpu;
 
   // ------------------------------------------------------------------ //
   // GLL points & weights
@@ -853,6 +852,12 @@ typedef struct mesh_ {
   int* d_lts_interface_p_refine_ibool;
   int* d_lts_interface_p_refine_boundary;
   int lts_max_nibool_interfaces_boundary;
+
+  // ------------------------------------------------------------------ //
+  // optimizations
+  // ------------------------------------------------------------------ //
+  // mesh coloring (to avoid atomic adds)
+  int use_mesh_coloring_gpu;
 
 } Mesh;
 

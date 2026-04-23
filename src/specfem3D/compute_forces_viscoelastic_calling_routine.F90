@@ -155,26 +155,6 @@
       endif
     endif
 
-    ! while inner elements compute "Kernel_2", we wait for MPI to
-    ! finish and transfer the boundary terms to the device asynchronously
-    if (GPU_MODE .and. iphase == 2) then
-      !daniel: todo - this avoids calling the Fortran vector send from CUDA routine
-      ! wait for asynchronous copy to finish
-      call sync_copy_from_device(Mesh_pointer,iphase,buffer_send_vector_ext_mesh)
-
-      ! sends MPI buffers
-      call assemble_MPI_vector_send_cuda(NPROC, &
-                                         buffer_send_vector_ext_mesh,buffer_recv_vector_ext_mesh, &
-                                         num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
-                                         nibool_interfaces_ext_mesh,my_neighbors_ext_mesh, &
-                                         request_send_vector_ext_mesh,request_recv_vector_ext_mesh)
-
-      ! transfers MPI buffers onto GPU
-      call transfer_boundary_to_device(NPROC,Mesh_pointer,buffer_recv_vector_ext_mesh, &
-                                       num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
-                                       request_recv_vector_ext_mesh)
-    endif ! inner elements
-
     ! computes additional contributions
     if (iphase == 1) then
       ! adds elastic absorbing boundary term to acceleration (Stacey conditions)
@@ -297,38 +277,57 @@
     endif ! iphase
 
     ! assemble all the contributions between slices using MPI
-    if (iphase == 1) then
-      if (.not. GPU_MODE) then
-        ! on CPU
-        ! sends accel values to corresponding MPI interface neighbors
-        call assemble_MPI_vector_async_send(NPROC,NGLOB_AB,accel, &
-                                            buffer_send_vector_ext_mesh,buffer_recv_vector_ext_mesh, &
-                                            num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
-                                            nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
-                                            my_neighbors_ext_mesh, &
-                                            request_send_vector_ext_mesh,request_recv_vector_ext_mesh)
+    if (.not. GPU_MODE) then
+      ! on CPU
+      if (iphase == 1) then
+          ! sends accel values to corresponding MPI interface neighbors
+          call assemble_MPI_vector_async_send(NPROC,NGLOB_AB,accel, &
+                                              buffer_send_vector_ext_mesh,buffer_recv_vector_ext_mesh, &
+                                              num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
+                                              nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
+                                              my_neighbors_ext_mesh, &
+                                              request_send_vector_ext_mesh,request_recv_vector_ext_mesh)
       else
-        ! on GPU
-        ! transfers boundary region to host asynchronously. The
-        ! MPI-send is done from within compute_forces_viscoelastic_cuda,
-        ! once the inner element kernels are launched, and the
-        ! memcpy has finished. see compute_forces_viscoelastic_cuda: ~ line 1655
-        call transfer_boundary_from_device_a(Mesh_pointer)
-      endif
-    else
-      ! waits for send/receive requests to be completed and assembles values
-      if (.not. GPU_MODE) then
-        ! on CPU
-        ! receives MPI buffers
+        ! waits for send/receive requests to be completed and assembles values
         call assemble_MPI_vector_async_recv(NPROC,NGLOB_AB,accel, &
                                             buffer_recv_vector_ext_mesh,num_interfaces_ext_mesh, &
                                             max_nibool_interfaces_ext_mesh, &
                                             nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
                                             request_send_vector_ext_mesh,request_recv_vector_ext_mesh, &
                                             my_neighbors_ext_mesh)
+      endif
+    else
+      ! on GPU
+      ! note: the goal here is to overlap asynchronous memory copies of the MPI buffers between CPU-GPU
+      !       and the MPI send/receive while inner elements are computed.
+      !       for this, we start the transfer of MPI buffers from GPU->CPU as soon as possible, that is when the outer
+      !       element contributions are ready in iphase==1. once this asynchronous memory copy is initiated,
+      !       we launch the inner element computations before sending/receiving the MPI buffers.
+      !       this should overlap the element computation on the GPU with the MPI communication on the CPU.
+      !       finally, the assembly on the GPU can be started when MPI and buffer copying are done.
+      if (iphase == 1) then
+        ! transfers boundary region to host asynchronously
+        call transfer_boundary_from_device_a(Mesh_pointer)
       else
-        ! on GPU
-        ! waits for send/receive requests to be completed and assembles values
+        ! while inner elements compute "Kernel_2", we initiate and wait for MPI to
+        ! finish and transfer the halo buffer to the device asynchronously.
+        !
+        ! wait for asynchronous copy to finish
+        call sync_copy_from_device(Mesh_pointer,iphase,buffer_send_vector_ext_mesh)
+
+        ! initiates asynchronous MPI transfer by sending MPI buffers
+        call assemble_MPI_vector_send_cuda(NPROC, &
+                                           buffer_send_vector_ext_mesh,buffer_recv_vector_ext_mesh, &
+                                           num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
+                                           nibool_interfaces_ext_mesh,my_neighbors_ext_mesh, &
+                                           request_send_vector_ext_mesh,request_recv_vector_ext_mesh)
+
+        ! waits for send/receive requests to be completed and transfers MPI buffers onto GPU
+        call transfer_boundary_to_device(NPROC,Mesh_pointer,buffer_recv_vector_ext_mesh, &
+                                         num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
+                                         request_recv_vector_ext_mesh)
+
+        ! assembles values
         call assemble_MPI_vector_write_cuda(NPROC,NGLOB_AB,accel,Mesh_pointer, &
                                             buffer_recv_vector_ext_mesh,num_interfaces_ext_mesh, &
                                             max_nibool_interfaces_ext_mesh, &
@@ -753,26 +752,6 @@
                                           nspec_inner_elastic, &
                                           COMPUTE_AND_STORE_STRAIN,ATTENUATION,0) ! 0 == both combined
 
-    ! while inner elements compute "Kernel_2", we wait for MPI to
-    ! finish and transfer the boundary terms to the device asynchronously
-    if (iphase == 2) then
-      !daniel: todo - this avoids calling the Fortran vector send from CUDA routine
-      ! wait for asynchronous copy to finish
-      call sync_copy_from_device(Mesh_pointer,iphase,buffer_send_vector_ext_mesh)
-
-      ! sends MPI buffers
-      call assemble_MPI_vector_send_cuda(NPROC, &
-                                         buffer_send_vector_ext_mesh,buffer_recv_vector_ext_mesh, &
-                                         num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
-                                         nibool_interfaces_ext_mesh,my_neighbors_ext_mesh, &
-                                         request_send_vector_ext_mesh,request_recv_vector_ext_mesh)
-
-      ! transfers MPI buffers onto GPU
-      call transfer_boundary_to_device(NPROC,Mesh_pointer,buffer_recv_vector_ext_mesh, &
-                                       num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
-                                       request_recv_vector_ext_mesh)
-    endif ! inner elements
-
     ! computes additional contributions
     if (iphase == 1) then
       ! adds elastic absorbing boundary term to acceleration (Stacey conditions)
@@ -839,7 +818,25 @@
                                          b_request_send_vector_ext_mesh,b_request_recv_vector_ext_mesh)
 
     else
-      ! waits for send/receive requests to be completed and assembles values
+      ! while inner elements compute "Kernel_2", we wait for MPI to
+      ! finish and transfer the boundary terms to the device asynchronously
+      !
+      ! wait for asynchronous copy to finish
+      call sync_copy_from_device(Mesh_pointer,iphase,buffer_send_vector_ext_mesh)
+
+      ! sends MPI buffers
+      call assemble_MPI_vector_send_cuda(NPROC, &
+                                         buffer_send_vector_ext_mesh,buffer_recv_vector_ext_mesh, &
+                                         num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
+                                         nibool_interfaces_ext_mesh,my_neighbors_ext_mesh, &
+                                         request_send_vector_ext_mesh,request_recv_vector_ext_mesh)
+
+      ! waits for send/receive requests to be completed and transfers MPI buffers onto GPU
+      call transfer_boundary_to_device(NPROC,Mesh_pointer,buffer_recv_vector_ext_mesh, &
+                                       num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
+                                       request_recv_vector_ext_mesh)
+
+      ! assembles values
       call assemble_MPI_vector_write_cuda(NPROC,NGLOB_AB,accel,Mesh_pointer, &
                                           buffer_recv_vector_ext_mesh,num_interfaces_ext_mesh, &
                                           max_nibool_interfaces_ext_mesh, &
