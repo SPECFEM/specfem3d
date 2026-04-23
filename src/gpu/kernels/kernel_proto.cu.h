@@ -1287,16 +1287,17 @@ __global__ void Kernel_2_smooth_pde(const int nb_blocks_to_compute,
 
 __global__ void kernel_3_smooth_pde_cuda_device(field* d_ddat_smooth_glob,
                                                 realw_const_p rvol,
-                                                int size);
+                                                int size) ;
 
 __global__ void UpdateData_smooth_pde_kernel(field* d_dat_smooth_glob,
                                              field* d_ddat_smooth_glob,
-                                             int size);
+                                             int size) ;
 
 __global__ void zero_pml_smooth_pde_kernel(int nb_blocks_to_compute,
                                            field * d_dat_smooth_glob,
                                            const int * d_ibool,
-                                           const int * d_CPML_to_spec);
+                                           const int * d_CPML_to_spec) ;
+
 
 //
 // src/gpu/kernels/synchronize_boundary_accel_on_device.cu

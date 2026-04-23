@@ -147,6 +147,7 @@
     local_dim_neighbors_adjncy
 
   integer :: nspec_ext,nglob_ext,nspec_irregular_ext
+  integer :: shape_2d(2), shape_3d(3)
 
   !-------------------------------------.
   ! Open ADIOS Database file, read mode |
@@ -1749,47 +1750,77 @@
   ! MPI communications
   ! acoustic wavefield buffers
   if (ACOUSTIC_SIMULATION) then
-    allocate(buffer_send_scalar_ext_mesh(max_nibool_interfaces_ext_mesh*NB_RUNS_ACOUSTIC_GPU,num_interfaces_ext_mesh),stat=ier)
-    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1930')
-    allocate(buffer_recv_scalar_ext_mesh(max_nibool_interfaces_ext_mesh*NB_RUNS_ACOUSTIC_GPU,num_interfaces_ext_mesh),stat=ier)
-    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1931')
-
+    if (USE_CUDA_AWARE_MPI) then
+      ! allocates buffers on GPU
+      shape_2d(1) = max_nibool_interfaces_ext_mesh*NB_RUNS_ACOUSTIC_GPU
+      shape_2d(2) = num_interfaces_ext_mesh
+      call allocate_gpu_buffer_2d(buffer_send_scalar_ext_mesh,shape_2d)
+      call allocate_gpu_buffer_2d(buffer_recv_scalar_ext_mesh,shape_2d)
+    else
+      ! allocates buffers on CPU
+      allocate(buffer_send_scalar_ext_mesh(max_nibool_interfaces_ext_mesh*NB_RUNS_ACOUSTIC_GPU,num_interfaces_ext_mesh),stat=ier)
+      if (ier /= 0) call exit_MPI_without_rank('error allocating array 1930')
+      allocate(buffer_recv_scalar_ext_mesh(max_nibool_interfaces_ext_mesh*NB_RUNS_ACOUSTIC_GPU,num_interfaces_ext_mesh),stat=ier)
+      if (ier /= 0) call exit_MPI_without_rank('error allocating array 1931')
+      buffer_send_scalar_ext_mesh(:,:) = 0.0_CUSTOM_REAL; buffer_recv_scalar_ext_mesh(:,:) = 0.0_CUSTOM_REAL
+    endif
     allocate(request_send_scalar_ext_mesh(num_interfaces_ext_mesh),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 1934')
     allocate(request_recv_scalar_ext_mesh(num_interfaces_ext_mesh),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 1935')
-
-    buffer_send_scalar_ext_mesh(:,:) = 0.0_CUSTOM_REAL; buffer_recv_scalar_ext_mesh(:,:) = 0.0_CUSTOM_REAL
     request_send_scalar_ext_mesh(:) = 0; request_recv_scalar_ext_mesh(:) = 0
   endif
 
   ! elastic wavefield buffers
   if (ELASTIC_SIMULATION) then
-    allocate(buffer_send_vector_ext_mesh(NDIM,max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh),stat=ier)
-    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1928')
-    allocate(buffer_recv_vector_ext_mesh(NDIM,max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh),stat=ier)
-    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1929')
-
+    ! MPI buffers
+    if (USE_CUDA_AWARE_MPI) then
+      ! allocates buffers on GPU
+      shape_3d(1) = NDIM
+      shape_3d(2) = max_nibool_interfaces_ext_mesh
+      shape_3d(3) = num_interfaces_ext_mesh
+      call allocate_gpu_buffer_3d(buffer_send_vector_ext_mesh,shape_3d)
+      call allocate_gpu_buffer_3d(buffer_recv_vector_ext_mesh,shape_3d)
+    else
+      ! allocates buffers on CPU
+      allocate(buffer_send_vector_ext_mesh(NDIM,max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh),stat=ier)
+      if (ier /= 0) call exit_MPI_without_rank('error allocating array 1928')
+      allocate(buffer_recv_vector_ext_mesh(NDIM,max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh),stat=ier)
+      if (ier /= 0) call exit_MPI_without_rank('error allocating array 1929')
+      buffer_send_vector_ext_mesh(:,:,:) = 0.0_CUSTOM_REAL; buffer_recv_vector_ext_mesh(:,:,:) = 0.0_CUSTOM_REAL
+    endif
     allocate(request_send_vector_ext_mesh(num_interfaces_ext_mesh),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 1932')
     allocate(request_recv_vector_ext_mesh(num_interfaces_ext_mesh),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 1933')
-
-    buffer_send_vector_ext_mesh(:,:,:) = 0.0_CUSTOM_REAL; buffer_recv_vector_ext_mesh(:,:,:) = 0.0_CUSTOM_REAL
     request_send_vector_ext_mesh(:) = 0; request_recv_vector_ext_mesh(:) = 0
   endif
 
   ! poroelastic wavefield buffers
   if (POROELASTIC_SIMULATION) then
-    allocate(buffer_send_vector_ext_mesh_s(NDIM,max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh),stat=ier)
-    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1936')
-    allocate(buffer_recv_vector_ext_mesh_s(NDIM,max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh),stat=ier)
-    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1937')
-    allocate(buffer_send_vector_ext_mesh_w(NDIM,max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh),stat=ier)
-    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1938')
-    allocate(buffer_recv_vector_ext_mesh_w(NDIM,max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh),stat=ier)
-    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1939')
-
+    ! MPI buffers
+    if (USE_CUDA_AWARE_MPI) then
+      ! allocates buffers on GPU
+      shape_3d(1) = NDIM
+      shape_3d(2) = max_nibool_interfaces_ext_mesh
+      shape_3d(3) = num_interfaces_ext_mesh
+      call allocate_gpu_buffer_3d(buffer_send_vector_ext_mesh_s,shape_3d)
+      call allocate_gpu_buffer_3d(buffer_recv_vector_ext_mesh_s,shape_3d)
+      call allocate_gpu_buffer_3d(buffer_send_vector_ext_mesh_w,shape_3d)
+      call allocate_gpu_buffer_3d(buffer_recv_vector_ext_mesh_w,shape_3d)
+    else
+      ! allocates buffers on CPU
+      allocate(buffer_send_vector_ext_mesh_s(NDIM,max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh),stat=ier)
+      if (ier /= 0) call exit_MPI_without_rank('error allocating array 1936')
+      allocate(buffer_recv_vector_ext_mesh_s(NDIM,max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh),stat=ier)
+      if (ier /= 0) call exit_MPI_without_rank('error allocating array 1937')
+      allocate(buffer_send_vector_ext_mesh_w(NDIM,max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh),stat=ier)
+      if (ier /= 0) call exit_MPI_without_rank('error allocating array 1938')
+      allocate(buffer_recv_vector_ext_mesh_w(NDIM,max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh),stat=ier)
+      if (ier /= 0) call exit_MPI_without_rank('error allocating array 1939')
+      buffer_send_vector_ext_mesh_s(:,:,:) = 0.0_CUSTOM_REAL; buffer_recv_vector_ext_mesh_s(:,:,:) = 0.0_CUSTOM_REAL
+      buffer_send_vector_ext_mesh_w(:,:,:) = 0.0_CUSTOM_REAL; buffer_recv_vector_ext_mesh_w(:,:,:) = 0.0_CUSTOM_REAL
+    endif
     allocate(request_send_vector_ext_mesh_s(num_interfaces_ext_mesh),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 1940')
     allocate(request_recv_vector_ext_mesh_s(num_interfaces_ext_mesh),stat=ier)
@@ -1798,10 +1829,7 @@
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 1942')
     allocate(request_recv_vector_ext_mesh_w(num_interfaces_ext_mesh),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 1943')
-    if (ier /= 0) stop 'error allocating array buffer_send_vector_ext_mesh etc.'
-
-    buffer_send_vector_ext_mesh_s(:,:,:) = 0.0_CUSTOM_REAL; buffer_recv_vector_ext_mesh_s(:,:,:) = 0.0_CUSTOM_REAL
-    buffer_send_vector_ext_mesh_w(:,:,:) = 0.0_CUSTOM_REAL; buffer_recv_vector_ext_mesh_w(:,:,:) = 0.0_CUSTOM_REAL
+    if (ier /= 0) stop 'error allocating array buffer_send_vector_ext_mesh_s etc.'
     request_send_vector_ext_mesh_s(:) = 0; request_recv_vector_ext_mesh_s(:) = 0
     request_send_vector_ext_mesh_w(:) = 0; request_recv_vector_ext_mesh_w(:) = 0
   endif
@@ -1812,6 +1840,40 @@
     write(IMAIN,*)
     call flush_IMAIN()
   endif
+
+contains
+
+  subroutine allocate_gpu_buffer_2d(buffer, shape)
+
+  use iso_c_binding, only: c_ptr,c_f_pointer
+
+  implicit none
+  real(kind=CUSTOM_REAL), dimension(:,:), pointer, intent(inout) :: buffer
+  integer, intent(in) :: shape(2)
+  ! local parameters
+  type(c_ptr) :: c_ptr_buffer
+
+  call allocate_gpu_buffer(c_ptr_buffer, shape(1) * shape(2))
+  call c_f_pointer(c_ptr_buffer, buffer, shape)
+
+  end subroutine allocate_gpu_buffer_2d
+
+  !--------
+
+  subroutine allocate_gpu_buffer_3d(buffer, shape)
+
+  use iso_c_binding, only: c_ptr,c_f_pointer
+
+  implicit none
+  real(kind=CUSTOM_REAL), dimension(:,:,:), pointer, intent(inout) :: buffer
+  integer, intent(in) :: shape(3)
+  ! local parameters
+  type(c_ptr) :: c_ptr_buffer
+
+  call allocate_gpu_buffer(c_ptr_buffer, shape(1) * shape(2) * shape(3))
+  call c_f_pointer(c_ptr_buffer, buffer, shape)
+
+  end subroutine allocate_gpu_buffer_3d
 
   end subroutine read_mesh_databases_adios
 

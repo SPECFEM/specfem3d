@@ -412,6 +412,42 @@ void synchronize_mpi () {
 
 
 /* ----------------------------------------------------------------------------------------------- */
+// CUDA-aware MPI helper function
+/* ----------------------------------------------------------------------------------------------- */
+
+// allocates buffers on GPU device
+
+extern EXTERN_LANG
+void FC_FUNC_ (allocate_gpu_buffer,
+               ALLOCATE_GPU_BUFFER) (realw** buffer_f, int* total_size) {
+  TRACE ("allocate_gpu_buffer");
+
+  realw* buffer;
+  size_t size = *total_size;
+
+  // initializes buffer pointer
+  *buffer_f = NULL;
+
+  // checks if anything to do
+  if (size == 0){ return; }
+
+  // allocates buffer on GPU
+  gpuMalloc_realw((void**) &buffer, size);
+
+  // initializes
+  gpuMemset_realw(buffer, size, 0);
+
+  // returns buffer pointer
+#ifdef USE_CUDA
+  if (run_cuda) { *buffer_f = buffer; }
+#endif
+#ifdef USE_HIP
+  if (run_hip) { *buffer_f = buffer; }
+#endif
+}
+
+
+/* ----------------------------------------------------------------------------------------------- */
 
 // for debugging purposes, unused so far...
 

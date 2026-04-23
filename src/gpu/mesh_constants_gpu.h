@@ -856,6 +856,9 @@ typedef struct mesh_ {
   // ------------------------------------------------------------------ //
   // optimizations
   // ------------------------------------------------------------------ //
+  // CUDA-aware MPI flag
+  int use_cuda_aware_mpi;
+
   // mesh coloring (to avoid atomic adds)
   int use_mesh_coloring_gpu;
 

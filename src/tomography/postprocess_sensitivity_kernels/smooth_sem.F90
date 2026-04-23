@@ -108,7 +108,7 @@ program smooth_sem
   integer :: ijk
 #endif
   integer :: icounter,num_slices
-  integer :: iproc,ncuda_devices
+  integer :: iproc,ngpu_devices
 
   ! GPU
   integer(kind=8) :: Container
@@ -350,7 +350,7 @@ program smooth_sem
   if (sigma_v < 1.e-9) stop 'Error sigma_v zero, must non-zero'
 
   ! GPU
-  if (USE_GPU) call initialize_gpu_device(myrank,ncuda_devices)
+  if (USE_GPU) call initialize_gpu_device(myrank,ngpu_devices,0)
 
   ! synchronizes
   call synchronize_all()

@@ -259,18 +259,22 @@ module specfem_par
   integer, dimension(:), allocatable :: my_neighbors_ext_mesh
   integer, dimension(:), allocatable :: nibool_interfaces_ext_mesh
   integer, dimension(:,:), allocatable :: ibool_interfaces_ext_mesh
-  real(kind=CUSTOM_REAL), dimension(:,:,:), allocatable :: buffer_send_vector_ext_mesh
-  real(kind=CUSTOM_REAL), dimension(:,:,:), allocatable :: buffer_recv_vector_ext_mesh
-  real(kind=CUSTOM_REAL), dimension(:,:), allocatable :: buffer_send_scalar_ext_mesh
-  real(kind=CUSTOM_REAL), dimension(:,:), allocatable :: buffer_recv_scalar_ext_mesh
+
+  ! note: MPI buffers are declared as pointers instead of allocatable arrays.
+  !       this will allow for CUDA-aware MPI handling, where buffers have to be allocated on the GPU device.
+  real(kind=CUSTOM_REAL), dimension(:,:,:), pointer :: buffer_send_vector_ext_mesh
+  real(kind=CUSTOM_REAL), dimension(:,:,:), pointer :: buffer_recv_vector_ext_mesh
+  real(kind=CUSTOM_REAL), dimension(:,:), pointer :: buffer_send_scalar_ext_mesh
+  real(kind=CUSTOM_REAL), dimension(:,:), pointer :: buffer_recv_scalar_ext_mesh
+
   integer, dimension(:), allocatable :: request_send_scalar_ext_mesh
   integer, dimension(:), allocatable :: request_recv_scalar_ext_mesh
   integer, dimension(:), allocatable :: request_send_vector_ext_mesh
   integer, dimension(:), allocatable :: request_recv_vector_ext_mesh
-  real(kind=CUSTOM_REAL), dimension(:,:,:), allocatable :: buffer_send_vector_ext_mesh_s
-  real(kind=CUSTOM_REAL), dimension(:,:,:), allocatable :: buffer_recv_vector_ext_mesh_s
-  real(kind=CUSTOM_REAL), dimension(:,:,:), allocatable :: buffer_send_vector_ext_mesh_w
-  real(kind=CUSTOM_REAL), dimension(:,:,:), allocatable :: buffer_recv_vector_ext_mesh_w
+  real(kind=CUSTOM_REAL), dimension(:,:,:), pointer :: buffer_send_vector_ext_mesh_s
+  real(kind=CUSTOM_REAL), dimension(:,:,:), pointer :: buffer_recv_vector_ext_mesh_s
+  real(kind=CUSTOM_REAL), dimension(:,:,:), pointer :: buffer_send_vector_ext_mesh_w
+  real(kind=CUSTOM_REAL), dimension(:,:,:), pointer :: buffer_recv_vector_ext_mesh_w
   integer, dimension(:), allocatable :: request_send_vector_ext_mesh_s
   integer, dimension(:), allocatable :: request_recv_vector_ext_mesh_s
   integer, dimension(:), allocatable :: request_send_vector_ext_mesh_w
@@ -361,6 +365,9 @@ module specfem_par
 
   ! for dynamic rupture computations on GPU
   integer(kind=8) :: Fault_pointer
+
+  ! flags for CUDA-aware MPI handling
+  logical :: USE_CUDA_AWARE_MPI = .false.
 
   !-----------------------------------------------------------------
   ! ASDF
@@ -483,8 +490,8 @@ module specfem_par_elastic
   integer :: b_reclen_field
 
   ! for assembling backward field
-  real(kind=CUSTOM_REAL), dimension(:,:,:), allocatable :: b_buffer_send_vector_ext_mesh
-  real(kind=CUSTOM_REAL), dimension(:,:,:), allocatable :: b_buffer_recv_vector_ext_mesh
+  real(kind=CUSTOM_REAL), dimension(:,:,:), pointer :: b_buffer_send_vector_ext_mesh
+  real(kind=CUSTOM_REAL), dimension(:,:,:), pointer :: b_buffer_recv_vector_ext_mesh
   integer, dimension(:), allocatable :: b_request_send_vector_ext_mesh
   integer, dimension(:), allocatable :: b_request_recv_vector_ext_mesh
 
@@ -561,8 +568,8 @@ module specfem_par_acoustic
   integer :: b_reclen_potential
 
   ! for assembling backward field
-  real(kind=CUSTOM_REAL), dimension(:,:), allocatable :: b_buffer_send_scalar_ext_mesh
-  real(kind=CUSTOM_REAL), dimension(:,:), allocatable :: b_buffer_recv_scalar_ext_mesh
+  real(kind=CUSTOM_REAL), dimension(:,:), pointer :: b_buffer_send_scalar_ext_mesh
+  real(kind=CUSTOM_REAL), dimension(:,:), pointer :: b_buffer_recv_scalar_ext_mesh
   integer, dimension(:), allocatable :: b_request_send_scalar_ext_mesh
   integer, dimension(:), allocatable :: b_request_recv_scalar_ext_mesh
 
@@ -639,10 +646,10 @@ module specfem_par_poroelastic
   integer :: b_reclen_field_poro
 
   ! for assembling backward field
-  real(kind=CUSTOM_REAL), dimension(:,:,:), allocatable :: b_buffer_send_vector_ext_meshs
-  real(kind=CUSTOM_REAL), dimension(:,:,:), allocatable :: b_buffer_send_vector_ext_meshw
-  real(kind=CUSTOM_REAL), dimension(:,:,:), allocatable :: b_buffer_recv_vector_ext_meshs
-  real(kind=CUSTOM_REAL), dimension(:,:,:), allocatable :: b_buffer_recv_vector_ext_meshw
+  real(kind=CUSTOM_REAL), dimension(:,:,:), pointer :: b_buffer_send_vector_ext_meshs
+  real(kind=CUSTOM_REAL), dimension(:,:,:), pointer :: b_buffer_send_vector_ext_meshw
+  real(kind=CUSTOM_REAL), dimension(:,:,:), pointer :: b_buffer_recv_vector_ext_meshs
+  real(kind=CUSTOM_REAL), dimension(:,:,:), pointer :: b_buffer_recv_vector_ext_meshw
   integer, dimension(:), allocatable :: b_request_send_vector_ext_meshs
   integer, dimension(:), allocatable :: b_request_send_vector_ext_meshw
   integer, dimension(:), allocatable :: b_request_recv_vector_ext_meshs

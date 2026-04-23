@@ -434,16 +434,22 @@ void FC_FUNC_(fault_solver_gpu,
 void FC_FUNC_(pause_for_debug,
               PAUSE_FOR_DEBUG)() {}
 
+void FC_FUNC_ (allocate_gpu_buffer,
+               ALLOCATE_GPU_BUFFER) (realw** buffer_f, int* total_size) {}
+
 
 //
 // src/gpu/initialize_gpu.cu
 //
 
 void FC_FUNC_(initialize_gpu_device,
-              INITIALIZE_GPU_DEVICE)(int* myrank_f,int* ncuda_devices) {
+              INITIALIZE_GPU_DEVICE)(int* myrank_f,int* ngpu_devices,int* cuda_aware_mpi_init_type) {
  fprintf(stderr,"ERROR: GPU_MODE enabled without GPU/CUDA/HIP Support. To enable GPU support, reconfigure with --with-cuda or --with-hip flag.\n");
  exit(1);
 }
+
+void FC_FUNC_ (check_cuda_aware_mpi,
+               CHECK_CUDA_AWARE_MPI) (int* has_cuda_aware_mpi_f) {}
 
 
 //
@@ -836,6 +842,7 @@ void FC_FUNC_(get_smooth_gpu,
               GET_SMOOTH_gpu)(long * smooth_pointer,
                               realw * data_smooth) {}
 
+
 //
 // src/gpu/smooth_pde_cuda.cu
 //
@@ -874,8 +881,7 @@ void FC_FUNC_(kernel_3_smooth_pde_cuda,
 
 void FC_FUNC_(update_dat_smooth_pde_cuda,
               UPDATE_DAT_SMOOTH_PDE_CUDA)(long * Mesh_pointer,
-                                          long * Container_smooth_pde
-                                          ) {}
+                                          long * Container_smooth_pde) {}
 
 void FC_FUNC_(zero_pml_smooth_pde_cuda,
               ZERO_PML_SMOOTH_PDE_CUDA)(long * Mesh_pointer,
@@ -884,12 +890,13 @@ void FC_FUNC_(zero_pml_smooth_pde_cuda,
 void FC_FUNC_(get_norm_smooth_pde_from_device,
               GET_NORM_SMOOTH_PDE_FROM_DEVICE)(long * Mesh_pointer,
                                                long * Container_smooth_pde,
-                                               realw * norm, int* ind_val){}
+                                               realw * norm, int * ind_val){}
 
 void FC_FUNC_(transfer_dat_smooth_pde_from_device,
               TRANSFER_DAT_SMOOTH_PDE_FROM_DEVICE)(long * Mesh_pointer,
                                                    long * Container_smooth_pde,
                                                    realw* dat_smooth_glob){}
+
 
 //
 // src/gpu/transfer_fields_cuda.cu
