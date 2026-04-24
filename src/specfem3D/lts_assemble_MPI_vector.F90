@@ -187,7 +187,8 @@
 ! MPI routines that only recv if *this* p-level has elements on the MPI boundary
 
   subroutine assemble_MPI_vector_async_recv_lts(NPROC,NGLOB_AB,array_val,ilevel, &
-                                                buffer_recv_vector_ext_mesh,num_interfaces_ext_mesh, &
+                                                buffer_send_vector_ext_mesh,buffer_recv_vector_ext_mesh, &
+                                                num_interfaces_ext_mesh, &
                                                 max_nibool_interfaces_ext_mesh,nibool_interfaces_ext_mesh, &
                                                 request_send_vector_ext_mesh,request_recv_vector_ext_mesh, &
                                                 my_neighbors_ext_mesh)
@@ -198,7 +199,7 @@
 
   use specfem_par, only: FAULT_SIMULATION
 
-  use specfem_par, only: GPU_MODE, Mesh_pointer, buffer_send_vector_ext_mesh
+  use specfem_par, only: GPU_MODE, Mesh_pointer
 
   use specfem_par_lts, only: num_interface_p_refine_ibool, interface_p_refine_ibool, num_p_level
 
@@ -217,7 +218,7 @@
   integer,intent(in) :: num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh
 
   real(kind=CUSTOM_REAL), dimension(NDIM,max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh),intent(inout) :: &
-    buffer_recv_vector_ext_mesh
+    buffer_send_vector_ext_mesh,buffer_recv_vector_ext_mesh
 
   integer, dimension(num_interfaces_ext_mesh),intent(in) :: nibool_interfaces_ext_mesh
   integer, dimension(num_interfaces_ext_mesh),intent(inout) :: request_send_vector_ext_mesh,request_recv_vector_ext_mesh
@@ -246,7 +247,8 @@
   if (FAULT_SIMULATION) then
     ! receives MPI buffers with ordered assembly
     call assemble_MPI_vector_async_w_ord_lts(NPROC,NGLOB_AB,array_val,ilevel, &
-                                             buffer_recv_vector_ext_mesh,num_interfaces_ext_mesh, &
+                                             buffer_send_vector_ext_mesh,buffer_recv_vector_ext_mesh, &
+                                             num_interfaces_ext_mesh, &
                                              max_nibool_interfaces_ext_mesh, &
                                              nibool_interfaces_ext_mesh, &
                                              request_send_vector_ext_mesh,request_recv_vector_ext_mesh, &
@@ -445,7 +447,8 @@
 ! MPI routines that only recv if *this* p-level has elements on the MPI boundary
 
   subroutine assemble_MPI_vector_async_w_ord_lts(NPROC,NGLOB_AB,array_val,ilevel, &
-                                                 buffer_recv_vector_ext_mesh,num_interfaces_ext_mesh, &
+                                                 buffer_send_vector_ext_mesh,buffer_recv_vector_ext_mesh, &
+                                                 num_interfaces_ext_mesh, &
                                                  max_nibool_interfaces_ext_mesh, &
                                                  nibool_interfaces_ext_mesh, &
                                                  request_send_vector_ext_mesh,request_recv_vector_ext_mesh, &
@@ -465,7 +468,7 @@
 
   use constants, only: NDIM,CUSTOM_REAL,ASSEMBLE_MPI_OFF,myrank,itag
 
-  use specfem_par, only: GPU_MODE, Mesh_pointer, buffer_send_vector_ext_mesh
+  use specfem_par, only: GPU_MODE, Mesh_pointer
 
   use specfem_par_lts, only: num_interface_p_refine_ibool, interface_p_refine_ibool, num_p_level
 
@@ -484,7 +487,7 @@
   integer,intent(in) :: num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh
 
   real(kind=CUSTOM_REAL), dimension(NDIM,max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh),intent(inout) :: &
-    buffer_recv_vector_ext_mesh
+    buffer_send_vector_ext_mesh,buffer_recv_vector_ext_mesh
 
   integer, dimension(num_interfaces_ext_mesh),intent(in) :: nibool_interfaces_ext_mesh
   integer, dimension(num_interfaces_ext_mesh),intent(inout) :: request_send_vector_ext_mesh,request_recv_vector_ext_mesh

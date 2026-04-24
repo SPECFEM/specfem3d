@@ -333,7 +333,8 @@
         ! waits for send/receive requests to be completed and assembles values
         ! receives MPI buffers
         call assemble_MPI_vector_async_recv_lts(NPROC,NGLOB_AB,accel,ilevel, &
-                                                buffer_recv_vector_ext_mesh,num_interfaces_ext_mesh, &
+                                                buffer_send_vector_ext_mesh,buffer_recv_vector_ext_mesh, &
+                                                num_interfaces_ext_mesh, &
                                                 max_nibool_interfaces_ext_mesh,nibool_interfaces_ext_mesh, &
                                                 request_send_vector_ext_mesh,request_recv_vector_ext_mesh, &
                                                 my_neighbors_ext_mesh)

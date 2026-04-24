@@ -621,10 +621,10 @@
       call flush_IMAIN()
     endif
     ! just to get number of devices and device info output
-    call initialize_gpu_device(num_device,ngpu_devices,1)  ! init type 1 == only show device output
+    call initialize_gpu_device(num_device,ngpu_devices,2)  ! init type 2 == only show device output
   else
     ! sets GPU devices
-    call initialize_gpu_device(num_device,ngpu_devices,0)  ! default init
+    call initialize_gpu_device(num_device,ngpu_devices,0)  ! default init (initialization & device output)
   endif
 
   ! collects min/max of local devices found for statistics

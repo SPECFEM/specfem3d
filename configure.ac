@@ -13,8 +13,8 @@ dnl
 
 ############################################################
 
-AC_PREREQ(2.61)
-AC_INIT([SPECFEM3D Cartesian], m4_normalize(m4_include([VERSION])), [see the wiki], [Specfem3D])
+AC_PREREQ([2.72])
+AC_INIT([SPECFEM3D Cartesian],[m4_normalize(m4_include(VERSION))],[see the wiki],[Specfem3DCartesian])
 AC_CONFIG_SRCDIR([src/specfem3D/specfem3D.F90])
 
 AC_CONFIG_HEADERS([setup/config.h])
@@ -134,6 +134,21 @@ AM_CONDITIONAL([COND_CUDA_PLUS],
      -o "$want_cuda" = cuda12 \
      -o "$want_cuda" = cuda13 \]
 )
+
+# CUDA-aware MPI setting
+AC_ARG_ENABLE([cuda-aware-mpi],
+    [AS_HELP_STRING([--enable-cuda-aware-mpi],
+        [build CUDA-aware MPI enabled version @<:@default=no@:>@])],
+    [enable_cuda_aware_mpi="$enableval"],
+    [enable_cuda_aware_mpi=no])
+AC_ARG_WITH([cuda-aware-mpi],
+    [AS_HELP_STRING([--with-cuda-aware-mpi],
+        [build CUDA-aware MPI enabled version @<:@default=no@:>@])],
+    [with_cuda_aware_mpi="$withval"],
+    [with_cuda_aware_mpi=no])
+AS_IF([test x"$enable_cuda_aware_mpi" != xno || test x"$with_cuda_aware_mpi" != xno],
+    [want_cuda_aware_mpi=yes],[want_cuda_aware_mpi=no])
+AM_CONDITIONAL([COND_CUDA_AWARE_MPI], [test x"$want_cuda_aware_mpi" != xno])
 
 ## HIP
 AC_ARG_WITH([hip],
@@ -524,7 +539,7 @@ AS_IF([test x"$want_asdf" != xno], [
 #mpbl: adding flags to config.h.in through autoheader in order to save them into the adios file.
 #configure_flags_str="FC=$FC FCFLAGS=$FCFLAGS $FLAGS_CHECK"
 #AC_DEFINE_UNQUOTED([CONFIGURE_FLAGS],["${configure_flags_str}"],
-#         [configuration flags to be saved in the adios output file.])
+#          [configuration flags to be saved in the adios output file.])
 CONFIGURE_FLAGS="FC=$FC FCFLAGS=$FCFLAGS"
 AC_SUBST([CONFIGURE_FLAGS])
 
@@ -709,6 +724,11 @@ AM_CONDITIONAL([COND_HIP_PLATFORM_AMD], [test x"$HIP_PLATFORM" = xamd])
 AM_CONDITIONAL([COND_HIP_PLATFORM_NVIDIA], [test x"$HIP_PLATFORM" = xnvidia])
 AM_CONDITIONAL([COND_HIP_PLATFORM_CPU], [test x"$HIP_PLATFORM" = xcpu])
 
+# CUDA-aware MPI setting
+AS_IF([test x"$want_cuda_aware_mpi" != xno], [
+    AC_MSG_NOTICE([enabling CUDA-aware MPI support])
+])
+
 ###
 ### OpenMP
 ###
@@ -750,6 +770,7 @@ AS_IF([test x"$want_vtk" != xno], [
 ###
 ### HDF5
 ###
+
 AS_IF([test x"$want_hdf5" != xno], [
     AS_BOX([HDF5])
     AC_MSG_NOTICE([HDF5 is enabled])
@@ -785,11 +806,12 @@ AS_IF([test x"$want_hdf5" != xno], [
 ##
 ## Git version info
 ##
+
 AS_BOX([git version info])
 CIG_PKG_GIT(SPECFEM3D)
 
-AC_DEFINE_UNQUOTED([SPECFEM3D_VERSION], ["$PACKAGE_VERSION"], [Define SPECFEM3D version])
-#AC_DEFINE_UNQUOTED([SPECFEM3D_DOI], ["10.5281/zenodo.xxxxx"], [Define SPECFEM3D doi])
+AC_DEFINE_UNQUOTED([SPECFEM3D_VERSION], ["$PACKAGE_VERSION"], [Define SPECFEM3D Cartesian version])
+#AC_DEFINE_UNQUOTED([SPECFEM3D_DOI], ["10.5281/zenodo.xxxxx"], [Define SPECFEM3D Cartesian doi])
 
 AS_IF([test x"$SPECFEM3D_RELEASE_VERSION" = x0],[
   AC_MSG_NOTICE([building from git repository])

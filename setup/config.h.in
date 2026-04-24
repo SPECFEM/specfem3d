@@ -124,7 +124,7 @@
 /* Set to 0 if source is from GIT, 1 otherwise. */
 #undef SPECFEM3D_RELEASE_VERSION
 
-/* Define SPECFEM3D version */
+/* Define SPECFEM3D Cartesian version */
 #undef SPECFEM3D_VERSION
 
 /* Define to 1 if all of the C89 standard headers exist (not just the ones
