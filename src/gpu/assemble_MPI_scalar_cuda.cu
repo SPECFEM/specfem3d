@@ -105,7 +105,13 @@ void FC_FUNC_(transfer_boun_pot_from_device,
     gpuStreamSynchronize(mp->compute_stream);
 
     // copies buffer to CPU
-    gpuMemcpy_tohost_field(send_potential_dot_dot_buffer,d_send_buffer,mp->size_mpi_buffer_potential);
+    if (mp->use_cuda_aware_mpi){
+      // CUDA-aware MPI copies buffers on GPU
+      gpuMemcpy_devicetodevice_field(send_potential_dot_dot_buffer,d_send_buffer,mp->size_mpi_buffer_potential);
+    } else {
+      // copies buffer to CPU
+      gpuMemcpy_tohost_field(send_potential_dot_dot_buffer,d_send_buffer,mp->size_mpi_buffer_potential);
+    }
   }
 
   // finish timing of kernel+memcpy
@@ -168,7 +174,13 @@ void FC_FUNC_(transfer_asmbl_pot_to_device,
     gpuSynchronize();
 
     // copies buffer onto GPU
-    gpuMemcpy_todevice_field(d_send_buffer, buffer_recv_scalar_ext_mesh,mp->size_mpi_buffer_potential);
+    if (mp->use_cuda_aware_mpi){
+      // CUDA-aware MPI copies buffers on GPU
+      gpuMemcpy_devicetodevice_field(d_send_buffer, buffer_recv_scalar_ext_mesh,mp->size_mpi_buffer_potential);
+    } else {
+      // // buffer copy from CPU
+      gpuMemcpy_todevice_field(d_send_buffer, buffer_recv_scalar_ext_mesh,mp->size_mpi_buffer_potential);
+    }
 
     // assembles field
 #ifdef USE_CUDA

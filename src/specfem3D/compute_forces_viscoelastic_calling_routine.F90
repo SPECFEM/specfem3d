@@ -307,7 +307,7 @@
       !       finally, the assembly on the GPU can be started when MPI and buffer copying are done.
       if (iphase == 1) then
         ! transfers boundary region to host asynchronously
-        call transfer_boundary_from_device_a(Mesh_pointer)
+        call transfer_boundary_from_device_a(Mesh_pointer,buffer_send_vector_ext_mesh)
       else
         ! while inner elements compute "Kernel_2", we initiate and wait for MPI to
         ! finish and transfer the halo buffer to the device asynchronously.
@@ -799,11 +799,9 @@
     if (iphase == 1) then
       ! sends accel values to corresponding MPI interface neighbors
 
-      ! transfers boundary region to host asynchronously. The
-      ! MPI-send is done from within compute_forces_viscoelastic_cuda,
-      ! once the inner element kernels are launched, and the
-      ! memcpy has finished. see compute_forces_viscoelastic_cuda: ~ line 1655
-      call transfer_boundary_from_device_a(Mesh_pointer)
+      ! transfers boundary region to host asynchronously
+      ! forward wavefield (accel forward)
+      call transfer_boundary_from_device_a(Mesh_pointer,buffer_send_vector_ext_mesh)
 
       ! adjoint simulations
       ! assumes SIMULATION_TYPE == 3
@@ -822,6 +820,7 @@
       ! finish and transfer the boundary terms to the device asynchronously
       !
       ! wait for asynchronous copy to finish
+      ! forward wavefield (accel forward)
       call sync_copy_from_device(Mesh_pointer,iphase,buffer_send_vector_ext_mesh)
 
       ! sends MPI buffers

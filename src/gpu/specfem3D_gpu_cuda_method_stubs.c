@@ -64,18 +64,14 @@ void FC_FUNC_(transfer_boun_accel_from_device,
                                                const int* FORWARD_OR_ADJOINT){}
 
 void FC_FUNC_(transfer_boundary_from_device_a,
-              TRANSFER_BOUNDARY_FROM_DEVICE_A)(long* Mesh_pointer) {}
+              TRANSFER_BOUNDARY_FROM_DEVICE_A)(long* Mesh_pointer,
+                                               realw *send_accel_buffer) {}
 
 void FC_FUNC_(transfer_boundary_to_device_a,
               TRANSFER_BOUNDARY_TO_DEVICE_A)(long* Mesh_pointer,
                                              realw* buffer_recv_vector_ext_mesh) {}
 
 void FC_FUNC_(transfer_asmbl_accel_to_device,
-              TRANSFER_ASMBL_ACCEL_TO_DEVICE)(long* Mesh_pointer,
-                                              realw* buffer_recv_vector_ext_mesh,
-                                              const int* FORWARD_OR_ADJOINT) {}
-
-void FC_FUNC_(transfer_sync_accel_to_device,
               TRANSFER_ASMBL_ACCEL_TO_DEVICE)(long* Mesh_pointer,
                                               realw* buffer_recv_vector_ext_mesh,
                                               const int* FORWARD_OR_ADJOINT) {}
@@ -480,7 +476,7 @@ void FC_FUNC_(transfer_boundary_from_device_async_lts,
 
 void FC_FUNC_(transfer_reduced_boundary_to_device_async_lts,
               TRANSFER_REDUCED_BOUNDARY_TO_DEVICE_ASYNC_LTS)(long* Mesh_pointer,
-                                                             realw* reduced_buffer_recv_vector_ext_mesh,
+                                                             realw* buffer_reduced_recv_vector,
                                                              int* num_interface_p_refine_boundary_f) {}
 
 void FC_FUNC_(assemble_mpi_device_lts,
@@ -625,7 +621,8 @@ void FC_FUNC_(prepare_constants_device,
                                         int* IS_WAVEFIELD_DISCONTINUITY,
                                         int* IS_COUPLE_WITH_INJECTION,
                                         int* UNDO_ATTENUATION_AND_OR_PML,
-                                        int* PML_CONDITIONS) {}
+                                        int* PML_CONDITIONS,
+                                        int* USE_CUDA_AWARE_MPI_f) {}
 
 void FC_FUNC_(prepare_fields_acoustic_device,
               PREPARE_FIELDS_ACOUSTIC_DEVICE)(long* Mesh_pointer,

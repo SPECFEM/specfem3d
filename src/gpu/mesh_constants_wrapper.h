@@ -52,6 +52,20 @@ static inline void gpuMemcpy_todevice_realw(realw* d_array,realw* h_array,const 
 #endif
 }
 
+static inline void gpuMemcpy_devicetodevice_realw(realw* to_array,realw* from_array,const size_t size){
+  // CUDA-aware MPI copies array onto GPU from buffer allocated on device (device-to-device copy)
+#ifdef USE_CUDA
+  if (run_cuda){
+    print_CUDA_error_if_any(cudaMemcpy(to_array,from_array,size*sizeof(realw),cudaMemcpyDeviceToDevice),1801);
+  }
+#endif
+#ifdef USE_HIP
+  if (run_hip){
+    print_HIP_error_if_any(hipMemcpy(to_array,from_array,size*sizeof(realw),hipMemcpyDeviceToDevice),1801);
+  }
+#endif
+}
+
 static inline void gpuMemcpy_todevice_field(field* d_array,field* h_array,const size_t size){
   // copies array onto GPU
 #ifdef USE_CUDA
@@ -62,6 +76,20 @@ static inline void gpuMemcpy_todevice_field(field* d_array,field* h_array,const 
 #ifdef USE_HIP
   if (run_hip){
     print_HIP_error_if_any(hipMemcpy(d_array,h_array,size*sizeof(field),hipMemcpyHostToDevice),1802);
+  }
+#endif
+}
+
+static inline void gpuMemcpy_devicetodevice_field(field* to_array,field* from_array,const size_t size){
+  // CUDA-aware MPI copies array onto GPU from buffer allocated on device (device-to-device copy)
+#ifdef USE_CUDA
+  if (run_cuda){
+    print_CUDA_error_if_any(cudaMemcpy(to_array,from_array,size*sizeof(field),cudaMemcpyDeviceToDevice),1802);
+  }
+#endif
+#ifdef USE_HIP
+  if (run_hip){
+    print_HIP_error_if_any(hipMemcpy(to_array,from_array,size*sizeof(field),hipMemcpyDeviceToDevice),1802);
   }
 #endif
 }
@@ -209,6 +237,20 @@ static inline void gpuMemcpyAsync_todevice_realw(realw* d_array,realw* h_array,c
 #ifdef USE_HIP
   if (run_hip){
     hipMemcpyAsync(d_array,h_array,size*sizeof(realw),hipMemcpyHostToDevice,stream);
+  }
+#endif
+}
+
+static inline void gpuMemcpyAsync_devicetodevice_realw(realw* to_array,realw* from_array,const size_t size, gpu_stream stream){
+  // CUDA-aware MPI asynchronuous copy onto GPU from buffer allocated on device (device-to-device copy)
+#ifdef USE_CUDA
+  if (run_cuda){
+    cudaMemcpyAsync(to_array,from_array,size*sizeof(realw),cudaMemcpyDeviceToDevice,stream);
+  }
+#endif
+#ifdef USE_HIP
+  if (run_hip){
+    hipMemcpyAsync(to_array,from_array,size*sizeof(realw),hipMemcpyDeviceToDevice,stream);
   }
 #endif
 }

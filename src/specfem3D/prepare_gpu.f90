@@ -103,7 +103,8 @@
                                 IS_WAVEFIELD_DISCONTINUITY, &
                                 COUPLE_WITH_INJECTION_TECHNIQUE, &
                                 UNDO_ATTENUATION_AND_OR_PML, &
-                                PML_CONDITIONS)
+                                PML_CONDITIONS, &
+                                USE_CUDA_AWARE_MPI)
 
 
   ! prepares fields on GPU for acoustic simulations

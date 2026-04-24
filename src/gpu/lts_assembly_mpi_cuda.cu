@@ -47,7 +47,7 @@ void FC_FUNC_(sync_copy_reduced_from_device,
   if (num_interface_p_refine_boundary == 0) return;
 
   // Wait until async-memcpy of outer elements is finished and start MPI.
-  if (*iphase != 2){ exit_on_error("sync_copy_from_device must be called for iphase == 2"); }
+  if (*iphase != 2){ exit_on_error("sync_copy_reduced_from_device must be called for iphase == 2"); }
 
   if (mp->size_mpi_buffer > 0){
     // waits for asynchronous copy to finish
@@ -250,7 +250,7 @@ void FC_FUNC_(transfer_boundary_from_device_async_lts,
 extern EXTERN_LANG
 void FC_FUNC_(transfer_reduced_boundary_to_device_async_lts,
               TRANSFER_REDUCED_BOUNDARY_TO_DEVICE_ASYNC_LTS)(long* Mesh_pointer,
-                                                             realw* reduced_buffer_recv_vector_ext_mesh,
+                                                             realw* buffer_reduced_recv_vector,
                                                              int* num_interface_p_refine_boundary_f) {
 
 // asynchronous transfer from host to device
@@ -265,7 +265,7 @@ void FC_FUNC_(transfer_reduced_boundary_to_device_async_lts,
 
   if (mp->size_mpi_buffer > 0){
     // copy on host memory
-    memcpy(mp->h_recv_accel_buffer,reduced_buffer_recv_vector_ext_mesh,3*num_interface_p_refine_boundary*sizeof(realw));
+    memcpy(mp->h_recv_accel_buffer,buffer_reduced_recv_vector,3*num_interface_p_refine_boundary*sizeof(realw));
 
     // asynchronous copy to GPU using copy_stream
     gpuMemcpyAsync_todevice_realw(mp->d_send_accel_buffer, mp->h_recv_accel_buffer, NDIM * num_interface_p_refine_boundary, mp->copy_stream);

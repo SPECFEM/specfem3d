@@ -109,7 +109,8 @@ void FC_FUNC_(prepare_constants_device,
                                         int* IS_WAVEFIELD_DISCONTINUITY,
                                         int* IS_COUPLE_WITH_INJECTION,
                                         int* UNDO_ATTENUATION_AND_OR_PML,
-                                        int* PML_CONDITIONS) {
+                                        int* PML_CONDITIONS,
+                                        int* USE_CUDA_AWARE_MPI_f) {
 
   TRACE("prepare_constants_device");
 
@@ -141,6 +142,9 @@ void FC_FUNC_(prepare_constants_device,
   mp->NSPEC_CPML = 0;
 
   mp->undo_attenuation = *UNDO_ATTENUATION_AND_OR_PML;
+
+  // CUDA-aware MPI flag
+  mp->use_cuda_aware_mpi = *USE_CUDA_AWARE_MPI_f;
 
   // local time stepping initially false
   mp->lts_mode = 0;
@@ -2284,7 +2288,10 @@ TRACE("prepare_cleanup_device");
   }
 
   // releases previous contexts
-  gpuReset();
+  // note: with CUDA-aware MPI, releasing the context before finishing MPI can lead to a PAMI error in MPI_Finalize():
+  //          Cuda failure .. /pami/components/devices/shmem/ShmemDevice.h:425: 'context is destroyed'
+  //       thus, we only explicitly release it if no CUDA-aware MPI was used, otherwise let the system handle it.
+  if (! mp->use_cuda_aware_mpi){ gpuReset(); }
 
   // mesh pointer - not needed anymore
   free(mp);
