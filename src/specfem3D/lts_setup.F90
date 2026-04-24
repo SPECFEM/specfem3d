@@ -49,10 +49,10 @@
   use constants, only: NDIM,CUSTOM_REAL,VERYSMALLVAL,FIX_UNDERFLOW_PROBLEM,IMAIN,itag,myrank
 
   use shared_parameters, only: DT,NSTEP,NPROC,SIMULATION_TYPE,LTS_MODE,USE_LDDRK, &
-    SAVE_SEISMOGRAMS_ACCELERATION,CREATE_SHAKEMAP
+    SAVE_SEISMOGRAMS_ACCELERATION,CREATE_SHAKEMAP,GPU_MODE
 
   use specfem_par, only: ACOUSTIC_SIMULATION,ELASTIC_SIMULATION,POROELASTIC_SIMULATION, &
-    deltat,NGLOB_AB,PML_CONDITIONS
+    deltat,NGLOB_AB,PML_CONDITIONS,USE_CUDA_AWARE_MPI
 
   ! MPI interfaces
   use specfem_par, only: num_interfaces_ext_mesh,ibool_interfaces_ext_mesh,nibool_interfaces_ext_mesh, &
@@ -88,13 +88,21 @@
 
   ! safety checks
   ! checks simulation domain types
-  if (ACOUSTIC_SIMULATION) call exit_MPI(myrank,'LTS routines only implemented for purely ELASTIC simulations')
-  if (POROELASTIC_SIMULATION) call exit_MPI(myrank,'LTS routines only implemented for purely ELASTIC simulations')
-  if (.not. ELASTIC_SIMULATION) call exit_MPI(myrank,'LTS routines only implemented for purely ELASTIC simulations')
+  if (ACOUSTIC_SIMULATION) &
+    call exit_MPI(myrank,'LTS routines only implemented for purely ELASTIC simulations')
+  if (POROELASTIC_SIMULATION) &
+    call exit_MPI(myrank,'LTS routines only implemented for purely ELASTIC simulations')
+  if (.not. ELASTIC_SIMULATION) &
+    call exit_MPI(myrank,'LTS routines only implemented for purely ELASTIC simulations')
 
-  if (SIMULATION_TYPE /= 1) call exit_MPI(myrank,'LTS routines only implemented for forward simulations (SIMULATION_TYPE == 1)')
-  if (USE_LDDRK) call exit_MPI(myrank,'LTS routines only implemented for Newark time scheme (USE_LDDRK == .false.)')
-  if (PML_CONDITIONS) call exit_MPI(myrank,'LTS mode w/ PML boundaries not implemented yet')
+  if (SIMULATION_TYPE /= 1) &
+    call exit_MPI(myrank,'LTS routines only implemented for forward simulations (SIMULATION_TYPE == 1)')
+  if (USE_LDDRK) &
+    call exit_MPI(myrank,'LTS routines only implemented for Newark time scheme (USE_LDDRK == .false.)')
+  if (PML_CONDITIONS) &
+    call exit_MPI(myrank,'LTS mode w/ PML boundaries not implemented yet')
+  if (GPU_MODE .and. USE_CUDA_AWARE_MPI) &
+    call exit_MPI(myrank,'LTS mode on GPU does not support CUDA-aware MPI yet')
 
   ! user output
   if (myrank == 0) then
