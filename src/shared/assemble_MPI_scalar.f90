@@ -387,10 +387,10 @@
   integer, dimension(max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh),intent(in) :: ibool_interfaces_ext_mesh
 
   ! local parameters
-  integer, dimension(:,:), allocatable :: buffer_send_scalar_ext_mesh
-  integer, dimension(:,:), allocatable :: buffer_recv_scalar_ext_mesh
-  integer, dimension(:), allocatable :: request_send_scalar_ext_mesh
-  integer, dimension(:), allocatable :: request_recv_scalar_ext_mesh
+  integer, dimension(:,:), allocatable :: buffer_send_scalar_local
+  integer, dimension(:,:), allocatable :: buffer_recv_scalar_local
+  integer, dimension(:), allocatable :: request_send_scalar_local
+  integer, dimension(:), allocatable :: request_recv_scalar_local
 
   integer :: ipoin,iinterface,ier
 
@@ -401,19 +401,19 @@
 
   ! assemble only if more than one partition
   if (NPROC > 1) then
-    allocate(buffer_send_scalar_ext_mesh(max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh),stat=ier)
-    if ( ier /= 0 ) stop 'error allocating array buffer_send_scalar_ext_mesh'
-    allocate(buffer_recv_scalar_ext_mesh(max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh),stat=ier)
-    if ( ier /= 0 ) stop 'error allocating array buffer_recv_scalar_ext_mesh'
-    allocate(request_send_scalar_ext_mesh(num_interfaces_ext_mesh),stat=ier)
-    if ( ier /= 0 ) stop 'error allocating array request_send_scalar_ext_mesh'
-    allocate(request_recv_scalar_ext_mesh(num_interfaces_ext_mesh),stat=ier)
-    if ( ier /= 0 ) stop 'error allocating array request_recv_scalar_ext_mesh'
+    allocate(buffer_send_scalar_local(max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh),stat=ier)
+    if ( ier /= 0 ) stop 'error allocating array buffer_send_scalar_local'
+    allocate(buffer_recv_scalar_local(max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh),stat=ier)
+    if ( ier /= 0 ) stop 'error allocating array buffer_recv_scalar_local'
+    allocate(request_send_scalar_local(num_interfaces_ext_mesh),stat=ier)
+    if ( ier /= 0 ) stop 'error allocating array request_send_scalar_local'
+    allocate(request_recv_scalar_local(num_interfaces_ext_mesh),stat=ier)
+    if ( ier /= 0 ) stop 'error allocating array request_recv_scalar_local'
 
     ! partition border copy into the buffer
     do iinterface = 1, num_interfaces_ext_mesh
       do ipoin = 1, nibool_interfaces_ext_mesh(iinterface)
-        buffer_send_scalar_ext_mesh(ipoin,iinterface) = &
+        buffer_send_scalar_local(ipoin,iinterface) = &
           array_val(ibool_interfaces_ext_mesh(ipoin,iinterface))
       enddo
     enddo
@@ -421,42 +421,42 @@
     ! send messages
     do iinterface = 1, num_interfaces_ext_mesh
       ! non-blocking synchronous send request
-      call isend_i(buffer_send_scalar_ext_mesh(1:nibool_interfaces_ext_mesh(iinterface),iinterface), &
+      call isend_i(buffer_send_scalar_local(1:nibool_interfaces_ext_mesh(iinterface),iinterface), &
                    nibool_interfaces_ext_mesh(iinterface), &
                    my_neighbors_ext_mesh(iinterface), &
                    itag, &
-                   request_send_scalar_ext_mesh(iinterface))
+                   request_send_scalar_local(iinterface))
       ! receive request
-      call irecv_i(buffer_recv_scalar_ext_mesh(1:nibool_interfaces_ext_mesh(iinterface),iinterface), &
+      call irecv_i(buffer_recv_scalar_local(1:nibool_interfaces_ext_mesh(iinterface),iinterface), &
                    nibool_interfaces_ext_mesh(iinterface), &
                    my_neighbors_ext_mesh(iinterface), &
                    itag, &
-                   request_recv_scalar_ext_mesh(iinterface))
+                   request_recv_scalar_local(iinterface))
     enddo
 
     ! wait for communications completion
     do iinterface = 1, num_interfaces_ext_mesh
-      call wait_req(request_recv_scalar_ext_mesh(iinterface))
+      call wait_req(request_recv_scalar_local(iinterface))
     enddo
 
     ! takes only highest value which occurrs on interface points
     do iinterface = 1, num_interfaces_ext_mesh
       do ipoin = 1, nibool_interfaces_ext_mesh(iinterface)
-        if (array_val(ibool_interfaces_ext_mesh(ipoin,iinterface)) < buffer_recv_scalar_ext_mesh(ipoin,iinterface)) then
-          array_val(ibool_interfaces_ext_mesh(ipoin,iinterface)) = buffer_recv_scalar_ext_mesh(ipoin,iinterface)
+        if (array_val(ibool_interfaces_ext_mesh(ipoin,iinterface)) < buffer_recv_scalar_local(ipoin,iinterface)) then
+          array_val(ibool_interfaces_ext_mesh(ipoin,iinterface)) = buffer_recv_scalar_local(ipoin,iinterface)
         endif
       enddo
     enddo
 
     ! wait for communications completion (send)
     do iinterface = 1, num_interfaces_ext_mesh
-      call wait_req(request_send_scalar_ext_mesh(iinterface))
+      call wait_req(request_send_scalar_local(iinterface))
     enddo
 
-    deallocate(buffer_send_scalar_ext_mesh)
-    deallocate(buffer_recv_scalar_ext_mesh)
-    deallocate(request_send_scalar_ext_mesh)
-    deallocate(request_recv_scalar_ext_mesh)
+    deallocate(buffer_send_scalar_local)
+    deallocate(buffer_recv_scalar_local)
+    deallocate(request_send_scalar_local)
+    deallocate(request_recv_scalar_local)
   endif
 
   end subroutine assemble_MPI_scalar_i_max

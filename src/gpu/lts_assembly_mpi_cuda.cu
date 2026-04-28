@@ -50,6 +50,9 @@ void FC_FUNC_(sync_copy_reduced_from_device,
   if (*iphase != 2){ exit_on_error("sync_copy_reduced_from_device must be called for iphase == 2"); }
 
   if (mp->size_mpi_buffer > 0){
+    // safety check: CUDA-aware MPI - not fully implemented yet
+    if (mp->use_cuda_aware_mpi) { exit_on_error("LTS mode with CUDA-aware MPI is not fully implemented yet."); }
+
     // waits for asynchronous copy to finish
     gpuStreamSynchronize(mp->copy_stream);
 
@@ -79,6 +82,9 @@ void FC_FUNC_(test_boundary_transfer_lts,
   int max_num_interface_p_refine_ibool = *max_num_interface_p_refine_ibool_f;
 
   if (mp->size_mpi_buffer > 0){
+    // safety check: CUDA-aware MPI - not fully implemented yet
+    if (mp->use_cuda_aware_mpi) { exit_on_error("LTS mode with CUDA-aware MPI is not fully implemented yet."); }
+
     int blocksize = BLOCKSIZE_TRANSFER;
 
     int size_padded = ((int)ceil(((double)max_num_interface_p_refine_ibool)/((double)blocksize)))*blocksize;
@@ -144,6 +150,9 @@ void FC_FUNC_(transfer_reduced_boundary_from_device_async_lts,
   if (num_interface_p_refine_boundary == 0) return;
 
   if (mp->size_mpi_buffer > 0){
+    // safety check: CUDA-aware MPI - not fully implemented yet
+    if (mp->use_cuda_aware_mpi) { exit_on_error("LTS mode with CUDA-aware MPI is not fully implemented yet."); }
+
     int blocksize = BLOCKSIZE_TRANSFER;
 
     int size_padded = ((int)ceil(((double)num_interface_p_refine_boundary)/((double)blocksize)))*blocksize;
@@ -202,6 +211,9 @@ void FC_FUNC_(transfer_boundary_from_device_async_lts,
   int max_num_interface_p_refine_ibool = *max_num_interface_p_refine_ibool_f;
 
   if (mp->size_mpi_buffer > 0){
+    // safety check: CUDA-aware MPI - not fully implemented yet
+    if (mp->use_cuda_aware_mpi) { exit_on_error("LTS mode with CUDA-aware MPI is not fully implemented yet."); }
+
     int blocksize = BLOCKSIZE_TRANSFER;
 
     int size_padded = ((int)ceil(((double)max_num_interface_p_refine_ibool)/((double)blocksize)))*blocksize;
@@ -264,6 +276,9 @@ void FC_FUNC_(transfer_reduced_boundary_to_device_async_lts,
   if (num_interface_p_refine_boundary == 0) return;
 
   if (mp->size_mpi_buffer > 0){
+    // safety check: CUDA-aware MPI - not fully implemented yet
+    if (mp->use_cuda_aware_mpi) { exit_on_error("LTS mode with CUDA-aware MPI is not fully implemented yet."); }
+
     // copy on host memory
     memcpy(mp->h_recv_accel_buffer,buffer_reduced_recv_vector,3*num_interface_p_refine_boundary*sizeof(realw));
 
@@ -291,7 +306,10 @@ void FC_FUNC_(assemble_mpi_device_lts,
   int max_num_interface_p_refine_ibool = *max_num_interface_p_refine_ibool_f;
 
   if (mp->size_mpi_buffer > 0){
+    // safety check: CUDA-aware MPI - not fully implemented yet
+    if (mp->use_cuda_aware_mpi) { exit_on_error("LTS mode with CUDA-aware MPI is not fully implemented yet."); }
 
+    // wait for copy to finish
     gpuStreamSynchronize(mp->copy_stream);
 
     int blocksize = BLOCKSIZE_TRANSFER;
@@ -354,7 +372,10 @@ void FC_FUNC_(assemble_reduced_mpi_device_lts,
   if (num_interface_p_refine_boundary == 0) return;
 
   if (mp->size_mpi_buffer > 0){
+    // safety check: CUDA-aware MPI - not fully implemented yet
+    if (mp->use_cuda_aware_mpi) { exit_on_error("LTS mode with CUDA-aware MPI is not fully implemented yet."); }
 
+    // wait for copy to finish
     gpuStreamSynchronize(mp->copy_stream);
 
     int blocksize = BLOCKSIZE_TRANSFER;

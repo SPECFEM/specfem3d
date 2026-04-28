@@ -514,7 +514,13 @@ void FC_FUNC_(prepare_fields_acoustic_device,
   // mpi buffer
   mp->size_mpi_buffer_potential = (mp->num_interfaces_ext_mesh) * (mp->max_nibool_interfaces_ext_mesh);
   if (mp->size_mpi_buffer_potential > 0){
-    gpuMalloc_field((void**)&(mp->d_send_potential_dot_dot_buffer),mp->size_mpi_buffer_potential);
+    if (mp->use_cuda_aware_mpi){
+      // CUDA-aware MPI
+      // buffers already on device
+      mp->d_send_potential_dot_dot_buffer = NULL;
+    } else {
+      gpuMalloc_field((void**)&(mp->d_send_potential_dot_dot_buffer),mp->size_mpi_buffer_potential);
+    }
   }
 
   // mass matrix
@@ -661,7 +667,13 @@ void FC_FUNC_(prepare_fields_acoustic_adj_dev,
 
   // mpi buffer
   if (mp->size_mpi_buffer_potential > 0){
-    gpuMalloc_field((void**)&(mp->d_b_send_potential_dot_dot_buffer),mp->size_mpi_buffer_potential);
+    if (mp->use_cuda_aware_mpi) {
+      // CUDA-aware MPI
+      // buffers already on device
+      mp->d_b_send_potential_dot_dot_buffer = NULL;
+    } else {
+      gpuMalloc_field((void**)&(mp->d_b_send_potential_dot_dot_buffer),mp->size_mpi_buffer_potential);
+    }
   }
 
   GPU_ERROR_CHECKING("prepare_fields_acoustic_adj_dev");
@@ -770,30 +782,38 @@ void FC_FUNC_(prepare_fields_elastic_device,
   // MPI buffer
   mp->size_mpi_buffer = NDIM * (mp->num_interfaces_ext_mesh) * (mp->max_nibool_interfaces_ext_mesh);
   if (mp->size_mpi_buffer > 0){
-    // note: Allocate pinned mpi-buffers.
-    //       MPI buffers use pinned memory allocated by cudaMallocHost, which
-    //       enables the use of asynchronous memory copies from host <-> device
+    if (mp->use_cuda_aware_mpi){
+      // CUDA-aware MPI
+      // MPI buffers already on device
+      mp->h_send_accel_buffer = NULL;   // host buffers for async copies not needed
+      mp->h_recv_accel_buffer = NULL;
+      mp->d_send_accel_buffer = NULL;   // device buffers not needed, already allocated in read_mesh_databases.F90
+      mp->d_b_send_accel_buffer = NULL;
+    } else {
+      // note: Allocate pinned mpi-buffers.
+      //       MPI buffers use pinned memory allocated by cudaMallocHost, which
+      //       enables the use of asynchronous memory copies from host <-> device
+      // send buffer
+      gpuMallocHost_realw((void**)&(mp->h_send_accel_buffer),mp->size_mpi_buffer);
 
-    // send buffer
-    gpuMallocHost_realw((void**)&(mp->h_send_accel_buffer),mp->size_mpi_buffer);
+      // unused so far..
+      //mp->send_buffer = (realw*)malloc((mp->size_mpi_buffer)*sizeof(realw));
+      // extra buffer for adjoint, not needed so far..., can use the same buffer for both forward/adjoint mpi exchanges
+      //gpuMallocHost_realw((void**)&(mp->h_send_b_accel_buffer),mp->size_mpi_buffer);
+      //mp->b_send_buffer = (realw*)malloc((size_mpi_buffer)*sizeof(realw));
 
-    // unused so far..
-    //mp->send_buffer = (realw*)malloc((mp->size_mpi_buffer)*sizeof(realw));
-    // extra buffer for adjoint, not needed so far..., can use the same buffer for both forward/adjoint mpi exchanges
-    //gpuMallocHost_realw((void**)&(mp->h_send_b_accel_buffer),mp->size_mpi_buffer);
-    //mp->b_send_buffer = (realw*)malloc((size_mpi_buffer)*sizeof(realw));
+      // receive buffer
+      gpuMallocHost_realw((void**)&(mp->h_recv_accel_buffer),mp->size_mpi_buffer);
 
-    // receive buffer
-    gpuMallocHost_realw((void**)&(mp->h_recv_accel_buffer),mp->size_mpi_buffer);
+      // unused so far..
+      //mp->recv_buffer = (realw*) malloc((mp->size_mpi_buffer)*sizeof(realw));
 
-    // unused so far..
-    //mp->recv_buffer = (realw*) malloc((mp->size_mpi_buffer)*sizeof(realw));
-
-    // non-pinned buffer
-    gpuMalloc_realw((void**)&(mp->d_send_accel_buffer),mp->size_mpi_buffer);
-    // adjoint
-    if (mp->simulation_type == 3){
-      gpuMalloc_realw((void**)&(mp->d_b_send_accel_buffer),mp->size_mpi_buffer);
+      // non-pinned buffer
+      gpuMalloc_realw((void**)&(mp->d_send_accel_buffer),mp->size_mpi_buffer);
+      // adjoint
+      if (mp->simulation_type == 3){
+        gpuMalloc_realw((void**)&(mp->d_b_send_accel_buffer),mp->size_mpi_buffer);
+      }
     }
   }
 
@@ -2021,8 +2041,10 @@ TRACE("prepare_cleanup_device");
     gpuFree(mp->d_potential_dot_acoustic);
     gpuFree(mp->d_potential_dot_dot_acoustic);
     if (mp->size_mpi_buffer_potential > 0){
-      gpuFree(mp->d_send_potential_dot_dot_buffer);
-      if (mp->simulation_type == 3) gpuFree(mp->d_b_send_potential_dot_dot_buffer);
+      if (! mp->use_cuda_aware_mpi){
+        gpuFree(mp->d_send_potential_dot_dot_buffer);
+        if (mp->simulation_type == 3) gpuFree(mp->d_b_send_potential_dot_dot_buffer);
+      }
     }
     gpuFree(mp->d_rmass_acoustic);
     gpuFree(mp->d_kappastore);
@@ -2058,8 +2080,10 @@ TRACE("prepare_cleanup_device");
     gpuFree(mp->d_veloc);
     gpuFree(mp->d_accel);
     if (mp->size_mpi_buffer > 0){
-      gpuFree(mp->d_send_accel_buffer);
-      if (mp->simulation_type == 3) gpuFree(mp->d_b_send_accel_buffer);
+      if (! mp->use_cuda_aware_mpi){
+        gpuFree(mp->d_send_accel_buffer);
+        if (mp->simulation_type == 3) gpuFree(mp->d_b_send_accel_buffer);
+      }
     }
 
     if (! mp->lts_mode){
