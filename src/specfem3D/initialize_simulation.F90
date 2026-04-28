@@ -602,6 +602,23 @@
   call any_all_l(USE_CUDA_AWARE_MPI,USE_CUDA_AWARE_MPI_all)
   USE_CUDA_AWARE_MPI = USE_CUDA_AWARE_MPI_all
 
+#ifdef WITH_CUDA_AWARE_MPI
+  if (USE_CUDA_AWARE_MPI) then
+    ! double check if loaded MPI system has CUDA support
+    ! query MPI for cuda support
+    call query_cuda_aware_mpi(myrank,USE_CUDA_AWARE_MPI)
+
+    ! all processes need support
+    call any_all_l(USE_CUDA_AWARE_MPI,USE_CUDA_AWARE_MPI_all)
+    USE_CUDA_AWARE_MPI = USE_CUDA_AWARE_MPI_all
+
+    if (myrank == 0) then
+      write(IMAIN,*) "check CUDA-aware MPI returned : ",USE_CUDA_AWARE_MPI
+      call flush_IMAIN()
+    endif
+  endif
+#endif
+
   ! simultaneous runs
   if (NPROC == 1 .and. NUMBER_OF_SIMULTANEOUS_RUNS > 1 ) then
     num_device = mygroup
@@ -615,9 +632,7 @@
   if (USE_CUDA_AWARE_MPI) then
     ! devices have already been set before MPI_init()
     if (myrank == 0) then
-      write(IMAIN,*)
-      write(IMAIN,*) "  using CUDA-aware MPI"
-      write(IMAIN,*)
+      write(IMAIN,*) "using CUDA-aware MPI"
       call flush_IMAIN()
     endif
     ! just to get number of devices and device info output

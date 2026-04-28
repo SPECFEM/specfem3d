@@ -29,13 +29,6 @@
 
 #include "mesh_constants_gpu.h"
 
-// CUDA-aware support
-#ifdef WITH_CUDA_AWARE_MPI
-#if defined(OPEN_MPI)
-#include <mpi-ext.h> /* extensions */
-#endif
-#endif
-
 // number of GPU cards (per compute node)
 static int number_of_gpu_devices = 0;
 
@@ -419,11 +412,7 @@ void initialize_hip_device(int myrank,int* nb_devices) {
     //         "setting the device when a process is active is not allowed"
 
     // releases previous contexts
-#if CUDA_VERSION < 4000
     hipDeviceReset();
-#else
-    hipDeviceReset();
-#endif
 
     //printf("rank %d: cuda device count = %d sets device = %d \n",myrank,device_count,myrank % device_count);
     //MPI_Barrier(MPI_COMM_WORLD);
@@ -554,13 +543,11 @@ static void output_hip_device_infos(int myrank){
     }
   }
 
-  /* daniel todo: check in case this applies...
   // we use pinned memory for asynchronous copy
   if (! deviceProp.canMapHostMemory){
     fprintf(stderr,"Device capability should allow to map host memory, exiting...\n");
-    exit_on_error("CUDA Device capability canMapHostMemory should be TRUE\n");
+    exit_on_error("HIP Device capability canMapHostMemory should be TRUE\n");
   }
-  */
 
   // checks kernel optimization setting
 #ifdef USE_LAUNCH_BOUNDS
@@ -613,7 +600,7 @@ void FC_FUNC_(initialize_gpu_device,
   // check if compiled with both CUDA and HIP support
 #if defined(USE_CUDA) && defined(USE_HIP)
   if (myrank == 0) {
-    printf("Error: GPU version compilation with both USE_CUDA and USE_HIP not supported yet.\nPlease only use one for now...\n\n",);
+    printf("Error: GPU version compilation with both USE_CUDA and USE_HIP not supported yet.\nPlease only use one for now...\n\n");
   }
   exit(1);
 #endif
@@ -672,6 +659,27 @@ void FC_FUNC_(initialize_gpu_device,
 // CUDA-aware MPI
 // we need to call cudaSetDevice before MPI_Init to ensure that the same GPU is chosen by MPI and your application
 
+// CUDA-aware support compile-time information
+#ifdef WITH_CUDA_AWARE_MPI
+// rank info
+#if defined(OPEN_MPI) && OPEN_MPI
+// OpenMPI
+#pragma message ("\n\nCompiling with: WITH_CUDA_AWARE_MPI uses OPEN_MPI CUDA-aware local rank\n")
+#elif defined(MVAPICH2_NUMVERSION) && (MVAPICH2_NUMVERSION >= 20205300)
+// MVAPICH
+#pragma message ("\n\nCompiling with: WITH_CUDA_AWARE_MPI uses MVAPICH2 CUDA-aware local rank\n")
+#else
+// unknown
+#pragma message ("\n\nCompiling with: unknown CUDA-aware local rank environment, use -DENV_LOCAL_RANK \"<MY_LOCAL_RANK>\" setting\n")
+#endif
+// MPIX query
+#if defined(MPIX_CUDA_AWARE_SUPPORT)
+#pragma message ("\n\nCompiling with: WITH_CUDA_AWARE_MPI has MPIX_CUDA_AWARE_SUPPORT\n")
+#else
+#pragma message ("\n\nCompiling with: WITH_CUDA_AWARE_MPI has no MPIX_CUDA_AWARE_SUPPORT, please check MPI installation\n")
+#endif  // MPIX_CUDA_AWARE_SUPPORT
+#endif  // WITH_CUDA_AWARE_MPI
+
 extern EXTERN_LANG
 void FC_FUNC_ (check_cuda_aware_mpi,
                CHECK_CUDA_AWARE_MPI) (int* has_cuda_aware_mpi_f) {
@@ -692,23 +700,17 @@ void FC_FUNC_ (check_cuda_aware_mpi,
   // for Open MPI, use "OMPI_COMM_WORLD_LOCAL_RANK".
 #if defined(OPEN_MPI) && OPEN_MPI
 // OpenMPI
-#pragma message ("\n\nCompiling with: WITH_CUDA_AWARE_MPI uses OPEN_MPI CUDA-aware local rank\n")
 #define ENV_LOCAL_RANK    "OMPI_COMM_WORLD_LOCAL_RANK"
-
 #elif defined(MVAPICH2_NUMVERSION) && (MVAPICH2_NUMVERSION >= 20205300)
 // MVAPICH
-#pragma message ("\n\nCompiling with: WITH_CUDA_AWARE_MPI uses MVAPICH2 CUDA-aware local rank\n")
 #define ENV_LOCAL_RANK    "MV2_COMM_WORLD_LOCAL_RANK"
-
 #else
 // unknown
-#pragma message ("\n\nCompiling with: unknown CUDA-aware local rank environment, use -DENV_LOCAL_RANK \"<MY_LOCAL_RANK>\" setting\n")
 // defines local rank environment variables as unknown if not set by compilation flag, mostly to be able to run getenv() command
 #ifndef ENV_LOCAL_RANK
 #define ENV_LOCAL_RANK    "UNKNOWN_LOCAL_RANK"
 #endif
-
-#endif
+#endif  // OPEN_MPI
 
   // sets GPU device before MPI initialization
   // MPI will then recognize the setting and take over the GPU device setup
@@ -721,10 +723,8 @@ void FC_FUNC_ (check_cuda_aware_mpi,
   int rank = 0;
   char * localRankStr = NULL;
 
-  // debug output to file
-  char filename[BUFSIZ];
-  FILE* fp;
-  sprintf(filename,OUTPUT_FILES"/gpu_aware_info.txt");
+  // info
+  const char* msg;
 
   // local rank info from environment
   if ((localRankStr = getenv(ENV_LOCAL_RANK)) != NULL) {
@@ -738,7 +738,7 @@ void FC_FUNC_ (check_cuda_aware_mpi,
   }
 
   // debug
-  //printf("debug: [check_cuda_aware_mpi] CUDA-aware check: has_local_rank_info = %d  -  local rank = %d\n",has_local_rank_info,rank);
+  //printf("[check_cuda_aware_mpi] CUDA-aware check: has_local_rank_info = %d  -  local rank = %d\n",has_local_rank_info,rank);
 
   // enables CUDA-aware MPI support
   if (has_local_rank_info){
@@ -746,39 +746,30 @@ void FC_FUNC_ (check_cuda_aware_mpi,
     if (rank == 0){ printf("\nchecking CUDA-aware MPI\n\n");}
 
     // debug
-    //printf("debug: compile time check for CUDA-aware MPI - rank %d\n",rank);
+    //printf("[check_cuda_aware_mpi] compile time check for CUDA-aware MPI - rank %d\n",rank);
 
 #if defined(MPIX_CUDA_AWARE_SUPPORT)
-#pragma message ("\n\nCompiling with: WITH_CUDA_AWARE_MPI has MPIX_CUDA_AWARE_SUPPORT\n")
-    int ret = MPIX_Query_cuda_support();
-    if (ret == 1) {
-      // MPI library has CUDA-aware support
-      has_cuda_aware_mpi = 1;
-    } else {
-      // MPI library does not have CUDA-aware support
-      has_cuda_aware_mpi = 0;
-    }
+    // assume CUDA-aware support, will run query later to double-check
+    has_cuda_aware_mpi = 1;
+    msg = "\
+This version has been compiled with flag WITH_CUDA_AWARE_MPI and MPI library has MPIX query cuda support.\n \
+We assume CUDA-aware MPI.\n\n";
 #else
-#pragma message ("\n\nCompiling with: WITH_CUDA_AWARE_MPI has no MPIX_CUDA_AWARE_SUPPORT, please check MPI installation\n")
-    // user info
-    if (rank == 0){
-      printf("\
-This version has been compiled with flag WITH_CUDA_AWARE_MPI, but MPI library cannot determine if there is CUDA-aware support.\n \
-Please check MPI installation.\n\n");
-      // file output
-      fp = fopen(filename,"w");
-      if (fp != NULL){
-        fprintf (fp, "\
-This version has been compiled with flag WITH_CUDA_AWARE_MPI, but MPI library cannot determine if there is CUDA-aware support.\n \
-Please check MPI installation.\n\n");
-        fclose(fp);
-      }
-    }
+    // no MPIX query support
     has_cuda_aware_mpi = 0;
+    msg = "\
+This version has been compiled with flag WITH_CUDA_AWARE_MPI, but MPI library cannot determine if there is CUDA-aware support.\n \
+Please check MPI installation.\n\n";
+    //debug
+    //printf("[check_cuda_aware_mpi] rank = %d - no MPIX has cuda aware MPI = %d\n",rank,has_cuda_aware_mpi);
 #endif  // MPIX_CUDA_AWARE_SUPPORT
 
+    // user info
+    if (rank == 0){
+      printf("%s",msg);
+    }
     // debug
-    //printf("debug: query cuda support: MPI library CUDA-aware support - rank %d has support %d\n\n",rank,has_cuda_aware_mpi);
+    //printf("[check_cuda_aware_mpi] query cuda support: MPI library CUDA-aware support - rank %d has support %d\n\n",rank,has_cuda_aware_mpi);
 
     // sets local rank's GPU association
     if (has_cuda_aware_mpi){
@@ -787,15 +778,6 @@ Please check MPI installation.\n\n");
       int init_type = 1; // type 1 == only initialize, no device info output yet
       // debug
       //printf("debug: setting - rank %d has support %d - running GPU init\n\n",rank,has_cuda_aware_mpi);
-
-      // user info
-      if (rank == 0) {
-        fp = fopen(filename,"w");
-        if (fp != NULL){
-          fprintf (fp, "gpu: has CUDA-aware MPI.\n\n");
-          fclose(fp);
-        }
-      }
 
       // sets device
       FC_FUNC_(initialize_gpu_device,INITIALIZE_GPU_DEVICE)(&rank,&dummy_nb_devices,&init_type);
@@ -807,3 +789,73 @@ Please check MPI installation.\n\n");
   // return value
   *has_cuda_aware_mpi_f = has_cuda_aware_mpi;
 }
+
+/* ----------------------------------------------------------------------------------------------- */
+
+// note: MPIX_Query_cuda_support() can only be called after MPI_init().
+//       However, for CUDA-aware MPI, we must set the device with cudaSetDevice() before MPI_init().
+//       Thus, we use a compile-time check for MPIX_CUDA_AWARE_SUPPORT to see if there is CUDA-aware MPI support.
+//       And then use the query here after setting device and MPI initialization as a validity check of the loaded MPI system.
+
+extern EXTERN_LANG
+void FC_FUNC_ (query_cuda_aware_mpi,
+               QUERY_CUDA_AWARE_MPI) (int* myrank_f, int* has_cuda_aware_mpi_f) {
+
+  TRACE ("query_cuda_aware_mpi");
+
+  // rank
+  int myrank = *myrank_f;
+
+  // flags
+  int has_cuda_aware_mpi = 0;
+
+#ifdef WITH_CUDA_AWARE_MPI
+  // debug output to file
+  char filename[BUFSIZ];
+  FILE* fp;
+  const char* msg;
+
+  sprintf(filename,OUTPUT_FILES"/gpu_aware_info.txt");
+
+#if defined(MPIX_CUDA_AWARE_SUPPORT)
+  int ret = MPIX_Query_cuda_support();
+  if (ret == 1) {
+    // MPI library loaded has CUDA-aware support
+    has_cuda_aware_mpi = 1;
+    msg = "CUDA-aware support is available. MPIX query returned CUDA support.\n";
+  } else {
+    // MPI library does not have CUDA-aware support
+    has_cuda_aware_mpi = 0;
+    msg = "CUDA-aware support is disabled or unavailable. MPIX query returned no CUDA support.\n";
+  }
+  //debug
+  //printf("[query_cuda_aware_mpi] myrank = %d - MPIX query: has cuda aware MPI = %d\n",myrank,has_cuda_aware_mpi);
+#else
+  // no MPIX query support
+  has_cuda_aware_mpi = 0;
+  msg = "\
+This version has been compiled with flag WITH_CUDA_AWARE_MPI, but MPI library cannot determine if there is CUDA-aware support.\n \
+Please check MPI installation.\n";
+  //debug
+  //printf("[query_cuda_aware_mpi] myrank = %d - no MPIX has cuda aware MPI = %d\n",myrank,has_cuda_aware_mpi);
+#endif  // MPIX_CUDA_AWARE_SUPPORT
+
+  // user info
+  if (myrank == 0){
+    printf("%s",msg);
+  }
+
+  // file output
+  if (myrank == 0){
+    fp = fopen(filename,"w");
+    if (fp != NULL){
+      fprintf (fp, "%s", msg);
+      fclose(fp);
+    }
+  }
+#endif // WITH_CUDA_AWARE_MPI
+
+  // return value
+  *has_cuda_aware_mpi_f = has_cuda_aware_mpi;
+}
+

@@ -439,13 +439,16 @@ void FC_FUNC_ (allocate_gpu_buffer,
 //
 
 void FC_FUNC_(initialize_gpu_device,
-              INITIALIZE_GPU_DEVICE)(int* myrank_f,int* ngpu_devices,int* cuda_aware_mpi_init_type) {
+              INITIALIZE_GPU_DEVICE)(int* myrank_f,int* nb_devices,int* cuda_aware_mpi_init_type) {
  fprintf(stderr,"ERROR: GPU_MODE enabled without GPU/CUDA/HIP Support. To enable GPU support, reconfigure with --with-cuda or --with-hip flag.\n");
  exit(1);
 }
 
 void FC_FUNC_ (check_cuda_aware_mpi,
                CHECK_CUDA_AWARE_MPI) (int* has_cuda_aware_mpi_f) {}
+
+void FC_FUNC_ (query_cuda_aware_mpi,
+               QUERY_CUDA_AWARE_MPI) (int* myrank_f, int* has_cuda_aware_mpi_f) {}
 
 
 //

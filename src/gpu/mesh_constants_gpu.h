@@ -54,6 +54,17 @@
 
 #include "config.h"
 
+#ifdef WITH_MPI
+#include <mpi.h>
+// CUDA-aware support
+#ifdef WITH_CUDA_AWARE_MPI
+// extension
+#if defined(OPEN_MPI)
+#include <mpi-ext.h> /* extensions */
+#endif
+#endif  // WITH_CUDA_AWARE_MPI
+#endif  // WITH_MPI
+
 #ifdef USE_CUDA
 #include <cuda.h>
 #include <cuda_runtime.h>
@@ -63,9 +74,6 @@
 #include <hip/hip_runtime.h>
 #endif
 
-#ifdef WITH_MPI
-#include <mpi.h>
-#endif
 
 // type of "working" variables: see also CUSTOM_REAL in constants.h
 //
