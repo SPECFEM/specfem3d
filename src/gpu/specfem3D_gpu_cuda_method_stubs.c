@@ -65,7 +65,7 @@ void FC_FUNC_(transfer_boun_accel_from_device,
 
 void FC_FUNC_(transfer_boundary_from_device_a,
               TRANSFER_BOUNDARY_FROM_DEVICE_A)(long* Mesh_pointer,
-                                               realw *send_accel_buffer) {}
+                                               realw* send_accel_buffer) {}
 
 void FC_FUNC_(transfer_boundary_to_device_a,
               TRANSFER_BOUNDARY_TO_DEVICE_A)(long* Mesh_pointer,
