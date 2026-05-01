@@ -433,6 +433,9 @@ void FC_FUNC_(pause_for_debug,
 void FC_FUNC_ (allocate_gpu_buffer,
                ALLOCATE_GPU_BUFFER) (realw** buffer_f, int* total_size) {}
 
+void FC_FUNC_ (check_gpu_pointer,
+               CHECK_GPU_POINTER)(void* ptr) {}
+
 
 //
 // src/gpu/initialize_gpu.cu
