@@ -693,126 +693,126 @@
 
   integer :: count_contributions
 
-! topology of faces of cube for skewness
+  ! topology of faces of cube for skewness
   integer faces_topo(6,6)
 
-! store the corners of this element for the skewness routine
+  ! store the corners of this element for the skewness routine
   do i = 1,NGNOD
     xelm(i) = x(ibool(i,ispec))
     yelm(i) = y(ibool(i,ispec))
     zelm(i) = z(ibool(i,ispec))
   enddo
 
-! define topology of faces of cube for skewness
+  ! define topology of faces of cube for skewness
 
-! face 1
+  ! face 1
   faces_topo(1,1) = 1
   faces_topo(1,2) = 2
   faces_topo(1,3) = 6
   faces_topo(1,4) = 5
 
-! face 2
+  ! face 2
   faces_topo(2,1) = 2
   faces_topo(2,2) = 3
   faces_topo(2,3) = 7
   faces_topo(2,4) = 6
 
-! face 3
+  ! face 3
   faces_topo(3,1) = 4
   faces_topo(3,2) = 3
   faces_topo(3,3) = 7
   faces_topo(3,4) = 8
 
-! face 4
+  ! face 4
   faces_topo(4,1) = 1
   faces_topo(4,2) = 5
   faces_topo(4,3) = 8
   faces_topo(4,4) = 4
 
-! face 5
+  ! face 5
   faces_topo(5,1) = 1
   faces_topo(5,2) = 2
   faces_topo(5,3) = 3
   faces_topo(5,4) = 4
 
-! face 6
+  ! face 6
   faces_topo(6,1) = 5
   faces_topo(6,2) = 6
   faces_topo(6,3) = 7
   faces_topo(6,4) = 8
 
-! define wraparound for angles for skewness calculation
+  ! define wraparound for angles for skewness calculation
   faces_topo(:,5) = faces_topo(:,1)
   faces_topo(:,6) = faces_topo(:,2)
 
-! compute equiangle skewness (as defined in Fluent/Gambit manual)
-! and compute edge aspect ratio using the corners of the element
-     distmin = + HUGEVAL
-     distmax = - HUGEVAL
-     distmean = ZERO
-     count_contributions = 0
-     equiangle_skewness = - HUGEVAL
+  ! compute equiangle skewness (as defined in Fluent/Gambit manual)
+  ! and compute edge aspect ratio using the corners of the element
+  distmin = + HUGEVAL
+  distmax = - HUGEVAL
+  distmean = ZERO
+  count_contributions = 0
+  equiangle_skewness = - HUGEVAL
 
-     do iface = 1,6
-       do icorner = 1,4
+  do iface = 1,6
+    do icorner = 1,4
 
-! first vector of angle
-         vectorA_x = xelm(faces_topo(iface,icorner)) - xelm(faces_topo(iface,icorner+1))
-         vectorA_y = yelm(faces_topo(iface,icorner)) - yelm(faces_topo(iface,icorner+1))
-         vectorA_z = zelm(faces_topo(iface,icorner)) - zelm(faces_topo(iface,icorner+1))
+      ! first vector of angle
+      vectorA_x = xelm(faces_topo(iface,icorner)) - xelm(faces_topo(iface,icorner+1))
+      vectorA_y = yelm(faces_topo(iface,icorner)) - yelm(faces_topo(iface,icorner+1))
+      vectorA_z = zelm(faces_topo(iface,icorner)) - zelm(faces_topo(iface,icorner+1))
 
-! second vector of angle
-         vectorB_x = xelm(faces_topo(iface,icorner+2)) - xelm(faces_topo(iface,icorner+1))
-         vectorB_y = yelm(faces_topo(iface,icorner+2)) - yelm(faces_topo(iface,icorner+1))
-         vectorB_z = zelm(faces_topo(iface,icorner+2)) - zelm(faces_topo(iface,icorner+1))
+      ! second vector of angle
+      vectorB_x = xelm(faces_topo(iface,icorner+2)) - xelm(faces_topo(iface,icorner+1))
+      vectorB_y = yelm(faces_topo(iface,icorner+2)) - yelm(faces_topo(iface,icorner+1))
+      vectorB_z = zelm(faces_topo(iface,icorner+2)) - zelm(faces_topo(iface,icorner+1))
 
-! norm of vectors A and B
-         norm_A = sqrt(vectorA_x**2 + vectorA_y**2 + vectorA_z**2)
-         norm_B = sqrt(vectorB_x**2 + vectorB_y**2 + vectorB_z**2)
+      ! norm of vectors A and B
+      norm_A = sqrt(vectorA_x**2 + vectorA_y**2 + vectorA_z**2)
+      norm_B = sqrt(vectorB_x**2 + vectorB_y**2 + vectorB_z**2)
 
-! sanity check
-         if (norm_A <= ZERO .or. norm_B <= ZERO) then
-           print *,'error detected in element ',ispec,' out of ',NSPEC
-           print *,'error: negative of null norm found, norm_A, norm_B = ',norm_A, norm_B
-           stop 'error in the norm found'
-         endif
+      ! sanity check
+      if (norm_A <= ZERO .or. norm_B <= ZERO) then
+        print *,'Error: invalid norm detected in element ',ispec,' out of ',NSPEC
+        print *,'       norm_A, norm_B = ',norm_A, norm_B
+        stop 'Error in the norm found'
+      endif
 
-! angle formed by the two vectors
-         argument_of_arccos = (vectorA_x*vectorB_x + vectorA_y*vectorB_y + vectorA_z*vectorB_z) / (norm_A * norm_B)
+      ! angle formed by the two vectors
+      argument_of_arccos = (vectorA_x*vectorB_x + vectorA_y*vectorB_y + vectorA_z*vectorB_z) / (norm_A * norm_B)
 
-! compute equiangle skewness
-         if (abs(argument_of_arccos) <= 0.9999999d0) then
-           angle_vectors = dacos(argument_of_arccos)
-           equiangle_skewness = max(equiangle_skewness,dabs(2.d0 * angle_vectors - PI) / PI)
-         else
-           angle_vectors = 0.d0
-           equiangle_skewness = 1.d0
-         endif
+      ! compute equiangle skewness
+      if (abs(argument_of_arccos) <= 0.9999999d0) then
+        angle_vectors = dacos(argument_of_arccos)
+        equiangle_skewness = max(equiangle_skewness,dabs(2.d0 * angle_vectors - PI) / PI)
+      else
+        angle_vectors = 0.d0
+        equiangle_skewness = 1.d0
+      endif
 
-! compute min and max size of an edge
-         dist = sqrt(vectorA_x**2 + vectorA_y**2 + vectorA_z**2)
+      ! compute min and max size of an edge
+      dist = sqrt(vectorA_x**2 + vectorA_y**2 + vectorA_z**2)
 
-         distmin = min(distmin,dist)
-         distmax = max(distmax,dist)
+      distmin = min(distmin,dist)
+      distmax = max(distmax,dist)
 
-         count_contributions = count_contributions + 1
-         distmean = distmean + dist
+      count_contributions = count_contributions + 1
+      distmean = distmean + dist
 
-       enddo
-     enddo
+    enddo
+  enddo
 
-! compute the mean distance
-   distmean = distmean / count_contributions
+  ! compute the mean distance
+  distmean = distmean / count_contributions
 
-! compute edge aspect ratio
-   edge_aspect_ratio = distmax / distmin
+  ! compute edge aspect ratio
+  edge_aspect_ratio = distmax / distmin
 
-! compute diagonal aspect ratio
-   dist1 = sqrt((xelm(1) - xelm(7))**2 + (yelm(1) - yelm(7))**2 + (zelm(1) - zelm(7))**2)
-   dist2 = sqrt((xelm(2) - xelm(8))**2 + (yelm(2) - yelm(8))**2 + (zelm(2) - zelm(8))**2)
-   dist3 = sqrt((xelm(3) - xelm(5))**2 + (yelm(3) - yelm(5))**2 + (zelm(3) - zelm(5))**2)
-   dist4 = sqrt((xelm(4) - xelm(6))**2 + (yelm(4) - yelm(6))**2 + (zelm(4) - zelm(6))**2)
-   diagonal_aspect_ratio = max(dist1,dist2,dist3,dist4) / min(dist1,dist2,dist3,dist4)
+  ! compute diagonal aspect ratio
+  dist1 = sqrt((xelm(1) - xelm(7))**2 + (yelm(1) - yelm(7))**2 + (zelm(1) - zelm(7))**2)
+  dist2 = sqrt((xelm(2) - xelm(8))**2 + (yelm(2) - yelm(8))**2 + (zelm(2) - zelm(8))**2)
+  dist3 = sqrt((xelm(3) - xelm(5))**2 + (yelm(3) - yelm(5))**2 + (zelm(3) - zelm(5))**2)
+  dist4 = sqrt((xelm(4) - xelm(6))**2 + (yelm(4) - yelm(6))**2 + (zelm(4) - zelm(6))**2)
+  diagonal_aspect_ratio = max(dist1,dist2,dist3,dist4) / min(dist1,dist2,dist3,dist4)
 
   end subroutine local_version_of_create_mesh_quality_data_3D
 
