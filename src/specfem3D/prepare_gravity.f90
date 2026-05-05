@@ -95,8 +95,8 @@
       ! determines z-values for bottom/top of the mesh
       zbottom = minval(zstore)
       ztop = maxval(zstore)
-      call min_all_dp(zbottom,zbottom_glob)
-      call max_all_dp(ztop,ztop_glob)
+      call min_all_all_dp(zbottom,zbottom_glob)
+      call max_all_all_dp(ztop,ztop_glob)
       zbottom = zbottom_glob
       ztop = ztop_glob
 
@@ -192,11 +192,11 @@
       ! minus_g
       filename = prname(1:len_trim(prname)) // 'minus_g'
       call write_VTK_wavefield_scalar(NSPEC_AB,NGLOB_AB,xstore,ystore,zstore,ibool,minus_g,filename)
-      write(IMAIN,*) '  written to: ',trim(filename)//'.vtk'
+      if (myrank == 0) write(IMAIN,*) '  saving VTK field -g  (for slice 0): ',trim(filename)//'.vtk'
       ! minus_deriv_gravity
       filename = prname(1:len_trim(prname)) // 'minus_deriv_gravity'
       call write_VTK_wavefield_scalar(NSPEC_AB,NGLOB_AB,xstore,ystore,zstore,ibool,minus_deriv_gravity,filename)
-      write(IMAIN,*) '  written to: ',trim(filename)//'.vtk'
+      if (myrank == 0) write(IMAIN,*) '  saving VTK field -dg (for slice 0): ',trim(filename)//'.vtk'
     endif
 
   else
