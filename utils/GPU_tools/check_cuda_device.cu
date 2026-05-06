@@ -393,11 +393,33 @@ e.g., on titan enable environment CRAY_CUDA_MPS=1 to use a single GPU with multi
     }else{
       printf("  deviceOverlap: FALSE\n");
     }
+    printf("  Compute Mode: %d\n", deviceProp.computeMode);
 #else
     // CUDA version >= 13, deviceOverlap deprecated, replaced by asyncEngineCount
     printf("  asyncEngineCount: %d\n", deviceProp.asyncEngineCount);
+    // computeMode deprecated, use cudaDeviceGetAttribute(cudaDevAttrComputeMode)
+    int computeMode = -1;
+    // Query the compute mode attribute
+    cudaDeviceGetAttribute(&computeMode, cudaDevAttrComputeMode, device);
+    // Interpret the result based on cudaComputeMode enum
+    switch (computeMode) {
+        case cudaComputeModeDefault:
+            printf("  Compute Mode: %d - Default (multiple threads can use cudaSetDevice)\n",computeMode);
+            break;
+        case cudaComputeModeExclusive:
+            printf("  Compute Mode: %d - Exclusive (only one thread can use cudaSetDevice)\n",computeMode);
+            break;
+        case cudaComputeModeProhibited:
+            printf("  Compute Mode: %d - Prohibited (no threads can use cudaSetDevice)\n",computeMode);
+            break;
+        case cudaComputeModeExclusiveProcess:
+            printf("  Compute Mode: %d - Exclusive Process (many threads in one process, or only one process)\n",computeMode);
+            break;
+        default:
+            printf("  Compute Mode: %d - Unknown\n",computeMode);
+            break;
+    }
 #endif
-    printf("  Compute Mode: %d\n", deviceProp.computeMode);
     fflush(stdout);
 
 
