@@ -345,8 +345,8 @@ jobs:
         # debug
         #export I_MPI_DEBUG=5,pid,host
         #export I_MPI_LIBRARY_KIND=debug
-        # remove -ftrapuv which leads to issues for running tests
-        sed -i "s/-ftrapuv//g" flags.guess
+        # remove -ftrapuv in case it leads to issues for running tests
+        #sed -i "s/-ftrapuv//g" flags.guess
         # environment setting
         export TERM=xterm
         # export info
@@ -363,7 +363,7 @@ jobs:
     - name: configure serial debug
       run: |
         set +e # revert the default `set -e`
-        ./configure --enable-debug --without-mpi FC=ifx CC=icx
+        ./configure --enable-debug --without-mpi FC=ifx CC=icx CXX=icx
         if [[ $? -ne 0 ]]; then echo "configuration failed:"; cat config.log; echo ""; echo "exiting..."; exit 1; fi
 
     - name: make serial debug
@@ -374,7 +374,7 @@ jobs:
 
     - name: configure serial
       run: |
-        ./configure --without-mpi FC=ifx CC=icx
+        ./configure --without-mpi FC=ifx CC=icx CXX=icx
 
     - name: make serial
       run: |
@@ -384,7 +384,8 @@ jobs:
     - name: configure parallel debug
       run: |
         set +e # revert the default `set -e`
-        ./configure --enable-debug --with-mpi FC=ifx CC=icx MPIFC=mpiifx MPI_INC="${I_MPI_ROOT}/include"
+        # adds -std=gnu17 to CFLAGS otherwise it will by default use -std=gnu23 which leads to errors in Scotch compilation
+        ./configure --enable-debug --with-mpi FC=ifx CC=icx CXX=icx CFLAGS="-std=gnu17 -Wall" MPIFC=mpiifx MPI_INC="${I_MPI_ROOT}/include"
         if [[ $? -ne 0 ]]; then echo "configuration failed:"; cat config.log; echo ""; echo "exiting..."; exit 1; fi
 
     - name: make parallel debug
@@ -395,7 +396,7 @@ jobs:
 
     - name: configure parallel
       run: |
-        ./configure --with-mpi FC=ifx CC=icx MPIFC=mpiifx MPI_INC="${I_MPI_ROOT}/include"
+        ./configure --with-mpi FC=ifx CC=icx CXX=icx CFLAGS="-std=gnu17" MPIFC=mpiifx MPI_INC="${I_MPI_ROOT}/include"
 
     - name: make parallel
       run: |

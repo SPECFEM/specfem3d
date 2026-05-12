@@ -105,7 +105,8 @@ case $my_FC in
         #
         DEF_FFLAGS="-xHost -fpe0 -ftz -assume buffered_io -assume byterecl -align sequence -std08 -diag-disable 6477 -implicitnone -gen-interfaces -warn all,noexternal"
         OPT_FFLAGS="-O3 -check nobounds"
-        DEBUG_FFLAGS="-check all -debug -g -O0 -fp-stack-check -traceback -ftrapuv"
+        # new version 2026: -fp-stack-check not available anymore, use -fstack-protector-all or -fstack-security-check
+        DEBUG_FFLAGS="-check all -debug -g -O0 -traceback -ftrapuv -fstack-security-check" # -fp-stack-check
         OMP_FFLAGS="-qopenmp"
         ;;
     gfortran|*/gfortran|f95|*/f95)
