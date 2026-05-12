@@ -78,6 +78,7 @@ TOPOGRAPHY                      = .false.
 ATTENUATION                     = .false.
 ANISOTROPY                      = .false.
 GRAVITY                         = .false.
+ROTATION                        = .false.
 
 # in case of attenuation, reference frequency in Hz at which the velocity values in the velocity model are given (unused otherwise)
 ATTENUATION_f0_REFERENCE        = 18.d0
