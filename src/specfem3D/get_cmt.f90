@@ -29,8 +29,8 @@
                      tshift_src,hdur,lat,long,depth,moment_tensor, &
                      DT,NSOURCES,min_tshift_src_original,user_source_time_function)
 
-  use constants, only: IIN,MAX_STRING_LEN,CUSTOM_REAL
-  use shared_parameters, only: USE_EXTERNAL_SOURCE_FILE,NSTEP_STF,NSOURCES_STF,NOISE_TOMOGRAPHY
+  use constants, only: IIN,MAX_STRING_LEN,CUSTOM_REAL,TINYVAL
+  use shared_parameters, only: USE_EXTERNAL_SOURCE_FILE,NSTEP_STF,NSOURCES_STF,NOISE_TOMOGRAPHY,USE_RICKER_TIME_FUNCTION
 
   implicit none
 
@@ -364,9 +364,14 @@
     endif
 
     ! checks half-duration
-    ! null half-duration indicates a Heaviside
-    ! replace with very short error function
-    if (hdur(isource) < 5.d0 * DT) hdur(isource) = 5.d0 * DT
+    if (USE_RICKER_TIME_FUNCTION) then
+      ! hdur is dominant frequency f0; only guard against zero/negative
+      if (hdur(isource) < TINYVAL) hdur(isource) = TINYVAL
+    else
+      ! null half-duration indicates a Heaviside
+      ! replace with very short error function
+      if (hdur(isource) < 5.d0 * DT) hdur(isource) = 5.d0 * DT
+    endif
 
     ! reads USER EXTERNAL SOURCE if needed
     if (USE_EXTERNAL_SOURCE_FILE) then

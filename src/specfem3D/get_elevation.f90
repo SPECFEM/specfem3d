@@ -36,7 +36,9 @@
 
   use constants, only: CUSTOM_REAL,HUGEVAL,ILONGLAT2UTM
   use specfem_par, only: ibool,myrank,NSPEC_AB,NGLOB_AB,USE_SOURCES_RECEIVERS_Z, &
-                         xstore,ystore,zstore,NPROC,num_free_surface_faces,free_surface_ispec,free_surface_ijk
+                         xstore,ystore,zstore,NPROC,num_free_surface_faces,free_surface_ispec,free_surface_ijk, &
+                         NSPEC2D_BOTTOM
+  use shared_parameters, only: BOTTOM_FREE_SURFACE
   implicit none
 
   integer, intent(in) :: npoints
@@ -52,6 +54,7 @@
   double precision, dimension(:,:), allocatable :: elevation_all,elevation_distmin_all
   real(kind=CUSTOM_REAL) :: xloc,yloc,loc_ele,loc_distmin
   integer :: iproc,ier
+  integer :: num_topo_faces, iface_offset
 
   !debug
   !print *,'get elevation: ',npoints
@@ -107,6 +110,16 @@
   elevation_all(:,:) = 0.d0
   elevation_distmin_all(:,:) = HUGEVAL
 
+  ! when the bottom is a free surface, its faces are stored first in free_surface_ispec
+  ! (bottom faces are filled before top faces in get_absorbing_boundary.F90).
+  ! skip those bottom faces so elevation is always taken from the top surface.
+  if (BOTTOM_FREE_SURFACE) then
+    iface_offset = NSPEC2D_BOTTOM
+  else
+    iface_offset = 0
+  endif
+  num_topo_faces = num_free_surface_faces - iface_offset
+
   ! gets elevation
   do ipoin = 1, npoints
     xloc = x_target(ipoin)
@@ -115,7 +128,7 @@
     ! get approximate topography elevation at point x/y coordinates
     call get_topo_elevation_free(xloc,yloc,loc_ele,loc_distmin, &
                                  NSPEC_AB,NGLOB_AB,ibool,xstore,ystore,zstore, &
-                                 num_free_surface_faces,free_surface_ispec,free_surface_ijk)
+                                 num_topo_faces,free_surface_ispec(iface_offset+1:),free_surface_ijk(:,:,iface_offset+1:))
 
     elevation(ipoin) = loc_ele
     elevation_distmin(ipoin) = loc_distmin
@@ -166,7 +179,9 @@
 
   use constants
   use specfem_par, only: USE_SOURCES_RECEIVERS_Z,ibool,myrank,NSPEC_AB,NGLOB_AB, &
-                         xstore,ystore,zstore,NPROC,num_free_surface_faces,free_surface_ispec,free_surface_ijk
+                         xstore,ystore,zstore,NPROC,num_free_surface_faces,free_surface_ispec,free_surface_ijk, &
+                         NSPEC2D_BOTTOM
+  use shared_parameters, only: BOTTOM_FREE_SURFACE
 
   implicit none
 
@@ -179,6 +194,7 @@
   double precision,dimension(1)     :: altitude_rec,distmin_ele
   double precision,dimension(NPROC) :: distmin_ele_all,elevation_all
   real(kind=CUSTOM_REAL)            :: xloc,yloc,loc_ele,loc_distmin
+  integer                           :: num_topo_faces,iface_offset
 
   ! convert station location to UTM
   call utm_geo(lon,lat,utm_x,utm_y,ILONGLAT2UTM)
@@ -194,10 +210,19 @@
     return
   endif
 
+  ! when the bottom is a free surface, its faces are stored first in free_surface_ispec;
+  ! skip them so elevation is always taken from the top surface.
+  if (BOTTOM_FREE_SURFACE) then
+    iface_offset = NSPEC2D_BOTTOM
+  else
+    iface_offset = 0
+  endif
+  num_topo_faces = num_free_surface_faces - iface_offset
+
   ! get approximate topography elevation at point long/lat coordinates
   call get_topo_elevation_free(xloc,yloc,loc_ele,loc_distmin, &
                                NSPEC_AB,NGLOB_AB,ibool,xstore,ystore,zstore, &
-                               num_free_surface_faces,free_surface_ispec,free_surface_ijk)
+                               num_topo_faces,free_surface_ispec(iface_offset+1:),free_surface_ijk(:,:,iface_offset+1:))
 
   altitude_rec(1) = loc_ele
   distmin_ele(1)  = loc_distmin
