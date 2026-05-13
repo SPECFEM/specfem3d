@@ -87,7 +87,7 @@ contains
   if (ier /= 0) then
     ! user output
     if (myrank == 0) then
-      write(IMAIN,*) '  no gravity simulation'
+      write(IMAIN,*) '  no gravity stations'
       call flush_IMAIN()
     endif
     ! nothing to do
@@ -102,7 +102,7 @@ contains
 
   ! user output
   if (myrank == 0) then
-    write(IMAIN,*) '  incorporating gravity simulation'
+    write(IMAIN,*) '  incorporating gravity field simulation'
     write(IMAIN,*) '    gravity stations: ',nstat
     call flush_IMAIN()
   endif
@@ -326,13 +326,14 @@ contains
 
   subroutine gravity_timeseries()
 
+  use constants, only: GRAV
   use specfem_par, only: xstore, ystore, zstore, it, NGLOB_AB
   use specfem_par_elastic, only: displ
 
   implicit none
 
   ! local parameters
-  real(kind=CUSTOM_REAL),parameter :: G_const = 6.674e-11_CUSTOM_REAL
+  real(kind=CUSTOM_REAL),parameter :: G_const = GRAV
 
   real(kind=CUSTOM_REAL), dimension(NGLOB_AB) :: accEdV,accNdV,accZdV
   real(kind=CUSTOM_REAL) :: E_local,N_local,Z_local,E_all,N_all,Z_all

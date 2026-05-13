@@ -170,6 +170,11 @@
     endif
   endif
 
+  ! dummy allocation (for passing arrays as routine arguments in compute_forces_viscoelastic.F90)
+  if (.not. allocated(stress_xx)) then
+    allocate(stress_xx(1,1,1,1),stress_yy(1,1,1,1),stress_zz(1,1,1,1),stress_xy(1,1,1,1),stress_xz(1,1,1,1),stress_yz(1,1,1,1))
+  endif
+
   ! initializes cross-section gif image
   if (PNM_IMAGE) then
     ! user output

@@ -23,7 +23,7 @@ UTM_PROJECTION_ZONE             = 0
 SUPPRESS_UTM_PROJECTION         = .true.
 
 # number of MPI processors
-NPROC                           = 4 
+NPROC                           = 4
 
 # time step parameters
 NSTEP                           = 3000
@@ -107,7 +107,7 @@ PML_CONDITIONS                  = .true.
 PML_INSTEAD_OF_FREE_SURFACE     = .false.
 
 # C-PML dominant frequency
-f0_FOR_PML                      = 4.0 
+f0_FOR_PML                      = 4.0
 
 # parameters used to rotate C-PML boundary conditions by a given angle (not completed yet)
 # ROTATE_PML_ACTIVATE           = .false.
@@ -318,7 +318,7 @@ SAVE_MOHO_MESH                  = .false.
 #
 #-----------------------------------------------------------
 COUPLE_WITH_INJECTION_TECHNIQUE = .false.
-INJECTION_TECHNIQUE_TYPE        = 3   # 1 = DSM, 2 = AxiSEM, 3 = FK
+INJECTION_TECHNIQUE_TYPE        = 3   # 1 = DSM, 2 = AxiSEM, 3 = FK, 4 = SPECFEM
 MESH_A_CHUNK_OF_THE_EARTH       = .false.
 TRACTION_PATH                   = ./DATA/AxiSEM_tractions/3/
 FKMODEL_FILE                    = FKmodel

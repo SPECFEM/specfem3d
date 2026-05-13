@@ -103,6 +103,7 @@
   ! local parameters
   integer :: ier,itest
   character(len=MAX_STRING_LEN) :: database_name
+  integer :: shape_2d(2), shape_3d(3)
 
   ! debugging
   integer :: i
@@ -1300,12 +1301,20 @@
 
   ! MPI communications
   if (ACOUSTIC_SIMULATION) then
-    allocate(buffer_send_scalar_ext_mesh(max_nibool_interfaces_ext_mesh*NB_RUNS_ACOUSTIC_GPU,num_interfaces_ext_mesh),stat=ier)
-    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1560')
-    allocate(buffer_recv_scalar_ext_mesh(max_nibool_interfaces_ext_mesh*NB_RUNS_ACOUSTIC_GPU,num_interfaces_ext_mesh),stat=ier)
-    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1561')
-    buffer_send_scalar_ext_mesh(:,:) = 0.0_CUSTOM_REAL; buffer_recv_scalar_ext_mesh(:,:) = 0.0_CUSTOM_REAL
-
+    if (USE_CUDA_AWARE_MPI) then
+      ! allocates buffers on GPU
+      shape_2d(1) = max_nibool_interfaces_ext_mesh*NB_RUNS_ACOUSTIC_GPU
+      shape_2d(2) = num_interfaces_ext_mesh
+      call allocate_gpu_buffer_2d(buffer_send_scalar_ext_mesh,shape_2d)
+      call allocate_gpu_buffer_2d(buffer_recv_scalar_ext_mesh,shape_2d)
+    else
+      ! allocates buffers on CPU
+      allocate(buffer_send_scalar_ext_mesh(max_nibool_interfaces_ext_mesh*NB_RUNS_ACOUSTIC_GPU,num_interfaces_ext_mesh),stat=ier)
+      if (ier /= 0) call exit_MPI_without_rank('error allocating array 1560')
+      allocate(buffer_recv_scalar_ext_mesh(max_nibool_interfaces_ext_mesh*NB_RUNS_ACOUSTIC_GPU,num_interfaces_ext_mesh),stat=ier)
+      if (ier /= 0) call exit_MPI_without_rank('error allocating array 1561')
+      buffer_send_scalar_ext_mesh(:,:) = 0.0_CUSTOM_REAL; buffer_recv_scalar_ext_mesh(:,:) = 0.0_CUSTOM_REAL
+    endif
     allocate(request_send_scalar_ext_mesh(num_interfaces_ext_mesh),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 1562')
     allocate(request_recv_scalar_ext_mesh(num_interfaces_ext_mesh), stat=ier)
@@ -1315,12 +1324,22 @@
   endif
 
   if (ELASTIC_SIMULATION) then
-    allocate(buffer_send_vector_ext_mesh(NDIM,max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh),stat=ier)
-    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1564')
-    allocate(buffer_recv_vector_ext_mesh(NDIM,max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh),stat=ier)
-    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1565')
-    buffer_send_vector_ext_mesh(:,:,:) = 0.0_CUSTOM_REAL; buffer_recv_vector_ext_mesh(:,:,:) = 0.0_CUSTOM_REAL
-
+    ! MPI buffers
+    if (USE_CUDA_AWARE_MPI) then
+      ! allocates buffers on GPU
+      shape_3d(1) = NDIM
+      shape_3d(2) = max_nibool_interfaces_ext_mesh
+      shape_3d(3) = num_interfaces_ext_mesh
+      call allocate_gpu_buffer_3d(buffer_send_vector_ext_mesh,shape_3d)
+      call allocate_gpu_buffer_3d(buffer_recv_vector_ext_mesh,shape_3d)
+    else
+      ! allocates buffers on CPU
+      allocate(buffer_send_vector_ext_mesh(NDIM,max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh),stat=ier)
+      if (ier /= 0) call exit_MPI_without_rank('error allocating array 1564')
+      allocate(buffer_recv_vector_ext_mesh(NDIM,max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh),stat=ier)
+      if (ier /= 0) call exit_MPI_without_rank('error allocating array 1565')
+      buffer_send_vector_ext_mesh(:,:,:) = 0.0_CUSTOM_REAL; buffer_recv_vector_ext_mesh(:,:,:) = 0.0_CUSTOM_REAL
+    endif
     allocate(request_send_vector_ext_mesh(num_interfaces_ext_mesh),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 1566')
     allocate(request_recv_vector_ext_mesh(num_interfaces_ext_mesh), stat=ier)
@@ -1330,17 +1349,28 @@
   endif
 
   if (POROELASTIC_SIMULATION) then
-    allocate(buffer_send_vector_ext_mesh_s(NDIM,max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh),stat=ier)
-    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1568')
-    allocate(buffer_recv_vector_ext_mesh_s(NDIM,max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh),stat=ier)
-    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1569')
-    allocate(buffer_send_vector_ext_mesh_w(NDIM,max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh),stat=ier)
-    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1570')
-    allocate(buffer_recv_vector_ext_mesh_w(NDIM,max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh),stat=ier)
-    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1571')
-    buffer_send_vector_ext_mesh_s(:,:,:) = 0.0_CUSTOM_REAL; buffer_recv_vector_ext_mesh_s(:,:,:) = 0.0_CUSTOM_REAL
-    buffer_send_vector_ext_mesh_w(:,:,:) = 0.0_CUSTOM_REAL; buffer_recv_vector_ext_mesh_w(:,:,:) = 0.0_CUSTOM_REAL
-
+    if (USE_CUDA_AWARE_MPI) then
+      ! allocates buffers on GPU
+      shape_3d(1) = NDIM
+      shape_3d(2) = max_nibool_interfaces_ext_mesh
+      shape_3d(3) = num_interfaces_ext_mesh
+      call allocate_gpu_buffer_3d(buffer_send_vector_ext_mesh_s,shape_3d)
+      call allocate_gpu_buffer_3d(buffer_recv_vector_ext_mesh_s,shape_3d)
+      call allocate_gpu_buffer_3d(buffer_send_vector_ext_mesh_w,shape_3d)
+      call allocate_gpu_buffer_3d(buffer_recv_vector_ext_mesh_w,shape_3d)
+    else
+      ! allocates buffers on CPU
+      allocate(buffer_send_vector_ext_mesh_s(NDIM,max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh),stat=ier)
+      if (ier /= 0) call exit_MPI_without_rank('error allocating array 1568')
+      allocate(buffer_recv_vector_ext_mesh_s(NDIM,max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh),stat=ier)
+      if (ier /= 0) call exit_MPI_without_rank('error allocating array 1569')
+      allocate(buffer_send_vector_ext_mesh_w(NDIM,max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh),stat=ier)
+      if (ier /= 0) call exit_MPI_without_rank('error allocating array 1570')
+      allocate(buffer_recv_vector_ext_mesh_w(NDIM,max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh),stat=ier)
+      if (ier /= 0) call exit_MPI_without_rank('error allocating array 1571')
+      buffer_send_vector_ext_mesh_s(:,:,:) = 0.0_CUSTOM_REAL; buffer_recv_vector_ext_mesh_s(:,:,:) = 0.0_CUSTOM_REAL
+      buffer_send_vector_ext_mesh_w(:,:,:) = 0.0_CUSTOM_REAL; buffer_recv_vector_ext_mesh_w(:,:,:) = 0.0_CUSTOM_REAL
+    endif
     allocate(request_send_vector_ext_mesh_s(num_interfaces_ext_mesh),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 1572')
     allocate(request_recv_vector_ext_mesh_s(num_interfaces_ext_mesh),stat=ier)
@@ -1388,6 +1418,40 @@ contains
       call flush_IMAIN()
     endif
   end subroutine print_mesh_databases_stats
+
+  !--------
+
+  subroutine allocate_gpu_buffer_2d(buffer, shape)
+
+  use iso_c_binding, only: c_ptr,c_f_pointer
+
+  implicit none
+  real(kind=CUSTOM_REAL), dimension(:,:), pointer, intent(inout) :: buffer
+  integer, intent(in) :: shape(2)
+  ! local parameters
+  type(c_ptr) :: c_ptr_buffer
+
+  call allocate_gpu_buffer(c_ptr_buffer, shape(1) * shape(2))
+  call c_f_pointer(c_ptr_buffer, buffer, shape)
+
+  end subroutine allocate_gpu_buffer_2d
+
+  !--------
+
+  subroutine allocate_gpu_buffer_3d(buffer, shape)
+
+  use iso_c_binding, only: c_ptr,c_f_pointer
+
+  implicit none
+  real(kind=CUSTOM_REAL), dimension(:,:,:), pointer, intent(inout) :: buffer
+  integer, intent(in) :: shape(3)
+  ! local parameters
+  type(c_ptr) :: c_ptr_buffer
+
+  call allocate_gpu_buffer(c_ptr_buffer, shape(1) * shape(2) * shape(3))
+  call c_f_pointer(c_ptr_buffer, buffer, shape)
+
+  end subroutine allocate_gpu_buffer_3d
 
   end subroutine read_mesh_databases
 
@@ -1592,7 +1656,7 @@ contains
   use specfem_par_noise
 
   implicit none
-
+  integer :: shape_2d(2), shape_3d(3)
   integer :: ier
 
   ! note: this routines has no file I/O, it (only) allocates necessary arrays for adjoint/kernel simulations
@@ -1683,17 +1747,27 @@ contains
     hess_kappa_kl(:,:,:,:) = 0.0_CUSTOM_REAL; hess_mu_kl(:,:,:,:) = 0.0_CUSTOM_REAL
 
     ! MPI handling
+    if (USE_CUDA_AWARE_MPI) then
+      ! allocates buffers on GPU
+      shape_3d(1) = NDIM
+      shape_3d(2) = max_nibool_interfaces_ext_mesh
+      shape_3d(3) = num_interfaces_ext_mesh
+      call allocate_gpu_buffer_3d(b_buffer_send_vector_ext_mesh,shape_3d)
+      call allocate_gpu_buffer_3d(b_buffer_recv_vector_ext_mesh,shape_3d)
+    else
+      ! allocates buffers on CPU
+      allocate(b_buffer_send_vector_ext_mesh(NDIM,max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh),stat=ier)
+      if (ier /= 0) call exit_MPI_without_rank('error allocating array 1608')
+      allocate(b_buffer_recv_vector_ext_mesh(NDIM,max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh),stat=ier)
+      if (ier /= 0) call exit_MPI_without_rank('error allocating array 1609')
+      b_buffer_send_vector_ext_mesh(:,:,:) = 0.0_CUSTOM_REAL; b_buffer_recv_vector_ext_mesh(:,:,:) = 0.0_CUSTOM_REAL
+    endif
     allocate(b_request_send_vector_ext_mesh(num_interfaces_ext_mesh),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 1606')
     allocate(b_request_recv_vector_ext_mesh(num_interfaces_ext_mesh),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 1607')
-    allocate(b_buffer_send_vector_ext_mesh(NDIM,max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh),stat=ier)
-    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1608')
-    allocate(b_buffer_recv_vector_ext_mesh(NDIM,max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh),stat=ier)
-    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1609')
     if (ier /= 0) stop 'Error allocating array b_request_send_vector_ext_mesh etc.'
     b_request_send_vector_ext_mesh(:) = 0; b_request_recv_vector_ext_mesh(:) = 0
-    b_buffer_send_vector_ext_mesh(:,:,:) = 0.0_CUSTOM_REAL; b_buffer_recv_vector_ext_mesh(:,:,:) = 0.0_CUSTOM_REAL
 
     ! allocates attenuation solids
     allocate(b_R_xx(N_SLS,NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB),stat=ier)
@@ -1811,18 +1885,26 @@ contains
     hess_kappa_ac_kl(:,:,:,:) = 0.0_CUSTOM_REAL
 
     ! MPI handling
+    if (USE_CUDA_AWARE_MPI) then
+      ! allocates buffers on GPU
+      shape_2d(1) = max_nibool_interfaces_ext_mesh*NB_RUNS_ACOUSTIC_GPU
+      shape_2d(2) = num_interfaces_ext_mesh
+      call allocate_gpu_buffer_2d(b_buffer_send_scalar_ext_mesh,shape_2d)
+      call allocate_gpu_buffer_2d(b_buffer_recv_scalar_ext_mesh,shape_2d)
+    else
+      ! allocates buffers on CPU
+      allocate(b_buffer_send_scalar_ext_mesh(max_nibool_interfaces_ext_mesh*NB_RUNS_ACOUSTIC_GPU,num_interfaces_ext_mesh),stat=ier)
+      if (ier /= 0) call exit_MPI_without_rank('error allocating array 1642')
+      allocate(b_buffer_recv_scalar_ext_mesh(max_nibool_interfaces_ext_mesh*NB_RUNS_ACOUSTIC_GPU,num_interfaces_ext_mesh),stat=ier)
+      if (ier /= 0) call exit_MPI_without_rank('error allocating array 1643')
+      b_buffer_send_scalar_ext_mesh(:,:) = 0.0_CUSTOM_REAL; b_buffer_recv_scalar_ext_mesh(:,:) = 0.0_CUSTOM_REAL
+    endif
     allocate(b_request_send_scalar_ext_mesh(num_interfaces_ext_mesh),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 1640')
     allocate(b_request_recv_scalar_ext_mesh(num_interfaces_ext_mesh),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 1641')
-    allocate(b_buffer_send_scalar_ext_mesh(max_nibool_interfaces_ext_mesh*NB_RUNS_ACOUSTIC_GPU,num_interfaces_ext_mesh),stat=ier)
-    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1642')
-    allocate(b_buffer_recv_scalar_ext_mesh(max_nibool_interfaces_ext_mesh*NB_RUNS_ACOUSTIC_GPU,num_interfaces_ext_mesh),stat=ier)
-    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1643')
     if (ier /= 0) stop 'Error allocating array b_request_send_scalar_ext_mesh'
     b_request_send_scalar_ext_mesh(:) = 0; b_request_recv_scalar_ext_mesh(:) = 0
-    b_buffer_send_scalar_ext_mesh(:,:) = 0.0_CUSTOM_REAL; b_buffer_recv_scalar_ext_mesh(:,:) = 0.0_CUSTOM_REAL
-
   else
     ! dummy arrays (needed for routine arguments)
     ! backward potentials
@@ -1958,29 +2040,41 @@ contains
     cpII_kl(:,:,:,:) = 0.0_CUSTOM_REAL
 
     ! MPI handling
+    if (USE_CUDA_AWARE_MPI) then
+      ! allocates buffers on GPU
+      shape_3d(1) = NDIM
+      shape_3d(2) = max_nibool_interfaces_ext_mesh
+      shape_3d(3) = num_interfaces_ext_mesh
+      call allocate_gpu_buffer_3d(b_buffer_send_vector_ext_meshs,shape_3d)
+      call allocate_gpu_buffer_3d(b_buffer_recv_vector_ext_meshs,shape_3d)
+      call allocate_gpu_buffer_3d(b_buffer_send_vector_ext_meshw,shape_3d)
+      call allocate_gpu_buffer_3d(b_buffer_recv_vector_ext_meshw,shape_3d)
+    else
+      ! allocates buffers on CPU
+      allocate(b_buffer_send_vector_ext_meshs(NDIM,max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh),stat=ier)
+      if (ier /= 0) call exit_MPI_without_rank('error allocating array 1685')
+      allocate(b_buffer_recv_vector_ext_meshs(NDIM,max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh),stat=ier)
+      if (ier /= 0) call exit_MPI_without_rank('error allocating array 1686')
+      allocate(b_buffer_send_vector_ext_meshw(NDIM,max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh),stat=ier)
+      if (ier /= 0) call exit_MPI_without_rank('error allocating array 1689')
+      allocate(b_buffer_recv_vector_ext_meshw(NDIM,max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh),stat=ier)
+      if (ier /= 0) call exit_MPI_without_rank('error allocating array 1690')
+      b_buffer_send_vector_ext_meshs(:,:,:) = 0.0_CUSTOM_REAL; b_buffer_recv_vector_ext_meshs(:,:,:) = 0.0_CUSTOM_REAL
+      b_buffer_send_vector_ext_meshw(:,:,:) = 0.0_CUSTOM_REAL; b_buffer_recv_vector_ext_meshw(:,:,:) = 0.0_CUSTOM_REAL
+    endif
     allocate(b_request_send_vector_ext_meshs(num_interfaces_ext_mesh),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 1683')
     allocate(b_request_recv_vector_ext_meshs(num_interfaces_ext_mesh),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 1684')
-    allocate(b_buffer_send_vector_ext_meshs(NDIM,max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh),stat=ier)
-    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1685')
-    allocate(b_buffer_recv_vector_ext_meshs(NDIM,max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh),stat=ier)
-    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1686')
     if (ier /= 0) stop 'Error allocating array b_request_send_vector_ext_meshs etc.'
     b_request_send_vector_ext_meshs(:) = 0; b_request_recv_vector_ext_meshs(:) = 0
-    b_buffer_send_vector_ext_meshs(:,:,:) = 0.0_CUSTOM_REAL; b_buffer_recv_vector_ext_meshs(:,:,:) = 0.0_CUSTOM_REAL
 
     allocate(b_request_send_vector_ext_meshw(num_interfaces_ext_mesh),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 1687')
     allocate(b_request_recv_vector_ext_meshw(num_interfaces_ext_mesh),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 1688')
-    allocate(b_buffer_send_vector_ext_meshw(NDIM,max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh),stat=ier)
-    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1689')
-    allocate(b_buffer_recv_vector_ext_meshw(NDIM,max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh),stat=ier)
-    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1690')
     if (ier /= 0) stop 'Error allocating array b_request_send_vector_ext_meshw etc.'
     b_request_send_vector_ext_meshw(:) = 0; b_request_recv_vector_ext_meshw(:) = 0
-    b_buffer_send_vector_ext_meshw(:,:,:) = 0.0_CUSTOM_REAL; b_buffer_recv_vector_ext_meshw(:,:,:) = 0.0_CUSTOM_REAL
 
     ! arrays needed for kernel computations
     allocate(b_epsilonsdev_xx(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT),stat=ier)
@@ -2103,6 +2197,40 @@ contains
     if (ier /= 0) stop 'Error allocating dummy array cpI_kl etc.'
 
   endif
+
+contains
+
+  subroutine allocate_gpu_buffer_2d(buffer, shape)
+
+  use iso_c_binding, only: c_ptr,c_f_pointer
+
+  implicit none
+  real(kind=CUSTOM_REAL), dimension(:,:), pointer, intent(inout) :: buffer
+  integer, intent(in) :: shape(2)
+  ! local parameters
+  type(c_ptr) :: c_ptr_buffer
+
+  call allocate_gpu_buffer(c_ptr_buffer, shape(1) * shape(2))
+  call c_f_pointer(c_ptr_buffer, buffer, shape)
+
+  end subroutine allocate_gpu_buffer_2d
+
+  !--------
+
+  subroutine allocate_gpu_buffer_3d(buffer, shape)
+
+  use iso_c_binding, only: c_ptr,c_f_pointer
+
+  implicit none
+  real(kind=CUSTOM_REAL), dimension(:,:,:), pointer, intent(inout) :: buffer
+  integer, intent(in) :: shape(3)
+  ! local parameters
+  type(c_ptr) :: c_ptr_buffer
+
+  call allocate_gpu_buffer(c_ptr_buffer, shape(1) * shape(2) * shape(3))
+  call c_f_pointer(c_ptr_buffer, buffer, shape)
+
+  end subroutine allocate_gpu_buffer_3d
 
   end subroutine read_mesh_databases_adjoint
 

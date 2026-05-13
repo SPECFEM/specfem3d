@@ -218,6 +218,7 @@ __device__ __forceinline__ void compute_element_gravity(int tx,int working_eleme
   realw factor;
 
   // compute non-symmetric terms for gravity
+  rhol = get_global_cr( &d_rhostore[working_element*NGLL3_PADDED + tx] );
 
   // get g, rho and dg/dr=dg
   minus_g = d_minus_g[*iglob];
@@ -226,7 +227,7 @@ __device__ __forceinline__ void compute_element_gravity(int tx,int working_eleme
   // Cartesian components of the gravitational acceleration
   //gxl = 0.f;
   //gyl = 0.f;
-  gzl = minus_g;
+  gzl = minus_g * rhol;
 
   // Cartesian components of gradient of gravitational acceleration
   // H = grad g
@@ -238,13 +239,11 @@ __device__ __forceinline__ void compute_element_gravity(int tx,int working_eleme
   //Hxzl = 0.f;
   //Hyzl = 0.f;
 
-  rhol = get_global_cr( &d_rhostore[working_element*NGLL3_PADDED + tx] );
-
   // get displacement and multiply by density to compute G tensor
   // G = rho [ sg - (s * g) I  ]
-  sx_l = rhol * sh_displx[tx]; // d_displ[iglob*3];
-  sy_l = rhol * sh_disply[tx]; // d_displ[iglob*3 + 1];
-  sz_l = rhol * sh_displz[tx]; // d_displ[iglob*3 + 2];
+  sx_l = sh_displx[tx]; // d_displ[iglob*3];
+  sy_l = sh_disply[tx]; // d_displ[iglob*3 + 1];
+  sz_l = sh_displz[tx]; // d_displ[iglob*3 + 2];
 
   // compute G tensor from s . g and add to sigma (not symmetric)
   //sigma_xx += sy_l*gyl + sz_l*gzl;
@@ -263,7 +262,7 @@ __device__ __forceinline__ void compute_element_gravity(int tx,int working_eleme
   //sigma_zy -= sz_l*gyl;
 
   // precompute vector
-  factor = jacobianl * wgll_cube[tx];
+  factor = jacobianl * wgll_cube[tx] * rhol;
 
   //rho_s_H1 = fac1 * (sx_l * Hxxl + sy_l * Hxyl + sz_l * Hxzl);
   //rho_s_H2 = fac1 * (sx_l * Hxyl + sy_l * Hyyl + sz_l * Hyzl);

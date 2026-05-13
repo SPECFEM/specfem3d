@@ -84,7 +84,7 @@
 
   ! safety check
   ! only for single process at the moment
-  if (NPROC_XI /= 1 .and. NPROC_ETA /= 1) then
+  if (.not. (NPROC_XI == 1 .and. NPROC_ETA == 1)) then
     print *,'Error: SAVE_MESH_AS_CUBIT output requires NPROC_XI == NPROC_ETA == 1'
     print *,'       using NPROC_XI = ',NPROC_XI,' and NPROC_ETA = ',NPROC_ETA
     print *,'Please update your Mesh_Par_file and re-run the mesher...'
@@ -393,7 +393,7 @@
   if (INJECTION_TECHNIQUE_TYPE /= INJECTION_TECHNIQUE_IS_AXISEM) return
 
   ! only for single process at the moment
-  if (NPROC_XI /= 1 .and. NPROC_ETA /= 1) then
+  if (.not. (NPROC_XI == 1 .and. NPROC_ETA == 1)) then
     print *,'Error: SAVE_MESH_AS_CUBIT output requires NPROC_XI == NPROC_ETA == 1'
     print *,'       using NPROC_XI = ',NPROC_XI,' and NPROC_ETA = ',NPROC_ETA
     print *,'Please update your Mesh_Par_file and re-run the mesher...'

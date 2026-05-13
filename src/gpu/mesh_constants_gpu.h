@@ -54,6 +54,17 @@
 
 #include "config.h"
 
+#ifdef WITH_MPI
+#include <mpi.h>
+// CUDA-aware support
+#ifdef WITH_CUDA_AWARE_MPI
+// extension
+#if defined(OPEN_MPI)
+#include <mpi-ext.h> /* extensions */
+#endif
+#endif  // WITH_CUDA_AWARE_MPI
+#endif  // WITH_MPI
+
 #ifdef USE_CUDA
 #include <cuda.h>
 #include <cuda_runtime.h>
@@ -63,9 +74,6 @@
 #include <hip/hip_runtime.h>
 #endif
 
-#ifdef WITH_MPI
-#include <mpi.h>
-#endif
 
 // type of "working" variables: see also CUSTOM_REAL in constants.h
 //
@@ -462,7 +470,6 @@ typedef struct mesh_ {
   int compute_and_store_strain;
 
   int approximate_hess_kl;
-  int use_mesh_coloring_gpu;
 
   // ------------------------------------------------------------------ //
   // GLL points & weights
@@ -853,6 +860,15 @@ typedef struct mesh_ {
   int* d_lts_interface_p_refine_ibool;
   int* d_lts_interface_p_refine_boundary;
   int lts_max_nibool_interfaces_boundary;
+
+  // ------------------------------------------------------------------ //
+  // optimizations
+  // ------------------------------------------------------------------ //
+  // CUDA-aware MPI flag
+  int use_cuda_aware_mpi;
+
+  // mesh coloring (to avoid atomic adds)
+  int use_mesh_coloring_gpu;
 
 } Mesh;
 

@@ -305,6 +305,7 @@
     ! sets material domain
     materials_domain_id(ifiles_tomo) = idomain_id
 
+    ! data section
     ! counts remaining records
     do while (ier == 0)
       read(IIN,*,iostat=ier)

@@ -222,6 +222,14 @@
       write(*,*)
     endif
 
+    ! (optional) gravity
+    call read_value_logical(USE_GRAVITY_MINMAX, 'USE_GRAVITY_MINMAX', ier); ier = 0
+    if (USE_GRAVITY_MINMAX) then
+      call read_value_double_precision(GRAVITY_MINMAX_TOP, 'GRAVITY_MINMAX_TOP', ier); ier = 0
+      call read_value_double_precision(GRAVITY_MINMAX_BOTTOM, 'GRAVITY_MINMAX_BOTTOM', ier); ier = 0
+    endif
+
+    ! attenuation
     call read_value_double_precision(ATTENUATION_f0_REFERENCE, 'ATTENUATION_f0_REFERENCE', ier)
     if (ier /= 0) then
       some_parameters_missing_from_Par_file = .true.
@@ -434,16 +442,14 @@
       write(*,*)
     endif
 
-    ! read two flags in CMT + FORCE simulation
-    call read_value_logical(USE_CMT_AND_FORCE_SOURCE, 'USE_CMT_AND_FORCE_SOURCE', ier)
-    ier = 0
+    ! (optional) read two flags in CMT + FORCE simulation
+    call read_value_logical(USE_CMT_AND_FORCE_SOURCE, 'USE_CMT_AND_FORCE_SOURCE', ier); ier = 0
     if (USE_CMT_AND_FORCE_SOURCE) then
       ! write(*,'(a)') 'cmt + force simulation is enabled'
       USE_FORCE_POINT_SOURCE  = .true.
     endif
 
-    call read_value_logical(USE_BINARY_SOURCE_FILE, 'USE_BINARY_SOURCE_FILE', ier)
-    ier = 0
+    call read_value_logical(USE_BINARY_SOURCE_FILE, 'USE_BINARY_SOURCE_FILE', ier); ier = 0
     if (.not. USE_CMT_AND_FORCE_SOURCE) USE_BINARY_SOURCE_FILE = .false.  ! binary file is disabled
 
     call read_value_logical(USE_RICKER_TIME_FUNCTION, 'USE_RICKER_TIME_FUNCTION', ier)
@@ -711,9 +717,8 @@
 
     !-------------------------------------------------------
 
-    ! prescribed wavefield discontinuity on an interface
-    ! if these parameters do not exist in Par_file, then wavefield
-    ! is not switched on by default
+    ! (optional) prescribed wavefield discontinuity on an interface
+    ! if these parameters do not exist in Par_file, then wavefield is not switched on by default
     call read_value_logical(IS_WAVEFIELD_DISCONTINUITY, 'IS_WAVEFIELD_DISCONTINUITY', ier); ier = 0
     if (IS_WAVEFIELD_DISCONTINUITY) write(*,'(a)') 'wavefield discontinuity enabled'
 
@@ -1452,6 +1457,11 @@
   call bcast_all_singlel(ATTENUATION)
   call bcast_all_singlel(ANISOTROPY)
   call bcast_all_singlel(GRAVITY)
+
+  ! (optional) gravity min/max
+  call bcast_all_singlel(USE_GRAVITY_MINMAX)
+  call bcast_all_singledp(GRAVITY_MINMAX_TOP)
+  call bcast_all_singledp(GRAVITY_MINMAX_BOTTOM)
 
   call bcast_all_singledp(ATTENUATION_f0_REFERENCE)
   call bcast_all_singledp(MIN_ATTENUATION_PERIOD)

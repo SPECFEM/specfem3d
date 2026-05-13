@@ -304,7 +304,7 @@
   call initialize_simulation_adjoint()
 
   ! initializes GPU cards
-  if (GPU_MODE) call initialize_GPU()
+  call initialize_GPU()
 
   ! output info for possible OpenMP
   call init_openmp()
@@ -367,9 +367,6 @@
   ! check simulation type
   if (SIMULATION_TYPE /= 1 .and. SIMULATION_TYPE /= 2 .and. SIMULATION_TYPE /= 3) &
     call exit_mpi(myrank,'SIMULATION_TYPE can only be 1, 2, or 3')
-
-  ! gravity only on GPU supported
-  if (.not. GPU_MODE .and. GRAVITY) stop 'GRAVITY only supported in GPU mode'
 
   if (NGLLX /= NGLLY .or. NGLLY /= NGLLZ) stop 'Methods that can handle unstructured meshes require NGLLX = NGLLY = NGLLZ'
 
@@ -574,7 +571,11 @@
   implicit none
 
   ! local parameters
-  integer :: ncuda_devices,num_device,ncuda_devices_min,ncuda_devices_max
+  integer :: ngpu_devices,num_device,ngpu_devices_min,ngpu_devices_max
+  logical :: USE_CUDA_AWARE_MPI_all
+
+  ! checks if GPU simulation turned on
+  if (.not. GPU_MODE) return
 
   ! GPU_MODE now defined in Par_file
   if (myrank == 0) then
@@ -583,16 +584,42 @@
     call flush_IMAIN()
   endif
 
-  if (CUSTOM_REAL /= 4) stop 'GPU mode runs only with CUSTOM_REAL == 4'
-
-  if (SAVE_MOHO_MESH) stop 'GPU mode does not support SAVE_MOHO_MESH yet'
-
+  if (CUSTOM_REAL /= 4) &
+    stop 'GPU mode runs only with CUSTOM_REAL == 4'
+  if (SAVE_MOHO_MESH) &
+    stop 'GPU mode does not support SAVE_MOHO_MESH yet'
   if (ATTENUATION) then
-    if (N_SLS /= 3) stop 'GPU mode does not support N_SLS /= 3 yet'
+    if (N_SLS /= 3) &
+      stop 'GPU mode does not support N_SLS /= 3 yet'
   endif
+  if (POROELASTIC_SIMULATION) &
+    stop 'poroelastic simulations on GPUs not supported yet'
 
-  if (POROELASTIC_SIMULATION) stop 'poroelastic simulations on GPUs not supported yet'
+  ! initializes number of local gpu devices
+  ngpu_devices = 0
 
+  ! all processes will try to switch to CUDA-aware setup
+  call any_all_l(USE_CUDA_AWARE_MPI,USE_CUDA_AWARE_MPI_all)
+  USE_CUDA_AWARE_MPI = USE_CUDA_AWARE_MPI_all
+
+#ifdef WITH_CUDA_AWARE_MPI
+  if (USE_CUDA_AWARE_MPI) then
+    ! double check if loaded MPI system has CUDA support
+    ! query MPI for cuda support
+    call query_cuda_aware_mpi(myrank,USE_CUDA_AWARE_MPI)
+
+    ! all processes need support
+    call any_all_l(USE_CUDA_AWARE_MPI,USE_CUDA_AWARE_MPI_all)
+    USE_CUDA_AWARE_MPI = USE_CUDA_AWARE_MPI_all
+
+    if (myrank == 0) then
+      write(IMAIN,*) "check CUDA-aware MPI returned : ",USE_CUDA_AWARE_MPI
+      call flush_IMAIN()
+    endif
+  endif
+#endif
+
+  ! simultaneous runs
   if (NPROC == 1 .and. NUMBER_OF_SIMULTANEOUS_RUNS > 1 ) then
     num_device = mygroup
   else if (NPROC > 1 .and. NUMBER_OF_SIMULTANEOUS_RUNS > 1 ) then
@@ -602,18 +629,80 @@
   endif
 
   ! initializes GPU and outputs info to files for all processes
-  call initialize_gpu_device(num_device,ncuda_devices)
+  if (USE_CUDA_AWARE_MPI) then
+    ! devices have already been set before MPI_init()
+    if (myrank == 0) then
+      write(IMAIN,*) "using CUDA-aware MPI"
+      call flush_IMAIN()
+    endif
+    ! just to get number of devices and device info output
+    call initialize_gpu_device(num_device,ngpu_devices,2)  ! init type 2 == only show device output
+  else
+    ! sets GPU devices
+    call initialize_gpu_device(num_device,ngpu_devices,0)  ! default init (initialization & device output)
+  endif
 
   ! collects min/max of local devices found for statistics
   call synchronize_all()
-  call min_all_i(ncuda_devices,ncuda_devices_min)
-  call max_all_i(ncuda_devices,ncuda_devices_max)
+  call min_all_i(ngpu_devices,ngpu_devices_min)
+  call max_all_i(ngpu_devices,ngpu_devices_max)
 
   if (myrank == 0) then
-    write(IMAIN,*) "GPU number of devices per node: min =",ncuda_devices_min
-    write(IMAIN,*) "                                max =",ncuda_devices_max
+    write(IMAIN,*) "GPU number of devices per node: min =",ngpu_devices_min
+    write(IMAIN,*) "                                max =",ngpu_devices_max
     write(IMAIN,*)
     call flush_IMAIN()
   endif
 
   end subroutine initialize_GPU
+
+!
+!-------------------------------------------------------------------------------------------------
+!
+
+  subroutine initialize_cuda_aware_mpi()
+
+  use shared_parameters, only: GPU_MODE
+  use specfem_par, only: USE_CUDA_AWARE_MPI
+
+  implicit none
+
+#ifdef WITH_CUDA_AWARE_MPI
+  ! local parameters
+  integer :: ier
+  logical :: has_cuda_aware_mpi
+
+  ! initializes flags
+  USE_CUDA_AWARE_MPI = .false.
+
+  ! we check first if GPU_MODE is set in Par_file
+  ! opens the parameter file: DATA/Par_file
+  call open_parameter_file(ier)
+  if (ier /= 0) stop 'an error occurred while opening the parameter file'
+
+  call read_value_logical(GPU_MODE, 'GPU_MODE', ier)
+  if (ier /= 0) stop 'an error occurred while reading the parameter file: GPU_MODE'
+
+  ! closes parameter file
+  call close_parameter_file()
+
+  ! default
+  has_cuda_aware_mpi = .false.
+
+  if (GPU_MODE) then
+    ! CUDA-aware MPI check
+    call check_cuda_aware_mpi(has_cuda_aware_mpi)
+
+    ! check if CUDA-aware MPI is supported (and GPU devices set)
+    if (has_cuda_aware_mpi) then
+      USE_CUDA_AWARE_MPI = .true.
+    endif
+  endif
+#else
+  ! to avoid compiler warnings
+  ! initializes flags
+  GPU_MODE = .false.
+  USE_CUDA_AWARE_MPI = .false.
+#endif
+
+  end subroutine initialize_cuda_aware_mpi

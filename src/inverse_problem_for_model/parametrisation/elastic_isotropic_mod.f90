@@ -127,7 +127,7 @@ contains
     real, dimension(:,:,:,:,:), allocatable, intent(in)  :: param_in
     real, dimension(:,:,:,:,:), allocatable, intent(out) :: param_out
     param_out(:,:,:,:,1) = param_in(:,:,:,:,1)
-    param_out(:,:,:,:,2) = param_in(:,:,:,:,2) + 2.*param_in(:,:,:,:,3))/ 3.
+    param_out(:,:,:,:,2) = param_in(:,:,:,:,2) + 2. * param_in(:,:,:,:,3) / 3.
     param_out(:,:,:,:,3) = param_in(:,:,:,:,3)
   end function rho_lambda_mu_to_rho_kappa_mu
 
@@ -143,7 +143,7 @@ contains
     real, dimension(:,:,:,:,:), allocatable, intent(in)  :: param_in
     real, dimension(:,:,:,:,:), allocatable, intent(out) :: param_out
     param_out(:,:,:,:,1) = param_in(:,:,:,:,1)
-    param_out(:,:,:,:,2) = param_in(:,:,:,:,2) - 2.*param_in(:,:,:,:,3))/ 3.
+    param_out(:,:,:,:,2) = param_in(:,:,:,:,2) - 2. * param_in(:,:,:,:,3) / 3.
     param_out(:,:,:,:,3) = param_in(:,:,:,:,3)
   end function rho_kappa_mu_to_rho_lambda_mu
   !--------------------------------------------------------------------------------

@@ -2132,8 +2132,10 @@
         num_output_info = min(100000,int(10**floor(log10(dble(npoints_total)))))
     else if (npoints_total > 50000) then
         num_output_info = min(10000,int(10**floor(log10(dble(npoints_total)))))
-    else
+    else if (npoints_total > 0) then
         num_output_info = min(1000,int(10**floor(log10(dble(npoints_total)))))
+    else
+        num_output_info = 1
     endif
     ! number to output about ~50 steps, rounds to the next multiple of 1000
     !num_output_info = max(1000,int(ceiling(ceiling(npoints_total/50.0)/1000.0)*1000))

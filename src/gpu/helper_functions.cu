@@ -412,6 +412,83 @@ void synchronize_mpi () {
 
 
 /* ----------------------------------------------------------------------------------------------- */
+// CUDA-aware MPI helper function
+/* ----------------------------------------------------------------------------------------------- */
+
+// allocates buffers on GPU device
+
+extern EXTERN_LANG
+void FC_FUNC_ (allocate_gpu_buffer,
+               ALLOCATE_GPU_BUFFER) (realw** buffer_f, int* total_size) {
+  TRACE ("allocate_gpu_buffer");
+
+  realw* buffer;
+  size_t size = *total_size;
+
+  // initializes buffer pointer
+  *buffer_f = NULL;
+
+  // checks if anything to do
+  if (size == 0){ return; }
+
+  // allocates buffer on GPU
+  gpuMalloc_realw((void**) &buffer, size);
+
+  //debug
+  //int myrank;
+#ifdef WITH_MPI
+  //MPI_Comm_rank(MPI_COMM_WORLD, &myrank);
+#else
+  //myrank = 0;
+#endif
+  //printf("[allocate_gpu_buffer] rank %d: cudaMalloc pointer: %p\n", myrank, (void*) buffer);
+
+  // initializes
+  gpuMemset_realw(buffer, size, 0);
+
+  // returns buffer pointer
+#ifdef USE_CUDA
+  if (run_cuda) { *buffer_f = buffer; }
+#endif
+#ifdef USE_HIP
+  if (run_hip) { *buffer_f = buffer; }
+#endif
+}
+
+
+// for debugging
+
+extern EXTERN_LANG
+void FC_FUNC_ (check_gpu_pointer,
+               CHECK_GPU_POINTER)(void* ptr) {
+  // checks if pointer is associated with memory on device.
+  // CUDA-aware MPI needs a positive check to allow for device-to-device MPI transfers.
+
+#ifdef USE_CUDA
+  struct cudaPointerAttributes attrs;
+  cudaError_t err = cudaPointerGetAttributes(&attrs, ptr);
+  if (err != cudaSuccess) {
+      printf("[check_gpu_pointer] cudaPointerGetAttributes failed: %s\n", cudaGetErrorString(err));
+      return;
+  }
+
+  int myrank;
+#ifdef WITH_MPI
+  MPI_Comm_rank(MPI_COMM_WORLD, &myrank);
+#else
+  myrank = 0;
+#endif
+  //printf("[check_gpu_pointer] pointer      : %p\n", ptr);
+  //printf("[check_gpu_pointer] devicePointer: %p\n", attrs.devicePointer);
+  //printf("[check_gpu_pointer] hostPointer  : %p\n", attrs.hostPointer);
+  // attrs.type: cudaMemoryTypeDevice, cudaMemoryTypeHost, cudaMemoryTypeManaged
+  //printf("[check_gpu_pointer] memoryType   : %d (2=device)\n", attrs.type);
+  printf("[check_gpu_pointer] rank %d: pointer: %p devicePointer: %p hostPointer: %p memoryType: %d (2=device) \n",
+          myrank, ptr, attrs.devicePointer, attrs.hostPointer, attrs.type);
+#endif  // USE_CUDA
+}
+
+/* ----------------------------------------------------------------------------------------------- */
 
 // for debugging purposes, unused so far...
 

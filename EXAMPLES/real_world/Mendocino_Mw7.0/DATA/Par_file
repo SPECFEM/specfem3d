@@ -23,7 +23,7 @@ UTM_PROJECTION_ZONE             = 10
 SUPPRESS_UTM_PROJECTION         = .false.
 
 # number of MPI processors
-NPROC                           = 16 
+NPROC                           = 16
 
 # time step parameters
 NSTEP                           = 20000
@@ -318,7 +318,7 @@ SAVE_MOHO_MESH                  = .false.
 #
 #-----------------------------------------------------------
 COUPLE_WITH_INJECTION_TECHNIQUE = .false.
-INJECTION_TECHNIQUE_TYPE        = 3   # 1 = DSM, 2 = AxiSEM, 3 = FK
+INJECTION_TECHNIQUE_TYPE        = 3   # 1 = DSM, 2 = AxiSEM, 3 = FK, 4 = SPECFEM
 MESH_A_CHUNK_OF_THE_EARTH       = .false.
 TRACTION_PATH                   = dummy
 FKMODEL_FILE                    = FKmodel

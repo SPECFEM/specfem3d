@@ -707,6 +707,9 @@
 
   use constants, only: NDIM,CUSTOM_REAL,itag
 
+  !debug
+  !use specfem_par, only: USE_CUDA_AWARE_MPI
+
   implicit none
 
   integer,intent(in) :: NPROC
@@ -730,6 +733,9 @@
 
     ! send messages
     do iinterface = 1, num_interfaces_ext_mesh
+      !debug
+      !if (USE_CUDA_AWARE_MPI) call check_gpu_pointer(buffer_send_vector_ext_mesh(1,1,iinterface))
+
       call isend_cr(buffer_send_vector_ext_mesh(1,1,iinterface), &
                      NDIM*nibool_interfaces_ext_mesh(iinterface), &
                      my_neighbors_ext_mesh(iinterface), &

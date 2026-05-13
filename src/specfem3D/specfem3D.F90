@@ -366,6 +366,9 @@
 
   implicit none
 
+  ! initializes CUDA-aware MPI
+  call initialize_cuda_aware_mpi()
+
   ! MPI initialization
   call init_mpi()
 

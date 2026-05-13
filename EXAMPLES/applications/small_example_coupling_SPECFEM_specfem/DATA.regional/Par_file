@@ -223,7 +223,7 @@ NTSTEP_BETWEEN_OUTPUT_SEISMOS   = 10000
 
 # set to n to reduce the sampling rate of output seismograms by a factor of n
 # defaults to 1, which means no down-sampling
-NTSTEP_BETWEEN_OUTPUT_SAMPLE    = 2 
+NTSTEP_BETWEEN_OUTPUT_SAMPLE    = 2
 
 # decide if we save displacement, velocity, acceleration and/or pressure in forward runs (they can be set to true simultaneously)
 # currently pressure seismograms are implemented in acoustic (i.e. fluid) elements only
@@ -318,7 +318,7 @@ SAVE_MOHO_MESH                  = .false.
 #
 #-----------------------------------------------------------
 COUPLE_WITH_INJECTION_TECHNIQUE = .false.
-INJECTION_TECHNIQUE_TYPE        = 4         # 1 = DSM, 2 = AxiSEM, 3 = FK, 4 = SPECFEM
+INJECTION_TECHNIQUE_TYPE        = 4   # 1 = DSM, 2 = AxiSEM, 3 = FK, 4 = SPECFEM
 MESH_A_CHUNK_OF_THE_EARTH       = .false.
 TRACTION_PATH                   = ./COUPLING_FILES
 FKMODEL_FILE                    = FKmodel

@@ -65,11 +65,19 @@ TRACE("transfer_boun_accel_from_device");
     if (*FORWARD_OR_ADJOINT == 1) {
       // forward wavefield
       d_accel = mp->d_accel;
-      d_send_buffer = mp->d_send_accel_buffer;
+      if (mp->use_cuda_aware_mpi) {
+        d_send_buffer = send_accel_buffer;  // buffer on GPU
+      } else {
+        d_send_buffer = mp->d_send_accel_buffer;
+      }
     } else if (*FORWARD_OR_ADJOINT == 3) {
       // backward/reconstructed wavefield
       d_accel = mp->d_b_accel;
-      d_send_buffer = mp->d_b_send_accel_buffer;
+      if (mp->use_cuda_aware_mpi) {
+        d_send_buffer = send_accel_buffer;  // buffer on GPU
+      } else {
+        d_send_buffer = mp->d_b_send_accel_buffer;
+      }
     }
 
     // Cuda timing
@@ -104,7 +112,13 @@ TRACE("transfer_boun_accel_from_device");
     gpuStreamSynchronize(mp->compute_stream);
 
     // copies buffer from GPU to CPU host
-    gpuMemcpy_tohost_realw(send_accel_buffer,d_send_buffer,mp->size_mpi_buffer);
+    if (mp->use_cuda_aware_mpi){
+      // CUDA-aware MPI buffers on GPU, no copy needed
+      //gpuMemcpy_devicetodevice_realw(send_accel_buffer,d_send_buffer,mp->size_mpi_buffer);
+    } else {
+      // copies buffer to CPU
+      gpuMemcpy_tohost_realw(send_accel_buffer,d_send_buffer,mp->size_mpi_buffer);
+    }
 
     // kernel timing
     // finish timing of kernel+memcpy
@@ -118,7 +132,8 @@ TRACE("transfer_boun_accel_from_device");
 
 extern EXTERN_LANG
 void FC_FUNC_(transfer_boundary_from_device_a,
-              TRANSFER_BOUNDARY_FROM_DEVICE_A)(long* Mesh_pointer) {
+              TRANSFER_BOUNDARY_FROM_DEVICE_A)(long* Mesh_pointer,
+                                               realw* send_accel_buffer) {
 
 // asynchronous transfer from device to host
 
@@ -138,9 +153,16 @@ void FC_FUNC_(transfer_boundary_from_device_a,
     dim3 threads(blocksize,1,1);
 
     // prepares boundary buffer
+    realw* d_send_buffer = NULL;
+    if (mp->use_cuda_aware_mpi) {
+      d_send_buffer = send_accel_buffer;  // buffer on GPU
+    } else {
+      d_send_buffer = mp->d_send_accel_buffer;
+    }
+
 #ifdef USE_CUDA
     if (run_cuda){
-      prepare_boundary_accel_on_device<<<grid,threads,0,mp->compute_stream>>>(mp->d_accel,mp->d_send_accel_buffer,
+      prepare_boundary_accel_on_device<<<grid,threads,0,mp->compute_stream>>>(mp->d_accel,d_send_buffer,
                                                                               mp->num_interfaces_ext_mesh,
                                                                               mp->max_nibool_interfaces_ext_mesh,
                                                                               mp->d_nibool_interfaces_ext_mesh,
@@ -150,7 +172,7 @@ void FC_FUNC_(transfer_boundary_from_device_a,
 #ifdef USE_HIP
     if (run_hip){
       hipLaunchKernelGGL(prepare_boundary_accel_on_device, dim3(grid), dim3(threads), 0, mp->compute_stream,
-                                                           mp->d_accel,mp->d_send_accel_buffer,
+                                                           mp->d_accel,d_send_buffer,
                                                            mp->num_interfaces_ext_mesh,
                                                            mp->max_nibool_interfaces_ext_mesh,
                                                            mp->d_nibool_interfaces_ext_mesh,
@@ -163,7 +185,14 @@ void FC_FUNC_(transfer_boundary_from_device_a,
     // waits until previous compute stream finishes
     gpuStreamSynchronize(mp->compute_stream);
 
-    gpuMemcpyAsync_tohost_realw(mp->h_send_accel_buffer,mp->d_send_accel_buffer,mp->size_mpi_buffer,mp->copy_stream);
+    // copies buffer from GPU to CPU host (asynchronuous)
+    if (mp->use_cuda_aware_mpi){
+      // CUDA-aware MPI buffers on GPU, no copy needed
+      //gpuMemcpyAsync_devicetodevice_realw(send_accel_buffer,mp->d_send_accel_buffer,mp->size_mpi_buffer,mp->copy_stream);
+    } else {
+      // copies buffer to CPU (pinned memory)
+      gpuMemcpyAsync_tohost_realw(mp->h_send_accel_buffer,mp->d_send_accel_buffer,mp->size_mpi_buffer,mp->copy_stream);
+    }
   }
 }
 
@@ -181,11 +210,17 @@ void FC_FUNC_(transfer_boundary_to_device_a,
   Mesh* mp = (Mesh*)(*Mesh_pointer); //get mesh pointer out of fortran integer container
 
   if (mp->size_mpi_buffer > 0){
-    // copy on host memory
-    memcpy(mp->h_recv_accel_buffer,buffer_recv_vector_ext_mesh,mp->size_mpi_buffer*sizeof(realw));
+    // copies buffer from CPU to GPU
+    if (mp->use_cuda_aware_mpi){
+      // CUDA-aware MPI buffers on GPU, no copy needed
+      //gpuMemcpyAsync_devicetodevice_realw(mp->d_send_accel_buffer,buffer_recv_vector_ext_mesh,mp->size_mpi_buffer,mp->copy_stream);
+    } else {
+      // copy on host memory (to pinned memory)
+      memcpy(mp->h_recv_accel_buffer,buffer_recv_vector_ext_mesh,mp->size_mpi_buffer*sizeof(realw));
 
-    // asynchronous copy to GPU using copy_stream
-    gpuMemcpyAsync_todevice_realw(mp->d_send_accel_buffer, mp->h_recv_accel_buffer,mp->size_mpi_buffer,mp->copy_stream);
+      // asynchronous copy to GPU using copy_stream
+      gpuMemcpyAsync_todevice_realw(mp->d_send_accel_buffer, mp->h_recv_accel_buffer,mp->size_mpi_buffer,mp->copy_stream);
+    }
   }
 }
 
@@ -209,17 +244,27 @@ TRACE("transfer_asmbl_accel_to_device");
 
   if (mp->size_mpi_buffer > 0){
 
-    //daniel: todo - check if this copy is only needed for adjoint simulation, otherwise it is called asynchronously?
+    // note: array copy is only needed for adjoint simulation, otherwise it is called asynchronously before
+    //       in routine transfer_boundary_to_device() and transfer_boundary_to_device_a()
     if (*FORWARD_OR_ADJOINT == 1){
       // Wait until previous copy stream finishes. We assemble while other compute kernels execute.
-      gpuStreamSynchronize(mp->copy_stream);
+      if (! mp->use_cuda_aware_mpi){
+        gpuStreamSynchronize(mp->copy_stream);
+      }
     }
     else if (*FORWARD_OR_ADJOINT == 3){
       // explicitly synchronizes
       // (cudaMemcpy implicitly synchronizes all other cuda operations)
       gpuSynchronize();
 
-      gpuMemcpy_todevice_realw(mp->d_b_send_accel_buffer, buffer_recv_vector_ext_mesh,mp->size_mpi_buffer);
+      // copy array onto GPU
+      if (mp->use_cuda_aware_mpi){
+        // CUDA-aware MPI buffers on GPU, no copy needed
+        //gpuMemcpy_devicetodevice_realw(mp->d_b_send_accel_buffer, buffer_recv_vector_ext_mesh,mp->size_mpi_buffer);
+      } else {
+        // copies to GPU
+        gpuMemcpy_todevice_realw(mp->d_b_send_accel_buffer, buffer_recv_vector_ext_mesh,mp->size_mpi_buffer);
+      }
     }
 
     int blocksize = BLOCKSIZE_TRANSFER;
@@ -237,11 +282,19 @@ TRACE("transfer_asmbl_accel_to_device");
     if (*FORWARD_OR_ADJOINT == 1) {
       // forward wavefield
       d_accel = mp->d_accel;
-      d_send_buffer = mp->d_send_accel_buffer;
+      if (mp->use_cuda_aware_mpi){
+        d_send_buffer = buffer_recv_vector_ext_mesh; // buffer on GPU
+      } else {
+        d_send_buffer = mp->d_send_accel_buffer;
+      }
     } else if (*FORWARD_OR_ADJOINT == 3) {
       // backward/reconstructed wavefield
       d_accel = mp->d_b_accel;
-      d_send_buffer = mp->d_b_send_accel_buffer;
+      if (mp->use_cuda_aware_mpi){
+        d_send_buffer = buffer_recv_vector_ext_mesh; // buffer on GPU
+      } else {
+        d_send_buffer = mp->d_b_send_accel_buffer;
+      }
     }
 
     //double start_time = get_time_val();
@@ -288,103 +341,108 @@ TRACE("transfer_asmbl_accel_to_device");
 
 /* ----------------------------------------------------------------------------------------------- */
 
-
-
-/* ----------------------------------------------------------------------------------------------- */
-
+// not used yet...
+//
 // FORWARD_OR_ADJOINT == 1 for accel, and == 3 for b_accel
-// This sync function is for FAULT_SOLVER
-extern EXTERN_LANG
-void FC_FUNC_(transfer_sync_accel_to_device,
-              TRANSFER_ASMBL_ACCEL_TO_DEVICE)(long* Mesh_pointer,
-                                              realw* buffer_recv_vector_ext_mesh,
-                                              const int* FORWARD_OR_ADJOINT) {
-TRACE("transfer_sync_accel_to_device");
-
-  Mesh* mp = (Mesh*)(*Mesh_pointer); //get mesh pointer out of fortran integer container
-
-  if (mp->size_mpi_buffer > 0){
-
-    //daniel: todo - check if this copy is only needed for adjoint simulation, otherwise it is called asynchronously?
-    if (*FORWARD_OR_ADJOINT == 1){
-      // Wait until previous copy stream finishes. We assemble while other compute kernels execute.
-      gpuStreamSynchronize(mp->copy_stream);
-    }
-    else if (*FORWARD_OR_ADJOINT == 3){
-      // explicitly synchronizes
-      // (cudaMemcpy implicitly synchronizes all other cuda operations)
-      gpuSynchronize();
-
-      gpuMemcpy_todevice_realw(mp->d_b_send_accel_buffer, buffer_recv_vector_ext_mesh,mp->size_mpi_buffer);
-    }
-
-    int blocksize = BLOCKSIZE_TRANSFER;
-    int size_padded = ((int)ceil(((double)mp->max_nibool_interfaces_ext_mesh)/((double)blocksize)))*blocksize;
-
-    int num_blocks_x, num_blocks_y;
-    get_blocks_xy(size_padded/blocksize,&num_blocks_x,&num_blocks_y);
-
-    dim3 grid(num_blocks_x,num_blocks_y);
-    dim3 threads(blocksize,1,1);
-
-    //double start_time = get_time_val();
-    // cudaEvent_t start, stop;
-    // realw time;
-    // cudaEventCreate(&start);
-    // cudaEventCreate(&stop);
-    // cudaEventRecord( start, 0);
-
-    // selects arrays
-    realw* d_accel = NULL;
-    realw* d_send_buffer = NULL;
-    if (*FORWARD_OR_ADJOINT == 1) {
-      // forward wavefield
-      d_accel = mp->d_accel;
-      d_send_buffer = mp->d_send_accel_buffer;
-    } else if (*FORWARD_OR_ADJOINT == 3) {
-      // backward/reconstructed wavefield
-      d_accel = mp->d_b_accel;
-      d_send_buffer = mp->d_b_send_accel_buffer;
-    }
-
-    //assembles accel
-#ifdef USE_CUDA
-    if (run_cuda){
-      synchronize_boundary_accel_on_device<<<grid,threads,0,mp->compute_stream>>>(d_accel, d_send_buffer,
-                                                                                  mp->num_interfaces_ext_mesh,
-                                                                                  mp->max_nibool_interfaces_ext_mesh,
-                                                                                  mp->d_nibool_interfaces_ext_mesh,
-                                                                                  mp->d_ibool_interfaces_ext_mesh);
-    }
-#endif
-#ifdef USE_HIP
-    if (run_hip){
-      hipLaunchKernelGGL(synchronize_boundary_accel_on_device, dim3(grid), dim3(threads), 0, mp->compute_stream,
-                                                               d_accel, d_send_buffer,
-                                                               mp->num_interfaces_ext_mesh,
-                                                               mp->max_nibool_interfaces_ext_mesh,
-                                                               mp->d_nibool_interfaces_ext_mesh,
-                                                               mp->d_ibool_interfaces_ext_mesh);
-    }
-#endif
-
-    // cudaEventRecord( stop, 0);
-    // cudaEventSynchronize( stop );
-    // cudaEventElapsedTime( &time, start, stop );
-    // cudaEventDestroy( start );
-    // cudaEventDestroy( stop );
-    // printf("Boundary Assemble Kernel Execution Time: %f ms\n",time);
-  }
-
-  //double end_time = get_time_val();
-  //printf("Elapsed time: %e\n",end_time-start_time);
-
-  GPU_ERROR_CHECKING("transfer_sync_accel_to_device");
-}
+//
+//extern EXTERN_LANG
+//void FC_FUNC_(transfer_sync_accel_to_device,
+//              TRANSFER_ASMBL_ACCEL_TO_DEVICE)(long* Mesh_pointer,
+//                                              realw* buffer_recv_vector_ext_mesh,
+//                                              const int* FORWARD_OR_ADJOINT) {
+//TRACE("transfer_sync_accel_to_device");
+//
+//  Mesh* mp = (Mesh*)(*Mesh_pointer); //get mesh pointer out of fortran integer container
+//
+//  if (mp->size_mpi_buffer > 0){
+//
+//    // note: array copy is only needed for adjoint simulation, otherwise it is called asynchronously?
+//    if (*FORWARD_OR_ADJOINT == 1){
+//      // Wait until previous copy stream finishes. We assemble while other compute kernels execute.
+//      gpuStreamSynchronize(mp->copy_stream);
+//    }
+//    else if (*FORWARD_OR_ADJOINT == 3){
+//      // explicitly synchronizes
+//      // (cudaMemcpy implicitly synchronizes all other cuda operations)
+//      gpuSynchronize();
+//
+//      // copy array onto GPU
+//      if (mp->use_cuda_aware_mpi){
+//        // CUDA-aware MPI copies buffers on GPU
+//        gpuMemcpy_devicetodevice_realw(mp->d_b_send_accel_buffer, buffer_recv_vector_ext_mesh,mp->size_mpi_buffer);
+//      } else {
+//        // copies to GPU
+//        gpuMemcpy_todevice_realw(mp->d_b_send_accel_buffer, buffer_recv_vector_ext_mesh,mp->size_mpi_buffer);
+//      }
+//    }
+//
+//    int blocksize = BLOCKSIZE_TRANSFER;
+//    int size_padded = ((int)ceil(((double)mp->max_nibool_interfaces_ext_mesh)/((double)blocksize)))*blocksize;
+//
+//    int num_blocks_x, num_blocks_y;
+//    get_blocks_xy(size_padded/blocksize,&num_blocks_x,&num_blocks_y);
+//
+//    dim3 grid(num_blocks_x,num_blocks_y);
+//    dim3 threads(blocksize,1,1);
+//
+//    //double start_time = get_time_val();
+//    // cudaEvent_t start, stop;
+//    // realw time;
+//    // cudaEventCreate(&start);
+//    // cudaEventCreate(&stop);
+//    // cudaEventRecord( start, 0);
+//
+//    // selects arrays
+//    realw* d_accel = NULL;
+//    realw* d_send_buffer = NULL;
+//    if (*FORWARD_OR_ADJOINT == 1) {
+//      // forward wavefield
+//      d_accel = mp->d_accel;
+//      d_send_buffer = mp->d_send_accel_buffer;
+//    } else if (*FORWARD_OR_ADJOINT == 3) {
+//      // backward/reconstructed wavefield
+//      d_accel = mp->d_b_accel;
+//      d_send_buffer = mp->d_b_send_accel_buffer;
+//    }
+//
+//    //assembles accel
+//#ifdef USE_CUDA
+//    if (run_cuda){
+//      synchronize_boundary_accel_on_device<<<grid,threads,0,mp->compute_stream>>>(d_accel, d_send_buffer,
+//                                                                                  mp->num_interfaces_ext_mesh,
+//                                                                                  mp->max_nibool_interfaces_ext_mesh,
+//                                                                                  mp->d_nibool_interfaces_ext_mesh,
+//                                                                                  mp->d_ibool_interfaces_ext_mesh);
+//    }
+//#endif
+//#ifdef USE_HIP
+//    if (run_hip){
+//      hipLaunchKernelGGL(synchronize_boundary_accel_on_device, dim3(grid), dim3(threads), 0, mp->compute_stream,
+//                                                               d_accel, d_send_buffer,
+//                                                               mp->num_interfaces_ext_mesh,
+//                                                               mp->max_nibool_interfaces_ext_mesh,
+//                                                               mp->d_nibool_interfaces_ext_mesh,
+//                                                               mp->d_ibool_interfaces_ext_mesh);
+//    }
+//#endif
+//
+//    // cudaEventRecord( stop, 0);
+//    // cudaEventSynchronize( stop );
+//    // cudaEventElapsedTime( &time, start, stop );
+//    // cudaEventDestroy( start );
+//    // cudaEventDestroy( stop );
+//    // printf("Boundary Assemble Kernel Execution Time: %f ms\n",time);
+//  }
+//
+//  //double end_time = get_time_val();
+//  //printf("Elapsed time: %e\n",end_time-start_time);
+//
+//  GPU_ERROR_CHECKING("transfer_sync_accel_to_device");
+//}
 
 /* ----------------------------------------------------------------------------------------------- */
 
-//daniel: not used ...
+// not used yet...
 //
 //extern EXTERN_LANG
 //void FC_FUNC_(assemble_accel_on_device,
@@ -448,12 +506,14 @@ void FC_FUNC_(sync_copy_from_device,
   if (*iphase != 2){ exit_on_gpu_error("sync_copy_from_device must be called for iphase == 2"); }
 
   if (mp->size_mpi_buffer > 0){
-    // waits for asynchronous copy to finish
-    gpuStreamSynchronize(mp->copy_stream);
+    if (! mp->use_cuda_aware_mpi) {
+      // waits for asynchronous copy to finish
+      gpuStreamSynchronize(mp->copy_stream);
 
-    // There have been problems using the pinned-memory with MPI, so
-    // we copy the buffer into a non-pinned region.
-    memcpy(send_buffer,mp->h_send_accel_buffer,mp->size_mpi_buffer*sizeof(realw));
+      // There have been problems using the pinned-memory with MPI, so
+      // we copy the buffer into a non-pinned region.
+      memcpy(send_buffer,mp->h_send_accel_buffer,mp->size_mpi_buffer*sizeof(realw));
+    }
   }
   // memory copy is now finished, so non-blocking MPI send can proceed
 }

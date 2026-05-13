@@ -65,11 +65,19 @@ void FC_FUNC_(transfer_boun_pot_from_device,
     if (*FORWARD_OR_ADJOINT == 1) {
       // forward wavefield
       d_potential_dot_dot = mp->d_potential_dot_dot_acoustic;
-      d_send_buffer = mp->d_send_potential_dot_dot_buffer;
+      if (mp->use_cuda_aware_mpi) {
+        d_send_buffer = send_potential_dot_dot_buffer; // buffer on GPU
+      } else {
+        d_send_buffer = mp->d_send_potential_dot_dot_buffer;
+      }
     } else if (*FORWARD_OR_ADJOINT == 3) {
       // backward/reconstructed wavefield
       d_potential_dot_dot = mp->d_b_potential_dot_dot_acoustic;
-      d_send_buffer = mp->d_b_send_potential_dot_dot_buffer;
+      if (mp->use_cuda_aware_mpi) {
+        d_send_buffer = send_potential_dot_dot_buffer; // buffer on GPU
+      } else {
+        d_send_buffer = mp->d_b_send_potential_dot_dot_buffer;
+      }
     }
 
 #ifdef USE_CUDA
@@ -105,7 +113,13 @@ void FC_FUNC_(transfer_boun_pot_from_device,
     gpuStreamSynchronize(mp->compute_stream);
 
     // copies buffer to CPU
-    gpuMemcpy_tohost_field(send_potential_dot_dot_buffer,d_send_buffer,mp->size_mpi_buffer_potential);
+    if (mp->use_cuda_aware_mpi){
+      // CUDA-aware MPI buffers on GPU, no copy needed
+      //gpuMemcpy_devicetodevice_field(send_potential_dot_dot_buffer,d_send_buffer,mp->size_mpi_buffer_potential);
+    } else {
+      // copies buffer to CPU
+      gpuMemcpy_tohost_field(send_potential_dot_dot_buffer,d_send_buffer,mp->size_mpi_buffer_potential);
+    }
   }
 
   // finish timing of kernel+memcpy
@@ -157,18 +171,32 @@ void FC_FUNC_(transfer_asmbl_pot_to_device,
     if (*FORWARD_OR_ADJOINT == 1) {
       // forward wavefield
       d_potential_dot_dot = mp->d_potential_dot_dot_acoustic;
-      d_send_buffer = mp->d_send_potential_dot_dot_buffer;
+      if (mp->use_cuda_aware_mpi) {
+        d_send_buffer = buffer_recv_scalar_ext_mesh;  // buffer on device
+      } else {
+        d_send_buffer = mp->d_send_potential_dot_dot_buffer;
+      }
     } else if (*FORWARD_OR_ADJOINT == 3) {
       // backward/reconstructed wavefield
       d_potential_dot_dot = mp->d_b_potential_dot_dot_acoustic;
-      d_send_buffer = mp->d_b_send_potential_dot_dot_buffer;
+      if (mp->use_cuda_aware_mpi) {
+        d_send_buffer = buffer_recv_scalar_ext_mesh;  // buffer on device
+      } else {
+        d_send_buffer = mp->d_b_send_potential_dot_dot_buffer;
+      }
     }
 
     // synchronizes
     gpuSynchronize();
 
     // copies buffer onto GPU
-    gpuMemcpy_todevice_field(d_send_buffer, buffer_recv_scalar_ext_mesh,mp->size_mpi_buffer_potential);
+    if (mp->use_cuda_aware_mpi){
+      // CUDA-aware MPI buffers on GPU, no copy needed
+      //gpuMemcpy_devicetodevice_field(d_send_buffer, buffer_recv_scalar_ext_mesh,mp->size_mpi_buffer_potential);
+    } else {
+      // // buffer copy from CPU
+      gpuMemcpy_todevice_field(d_send_buffer, buffer_recv_scalar_ext_mesh,mp->size_mpi_buffer_potential);
+    }
 
     // assembles field
 #ifdef USE_CUDA

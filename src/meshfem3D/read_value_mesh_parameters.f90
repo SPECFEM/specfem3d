@@ -603,7 +603,7 @@
 
   is_digit_alpha = .false.
 
-  if (index('0123456789.de-', char) /= 0) then
+  if (index('0123456789.dDeE-+', char) /= 0) then
     is_digit_alpha = .true.
   endif
 

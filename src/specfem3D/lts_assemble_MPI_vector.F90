@@ -187,7 +187,8 @@
 ! MPI routines that only recv if *this* p-level has elements on the MPI boundary
 
   subroutine assemble_MPI_vector_async_recv_lts(NPROC,NGLOB_AB,array_val,ilevel, &
-                                                buffer_recv_vector_ext_mesh,num_interfaces_ext_mesh, &
+                                                buffer_send_vector_ext_mesh,buffer_recv_vector_ext_mesh, &
+                                                num_interfaces_ext_mesh, &
                                                 max_nibool_interfaces_ext_mesh,nibool_interfaces_ext_mesh, &
                                                 request_send_vector_ext_mesh,request_recv_vector_ext_mesh, &
                                                 my_neighbors_ext_mesh)
@@ -198,7 +199,7 @@
 
   use specfem_par, only: FAULT_SIMULATION
 
-  use specfem_par, only: GPU_MODE, Mesh_pointer, buffer_send_vector_ext_mesh
+  use specfem_par, only: GPU_MODE, Mesh_pointer
 
   use specfem_par_lts, only: num_interface_p_refine_ibool, interface_p_refine_ibool, num_p_level
 
@@ -217,7 +218,7 @@
   integer,intent(in) :: num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh
 
   real(kind=CUSTOM_REAL), dimension(NDIM,max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh),intent(inout) :: &
-    buffer_recv_vector_ext_mesh
+    buffer_send_vector_ext_mesh,buffer_recv_vector_ext_mesh
 
   integer, dimension(num_interfaces_ext_mesh),intent(in) :: nibool_interfaces_ext_mesh
   integer, dimension(num_interfaces_ext_mesh),intent(inout) :: request_send_vector_ext_mesh,request_recv_vector_ext_mesh
@@ -227,7 +228,7 @@
   integer :: ipoin,iinterface,iglob
   integer :: num_buffer_points
   ! GPU
-  real(kind=CUSTOM_REAL), dimension(:), allocatable :: reduced_buffer_recv_vector_ext_mesh, reduced_buffer_send_vector_ext_mesh
+  real(kind=CUSTOM_REAL), dimension(:), allocatable :: buffer_reduced_recv_vector, buffer_reduced_send_vector
   integer :: num_refine,index,ier
   ! testing
   logical, parameter :: TEST_GPU = .false.
@@ -246,7 +247,8 @@
   if (FAULT_SIMULATION) then
     ! receives MPI buffers with ordered assembly
     call assemble_MPI_vector_async_w_ord_lts(NPROC,NGLOB_AB,array_val,ilevel, &
-                                             buffer_recv_vector_ext_mesh,num_interfaces_ext_mesh, &
+                                             buffer_send_vector_ext_mesh,buffer_recv_vector_ext_mesh, &
+                                             num_interfaces_ext_mesh, &
                                              max_nibool_interfaces_ext_mesh, &
                                              nibool_interfaces_ext_mesh, &
                                              request_send_vector_ext_mesh,request_recv_vector_ext_mesh, &
@@ -323,11 +325,11 @@
 
       num_refine = num_interface_p_refine_boundary(ilevel)
 
-      allocate(reduced_buffer_send_vector_ext_mesh(3*num_refine), &
-               reduced_buffer_recv_vector_ext_mesh(3*num_refine),stat=ier)
+      allocate(buffer_reduced_send_vector(3*num_refine), &
+               buffer_reduced_recv_vector(3*num_refine),stat=ier)
       if (ier /= 0) stop "Error allocating reduced_buffer_send_vector"
 
-      call sync_copy_reduced_from_device(Mesh_pointer,2,reduced_buffer_send_vector_ext_mesh,num_refine)
+      call sync_copy_reduced_from_device(Mesh_pointer,2,buffer_reduced_send_vector,num_refine)
 
       ! when testing, zero out unused portions
       if (TEST_GPU) buffer_send_vector_ext_mesh = 0
@@ -339,11 +341,11 @@
         if (num_interface_p_refine_ibool(iinterface,ilevel) > 0 ) then
           do ipoin = 1, num_interface_p_refine_ibool(iinterface,ilevel)
             index = index + 1
-            buffer_send_vector_ext_mesh(1,ipoin,iinterface) = reduced_buffer_send_vector_ext_mesh(index)
+            buffer_send_vector_ext_mesh(1,ipoin,iinterface) = buffer_reduced_send_vector(index)
             index = index + 1
-            buffer_send_vector_ext_mesh(2,ipoin,iinterface) = reduced_buffer_send_vector_ext_mesh(index)
+            buffer_send_vector_ext_mesh(2,ipoin,iinterface) = buffer_reduced_send_vector(index)
             index = index + 1
-            buffer_send_vector_ext_mesh(3,ipoin,iinterface) = reduced_buffer_send_vector_ext_mesh(index)
+            buffer_send_vector_ext_mesh(3,ipoin,iinterface) = buffer_reduced_send_vector(index)
           enddo
         endif
       enddo
@@ -408,17 +410,17 @@
         if (num_interface_p_refine_ibool(iinterface,ilevel) > 0 ) then
           do ipoin = 1, num_interface_p_refine_ibool(iinterface,ilevel)
             index = index + 1
-            reduced_buffer_recv_vector_ext_mesh(index) = buffer_recv_vector_ext_mesh(1,ipoin,iinterface)
+            buffer_reduced_recv_vector(index) = buffer_recv_vector_ext_mesh(1,ipoin,iinterface)
             index = index + 1
-            reduced_buffer_recv_vector_ext_mesh(index) = buffer_recv_vector_ext_mesh(2,ipoin,iinterface)
+            buffer_reduced_recv_vector(index) = buffer_recv_vector_ext_mesh(2,ipoin,iinterface)
             index = index + 1
-            reduced_buffer_recv_vector_ext_mesh(index) = buffer_recv_vector_ext_mesh(3,ipoin,iinterface)
+            buffer_reduced_recv_vector(index) = buffer_recv_vector_ext_mesh(3,ipoin,iinterface)
           enddo
         endif
       enddo
 
       ! async sends boundary to device (on memory copy stream)
-      call transfer_reduced_boundary_to_device_async_lts(Mesh_pointer,reduced_buffer_recv_vector_ext_mesh,num_refine)
+      call transfer_reduced_boundary_to_device_async_lts(Mesh_pointer,buffer_reduced_recv_vector,num_refine)
 
       ! assemble values on GPU to accel field
       call assemble_reduced_mpi_device_lts(Mesh_pointer,ilevel,num_refine)
@@ -428,8 +430,8 @@
         call wait_req(request_send_vector_ext_mesh(iinterface))
       enddo
 
-      deallocate(reduced_buffer_send_vector_ext_mesh)
-      deallocate(reduced_buffer_recv_vector_ext_mesh)
+      deallocate(buffer_reduced_send_vector)
+      deallocate(buffer_reduced_recv_vector)
 
     endif ! ilevel == num_p_level
   endif ! GPU
@@ -445,7 +447,8 @@
 ! MPI routines that only recv if *this* p-level has elements on the MPI boundary
 
   subroutine assemble_MPI_vector_async_w_ord_lts(NPROC,NGLOB_AB,array_val,ilevel, &
-                                                 buffer_recv_vector_ext_mesh,num_interfaces_ext_mesh, &
+                                                 buffer_send_vector_ext_mesh,buffer_recv_vector_ext_mesh, &
+                                                 num_interfaces_ext_mesh, &
                                                  max_nibool_interfaces_ext_mesh, &
                                                  nibool_interfaces_ext_mesh, &
                                                  request_send_vector_ext_mesh,request_recv_vector_ext_mesh, &
@@ -465,7 +468,7 @@
 
   use constants, only: NDIM,CUSTOM_REAL,ASSEMBLE_MPI_OFF,myrank,itag
 
-  use specfem_par, only: GPU_MODE, Mesh_pointer, buffer_send_vector_ext_mesh
+  use specfem_par, only: GPU_MODE, Mesh_pointer
 
   use specfem_par_lts, only: num_interface_p_refine_ibool, interface_p_refine_ibool, num_p_level
 
@@ -484,7 +487,7 @@
   integer,intent(in) :: num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh
 
   real(kind=CUSTOM_REAL), dimension(NDIM,max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh),intent(inout) :: &
-    buffer_recv_vector_ext_mesh
+    buffer_send_vector_ext_mesh,buffer_recv_vector_ext_mesh
 
   integer, dimension(num_interfaces_ext_mesh),intent(in) :: nibool_interfaces_ext_mesh
   integer, dimension(num_interfaces_ext_mesh),intent(inout) :: request_send_vector_ext_mesh,request_recv_vector_ext_mesh
@@ -496,7 +499,7 @@
   logical :: need_add_my_contrib
   integer :: num_buffer_points
   ! GPU
-  real(kind=CUSTOM_REAL), dimension(:), allocatable :: reduced_buffer_recv_vector_ext_mesh, reduced_buffer_send_vector_ext_mesh
+  real(kind=CUSTOM_REAL), dimension(:), allocatable :: buffer_reduced_recv_vector, buffer_reduced_send_vector
   integer :: num_refine,index,ier
   ! testing
   logical, parameter :: TEST_GPU = .false.
@@ -600,11 +603,11 @@
 
       num_refine = num_interface_p_refine_boundary(ilevel)
 
-      allocate(reduced_buffer_send_vector_ext_mesh(3*num_refine), &
-               reduced_buffer_recv_vector_ext_mesh(3*num_refine),stat=ier)
+      allocate(buffer_reduced_send_vector(3*num_refine), &
+               buffer_reduced_recv_vector(3*num_refine),stat=ier)
       if (ier /= 0) call exit_mpi(myrank,"Error allocating reduced_buffer_send_vector")
 
-      call sync_copy_reduced_from_device(Mesh_pointer,2,reduced_buffer_send_vector_ext_mesh,num_refine)
+      call sync_copy_reduced_from_device(Mesh_pointer,2,buffer_reduced_send_vector,num_refine)
 
       ! when testing, zero out unused portions
       if (TEST_GPU) buffer_send_vector_ext_mesh = 0
@@ -616,11 +619,11 @@
         if (num_interface_p_refine_ibool(iinterface,ilevel) > 0 ) then
           do ipoin = 1, num_interface_p_refine_ibool(iinterface,ilevel)
             index = index + 1
-            buffer_send_vector_ext_mesh(1,ipoin,iinterface) = reduced_buffer_send_vector_ext_mesh(index)
+            buffer_send_vector_ext_mesh(1,ipoin,iinterface) = buffer_reduced_send_vector(index)
             index = index + 1
-            buffer_send_vector_ext_mesh(2,ipoin,iinterface) = reduced_buffer_send_vector_ext_mesh(index)
+            buffer_send_vector_ext_mesh(2,ipoin,iinterface) = buffer_reduced_send_vector(index)
             index = index + 1
-            buffer_send_vector_ext_mesh(3,ipoin,iinterface) = reduced_buffer_send_vector_ext_mesh(index)
+            buffer_send_vector_ext_mesh(3,ipoin,iinterface) = buffer_reduced_send_vector(index)
           enddo
         endif
       enddo
@@ -685,17 +688,17 @@
         if (num_interface_p_refine_ibool(iinterface,ilevel) > 0 ) then
           do ipoin = 1, num_interface_p_refine_ibool(iinterface,ilevel)
             index = index + 1
-            reduced_buffer_recv_vector_ext_mesh(index) = buffer_recv_vector_ext_mesh(1,ipoin,iinterface)
+            buffer_reduced_recv_vector(index) = buffer_recv_vector_ext_mesh(1,ipoin,iinterface)
             index = index + 1
-            reduced_buffer_recv_vector_ext_mesh(index) = buffer_recv_vector_ext_mesh(2,ipoin,iinterface)
+            buffer_reduced_recv_vector(index) = buffer_recv_vector_ext_mesh(2,ipoin,iinterface)
             index = index + 1
-            reduced_buffer_recv_vector_ext_mesh(index) = buffer_recv_vector_ext_mesh(3,ipoin,iinterface)
+            buffer_reduced_recv_vector(index) = buffer_recv_vector_ext_mesh(3,ipoin,iinterface)
           enddo
         endif
       enddo
 
       ! async sends boundary to device (on memory copy stream)
-      call transfer_reduced_boundary_to_device_async_lts(Mesh_pointer,reduced_buffer_recv_vector_ext_mesh,num_refine)
+      call transfer_reduced_boundary_to_device_async_lts(Mesh_pointer,buffer_reduced_recv_vector,num_refine)
 
       ! assemble values on GPU to accel field
       call assemble_reduced_mpi_device_lts(Mesh_pointer,ilevel,num_refine)
@@ -705,8 +708,8 @@
         call wait_req(request_send_vector_ext_mesh(iinterface))
       enddo
 
-      deallocate(reduced_buffer_send_vector_ext_mesh)
-      deallocate(reduced_buffer_recv_vector_ext_mesh)
+      deallocate(buffer_reduced_send_vector)
+      deallocate(buffer_reduced_recv_vector)
     endif ! ilevel == num_p_level
   endif ! GPU
 

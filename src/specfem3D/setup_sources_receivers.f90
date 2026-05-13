@@ -2312,24 +2312,23 @@
   ! set flag to save wavefield on coupling points
   do_save_coupling_wavefield = .true.
 
-  ! allocate stress arrays to store element stresses and compute boundary tractions
-  if (.not. allocated(stress_xx)) then
-    ! might be done already in detect_mesh_surfaces() routine for MOVIE_VOLUME_STRESS case
-    ! we will use the same arrays here
-    allocate(stress_xx(NGLLX,NGLLY,NGLLZ,NSPEC_AB), &
-             stress_yy(NGLLX,NGLLY,NGLLZ,NSPEC_AB), &
-             stress_zz(NGLLX,NGLLY,NGLLZ,NSPEC_AB), &
-             stress_xy(NGLLX,NGLLY,NGLLZ,NSPEC_AB), &
-             stress_xz(NGLLX,NGLLY,NGLLZ,NSPEC_AB), &
-             stress_yz(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
-    if (ier /= 0) stop 'error allocating array stress'
-    stress_xx(:,:,:,:) = 0._CUSTOM_REAL
-    stress_yy(:,:,:,:) = 0._CUSTOM_REAL
-    stress_zz(:,:,:,:) = 0._CUSTOM_REAL
-    stress_xy(:,:,:,:) = 0._CUSTOM_REAL
-    stress_xz(:,:,:,:) = 0._CUSTOM_REAL
-    stress_yz(:,:,:,:) = 0._CUSTOM_REAL
-  endif
+  ! allocate stress arrays to store element stresses and compute boundary tractions;
+  ! might be done already in detect_mesh_surfaces() routine for MOVIE_VOLUME_STRESS case
+  ! we will use the same arrays here
+  if (allocated(stress_xx)) deallocate(stress_xx,stress_yy,stress_zz,stress_xy,stress_xz,stress_yz)
+  allocate(stress_xx(NGLLX,NGLLY,NGLLZ,NSPEC_AB), &
+           stress_yy(NGLLX,NGLLY,NGLLZ,NSPEC_AB), &
+           stress_zz(NGLLX,NGLLY,NGLLZ,NSPEC_AB), &
+           stress_xy(NGLLX,NGLLY,NGLLZ,NSPEC_AB), &
+           stress_xz(NGLLX,NGLLY,NGLLZ,NSPEC_AB), &
+           stress_yz(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
+  if (ier /= 0) stop 'error allocating array stress'
+  stress_xx(:,:,:,:) = 0._CUSTOM_REAL
+  stress_yy(:,:,:,:) = 0._CUSTOM_REAL
+  stress_zz(:,:,:,:) = 0._CUSTOM_REAL
+  stress_xy(:,:,:,:) = 0._CUSTOM_REAL
+  stress_xz(:,:,:,:) = 0._CUSTOM_REAL
+  stress_yz(:,:,:,:) = 0._CUSTOM_REAL
 
   ! main process writes out wavefield solutions for all coupling boundary points
   if (myrank == 0) then

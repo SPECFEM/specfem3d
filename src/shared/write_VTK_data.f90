@@ -1629,6 +1629,75 @@
   end subroutine write_VTK_wavefield
 
 
+!
+!-------------------------------------------------------------------------------------------------
+!
+
+  subroutine write_VTK_wavefield_scalar(nspec,nglob,xstore,ystore,zstore,ibool, &
+                                        field,prname_file)
+
+! scalar wavefield output
+
+  use constants, only: CUSTOM_REAL,MAX_STRING_LEN,IOUT_VTK,NGLLX,NGLLY,NGLLZ
+
+  implicit none
+
+  integer,intent(in) :: nspec,nglob
+
+  ! global coordinates
+  integer, dimension(NGLLX,NGLLY,NGLLZ,nspec),intent(in) :: ibool
+  real(kind=CUSTOM_REAL), dimension(nglob),intent(in) :: xstore,ystore,zstore
+
+  ! GLL data values array
+  real(kind=CUSTOM_REAL), dimension(nglob),intent(in) :: field
+
+  ! file name
+  character(len=MAX_STRING_LEN),intent(in) :: prname_file
+
+  ! local parameters
+  integer :: ispec,i
+
+  open(IOUT_VTK,file=prname_file(1:len_trim(prname_file))//'.vtk',status='unknown')
+  write(IOUT_VTK,'(a)') '# vtk DataFile Version 3.1'
+  write(IOUT_VTK,'(a)') 'material model VTK file'
+  write(IOUT_VTK,'(a)') 'ASCII'
+  write(IOUT_VTK,'(a)') 'DATASET UNSTRUCTURED_GRID'
+  write(IOUT_VTK, '(a,i12,a)') 'POINTS ', nglob, ' float'
+  do i = 1,nglob
+    write(IOUT_VTK,'(3e18.6)') xstore(i),ystore(i),zstore(i)
+  enddo
+  write(IOUT_VTK,*) ""
+
+  ! note: indices for vtk start at 0
+  write(IOUT_VTK,'(a,i12,i12)') "CELLS ",nspec,nspec*9
+  do ispec = 1,nspec
+    write(IOUT_VTK,'(9i12)') 8, &
+                             ibool(1,1,1,ispec)-1,ibool(NGLLX,1,1,ispec)-1, &
+                             ibool(NGLLX,NGLLY,1,ispec)-1,ibool(1,NGLLY,1,ispec)-1, &
+                             ibool(1,1,NGLLZ,ispec)-1,ibool(NGLLX,1,NGLLZ,ispec)-1, &
+                             ibool(NGLLX,NGLLY,NGLLZ,ispec)-1,ibool(1,NGLLY,NGLLZ,ispec)-1
+  enddo
+  write(IOUT_VTK,*) ""
+
+  ! type: hexahedrons
+  write(IOUT_VTK,'(a,i12)') "CELL_TYPES ",nspec
+  write(IOUT_VTK,'(6i12)') (12,ispec=1,nspec)
+  write(IOUT_VTK,*) ""
+
+  write(IOUT_VTK,'(a,i12)') "POINT_DATA ",nglob
+
+  ! single wavefield component
+  write(IOUT_VTK,'(a)') "SCALARS field float"
+  write(IOUT_VTK,'(a)') "LOOKUP_TABLE default"
+  do i = 1,nglob
+    write(IOUT_VTK,*) field(i)
+  enddo
+  write(IOUT_VTK,*) ""
+
+  close(IOUT_VTK)
+
+  end subroutine write_VTK_wavefield_scalar
+
 !-------------------------------------------------------------------------------------------------
 !
 ! VTU binary formats

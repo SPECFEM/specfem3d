@@ -43,7 +43,3 @@ doc/USER_MANUAL/Schedule
 .*swn
 *~
 *.pyc
-
-# misc
-.aider*
-

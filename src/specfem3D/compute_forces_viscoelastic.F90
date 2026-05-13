@@ -40,13 +40,12 @@
                                          epsilondev_xz,epsilondev_yz,epsilon_trace_over_3, &
                                          backward_simulation)
 
-  use constants, only: CUSTOM_REAL,NGLLX,NGLLY,NGLLZ,NDIM,N_SLS,ONE_THIRD,FOUR_THIRDS, &
+  use constants, only: CUSTOM_REAL,NGLLX,NGLLY,NGLLZ,NDIM,N_SLS,ONE_THIRD, &
     m1,m2
 
   use shared_parameters, only: SIMULATION_TYPE, &
     USE_LDDRK,LTS_MODE,SAVE_MOHO_MESH, &
-    ATTENUATION,ANISOTROPY, &
-    MOVIE_VOLUME_STRESS
+    ATTENUATION,ANISOTROPY
 
   use fault_solver_common, only: Kelvin_Voigt_eta,USE_KELVIN_VOIGT_DAMPING
 
@@ -62,7 +61,7 @@
                          NSPEC_ATTENUATION_AB,NSPEC_ATTENUATION_AB_LDDRK, &
                          NSPEC_ADJOINT, &
                          is_moho_top,is_moho_bot, &
-                         irregular_element_number,xix_regular,jacobian_regular
+                         irregular_element_number,xix_regular
 
   use specfem_par, only: wgllwgll_xy_3D,wgllwgll_xz_3D,wgllwgll_yz_3D
   !or: use specfem_par, only: wgllwgll_xy,wgllwgll_xz,wgllwgll_yz
@@ -75,6 +74,9 @@
                                  dsdx_top,dsdx_bot, &
                                  ispec2D_moho_top,ispec2D_moho_bot, &
                                  nspec_inner_elastic,nspec_outer_elastic,phase_ispec_inner_elastic
+
+  ! for gravity
+  use specfem_par, only: wgll_cube,minus_g,minus_deriv_gravity
 
   ! movie
   use specfem_par_movie, only: stress_xx,stress_yy,stress_zz,stress_xy,stress_xz,stress_yz
@@ -90,8 +92,8 @@
   ! LTS
   use specfem_par_lts, only: lts_type_compute_pelem,current_lts_elem,current_lts_boundary_elem
 
-  ! coupling
-  use specfem_par_coupling, only: do_save_coupling_wavefield
+  ! element compute routines
+  use mod_element, only: compute_element_iso,compute_element_aniso
 
 #ifdef FORCE_VECTORIZATION
   use constants, only: NGLLCUBE
@@ -157,27 +159,20 @@
   real(kind=CUSTOM_REAL) :: tempy1l,tempy2l,tempy3l
   real(kind=CUSTOM_REAL) :: tempz1l,tempz2l,tempz3l
 
-  real(kind=CUSTOM_REAL) :: xixl,xiyl,xizl,etaxl,etayl,etazl,gammaxl,gammayl,gammazl,jacobianl
-  real(kind=CUSTOM_REAL) :: duxdyl_plus_duydxl,duzdxl_plus_duxdzl,duzdyl_plus_duydzl
-  real(kind=CUSTOM_REAL) :: sigma_xx,sigma_yy,sigma_zz,sigma_xy,sigma_xz,sigma_yz,sigma_yx,sigma_zx,sigma_zy
+  real(kind=CUSTOM_REAL) :: xixl,xiyl,xizl,etaxl,etayl,etazl,gammaxl,gammayl,gammazl
 
   real(kind=CUSTOM_REAL) :: fac1,fac2,fac3
   real(kind=CUSTOM_REAL) :: hp1,hp2,hp3
 
-  real(kind=CUSTOM_REAL) :: lambdal,mul,lambdalplus2mul
-  real(kind=CUSTOM_REAL) :: kappal
+  ! for gravity
+  real(kind=CUSTOM_REAL), dimension(NDIM,NGLLX,NGLLY,NGLLZ) :: rho_s_H
 
   ! faults
   real(kind=CUSTOM_REAL) :: eta
 
-  ! local anisotropy parameters
-  real(kind=CUSTOM_REAL) :: c11,c12,c13,c14,c15,c16,c22,c23,c24,c25,c26, &
-                            c33,c34,c35,c36,c44,c45,c46,c55,c56,c66
-
   ! local attenuation parameters
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ) :: epsilondev_trace_loc, epsilondev_xx_loc, &
             epsilondev_yy_loc, epsilondev_xy_loc, epsilondev_xz_loc, epsilondev_yz_loc
-  real(kind=CUSTOM_REAL) :: R_trace_kappa_sum,R_xx_sum,R_yy_sum
   real(kind=CUSTOM_REAL) :: templ
 
   integer :: ispec,iglob,ispec_p,num_elements
@@ -200,7 +195,7 @@
 !$OMP SHARED( &
 !$OMP num_elements,ibool, &
 !$OMP iphase,phase_ispec_inner_elastic, &
-!$OMP irregular_element_number,jacobian_regular,xix_regular, &
+!$OMP irregular_element_number,xix_regular, &
 !$OMP displ,veloc,accel, &
 !$OMP is_CPML,backward_simulation, &
 !$OMP IS_WAVEFIELD_DISCONTINUITY, &
@@ -214,26 +209,22 @@
 !$OMP c55store,c56store,c66store, &
 !$OMP factor_common,factor_common_kappa, &
 !$OMP COMPUTE_AND_STORE_STRAIN,ATTENUATION,ANISOTROPY,SIMULATION_TYPE, &
-!$OMP MOVIE_VOLUME_STRESS,do_save_coupling_wavefield, &
 !$OMP stress_xx,stress_yy,stress_zz,stress_xy,stress_xz,stress_yz, &
 !$OMP R_xx,R_yy,R_xy,R_xz,R_yz,R_trace, &
 !$OMP epsilondev_xx,epsilondev_yy,epsilondev_xy,epsilondev_xz,epsilondev_yz,epsilondev_trace,epsilon_trace_over_3, &
 !$OMP USE_LDDRK,R_xx_lddrk,R_yy_lddrk,R_xy_lddrk,R_xz_lddrk,R_yz_lddrk,R_trace_lddrk, &
 !$OMP NSPEC_AB,NSPEC_ATTENUATION_AB,NSPEC_ATTENUATION_AB_LDDRK,NSPEC_STRAIN_ONLY, &
 !$OMP SAVE_MOHO_MESH,dsdx_top,dsdx_bot,ispec2D_moho_top,ispec2D_moho_bot,is_moho_top,is_moho_bot, &
-!$OMP LTS_MODE,lts_type_compute_pelem,current_lts_elem,current_lts_boundary_elem &
+!$OMP LTS_MODE,lts_type_compute_pelem,current_lts_elem,current_lts_boundary_elem, &
+!$OMP minus_g,minus_deriv_gravity &
 !$OMP ) &
 !$OMP PRIVATE( &
 !$OMP ispec_p,ispec,ispec_irreg,i,j,k,l,iglob,ispec2D, &
 #ifdef FORCE_VECTORIZATION
 !$OMP ijk, &
 #endif
-!$OMP xixl,xiyl,xizl,etaxl,etayl,etazl,gammaxl,gammayl,gammazl,jacobianl,eta, &
+!$OMP xixl,xiyl,xizl,etaxl,etayl,etazl,gammaxl,gammayl,gammazl,eta, &
 !$OMP duxdxl,duxdyl,duxdzl,duydxl,duydyl,duydzl,duzdxl,duzdyl,duzdzl, &
-!$OMP duxdyl_plus_duydxl,duzdxl_plus_duxdzl,duzdyl_plus_duydzl, &
-!$OMP sigma_xx,sigma_yy,sigma_zz,sigma_xy,sigma_xz,sigma_yz,sigma_yx,sigma_zx,sigma_zy, &
-!$OMP c11,c12,c13,c14,c15,c16,c22,c23,c24,c25,c26,c33,c34,c35,c36,c44,c45,c46,c55,c56,c66, &
-!$OMP lambdal,mul,lambdalplus2mul,kappal, &
 !$OMP hp1,hp2,hp3,fac1,fac2,fac3, &
 !$OMP dummyx_loc,dummyy_loc,dummyz_loc, &
 !$OMP tempx1,tempx2,tempx3,tempy1,tempy2,tempy3,tempz1,tempz2,tempz3, &
@@ -245,13 +236,13 @@
 !$OMP duxdyl_plus_duydxl_att,duzdxl_plus_duxdzl_att,duzdyl_plus_duydzl_att, &
 !$OMP tempx1_att,tempx2_att,tempx3_att,tempy1_att,tempy2_att,tempy3_att,tempz1_att,tempz2_att,tempz3_att, &
 !$OMP epsilondev_trace_loc, epsilondev_xx_loc,epsilondev_yy_loc, epsilondev_xy_loc, epsilondev_xz_loc, epsilondev_yz_loc, &
-!$OMP R_trace_kappa_sum,R_xx_sum,R_yy_sum,templ &
+!$OMP templ,rho_s_h &
 !$OMP ) &
 !$OMP FIRSTPRIVATE( &
 !$OMP hprime_xx,hprime_xxT,hprimewgll_xxT,hprimewgll_xx, &
 !$OMP hprime_yy,hprime_yyT,hprimewgll_yy, &
 !$OMP hprime_zz,hprime_zzT,hprimewgll_zz, &
-!$OMP wgllwgll_yz_3D,wgllwgll_xz_3D,wgllwgll_xy_3D, &
+!$OMP wgllwgll_yz_3D,wgllwgll_xz_3D,wgllwgll_xy_3D,wgll_cube, &
 !$OMP alphaval,betaval,gammaval &
 !$OMP )
 
@@ -328,8 +319,7 @@
       !! note that this is called in adjoint simulation
       if (IS_WAVEFIELD_DISCONTINUITY .and. &
           ((SIMULATION_TYPE == 1) .or. backward_simulation)) then
-        call add_displacement_discontinuity_element(ispec, dummyx_loc, &
-                                                  dummyy_loc, dummyz_loc)
+        call add_displacement_discontinuity_element(ispec, dummyx_loc, dummyy_loc, dummyz_loc)
       endif
     endif
 
@@ -587,148 +577,38 @@
     endif ! COMPUTE_AND_STORE_STRAIN
 
     ! stresses
-    DO_LOOP_IJK
-      ! precompute some sums to save CPU time
-      duxdyl_plus_duydxl = duxdyl(INDEX_IJK) + duydxl(INDEX_IJK)
-      duzdxl_plus_duxdzl = duzdxl(INDEX_IJK) + duxdzl(INDEX_IJK)
-      duzdyl_plus_duydzl = duzdyl(INDEX_IJK) + duydzl(INDEX_IJK)
-
-      ! computes either isotropic or anisotropic element stresses
-      if (ANISOTROPY) then
-        ! full anisotropic case, stress calculations
-        c11 = c11store(INDEX_IJK,ispec)
-        c12 = c12store(INDEX_IJK,ispec)
-        c13 = c13store(INDEX_IJK,ispec)
-        c14 = c14store(INDEX_IJK,ispec)
-        c15 = c15store(INDEX_IJK,ispec)
-        c16 = c16store(INDEX_IJK,ispec)
-        c22 = c22store(INDEX_IJK,ispec)
-        c23 = c23store(INDEX_IJK,ispec)
-        c24 = c24store(INDEX_IJK,ispec)
-        c25 = c25store(INDEX_IJK,ispec)
-        c26 = c26store(INDEX_IJK,ispec)
-        c33 = c33store(INDEX_IJK,ispec)
-        c34 = c34store(INDEX_IJK,ispec)
-        c35 = c35store(INDEX_IJK,ispec)
-        c36 = c36store(INDEX_IJK,ispec)
-        c44 = c44store(INDEX_IJK,ispec)
-        c45 = c45store(INDEX_IJK,ispec)
-        c46 = c46store(INDEX_IJK,ispec)
-        c55 = c55store(INDEX_IJK,ispec)
-        c56 = c56store(INDEX_IJK,ispec)
-        c66 = c66store(INDEX_IJK,ispec)
-
-        sigma_xx = c11 * duxdxl(INDEX_IJK) + c16 * duxdyl_plus_duydxl + c12 * duydyl(INDEX_IJK) + &
-                   c15 * duzdxl_plus_duxdzl + c14 * duzdyl_plus_duydzl + c13 * duzdzl(INDEX_IJK)
-        sigma_yy = c12 * duxdxl(INDEX_IJK) + c26 * duxdyl_plus_duydxl + c22 * duydyl(INDEX_IJK) + &
-                   c25 * duzdxl_plus_duxdzl + c24 * duzdyl_plus_duydzl + c23 * duzdzl(INDEX_IJK)
-        sigma_zz = c13 * duxdxl(INDEX_IJK) + c36 * duxdyl_plus_duydxl + c23 * duydyl(INDEX_IJK) + &
-                   c35 * duzdxl_plus_duxdzl + c34 * duzdyl_plus_duydzl + c33 * duzdzl(INDEX_IJK)
-        sigma_xy = c16 * duxdxl(INDEX_IJK) + c66 * duxdyl_plus_duydxl + c26 * duydyl(INDEX_IJK) + &
-                   c56 * duzdxl_plus_duxdzl + c46 * duzdyl_plus_duydzl + c36 * duzdzl(INDEX_IJK)
-        sigma_xz = c15 * duxdxl(INDEX_IJK) + c56 * duxdyl_plus_duydxl + c25 * duydyl(INDEX_IJK) + &
-                   c55 * duzdxl_plus_duxdzl + c45 * duzdyl_plus_duydzl + c35 * duzdzl(INDEX_IJK)
-        sigma_yz = c14 * duxdxl(INDEX_IJK) + c46 * duxdyl_plus_duydxl + c24 * duydyl(INDEX_IJK) + &
-                   c45 * duzdxl_plus_duxdzl + c44 * duzdyl_plus_duydzl + c34 * duzdzl(INDEX_IJK)
-
-      else
-        ! isotropic case
-        kappal = kappastore(INDEX_IJK,ispec)
-        mul = mustore(INDEX_IJK,ispec)
-
-        lambdalplus2mul = kappal + FOUR_THIRDS * mul
-        lambdal = lambdalplus2mul - 2._CUSTOM_REAL * mul
-
-        ! compute stress sigma
-        sigma_xx = lambdalplus2mul * duxdxl(INDEX_IJK) + lambdal * (duydyl(INDEX_IJK) + duzdzl(INDEX_IJK))
-        sigma_yy = lambdalplus2mul * duydyl(INDEX_IJK) + lambdal * (duxdxl(INDEX_IJK) + duzdzl(INDEX_IJK))
-        sigma_zz = lambdalplus2mul * duzdzl(INDEX_IJK) + lambdal * (duxdxl(INDEX_IJK) + duydyl(INDEX_IJK))
-
-        sigma_xy = mul * duxdyl_plus_duydxl
-        sigma_xz = mul * duzdxl_plus_duxdzl
-        sigma_yz = mul * duzdyl_plus_duydzl
-      endif ! ANISOTROPY
-
-      ! subtract memory variables if attenuation
-      if (ATTENUATION .and. .not. is_CPML(ispec)) then
-        R_xx_sum = sum(R_xx(:,INDEX_IJK,ispec))
-        R_yy_sum = sum(R_yy(:,INDEX_IJK,ispec))
-        R_trace_kappa_sum = sum(R_trace(:,INDEX_IJK,ispec))
-
-        ! in case no bulk attenuation is desired:
-        !R_trace_kappa_sum = 0.0
-
-        sigma_xx = sigma_xx - R_xx_sum - R_trace_kappa_sum
-        sigma_yy = sigma_yy - R_yy_sum - R_trace_kappa_sum
-        sigma_zz = sigma_zz + R_xx_sum + R_yy_sum - R_trace_kappa_sum
-        sigma_xy = sigma_xy - sum(R_xy(:,INDEX_IJK,ispec))
-        sigma_xz = sigma_xz - sum(R_xz(:,INDEX_IJK,ispec))
-        sigma_yz = sigma_yz - sum(R_yz(:,INDEX_IJK,ispec))
-      endif
-
-      ! stores stress for movie output
-      ! and SPECFEM coupling injection technique to compute traction on boundary point
-      if (MOVIE_VOLUME_STRESS .or. do_save_coupling_wavefield) then
-        ! store stress tensor
-        stress_xx(INDEX_IJK,ispec) = sigma_xx
-        stress_yy(INDEX_IJK,ispec) = sigma_yy
-        stress_zz(INDEX_IJK,ispec) = sigma_zz
-        stress_xy(INDEX_IJK,ispec) = sigma_xy
-        stress_xz(INDEX_IJK,ispec) = sigma_xz
-        stress_yz(INDEX_IJK,ispec) = sigma_yz
-      endif
-
-      if (.not. is_CPML(ispec)) then
-        ! define symmetric components of sigma
-        sigma_yx = sigma_xy
-        sigma_zx = sigma_xz
-        sigma_zy = sigma_yz
-
-        ! dot product with test vector
-        if (ispec_irreg /= 0) then
-          ! irregular element
-          xixl = xixstore(INDEX_IJK,ispec_irreg)
-          xiyl = xiystore(INDEX_IJK,ispec_irreg)
-          xizl = xizstore(INDEX_IJK,ispec_irreg)
-          etaxl = etaxstore(INDEX_IJK,ispec_irreg)
-          etayl = etaystore(INDEX_IJK,ispec_irreg)
-          etazl = etazstore(INDEX_IJK,ispec_irreg)
-          gammaxl = gammaxstore(INDEX_IJK,ispec_irreg)
-          gammayl = gammaystore(INDEX_IJK,ispec_irreg)
-          gammazl = gammazstore(INDEX_IJK,ispec_irreg)
-          jacobianl = jacobianstore(INDEX_IJK,ispec_irreg)
-
-          ! form dot product with test vector, non-symmetric form (which is useful in the case of PML)
-          tempx1(INDEX_IJK) = jacobianl * (sigma_xx * xixl + sigma_yx * xiyl + sigma_zx * xizl) ! this goes to accel_x
-          tempy1(INDEX_IJK) = jacobianl * (sigma_xy * xixl + sigma_yy * xiyl + sigma_zy * xizl) ! this goes to accel_y
-          tempz1(INDEX_IJK) = jacobianl * (sigma_xz * xixl + sigma_yz * xiyl + sigma_zz * xizl) ! this goes to accel_z
-
-          tempx2(INDEX_IJK) = jacobianl * (sigma_xx * etaxl + sigma_yx * etayl + sigma_zx * etazl) ! this goes to accel_x
-          tempy2(INDEX_IJK) = jacobianl * (sigma_xy * etaxl + sigma_yy * etayl + sigma_zy * etazl) ! this goes to accel_y
-          tempz2(INDEX_IJK) = jacobianl * (sigma_xz * etaxl + sigma_yz * etayl + sigma_zz * etazl) ! this goes to accel_z
-
-          tempx3(INDEX_IJK) = jacobianl * (sigma_xx * gammaxl + sigma_yx * gammayl + sigma_zx * gammazl) ! this goes to accel_x
-          tempy3(INDEX_IJK) = jacobianl * (sigma_xy * gammaxl + sigma_yy * gammayl + sigma_zy * gammazl) ! this goes to accel_y
-          tempz3(INDEX_IJK) = jacobianl * (sigma_xz * gammaxl + sigma_yz * gammayl + sigma_zz * gammazl) ! this goes to accel_z
-        else
-          !regular element
-          jacobianl = jacobian_regular
-
-          ! form dot product with test vector, non-symmetric form (which is useful in the case of PML)
-          tempx1(INDEX_IJK) = jacobianl * sigma_xx * xix_regular ! this goes to accel_x
-          tempy1(INDEX_IJK) = jacobianl * sigma_xy * xix_regular ! this goes to accel_y
-          tempz1(INDEX_IJK) = jacobianl * sigma_xz * xix_regular ! this goes to accel_z
-
-          tempx2(INDEX_IJK) = jacobianl * sigma_yx * xix_regular ! this goes to accel_x
-          tempy2(INDEX_IJK) = jacobianl * sigma_yy * xix_regular ! this goes to accel_y
-          tempz2(INDEX_IJK) = jacobianl * sigma_yz * xix_regular ! this goes to accel_z
-
-          tempx3(INDEX_IJK) = jacobianl * sigma_zx * xix_regular ! this goes to accel_x
-          tempy3(INDEX_IJK) = jacobianl * sigma_zy * xix_regular ! this goes to accel_y
-          tempz3(INDEX_IJK) = jacobianl * sigma_zz * xix_regular ! this goes to accel_z
-        endif
-      endif
-    ENDDO_LOOP_IJK
+    ! computes either isotropic or anisotropic element stresses
+    if (ANISOTROPY) then
+      ! full anisotropic case
+      call compute_element_aniso(ispec,ispec_irreg, &
+                                 minus_g,minus_deriv_gravity,rho_s_H, &
+                                 xixstore,xiystore,xizstore,etaxstore,etaystore,etazstore, &
+                                 gammaxstore,gammaystore,gammazstore,jacobianstore, &
+                                 duxdxl,duxdyl,duxdzl,duydxl,duydyl,duydzl,duzdxl,duzdyl,duzdzl, &
+                                 wgll_cube, &
+                                 c11store,c12store,c13store,c14store,c15store,c16store,c22store, &
+                                 c23store,c24store,c25store,c26store,c33store,c34store,c35store, &
+                                 c36store,c44store,c45store,c46store,c55store,c56store,c66store, &
+                                 ibool, &
+                                 R_xx,R_yy,R_xy,R_xz,R_yz,R_trace, &
+                                 stress_xx,stress_yy,stress_zz,stress_xy,stress_xz,stress_yz, &
+                                 tempx1,tempx2,tempx3,tempy1,tempy2,tempy3,tempz1,tempz2,tempz3, &
+                                 dummyx_loc,dummyy_loc,dummyz_loc)
+    else
+      ! isotropic case
+      call compute_element_iso(ispec,ispec_irreg, &
+                               minus_g,minus_deriv_gravity,rho_s_H, &
+                               xixstore,xiystore,xizstore,etaxstore,etaystore,etazstore, &
+                               gammaxstore,gammaystore,gammazstore,jacobianstore, &
+                               duxdxl,duxdyl,duxdzl,duydxl,duydyl,duydzl,duzdxl,duzdyl,duzdzl, &
+                               wgll_cube, &
+                               kappastore,mustore, &
+                               ibool, &
+                               R_xx,R_yy,R_xy,R_xz,R_yz,R_trace, &
+                               stress_xx,stress_yy,stress_zz,stress_xy,stress_xz,stress_yz, &
+                               tempx1,tempx2,tempx3,tempy1,tempy2,tempy3,tempz1,tempz2,tempz3, &
+                               dummyx_loc,dummyy_loc,dummyz_loc)
+    endif
 
     ! second double-loop over GLL to compute all the terms
 

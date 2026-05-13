@@ -29,6 +29,9 @@
 
 #include "mesh_constants_gpu.h"
 
+// number of GPU cards (per compute node)
+static int number_of_gpu_devices = 0;
+
 // gpu runtime flags
 int run_cuda = 0;
 int run_hip = 0;
@@ -56,18 +59,18 @@ int run_hip = 0;
 #endif
 
 
-void initialize_cuda_device(int* myrank_f,int* ncuda_devices) {
+void initialize_cuda_device(int myrank,int* nb_devices) {
 
   TRACE("initialize_cuda_device");
 
   int device;
-  int device_count;
+  int device_count = 0;
+
+  // user error info
+  const char* err_info = "Please check GPU settings on your node \n\n";
 
   // sets gpu runtime flag
   run_cuda = 1;
-
-  // Gets rank number of MPI process
-  int myrank = *myrank_f;
 
   /*
    // cuda initialization (needs -lcuda library)
@@ -102,7 +105,6 @@ void initialize_cuda_device(int* myrank_f,int* ncuda_devices) {
   // note: from here on we use the runtime API  ...
 
   // Gets number of GPU devices
-  device_count = 0;
   cudaGetDeviceCount(&device_count);
   // Do not check if command failed with `exit_on_gpu_error` since it calls cudaDevice()/ThreadSynchronize():
   // If multiple MPI tasks access multiple GPUs per node, they will try to synchronize
@@ -131,8 +133,11 @@ void initialize_cuda_device(int* myrank_f,int* ncuda_devices) {
   // checks if CUDA devices available
   if (device_count == 0) exit_on_error("CUDA runtime error: there is no device supporting CUDA\n");
 
+  // stores counts
+  number_of_gpu_devices = device_count;
+
   // returns device count to fortran
-  *ncuda_devices = device_count;
+  *nb_devices = number_of_gpu_devices;
 
   // Sets the active device
   if (device_count >= 1) {
@@ -157,6 +162,15 @@ void initialize_cuda_device(int* myrank_f,int* ncuda_devices) {
 
     // double check that device was  properly selected
     cudaGetDevice(&device);
+
+    err = cudaGetLastError();
+    if (err != cudaSuccess) {
+      fprintf(stderr,"Error cudaGetDevice: %s\n", cudaGetErrorString(err));
+      if (err == cudaErrorDevicesUnavailable){ fprintf(stderr,"\n%s\n", err_info); }
+      exit_on_error("CUDA runtime error: cudaGetDevice failed\n\n");
+    }
+
+    // checks device id
     if (device != GPU_DEVICE_ID ){
        printf("Error rank: %d devices: %d \n",myrank,device_count);
        printf("  cudaSetDevice()=%d\n  cudaGetDevice()=%d\n",GPU_DEVICE_ID,device);
@@ -172,6 +186,15 @@ void initialize_cuda_device(int* myrank_f,int* ncuda_devices) {
 
     // double check that device was  properly selected
     cudaGetDevice(&device);
+
+    err = cudaGetLastError();
+    if (err != cudaSuccess) {
+      fprintf(stderr,"Error cudaGetDevice: %s\n", cudaGetErrorString(err));
+      if (err == cudaErrorDevicesUnavailable){ fprintf(stderr,"\n%s\n", err_info); }
+      exit_on_error("CUDA runtime error: cudaGetDevice failed\n\n");
+    }
+
+    // checks device id
     if (device != (myrank % device_count) ){
        printf("Error rank: %d devices: %d \n",myrank,device_count);
        printf("  cudaSetDevice()=%d\n  cudaGetDevice()=%d\n",myrank%device_count,device);
@@ -179,13 +202,30 @@ void initialize_cuda_device(int* myrank_f,int* ncuda_devices) {
     }
 #endif
   }
+}
+
+// outputs devices infos
+
+static void output_cuda_device_infos(int myrank){
+
+  struct cudaDeviceProp deviceProp;
+  int device;
 
   // returns a handle to the active device
   cudaGetDevice(&device);
+  exit_on_gpu_error("cudaGetDevice failed");
+
+  // Gets number of GPU devices & version infos
+  int device_count = 0;
+  int driverVersion = 0, runtimeVersion = 0;
+
+  cudaGetDeviceCount(&device_count);
+  cudaDriverGetVersion(&driverVersion);
+  cudaRuntimeGetVersion(&runtimeVersion);
 
   // get device properties
-  struct cudaDeviceProp deviceProp;
   cudaGetDeviceProperties(&deviceProp,device);
+  exit_on_gpu_error("cudaGetDeviceProperties failed");
 
   // exit if the machine has no CUDA-enabled device
   if (deviceProp.major == 9999 && deviceProp.minor == 9999){
@@ -200,10 +240,9 @@ void initialize_cuda_device(int* myrank_f,int* ncuda_devices) {
   // outputs device infos to file
   char filename[BUFSIZ];
   FILE* fp;
-  int do_output_info;
+  int do_output_info = 0;
 
   // by default, only main process outputs device infos to avoid file cluttering
-  do_output_info = 0;
   if (myrank == 0){
     do_output_info = 1;
     sprintf(filename,OUTPUT_FILES"/gpu_device_info.txt");
@@ -322,15 +361,12 @@ void initialize_cuda_device(int* myrank_f,int* ncuda_devices) {
 
 #ifdef USE_HIP
 
-void initialize_hip_device(int* myrank_f,int* ncuda_devices) {
+void initialize_hip_device(int myrank,int* nb_devices) {
 
   TRACE("initialize_hip_device");
 
   int device;
-  int device_count;
-
-  // Gets rank number of MPI process
-  int myrank = *myrank_f;
+  int device_count = 0;
 
   // first HIP call
   //
@@ -340,8 +376,8 @@ void initialize_hip_device(int* myrank_f,int* ncuda_devices) {
   //if (status != hipSuccess) exit_on_error("HIP initialization failed\n");
   //
   // gets number of devices
-  device_count = 0;
   hipGetDeviceCount(&device_count);
+
   hipError_t err = hipGetLastError();
 
   // adds quick check on versions
@@ -363,8 +399,11 @@ void initialize_hip_device(int* myrank_f,int* ncuda_devices) {
   // checks if HIP devices available
   if (device_count == 0) exit_on_error("HIP runtime error: no HIP devices available\n");
 
+  // stores counts
+  number_of_gpu_devices = device_count;
+
   // returns device count to fortran
-  *ncuda_devices = device_count;
+  *nb_devices = number_of_gpu_devices;
 
   // Sets the active device
   if (device_count >= 1) {
@@ -373,11 +412,7 @@ void initialize_hip_device(int* myrank_f,int* ncuda_devices) {
     //         "setting the device when a process is active is not allowed"
 
     // releases previous contexts
-#if CUDA_VERSION < 4000
     hipDeviceReset();
-#else
-    hipDeviceReset();
-#endif
 
     //printf("rank %d: cuda device count = %d sets device = %d \n",myrank,device_count,myrank % device_count);
     //MPI_Barrier(MPI_COMM_WORLD);
@@ -415,13 +450,28 @@ void initialize_hip_device(int* myrank_f,int* ncuda_devices) {
     }
 #endif
   }
+}
+
+// outputs devices infos
+
+static void output_hip_device_infos(int myrank){
+
+  struct hipDeviceProp_t deviceProp;
+  int device;
 
   // returns a handle to the active device
   hipGetDevice(&device);
   exit_on_gpu_error("hipGetDevice failed");
 
+  // Gets number of GPU devices & version infos
+  int device_count = 0;
+  int driverVersion = 0, runtimeVersion = 0;
+
+  hipGetDeviceCount(&device_count);
+  hipDriverGetVersion(&driverVersion);
+  hipRuntimeGetVersion(&runtimeVersion);
+
   // get device properties
-  struct hipDeviceProp_t deviceProp;
   hipGetDeviceProperties(&deviceProp,device);
   exit_on_gpu_error("hipGetDevicePropoerties failed");
 
@@ -432,10 +482,9 @@ void initialize_hip_device(int* myrank_f,int* ncuda_devices) {
   // outputs device infos to file
   char filename[BUFSIZ];
   FILE* fp;
-  int do_output_info;
+  int do_output_info = 0;
 
   // by default, only master process outputs device infos to avoid file cluttering
-  do_output_info = 0;
   if (myrank == 0){
     do_output_info = 1;
     sprintf(filename,OUTPUT_FILES"/gpu_device_info.txt");
@@ -494,13 +543,11 @@ void initialize_hip_device(int* myrank_f,int* ncuda_devices) {
     }
   }
 
-  /* daniel todo: check in case this applies...
   // we use pinned memory for asynchronous copy
   if (! deviceProp.canMapHostMemory){
     fprintf(stderr,"Device capability should allow to map host memory, exiting...\n");
-    exit_on_error("CUDA Device capability canMapHostMemory should be TRUE\n");
+    exit_on_error("HIP Device capability canMapHostMemory should be TRUE\n");
   }
-  */
 
   // checks kernel optimization setting
 #ifdef USE_LAUNCH_BOUNDS
@@ -538,29 +585,277 @@ void initialize_hip_device(int* myrank_f,int* ncuda_devices) {
 
 extern EXTERN_LANG
 void FC_FUNC_(initialize_gpu_device,
-              INITIALIZE_GPU_DEVICE)(int* myrank_f,int* ncuda_devices) {
+              INITIALIZE_GPU_DEVICE)(int* myrank_f,int* nb_devices,int* cuda_aware_mpi_init_type) {
 
   TRACE("initialize_gpu_device");
 
+  // rank
+  int myrank = *myrank_f;
+  int init_type = *cuda_aware_mpi_init_type;
+
+  // flags to run initialization and output device infos
+  int do_init = 1;
+  int do_output = 1;
+
   // check if compiled with both CUDA and HIP support
 #if defined(USE_CUDA) && defined(USE_HIP)
-  if (*myrank_f == 0) {
-    printf("Error: GPU version compilation with both USE_CUDA and USE_HIP not supported yet.\nPlease only use one for now...\n\n",);
+  if (myrank == 0) {
+    printf("Error: GPU version compilation with both USE_CUDA and USE_HIP not supported yet.\nPlease only use one for now...\n\n");
   }
   exit(1);
 #endif
 
-  // initializes gpu cards
-#ifdef USE_CUDA
-  run_cuda = 1;
-  if (run_cuda) {
-    initialize_cuda_device(myrank_f, ncuda_devices);
+  // CUDA-aware MPI
+  // we need to set the GPU device before MPI_init but should avoid calling further CUDA calls to avoid issues.
+  // for example, on Summit the PAMI backend uses "CUDA hooks" and would complain about:
+  //    CUDA Hook Library: Failed to find symbol mem_find_dreg_entries, ./bin/xspecfem3D: undefined symbol: __PAMI_Invalidate_region
+  // see: https://docs.olcf.ornl.gov/systems/summit_user_guide.html#cuda-hook-error-when-program-uses-cuda-without-first-calling-mpi-init
+  //
+  // thus, we separate the initialization and the device output (which contains a memory allocation check leading to this problem).
+#ifdef WITH_CUDA_AWARE_MPI
+  // checks if initialize called by CUDA-aware check
+  if (init_type == 1) {
+    // initial call to set device
+    if (myrank == 0){ printf("using CUDA-aware MPI: initializing GPU devices\n"); }
+    // only initialization
+    do_init = 1;
+    do_output = 0;
+  }else if (init_type == 2){
+    // called again with Par_file setting
+    if (myrank == 0){ printf("using CUDA-aware MPI: returning number of devices = %d\n",number_of_gpu_devices); }
+    // already initialized
+    *nb_devices = number_of_gpu_devices;
+    // only device infos
+    do_init = 0;
+    do_output = 1;
   }
+#endif // WITH_CUDA_AWARE_MPI
+
+  // initializes gpu cards
+  if (do_init) {
+#ifdef USE_CUDA
+    run_cuda = 1;
+    if (run_cuda) { initialize_cuda_device(myrank, nb_devices); }
 #endif
 #ifdef USE_HIP
-  run_hip = 1;
-  if (run_hip) {
-    initialize_hip_device(myrank_f, ncuda_devices);
-  }
+    run_hip = 1;
+    if (run_hip) { initialize_hip_device(myrank, nb_devices); }
 #endif
+  }
+
+  // outputs device infos
+  if (do_output){
+#ifdef USE_CUDA
+    if (run_cuda) { output_cuda_device_infos(myrank); }
+#endif
+#ifdef USE_HIP
+    if (run_hip) { output_hip_device_infos(myrank); }
+#endif
+  }
 }
+
+/* ----------------------------------------------------------------------------------------------- */
+
+// CUDA-aware MPI
+// we need to call cudaSetDevice before MPI_Init to ensure that the same GPU is chosen by MPI and your application
+
+// CUDA-aware support compile-time information
+#ifdef WITH_CUDA_AWARE_MPI
+// rank info
+#if defined(OPEN_MPI) && OPEN_MPI
+// OpenMPI
+#pragma message ("\n\nCompiling with: WITH_CUDA_AWARE_MPI uses OPEN_MPI CUDA-aware local rank\n")
+#elif defined(MVAPICH2_NUMVERSION) && (MVAPICH2_NUMVERSION >= 20205300)
+// MVAPICH
+#pragma message ("\n\nCompiling with: WITH_CUDA_AWARE_MPI uses MVAPICH2 CUDA-aware local rank\n")
+#else
+// unknown
+#pragma message ("\n\nCompiling with: unknown CUDA-aware local rank environment, use -DENV_LOCAL_RANK \"<MY_LOCAL_RANK>\" setting\n")
+#endif
+// MPIX query
+#if defined(MPIX_CUDA_AWARE_SUPPORT)
+#pragma message ("\n\nCompiling with: WITH_CUDA_AWARE_MPI has MPIX_CUDA_AWARE_SUPPORT\n")
+#else
+#pragma message ("\n\nCompiling with: WITH_CUDA_AWARE_MPI has no MPIX_CUDA_AWARE_SUPPORT, please check MPI installation\n")
+#endif  // MPIX_CUDA_AWARE_SUPPORT
+#endif  // WITH_CUDA_AWARE_MPI
+
+extern EXTERN_LANG
+void FC_FUNC_ (check_cuda_aware_mpi,
+               CHECK_CUDA_AWARE_MPI) (int* has_cuda_aware_mpi_f) {
+
+  TRACE ("check_cuda_aware_mpi");
+
+  // flags
+  int has_cuda_aware_mpi = 0;
+
+#ifdef WITH_CUDA_AWARE_MPI
+  // environment variable which allows the reading of the local rank of the current MPI
+  // process before the MPI environment gets initialized with MPI_Init().
+  //
+  // This is necessary when running the CUDA-aware MPI version, which needs this information in order to be able to
+  // set the CUDA device for the MPI process before MPI environment initialization.
+  //
+  // If you are using MVAPICH2, set this constant to "MV2_COMM_WORLD_LOCAL_RANK";
+  // for Open MPI, use "OMPI_COMM_WORLD_LOCAL_RANK".
+#if defined(OPEN_MPI) && OPEN_MPI
+// OpenMPI
+#define ENV_LOCAL_RANK    "OMPI_COMM_WORLD_LOCAL_RANK"
+#elif defined(MVAPICH2_NUMVERSION) && (MVAPICH2_NUMVERSION >= 20205300)
+// MVAPICH
+#define ENV_LOCAL_RANK    "MV2_COMM_WORLD_LOCAL_RANK"
+#else
+// unknown
+// defines local rank environment variables as unknown if not set by compilation flag, mostly to be able to run getenv() command
+#ifndef ENV_LOCAL_RANK
+#define ENV_LOCAL_RANK    "UNKNOWN_LOCAL_RANK"
+#endif
+#endif  // OPEN_MPI
+
+  // sets GPU device before MPI initialization
+  // MPI will then recognize the setting and take over the GPU device setup
+
+  // determine local rank
+  // note: local rank is the rank id per compute node
+  //       for example, 4 MPI processes per node -> local rank id = 0,1,2,3 on all cmopute nodes
+  //       not the same as the MPI rank which goes from 0 to MPI size-1
+  int has_local_rank_info = 0;
+  int rank = 0;
+  char * localRankStr = NULL;
+
+  // info
+  const char* msg;
+
+  // local rank info from environment
+  if ((localRankStr = getenv(ENV_LOCAL_RANK)) != NULL) {
+    // catching OpenMPI environment rank
+    rank = atoi(localRankStr);
+    has_local_rank_info = 1;
+  } else {
+    // no OpenMPI environment rank found, initializing myrank to zero
+    rank = 0;
+    has_local_rank_info = 0;
+  }
+
+  // debug
+  //printf("[check_cuda_aware_mpi] CUDA-aware check: has_local_rank_info = %d  -  local rank = %d\n",has_local_rank_info,rank);
+
+  // enables CUDA-aware MPI support
+  if (has_local_rank_info){
+    // user output
+    if (rank == 0){ printf("\nchecking CUDA-aware MPI\n\n");}
+
+    // debug
+    //printf("[check_cuda_aware_mpi] compile time check for CUDA-aware MPI - rank %d\n",rank);
+
+#if defined(MPIX_CUDA_AWARE_SUPPORT)
+    // assume CUDA-aware support, will run query later to double-check
+    has_cuda_aware_mpi = 1;
+    msg = "\
+This version has been compiled with flag WITH_CUDA_AWARE_MPI and MPI library has MPIX query cuda support.\n \
+We assume CUDA-aware MPI.\n\n";
+#else
+    // no MPIX query support
+    has_cuda_aware_mpi = 0;
+    msg = "\
+This version has been compiled with flag WITH_CUDA_AWARE_MPI, but MPI library cannot determine if there is CUDA-aware support.\n \
+Please check MPI installation.\n\n";
+    //debug
+    //printf("[check_cuda_aware_mpi] rank = %d - no MPIX has cuda aware MPI = %d\n",rank,has_cuda_aware_mpi);
+#endif  // MPIX_CUDA_AWARE_SUPPORT
+
+    // user info
+    if (rank == 0){
+      printf("%s",msg);
+    }
+    // debug
+    //printf("[check_cuda_aware_mpi] query cuda support: MPI library CUDA-aware support - rank %d has support %d\n\n",rank,has_cuda_aware_mpi);
+
+    // sets local rank's GPU association
+    if (has_cuda_aware_mpi){
+      // dummy value, not needed at this point
+      int dummy_nb_devices;
+      int init_type = 1; // type 1 == only initialize, no device info output yet
+      // debug
+      //printf("debug: setting - rank %d has support %d - running GPU init\n\n",rank,has_cuda_aware_mpi);
+
+      // sets device
+      FC_FUNC_(initialize_gpu_device,INITIALIZE_GPU_DEVICE)(&rank,&dummy_nb_devices,&init_type);
+    }
+  }
+
+#endif // WITH_CUDA_AWARE_MPI
+
+  // return value
+  *has_cuda_aware_mpi_f = has_cuda_aware_mpi;
+}
+
+/* ----------------------------------------------------------------------------------------------- */
+
+// note: MPIX_Query_cuda_support() can only be called after MPI_init().
+//       However, for CUDA-aware MPI, we must set the device with cudaSetDevice() before MPI_init().
+//       Thus, we use a compile-time check for MPIX_CUDA_AWARE_SUPPORT to see if there is CUDA-aware MPI support.
+//       And then use the query here after setting device and MPI initialization as a validity check of the loaded MPI system.
+
+extern EXTERN_LANG
+void FC_FUNC_ (query_cuda_aware_mpi,
+               QUERY_CUDA_AWARE_MPI) (int* myrank_f, int* has_cuda_aware_mpi_f) {
+
+  TRACE ("query_cuda_aware_mpi");
+
+  // rank
+  int myrank = *myrank_f;
+
+  // flags
+  int has_cuda_aware_mpi = 0;
+
+#ifdef WITH_CUDA_AWARE_MPI
+  // debug output to file
+  char filename[BUFSIZ];
+  FILE* fp;
+  const char* msg;
+
+  sprintf(filename,OUTPUT_FILES"/gpu_aware_info.txt");
+
+#if defined(MPIX_CUDA_AWARE_SUPPORT)
+  int ret = MPIX_Query_cuda_support();
+  if (ret == 1) {
+    // MPI library loaded has CUDA-aware support
+    has_cuda_aware_mpi = 1;
+    msg = "CUDA-aware support is available. MPIX query returned CUDA support.\n";
+  } else {
+    // MPI library does not have CUDA-aware support
+    has_cuda_aware_mpi = 0;
+    msg = "CUDA-aware support is disabled or unavailable. MPIX query returned no CUDA support.\n";
+  }
+  //debug
+  //printf("[query_cuda_aware_mpi] myrank = %d - MPIX query: has cuda aware MPI = %d\n",myrank,has_cuda_aware_mpi);
+#else
+  // no MPIX query support
+  has_cuda_aware_mpi = 0;
+  msg = "\
+This version has been compiled with flag WITH_CUDA_AWARE_MPI, but MPI library cannot determine if there is CUDA-aware support.\n \
+Please check MPI installation.\n";
+  //debug
+  //printf("[query_cuda_aware_mpi] myrank = %d - no MPIX has cuda aware MPI = %d\n",myrank,has_cuda_aware_mpi);
+#endif  // MPIX_CUDA_AWARE_SUPPORT
+
+  // user info
+  if (myrank == 0){
+    printf("%s",msg);
+  }
+
+  // file output
+  if (myrank == 0){
+    fp = fopen(filename,"w");
+    if (fp != NULL){
+      fprintf (fp, "%s", msg);
+      fclose(fp);
+    }
+  }
+#endif // WITH_CUDA_AWARE_MPI
+
+  // return value
+  *has_cuda_aware_mpi_f = has_cuda_aware_mpi;
+}
+

@@ -225,7 +225,7 @@ if [ -e DATA/Par_file ]; then
   cp -v DATA/Par_file DATA/Par_file.bak
 fi
 
-# use kernel script
+# runs simulation
 if [ "${RUN_KERNEL}" == "true" ]; then
   # use kernel script
   ./run_this_example_kernel.sh | tee output.log

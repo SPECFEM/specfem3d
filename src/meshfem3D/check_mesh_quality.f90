@@ -363,7 +363,7 @@
                                         equiangle_skewness,edge_aspect_ratio,diagonal_aspect_ratio, &
                                         stability,distmin,distmax)
 
-  use constants, only: NGNOD_EIGHT_CORNERS,PI,HUGEVAL
+  use constants, only: NGNOD_EIGHT_CORNERS,PI,HUGEVAL,ZERO
   use constants_meshfem, only: NGLLX_M,NGLLY_M,NGLLZ_M
 
   implicit none
@@ -514,6 +514,13 @@
         ! norm of vectors A and B
         norm_A = sqrt(vectorA_x**2 + vectorA_y**2 + vectorA_z**2)
         norm_B = sqrt(vectorB_x**2 + vectorB_y**2 + vectorB_z**2)
+
+        ! sanity check
+        if (norm_A <= ZERO .or. norm_B <= ZERO) then
+          print *,'Error: invalid norm detected in face ',iface,' corner ',icorner
+          print *,'       norm_A, norm_B = ',norm_A, norm_B
+          stop 'Error in the norm found'
+        endif
 
         ! angle formed by the two vectors
         argument_of_arccos = (vectorA_x*vectorB_x + vectorA_y*vectorB_y + vectorA_z*vectorB_z) / (norm_A * norm_B)

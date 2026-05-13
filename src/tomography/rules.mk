@@ -149,6 +149,13 @@ xadd_model_OBJECTS += $(adios_specfem3D_STUBS)
 endif
 
 
+###
+### GPU
+###
+
+# cuda stubs
+xadd_model_SHARED_OBJECTS += $(gpu_specfem3D_STUBS)
+
 # extra dependencies
 $O/add_model_iso.tomo.o: $O/specfem3D_par.spec_module.o $O/tomography_par.tomo_module.o
 
@@ -184,6 +191,7 @@ xmodel_update_SHARED_OBJECTS = \
 	$O/compute_add_sources_viscoelastic.spec.o \
 	$O/compute_adj_source_frechet.spec.o \
 	$O/compute_arrays_source.spec.o \
+	$O/compute_element.spec.o \
 	$O/compute_element_strain.spec.o \
 	$O/compute_gradient_in_acoustic.spec.o \
 	$O/compute_interpolated_dva.spec.o \
@@ -225,9 +233,6 @@ xmodel_update_SHARED_OBJECTS += \
 	$O/write_VTK_data.shared.o \
 	$(EMPTY_MACRO)
 
-# cuda stubs
-xmodel_update_OBJECTS += $(gpu_specfem3D_STUBS)
-
 ###
 ### ADIOS
 ###
@@ -256,6 +261,13 @@ else
 xmodel_update_OBJECTS += $(asdf_specfem3D_STUBS)
 xmodel_update_SHARED_OBJECTS += $(asdf_specfem3D_SHARED_STUBS)
 endif
+
+###
+### GPU
+###
+
+# cuda stubs
+xmodel_update_OBJECTS += $(gpu_specfem3D_STUBS)
 
 # extra dependencies
 $O/model_update.tomo.o: $O/specfem3D_par.spec_module.o $O/tomography_par.tomo_module.o

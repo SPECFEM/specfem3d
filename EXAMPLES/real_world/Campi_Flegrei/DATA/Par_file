@@ -23,7 +23,7 @@ UTM_PROJECTION_ZONE             = 33
 SUPPRESS_UTM_PROJECTION         = .false.
 
 # number of MPI processors
-NPROC                           = 16  
+NPROC                           = 16
 
 # time step parameters
 NSTEP                           = 40000
@@ -54,7 +54,7 @@ RATIO_BY_WHICH_TO_INCREASE_IT   = 1.4
 # Number of nodes for 2D and 3D shape functions for hexahedra.
 # We use either 8-node mesh elements (bricks) or 27-node elements.
 # If you use our internal mesher, the only option is 8-node bricks (27-node elements are not supported).
-NGNOD                           = 27 
+NGNOD                           = 27
 
 # models:
 # available options are:
@@ -107,7 +107,7 @@ PML_CONDITIONS                  = .true.
 PML_INSTEAD_OF_FREE_SURFACE     = .false.
 
 # C-PML dominant frequency
-f0_FOR_PML                      = 3.0 
+f0_FOR_PML                      = 3.0
 
 # parameters used to rotate C-PML boundary conditions by a given angle (not completed yet)
 # ROTATE_PML_ACTIVATE           = .false.
@@ -318,7 +318,7 @@ SAVE_MOHO_MESH                  = .false.
 #
 #-----------------------------------------------------------
 COUPLE_WITH_INJECTION_TECHNIQUE = .false.
-INJECTION_TECHNIQUE_TYPE        = 3   # 1 = DSM, 2 = AxiSEM, 3 = FK
+INJECTION_TECHNIQUE_TYPE        = 3   # 1 = DSM, 2 = AxiSEM, 3 = FK, 4 = SPECFEM
 MESH_A_CHUNK_OF_THE_EARTH       = .false.
 TRACTION_PATH                   = dummy
 FKMODEL_FILE                    = FKmodel
