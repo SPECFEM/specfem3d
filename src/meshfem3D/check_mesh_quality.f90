@@ -69,8 +69,10 @@
   double precision :: distance_min_MPI,distance_max_MPI
   ! for stability
   double precision :: dt_suggested,dt_suggested_max,dt_suggested_max_MPI
-  double precision :: stability,stability_min,stability_max,max_CFL_stability_limit
+  double precision :: stability,stability_min,stability_max
   double precision :: stability_max_MPI
+  ! maximum stability CFL value
+  double precision, parameter :: max_CFL_stability_limit = 0.55d0
 
   ! For MPI maxloc reduction
   double precision, dimension(2) :: buf_maxloc_send,buf_maxloc_recv
@@ -227,20 +229,16 @@
     write(IMAIN,*) '***'
     call flush_IMAIN()
 
-    ! max stability CFL value
-    !! DK DK we could probably increase this, now that the Stacey conditions have been fixed
-    max_CFL_stability_limit = 0.55d0 !! DK DK increased this    0.48d0
-
     if (stability_max_MPI >= max_CFL_stability_limit) then
       write(IMAIN,*) '*********************************************'
       write(IMAIN,*) '*********************************************'
-      write(IMAIN,*) ' WARNING, that value is above the upper CFL limit of ',max_CFL_stability_limit
+      write(IMAIN,*) ' WARNING, that value is above the upper CFL limit of ',sngl(max_CFL_stability_limit)
       write(IMAIN,*) 'therefore the run should be unstable'
       write(IMAIN,*) 'You can try to reduce the time step'
       write(IMAIN,*) '*********************************************'
       write(IMAIN,*) '*********************************************'
     else
-      write(IMAIN,*) 'that value is below the upper CFL limit of ',max_CFL_stability_limit
+      write(IMAIN,*) 'that value is below the upper CFL limit of ',sngl(max_CFL_stability_limit)
       write(IMAIN,*) 'therefore the run should be stable'
     endif
     write(IMAIN,*)
@@ -363,7 +361,7 @@
                                         equiangle_skewness,edge_aspect_ratio,diagonal_aspect_ratio, &
                                         stability,distmin,distmax)
 
-  use constants, only: NGNOD_EIGHT_CORNERS,PI,HUGEVAL,ZERO
+  use constants, only: NGNOD_EIGHT_CORNERS,PI,HUGEVAL,ZERO,COURANT_SUGGESTED
   use constants_meshfem, only: NGLLX_M,NGLLY_M,NGLLZ_M
 
   implicit none
@@ -551,7 +549,10 @@
   ! compute edge aspect ratio
   edge_aspect_ratio = distmax / distmin
 
-  dt_suggested = ((1.d0 - 0.02d0)*0.48d0) * (distmin * percent_GLL(true_NGLLX)) / VP_MAX
+  ! suggested timestep
+  dt_suggested = COURANT_SUGGESTED * (distmin * percent_GLL(true_NGLLX)) / VP_MAX
+
+  ! CFL stability criterion
   stability = dt_suggested * VP_MAX / (distmin * percent_GLL(true_NGLLX))
 
   ! compute diagonal aspect ratio
