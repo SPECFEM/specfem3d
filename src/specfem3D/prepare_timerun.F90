@@ -34,9 +34,8 @@
   use specfem_par_poroelastic
   use specfem_par_movie
 
-  !! solving wavefield discontinuity problem with non-split-node scheme
-  use wavefield_discontinuity_solver, only: &
-               prepare_timerun_wavefield_discontinuity
+  ! solving wavefield discontinuity problem with non-split-node scheme
+  use wavefield_discontinuity_solver, only: prepare_timerun_wavefield_discontinuity
 
   implicit none
 
@@ -74,9 +73,10 @@
   ! prepares gravity arrays
   call prepare_gravity()
 
-  ! ZN I do not use if (USE_LDDRK) call prepare_timerun_lddrk()
-  ! ZN in order to avoid the error of using unallocated arrays later on in the code,
-  ! ZN since R_**_lddrk are arguments in subroutine compute_forces_viscoelastic
+  ! prepares LDDRK time scheme
+  ! note: do not use if (USE_LDDRK) call prepare_timerun_lddrk()
+  !       in order to avoid the error of using unallocated arrays later on in the code,
+  !       since R_**_lddrk are arguments in subroutine compute_forces_viscoelastic
   call prepare_timerun_lddrk()
 
   ! prepares C-PML arrays
@@ -269,41 +269,6 @@
   ! to make sure all the nodes have finished to read their databases
   call synchronize_all()
 
-  ! sets up mass matrices
-  if (ACOUSTIC_SIMULATION) then
-    ! adds contributions
-    if (STACEY_ABSORBING_CONDITIONS) then
-      if (USE_LDDRK) then
-        rmass_acoustic(:) = rmass_acoustic(:)
-      else
-        ! adds boundary contributions for newmark scheme
-        rmass_acoustic(:) = rmass_acoustic(:) + rmassz_acoustic(:)
-      endif
-      ! not needed anymore
-      deallocate(rmassz_acoustic)
-    endif
-  endif
-
-  if (ELASTIC_SIMULATION) then
-    ! switches to three-component mass matrix
-    if (STACEY_ABSORBING_CONDITIONS) then
-      if (USE_LDDRK) then
-        rmassx(:) = rmass(:)
-        rmassy(:) = rmass(:)
-        rmassz(:) = rmass(:)
-      else
-        ! adds boundary contributions for Newmark scheme
-        rmassx(:) = rmass(:) + rmassx(:)
-        rmassy(:) = rmass(:) + rmassy(:)
-        rmassz(:) = rmass(:) + rmassz(:)
-      endif
-    else
-      rmassx(:) = rmass(:)
-      rmassy(:) = rmass(:)
-      rmassz(:) = rmass(:)
-    endif
-  endif
-
   ! LTS mass matrices
   if (LTS_MODE) call lts_prepare_mass_matrices()
 
@@ -317,6 +282,13 @@
 
     ! fill mass matrix with fictitious non-zero values to make sure it can be inverted globally
     where(rmass_acoustic <= 0._CUSTOM_REAL) rmass_acoustic = 1._CUSTOM_REAL
+
+    ! checks mass matrix
+    if (minval(rmass_acoustic) <= 0._CUSTOM_REAL) &
+      call exit_MPI(myrank,'negative mass matrix term for rmass_acoustic')
+
+    ! mass matrix inversion
+    ! for efficiency, invert final mass matrix once and for all on each slice
     rmass_acoustic(:) = 1._CUSTOM_REAL / rmass_acoustic(:)
   endif
 
@@ -340,6 +312,17 @@
     where(rmassx <= 0._CUSTOM_REAL) rmassx = 1._CUSTOM_REAL
     where(rmassy <= 0._CUSTOM_REAL) rmassy = 1._CUSTOM_REAL
     where(rmassz <= 0._CUSTOM_REAL) rmassz = 1._CUSTOM_REAL
+
+    ! checks mass matrix
+    if (minval(rmassx) <= 0._CUSTOM_REAL) &
+      call exit_MPI(myrank,'negative mass matrix term for rmassx')
+    if (minval(rmassy) <= 0._CUSTOM_REAL) &
+      call exit_MPI(myrank,'negative mass matrix term for rmassy')
+    if (minval(rmassz) <= 0._CUSTOM_REAL) &
+      call exit_MPI(myrank,'negative mass matrix term for rmassz')
+
+    ! mass matrix inversion
+    ! for efficiency, invert final mass matrix once and for all on each slice
     rmassx(:) = 1._CUSTOM_REAL / rmassx(:)
     rmassy(:) = 1._CUSTOM_REAL / rmassy(:)
     rmassz(:) = 1._CUSTOM_REAL / rmassz(:)
@@ -351,6 +334,11 @@
                                         nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
                                         my_neighbors_ext_mesh)
       where(rmass_ocean_load <= 0._CUSTOM_REAL) rmass_ocean_load = 1._CUSTOM_REAL
+      ! checks mass matrix
+      if (minval(rmass_ocean_load) <= 0._CUSTOM_REAL) &
+      call exit_MPI(myrank,'negative mass matrix term for rmass_ocean_load')
+      ! mass matrix inversion
+      ! for efficiency, invert final mass matrix once and for all on each slice
       rmass_ocean_load(:) = 1._CUSTOM_REAL / rmass_ocean_load(:)
     endif
   endif
@@ -370,6 +358,15 @@
     ! fills mass matrix with fictitious non-zero values to make sure it can be inverted globally
     where(rmass_solid_poroelastic <= 0._CUSTOM_REAL) rmass_solid_poroelastic = 1._CUSTOM_REAL
     where(rmass_fluid_poroelastic <= 0._CUSTOM_REAL) rmass_fluid_poroelastic = 1._CUSTOM_REAL
+
+    ! checks mass matrix
+    if (minval(rmass_solid_poroelastic) <= 0._CUSTOM_REAL) &
+      call exit_MPI(myrank,'negative mass matrix term for rmass_solid_poroelastic')
+    if (minval(rmass_fluid_poroelastic) <= 0._CUSTOM_REAL) &
+      call exit_MPI(myrank,'negative mass matrix term for rmass_fluid_poroelastic')
+
+    ! mass matrix inversion
+    ! for efficiency, invert final mass matrix once and for all on each slice
     rmass_solid_poroelastic(:) = 1._CUSTOM_REAL / rmass_solid_poroelastic(:)
     rmass_fluid_poroelastic(:) = 1._CUSTOM_REAL / rmass_fluid_poroelastic(:)
   endif
@@ -379,12 +376,6 @@
 
   ! synchonizes
   call synchronize_all()
-
-  ! frees arrays
-  if (ELASTIC_SIMULATION) then
-    ! not needed anymore
-    deallocate(rmass)
-  endif
 
   end subroutine prepare_timerun_mass_matrices
 

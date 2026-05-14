@@ -134,7 +134,6 @@
   integer, dimension(0:NPROC-1) :: offset_nglob_interface_PML_acoustic
   integer, dimension(0:NPROC-1) :: offset_nglob_interface_PML_elastic
   integer, dimension(0:NPROC-1) :: offset_num_abs_boundary_faces
-  integer, dimension(0:NPROC-1) :: offset_nglob_xy
   integer, dimension(0:NPROC-1) :: offset_nspec2D_xmin
   integer, dimension(0:NPROC-1) :: offset_nspec2D_xmax
   integer, dimension(0:NPROC-1) :: offset_nspec2D_ymin
@@ -366,12 +365,6 @@
       call h5_read_dataset_collect_hyperslab(dsetname, rmass_acoustic,(/sum(offset_nglob(0:myrank-1))/),H5_COL)
     endif
     if (size(rmass_acoustic) > 0) call bcast_all_cr_for_database(rmass_acoustic(1), size(rmass_acoustic,kind=4))
-
-    ! initializes mass matrix contribution
-    allocate(rmassz_acoustic(NGLOB_AB),stat=ier)
-    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1425')
-    if (ier /= 0) stop 'Error allocating array rmassz_acoustic'
-    rmassz_acoustic(:) = 0.0_CUSTOM_REAL
   endif
 
   ! elastic simulation
@@ -400,18 +393,10 @@
     endif
 
     ! allocates mass matrix
-    allocate(rmass(NGLOB_AB),stat=ier)
+    allocate(rmassx(NGLOB_AB), &
+             rmassy(NGLOB_AB), &
+             rmassz(NGLOB_AB), stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 1431')
-    rmass(:) = 0.0_CUSTOM_REAL
-
-    if (ier /= 0) stop 'Error allocating array rmass'
-    ! initializes mass matrix contributions
-    allocate(rmassx(NGLOB_AB),stat=ier)
-    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1432')
-    allocate(rmassy(NGLOB_AB),stat=ier)
-    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1433')
-    allocate(rmassz(NGLOB_AB), stat=ier)
-    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1434')
     if (ier /= 0) stop 'Error allocating array rmassx,rmassy,rmassz'
     rmassx(:) = 0._CUSTOM_REAL
     rmassy(:) = 0._CUSTOM_REAL
@@ -533,11 +518,16 @@
 
     ! reads mass matrices
     if (I_should_read_the_database) then
-      dsetname = "rmass"
-      call h5_read_dataset_collect_hyperslab(dsetname, rmass, (/sum(offset_nglob(0:myrank-1))/), H5_COL)
+      dsetname = "rmassx"
+      call h5_read_dataset_collect_hyperslab(dsetname, rmassx, (/sum(offset_nglob(0:myrank-1))/), H5_COL)
+      dsetname = "rmassy"
+      call h5_read_dataset_collect_hyperslab(dsetname, rmassy, (/sum(offset_nglob(0:myrank-1))/), H5_COL)
+      dsetname = "rmassz"
+      call h5_read_dataset_collect_hyperslab(dsetname, rmassz, (/sum(offset_nglob(0:myrank-1))/), H5_COL)
     endif
-    call bcast_all_cr_for_database(rmass(1), size(rmass,kind=4))
-    if (ier /= 0) stop 'Error reading in array rmass'
+    if (size(rmassx) > 0) call bcast_all_cr_for_database(rmassx(1), size(rmassx,kind=4))
+    if (size(rmassy) > 0) call bcast_all_cr_for_database(rmassy(1), size(rmassy,kind=4))
+    if (size(rmassz) > 0) call bcast_all_cr_for_database(rmassz(1), size(rmassz,kind=4))
 
     if (APPROXIMATE_OCEAN_LOAD) then
       ! ocean mass matrix
@@ -940,11 +930,6 @@
 
   if (sum(offset_num_abs_boundary_faces) > 0) then
     if (I_should_read_the_database) then
-      call h5_read_dataset_collect_hyperslab("offset_nglob_xy",offset_nglob_xy, (/0/), H5_COL)
-    endif
-    call bcast_all_i_array_for_database(offset_nglob_xy, size(offset_nglob_xy,kind=4))
-
-    if (I_should_read_the_database) then
       dsetname = "abs_boundary_ispec"
       call h5_read_dataset_collect_hyperslab(dsetname, abs_boundary_ispec, &
               (/sum(offset_num_abs_boundary_faces(0:myrank-1))/),H5_COL)
@@ -966,34 +951,6 @@
       call bcast_all_cr_for_database(abs_boundary_jacobian2Dw(1,1), size(abs_boundary_jacobian2Dw,kind=4))
     if (size(abs_boundary_normal) > 0) &
       call bcast_all_cr_for_database(abs_boundary_normal(1,1,1), size(abs_boundary_normal,kind=4))
-
-    if (STACEY_ABSORBING_CONDITIONS .and. (.not. PML_CONDITIONS)) then
-      ! store mass matrix contributions
-      if (ELASTIC_SIMULATION) then
-        if (I_should_read_the_database) then
-          dsetname = "rmassx"
-          call h5_read_dataset_collect_hyperslab(dsetname, rmassx(1:offset_nglob_xy(myrank)), &
-                                                          (/sum(offset_nglob_xy(0:myrank-1))/),H5_COL)
-          dsetname = "rmassy"
-          call h5_read_dataset_collect_hyperslab(dsetname, rmassy(1:offset_nglob_xy(myrank)), &
-                                                          (/sum(offset_nglob_xy(0:myrank-1))/),H5_COL)
-          dsetname = "rmassz"
-          call h5_read_dataset_collect_hyperslab(dsetname, rmassz(1:offset_nglob_xy(myrank)), &
-                                                          (/sum(offset_nglob_xy(0:myrank-1))/),H5_COL)
-        endif
-        if (size(rmassx) > 0) call bcast_all_cr_for_database(rmassx(1), size(rmassx,kind=4))
-        if (size(rmassy) > 0) call bcast_all_cr_for_database(rmassy(1), size(rmassy,kind=4))
-        if (size(rmassz) > 0) call bcast_all_cr_for_database(rmassz(1), size(rmassz,kind=4))
-      endif
-      if (ACOUSTIC_SIMULATION) then
-        if (I_should_read_the_database) then
-          dsetname = "rmassz_acoustic"
-          call h5_read_dataset_collect_hyperslab(dsetname, rmassz_acoustic(1:offset_nglob_xy(myrank)), &
-                                                          (/sum(offset_nglob_xy(0:myrank-1))/),H5_COL)
-        endif
-        if (size(rmassz_acoustic) > 0) call bcast_all_cr_for_database(rmassz_acoustic(1), size(rmassz_acoustic,kind=4))
-      endif
-    endif
   endif
 
   ! boundaries

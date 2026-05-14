@@ -284,12 +284,6 @@
 
     if (I_should_read_the_database) read(IIN) rmass_acoustic
     call bcast_all_cr_for_database(rmass_acoustic(1), size(rmass_acoustic,kind=4))
-
-    ! initializes mass matrix contribution
-    allocate(rmassz_acoustic(NGLOB_AB),stat=ier)
-    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1425')
-    if (ier /= 0) stop 'Error allocating array rmassz_acoustic'
-    rmassz_acoustic(:) = 0.0_CUSTOM_REAL
   endif
 
   ! elastic simulation
@@ -318,18 +312,10 @@
     endif
 
     ! allocates mass matrix
-    allocate(rmass(NGLOB_AB),stat=ier)
+    allocate(rmassx(NGLOB_AB), &
+             rmassy(NGLOB_AB), &
+             rmassz(NGLOB_AB), stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 1431')
-    if (ier /= 0) stop 'Error allocating array rmass'
-    rmass(:) = 0.0_CUSTOM_REAL
-
-    ! initializes mass matrix contributions
-    allocate(rmassx(NGLOB_AB),stat=ier)
-    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1432')
-    allocate(rmassy(NGLOB_AB),stat=ier)
-    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1433')
-    allocate(rmassz(NGLOB_AB), stat=ier)
-    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1434')
     if (ier /= 0) stop 'Error allocating array rmassx,rmassy,rmassz'
     rmassx(:) = 0._CUSTOM_REAL
     rmassy(:) = 0._CUSTOM_REAL
@@ -451,10 +437,14 @@
 
     ! reads mass matrices
     if (I_should_read_the_database) then
-      read(IIN,iostat=ier) rmass
-      if (ier /= 0) stop 'Error reading in array rmass'
+      read(IIN,iostat=ier) rmassx
+      read(IIN,iostat=ier) rmassy
+      read(IIN,iostat=ier) rmassz
+      if (ier /= 0) stop 'Error reading in array rmassx,rmassy,rmassz'
     endif
-    call bcast_all_cr_for_database(rmass(1), size(rmass,kind=4))
+    call bcast_all_cr_for_database(rmassx(1), size(rmassx,kind=4))
+    call bcast_all_cr_for_database(rmassy(1), size(rmassy,kind=4))
+    call bcast_all_cr_for_database(rmassz(1), size(rmassz,kind=4))
 
     if (APPROXIMATE_OCEAN_LOAD) then
       ! ocean mass matrix
@@ -791,24 +781,6 @@
     call bcast_all_i_for_database(abs_boundary_ijk(1,1,1), size(abs_boundary_ijk,kind=4))
     call bcast_all_cr_for_database(abs_boundary_jacobian2Dw(1,1), size(abs_boundary_jacobian2Dw,kind=4))
     call bcast_all_cr_for_database(abs_boundary_normal(1,1,1), size(abs_boundary_normal,kind=4))
-
-    if (STACEY_ABSORBING_CONDITIONS .and. (.not. PML_CONDITIONS)) then
-      ! store mass matrix contributions
-      if (ELASTIC_SIMULATION) then
-        if (I_should_read_the_database) then
-          read(IIN) rmassx
-          read(IIN) rmassy
-          read(IIN) rmassz
-        endif
-        call bcast_all_cr_for_database(rmassx(1), size(rmassx,kind=4))
-        call bcast_all_cr_for_database(rmassy(1), size(rmassy,kind=4))
-        call bcast_all_cr_for_database(rmassz(1), size(rmassz,kind=4))
-      endif
-      if (ACOUSTIC_SIMULATION) then
-        if (I_should_read_the_database) read(IIN) rmassz_acoustic
-        call bcast_all_cr_for_database(rmassz_acoustic(1), size(rmassz_acoustic,kind=4))
-      endif
-    endif
   endif
 
   ! checks i/o so far

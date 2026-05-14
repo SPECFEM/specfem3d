@@ -27,9 +27,9 @@
 
   subroutine create_mass_matrices(nglob)
 
-! returns precomputed mass matrix in rmass array
+! returns precomputed mass matrix in rmass arrays
 
-  use constants, only: CUSTOM_REAL
+  use constants, only: CUSTOM_REAL,IMAIN,myrank
 
   use shared_parameters, only: ACOUSTIC_SIMULATION, ELASTIC_SIMULATION, POROELASTIC_SIMULATION, &
     PML_CONDITIONS, STACEY_ABSORBING_CONDITIONS, DT
@@ -53,25 +53,39 @@
   ! elastic domains
   if (ELASTIC_SIMULATION) then
     ! allocates memory
-    allocate(rmass(nglob),stat=ier)
+    allocate(rmassx(nglob), &
+             rmassy(nglob), &
+             rmassz(nglob),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 660')
-    if (ier /= 0) call exit_MPI_without_rank('error allocating array rmass')
-    rmass(:) = 0._CUSTOM_REAL
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array rmassx,rmassy,rmassz')
+    rmassx(:) = 0._CUSTOM_REAL
+    rmassy(:) = 0._CUSTOM_REAL
+    rmassz(:) = 0._CUSTOM_REAL
 
     ! returns elastic mass matrix
     if (PML_CONDITIONS) then
+      ! user info
+      if (myrank == 0) then
+        write(IMAIN,*) '     elastic mass matrix w/ PML elements'
+      endif
+
       call define_mass_matrices_pml_elastic(nglob,nspec,nspec_irregular,DT,ibool,rhostore, &
                                             jacobianstore,irregular_element_number,jacobian_regular, &
                                             wxgll,wygll,wzgll,ispec_is_elastic, &
                                             nspec_cpml,is_CPML,CPML_regions,CPML_to_spec, &
                                             d_store_x,d_store_y,d_store_z, &
                                             K_store_x,K_store_y,K_store_z, &
-                                            rmass)
+                                            rmassx,rmassy,rmassz)
     else
+      ! user info
+      if (myrank == 0) then
+        write(IMAIN,*) '     elastic mass matrix'
+      endif
+
       call define_mass_matrices_elastic(nglob,nspec,nspec_irregular,ibool,rhostore, &
                                         jacobianstore,irregular_element_number,jacobian_regular, &
                                         wxgll,wygll,wzgll,ispec_is_elastic, &
-                                        rmass)
+                                        rmassx,rmassy,rmassz)
     endif
   endif
 
@@ -85,6 +99,11 @@
 
     ! returns acoustic mass matrix
     if (PML_CONDITIONS) then
+      ! user info
+      if (myrank == 0) then
+        write(IMAIN,*) '     acoustic mass matrix w/ PML elements'
+      endif
+
       call define_mass_matrices_pml_acoustic(nglob,nspec,nspec_irregular,DT,ibool,kappastore, &
                                              jacobianstore,irregular_element_number,jacobian_regular, &
                                              wxgll,wygll,wzgll,ispec_is_acoustic, &
@@ -93,6 +112,11 @@
                                              K_store_x,K_store_y,K_store_z, &
                                              rmass_acoustic)
     else
+      ! user info
+      if (myrank == 0) then
+        write(IMAIN,*) '     acoustic mass matrix'
+      endif
+
       call define_mass_matrices_acoustic(nglob,nspec,nspec_irregular,ibool,kappastore, &
                                          jacobianstore,irregular_element_number,jacobian_regular, &
                                          wxgll,wygll,wzgll,ispec_is_acoustic, &
@@ -112,6 +136,11 @@
     rmass_solid_poroelastic(:) = 0._CUSTOM_REAL
     rmass_fluid_poroelastic(:) = 0._CUSTOM_REAL
 
+    ! user info
+    if (myrank == 0) then
+      write(IMAIN,*) '     poroelastic mass matrix'
+    endif
+
     ! poroelastic mass matrices
     call define_mass_matrices_poroelastic(nglob,nspec,nspec_irregular,ibool,rhoarraystore,phistore,tortstore, &
                                           jacobianstore,irregular_element_number,jacobian_regular, &
@@ -120,7 +149,9 @@
   endif
 
   ! Stacey absorbing conditions (adds C*deltat/2 contribution to the mass matrices on Stacey edges)
-  if (STACEY_ABSORBING_CONDITIONS) call create_mass_matrices_Stacey(nglob)
+  if (STACEY_ABSORBING_CONDITIONS) then
+    call create_mass_matrices_Stacey(nglob)
+  endif
 
   ! ocean load mass matrix
   call create_mass_matrices_ocean_load(nglob)
@@ -133,7 +164,7 @@
 
   subroutine create_mass_matrices_ocean_load(nglob)
 
-! returns precomputed mass matrix in rmass array
+! compute mass matrix contribution in rmass_ocean_load array
 
   use constants, only: myrank,CUSTOM_REAL,IMAIN
 
@@ -155,9 +186,9 @@
 
   ! creates ocean load mass matrix
   if (APPROXIMATE_OCEAN_LOAD) then
-
+    ! user info
     if (myrank == 0) then
-      write(IMAIN,*) '  ...creating ocean load mass matrix '
+      write(IMAIN,*) '     creating ocean load mass matrix '
     endif
 
     ! adding ocean load mass matrix at ocean bottom
@@ -175,16 +206,13 @@
                                          ispec_is_elastic,rmass_ocean_load)
 
     ! adds regular mass matrix to ocean load contribution
-    rmass_ocean_load(:) = rmass_ocean_load(:) + rmass(:)
-
+    rmass_ocean_load(:) = rmass_ocean_load(:) + rmassz(:)
   else
-
     ! allocate dummy array if no oceans
     NGLOB_OCEAN = 1
     allocate(rmass_ocean_load(NGLOB_OCEAN),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 665')
     if (ier /= 0) stop 'error allocating dummy array rmass_ocean_load'
-
   endif
 
   end subroutine create_mass_matrices_ocean_load
@@ -195,13 +223,12 @@
 
   subroutine create_mass_matrices_Stacey(nglob)
 
-! in the case of Stacey boundary conditions, add C*deltat/2 contribution to the mass matrix
-! on Stacey edges for the crust_mantle and outer_core regions but not for the inner_core region
+! in the case of Stacey boundary conditions, add C*deltat/2 contribution to the mass matrix on Stacey edges;
 ! thus the mass matrix must be replaced by three mass matrices including the "C" damping matrix
 
-  use constants, only: CUSTOM_REAL
+  use constants, only: CUSTOM_REAL,IMAIN,myrank
 
-  use shared_parameters, only: ACOUSTIC_SIMULATION, ELASTIC_SIMULATION, DT
+  use shared_parameters, only: ACOUSTIC_SIMULATION, ELASTIC_SIMULATION, USE_LDDRK, DT
 
   ! global indices
   use generate_databases_par, only: nspec => NSPEC_AB, ibool
@@ -212,48 +239,34 @@
 
   integer,intent(in) :: nglob
 
-  ! local parameters
-  integer :: ier
+  ! only for Newmark time schemes
+  if (USE_LDDRK) return
 
-  ! checks if anything to do
-  if (num_abs_boundary_faces > 0) then
-    nglob_xy = nglob
-  else
-    nglob_xy = 1
+  ! user info
+  if (myrank == 0) then
+    write(IMAIN,*) '     adding Stacey contributions'
   endif
 
+  ! checks if anything to do in this slice
+  if (num_abs_boundary_faces == 0) return
+
+  ! adds Stacey contributions to mass matrices
   ! elastic domains
   if (ELASTIC_SIMULATION) then
-    allocate( rmassx(nglob_xy), rmassy(nglob_xy), rmassz(nglob_xy), stat=ier)
-    if (ier /= 0) call exit_MPI_without_rank('error allocating array 666')
-    if (ier /= 0) stop 'error in allocate 21'
-    rmassx(:) = 0._CUSTOM_REAL
-    rmassy(:) = 0._CUSTOM_REAL
-    rmassz(:) = 0._CUSTOM_REAL
-
-    if (num_abs_boundary_faces > 0) then
-      call define_mass_matrices_Stacey_elastic(nglob,nspec,DT,ibool,rho_vp,rho_vs, &
-                                               num_abs_boundary_faces,abs_boundary_ispec,abs_boundary_ijk, &
-                                               abs_boundary_normal,abs_boundary_jacobian2Dw, &
-                                               ispec_is_elastic, &
-                                               rmassx, rmassy, rmassz)
-    endif
+    call add_mass_matrices_Stacey_elastic(nglob,nspec,DT,ibool,rho_vp,rho_vs, &
+                                             num_abs_boundary_faces,abs_boundary_ispec,abs_boundary_ijk, &
+                                             abs_boundary_normal,abs_boundary_jacobian2Dw, &
+                                             ispec_is_elastic, &
+                                             rmassx, rmassy, rmassz)
   endif
 
   ! acoustic domains
   if (ACOUSTIC_SIMULATION) then
-    allocate( rmassz_acoustic(nglob_xy), stat=ier)
-    if (ier /= 0) call exit_MPI_without_rank('error allocating array 667')
-    if (ier /= 0) stop 'error in allocate 22'
-    rmassz_acoustic(:) = 0._CUSTOM_REAL
-
-    if (num_abs_boundary_faces > 0) then
-      call define_mass_matrices_Stacey_acoustic(nglob,nspec,DT,ibool,rho_vp, &
-                                                num_abs_boundary_faces,abs_boundary_ispec,abs_boundary_ijk, &
-                                                abs_boundary_jacobian2Dw, &
-                                                ispec_is_acoustic, &
-                                                rmassz_acoustic)
-    endif
+    call add_mass_matrices_Stacey_acoustic(nglob,nspec,DT,ibool,rho_vp, &
+                                              num_abs_boundary_faces,abs_boundary_ispec,abs_boundary_ijk, &
+                                              abs_boundary_jacobian2Dw, &
+                                              ispec_is_acoustic, &
+                                              rmass_acoustic)
   endif
 
   end subroutine create_mass_matrices_Stacey

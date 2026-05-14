@@ -119,10 +119,10 @@
   ! elastic arrays
   if (ELASTIC_SIMULATION) then
     ! displacement,velocity,acceleration
-    memory_size = memory_size + 3.d0*dble(NDIM)*NGLOB_AB*dble(CUSTOM_REAL)
+    memory_size = memory_size + 3.d0*dble(NDIM)*dble(NGLOB_AB)*dble(CUSTOM_REAL)
 
-    ! rmass
-    memory_size = memory_size + 3*NGLOB_AB*dble(CUSTOM_REAL)
+    ! rmassx,rmassy,rmassz
+    memory_size = memory_size + 3.d0*dble(NGLOB_AB)*dble(CUSTOM_REAL)
 
     ! rho_vp,rho_vs
     memory_size = memory_size + 2.d0*dble(NGLLX)*dble(NGLLY)*dble(NGLLZ)*NSPEC_AB*dble(CUSTOM_REAL)

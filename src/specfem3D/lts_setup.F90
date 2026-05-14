@@ -1591,7 +1591,7 @@
   use specfem_par, only: num_abs_boundary_faces, &
     abs_boundary_ispec, abs_boundary_ijk, abs_boundary_normal, abs_boundary_jacobian2Dw
 
-  use specfem_par_elastic, only: ispec_is_elastic,rho_vp,rho_vs,rmassx,rmassy,rmassz,rmass
+  use specfem_par_elastic, only: ispec_is_elastic,rho_vp,rho_vs,rmassx,rmassy,rmassz
 
   use specfem_par_lts, only: cmassxyz, rmassxyz, rmassxyz_mod
 
@@ -1631,31 +1631,34 @@
       call define_mass_matrices_elastic(NGLOB_AB,NSPEC_AB,NSPEC_IRREGULAR,ibool,rhostore, &
                                         jacobianstore,irregular_element_number,jacobian_regular, &
                                         wxgll,wygll,wzgll,ispec_is_elastic, &
-                                        rmass)
+                                        rmassx,rmassy,rmassz)
 
-      ! re-creates Stacey contributions
-      if (num_abs_boundary_faces > 0) then
-        call define_mass_matrices_Stacey_elastic(NGLOB_AB,NSPEC_AB,DT,ibool,rho_vp,rho_vs, &
-                                                 num_abs_boundary_faces,abs_boundary_ispec,abs_boundary_ijk, &
-                                                 abs_boundary_normal,abs_boundary_jacobian2Dw, &
-                                                 ispec_is_elastic, &
-                                                 rmassx, rmassy, rmassz)
-      endif
+      ! initial mass matrix (rmass)
+      rmassxyz(1,:) = rmassx(:)
+      rmassxyz(2,:) = rmassy(:)
+      rmassxyz(3,:) = rmassz(:)
 
-      ! stores initial boundary contributions
-      cmassxyz(1,:) = rmassx(:)
-      cmassxyz(2,:) = rmassy(:)
-      cmassxyz(3,:) = rmassz(:)
+      ! adds Stacey contributions
+      call add_mass_matrices_Stacey_elastic(NGLOB_AB,NSPEC_AB,DT,ibool,rho_vp,rho_vs, &
+                                               num_abs_boundary_faces,abs_boundary_ispec,abs_boundary_ijk, &
+                                               abs_boundary_normal,abs_boundary_jacobian2Dw, &
+                                               ispec_is_elastic, &
+                                               rmassx,rmassy,rmassz)
 
-      ! modified mass matrices with contributions
-      rmassxyz_mod(1,:) = rmass(:) + rmassx(:)
-      rmassxyz_mod(2,:) = rmass(:) + rmassy(:)
-      rmassxyz_mod(3,:) = rmass(:) + rmassz(:)
+      ! modified mass matrices with contributions (rmass + stacey_contribution)
+      rmassxyz_mod(1,:) = rmassx(:)
+      rmassxyz_mod(2,:) = rmassy(:)
+      rmassxyz_mod(3,:) = rmassz(:)
 
-      ! re-sets mass matrices without contributions
-      rmassx(:) = rmass(:)
-      rmassy(:) = rmass(:)
-      rmassz(:) = rmass(:)
+      ! only boundary contributions ((rmass + stacey_contribution) - rmass == stacey_contribution)
+      cmassxyz(1,:) = rmassxyz_mod(1,:) - rmassxyz(1,:)
+      cmassxyz(2,:) = rmassxyz_mod(2,:) - rmassxyz(2,:)
+      cmassxyz(3,:) = rmassxyz_mod(3,:) - rmassxyz(3,:)
+
+      ! re-sets mass matrices without contributions ((rmass + stacey_contribution) - stacey_contribution == rmass)
+      rmassx(:) = rmassxyz(1,:)
+      rmassy(:) = rmassxyz(2,:)
+      rmassz(:) = rmassxyz(3,:)
 
     else
       ! no absorbing boundary contributions
@@ -1768,7 +1771,7 @@
 
     ! stores final, inverted mass matrices of each component into single array
     ! note: when calling this routine, rmassx,rmassy,rmassz have been assembled and inverted.
-    !       we will needs these inverted mass matrices and store them into rmassxyz
+    !       we need these inverted mass matrices and store them into rmassxyz
     rmassxyz(1,:) = rmassx(:)
     rmassxyz(2,:) = rmassy(:)
     rmassxyz(3,:) = rmassz(:)

@@ -45,7 +45,6 @@
     NSPEC2D_BOTTOM, NSPEC2D_TOP, &
     ibelm_xmin, ibelm_xmax,ibelm_ymin, ibelm_ymax, ibelm_bottom, ibelm_top, &
     SIMULATION_TYPE, SAVE_FORWARD, &
-    STACEY_ABSORBING_CONDITIONS, &
     LOCAL_PATH, myrank
 
   ! MPI interfaces
@@ -109,7 +108,6 @@
   integer, dimension(0:NPROC-1) :: offset_nglob_interface_PML_acoustic
   integer, dimension(0:NPROC-1) :: offset_nglob_interface_PML_elastic
   integer, dimension(0:NPROC-1) :: offset_num_abs_boundary_faces
-  integer, dimension(0:NPROC-1) :: offset_nglob_xy
   integer, dimension(0:NPROC-1) :: offset_nspec2D_xmin
   integer, dimension(0:NPROC-1) :: offset_nspec2D_xmax
   integer, dimension(0:NPROC-1) :: offset_nspec2D_ymin
@@ -208,7 +206,6 @@
   endif
 
   call gather_all_all_singlei(num_abs_boundary_faces,offset_num_abs_boundary_faces,NPROC)
-  call gather_all_all_singlei(nglob_xy,offset_nglob_xy,NPROC)
   call gather_all_all_singlei(nspec2D_xmin,offset_nspec2D_xmin,NPROC)
   call gather_all_all_singlei(nspec2D_xmax,offset_nspec2D_xmax,NPROC)
   call gather_all_all_singlei(nspec2D_ymin,offset_nspec2D_ymin,NPROC)
@@ -278,7 +275,6 @@
     endif
 
     call h5_write_dataset_no_group("offset_num_abs_boundary_faces",offset_num_abs_boundary_faces)
-    call h5_write_dataset_no_group("offset_nglob_xy",offset_nglob_xy)
     call h5_write_dataset_no_group("offset_nspec2D_xmin",offset_nspec2D_xmin)
     call h5_write_dataset_no_group("offset_nspec2D_xmax",offset_nspec2D_xmax)
     call h5_write_dataset_no_group("offset_nspec2D_ymin",offset_nspec2D_ymin)
@@ -414,15 +410,17 @@
 
     ! elastic
     if (ELASTIC_SIMULATION) then
-      dset_name = "rmass" ! 1 r (/offset_nglob/)
-      call h5_create_dataset_gen(dset_name,(/sum(offset_nglob(:))/), 1, CUSTOM_REAL)
-
+      dset_name = "rmassx" ! 1 r (/offset_nglob/)
+      call h5_create_dataset_gen(dset_name, (/sum(offset_nglob(:))/), 1, CUSTOM_REAL)
+      dset_name = "rmassy" ! 1 r (/offset_nglob/)
+      call h5_create_dataset_gen(dset_name, (/sum(offset_nglob(:))/), 1, CUSTOM_REAL)
+      dset_name = "rmassz" ! 1 r (/offset_nglob/)
+      call h5_create_dataset_gen(dset_name, (/sum(offset_nglob(:))/), 1, CUSTOM_REAL)
       if (APPROXIMATE_OCEAN_LOAD) then
         dset_name = "rmass_ocean_load" ! 1 r (/offset_nglob_ocean/)
         call h5_create_dataset_gen(dset_name,(/sum(offset_nglob_ocean(:))/), 1, CUSTOM_REAL)
       endif
-
-      !pll Stacey
+      ! Stacey
       dset_name = "rho_vp" ! 4 r (/0,0,0,offset_nspec/)
       call h5_create_dataset_gen(dset_name,(/NGLLX,NGLLY,NGLLZ,sum(offset_nspec(:))/), 4, CUSTOM_REAL)
       dset_name = "rho_vs" ! 4 r (/0,0,0,offset_nspec/)
@@ -530,22 +528,6 @@
       call h5_create_dataset_gen(dset_name,(/NGLLSQUARE,sum(offset_num_abs_boundary_faces(:))/), 2, CUSTOM_REAL)
       dset_name = "abs_boundary_normal" ! 3 r (/0,0,offset_num_abs_boundary_faces/)
       call h5_create_dataset_gen(dset_name,(/NDIM,NGLLSQUARE,sum(offset_num_abs_boundary_faces(:))/), 3, CUSTOM_REAL)
-
-      if (STACEY_ABSORBING_CONDITIONS .and. (.not. PML_CONDITIONS)) then
-        ! store mass matrix contributions
-        if (ELASTIC_SIMULATION) then
-          dset_name = "rmassx" ! 1 r (/offset_nglob_xy/)
-          call h5_create_dataset_gen(dset_name, (/sum(offset_nglob_xy(:))/),1,CUSTOM_REAL)
-          dset_name = "rmassy" ! 1 r (/offset_nglob_xy/)
-          call h5_create_dataset_gen(dset_name, (/sum(offset_nglob_xy(:))/),1,CUSTOM_REAL)
-          dset_name = "rmassz" ! 1 r (/offset_nglob_xy/)
-          call h5_create_dataset_gen(dset_name, (/sum(offset_nglob_xy(:))/),1,CUSTOM_REAL)
-        endif
-        if (ACOUSTIC_SIMULATION) then
-          dset_name = "rmassz_acoustic" ! 1 r (/offset_nglob_xy/)
-          call h5_create_dataset_gen(dset_name, (/sum(offset_nglob_xy(:))/),1,CUSTOM_REAL)
-        endif
-      endif
     else
       ! dummy
       dset_name = "abs_boundary_ispec" ! 1 i (/myrank/)
@@ -556,22 +538,6 @@
       call h5_create_dataset_gen(dset_name,(/1,NPROC/), 2, CUSTOM_REAL)
       dset_name = "abs_boundary_normal" ! 3 r (/0,0,myrank/)
       call h5_create_dataset_gen(dset_name,(/1,1,NPROC/), 3, CUSTOM_REAL)
-
-      if (STACEY_ABSORBING_CONDITIONS .and. (.not. PML_CONDITIONS)) then
-        ! store mass matrix contributions
-        if (ELASTIC_SIMULATION) then
-          dset_name = "rmassx" ! 1 r (/myrank/)
-          call h5_create_dataset_gen(dset_name,(/NPROC/), 1, CUSTOM_REAL)
-          dset_name = "rmassy" ! 1 r (/myrank/)
-          call h5_create_dataset_gen(dset_name,(/NPROC/), 1, CUSTOM_REAL)
-          dset_name = "rmassz" ! 1 r (/myrank/)
-          call h5_create_dataset_gen(dset_name,(/NPROC/), 1, CUSTOM_REAL)
-       endif
-        if (ACOUSTIC_SIMULATION) then
-          dset_name = "rmassz_acoustic" ! 1 r (/myrank/)
-          call h5_create_dataset_gen(dset_name,(/NPROC/), 1, CUSTOM_REAL)
-       endif
-      endif
     endif
 
     dset_name = "nspec2D_xmin" ! 1 i (/myrank/)
@@ -961,13 +927,17 @@
 
   ! elastic
   if (ELASTIC_SIMULATION) then
-    dset_name = "rmass" ! 1 r (/offset_nglob/)
-    call h5_write_dataset_collect_hyperslab(dset_name, rmass, (/sum(offset_nglob(0:myrank-1))/), H5_COL)
+    dset_name = "rmassx" ! 1 r (/offset_nglob/)
+    call h5_write_dataset_collect_hyperslab(dset_name, rmassx, (/sum(offset_nglob(0:myrank-1))/),H5_COL)
+    dset_name = "rmassy" ! 1 r (/offset_nglob/)
+    call h5_write_dataset_collect_hyperslab(dset_name, rmassy, (/sum(offset_nglob(0:myrank-1))/),H5_COL)
+    dset_name = "rmassz" ! 1 r (/offset_nglob/)
+    call h5_write_dataset_collect_hyperslab(dset_name, rmassz, (/sum(offset_nglob(0:myrank-1))/),H5_COL)
     if (APPROXIMATE_OCEAN_LOAD) then
       dset_name = "rmass_ocean_load" ! 1 r (/offset_nglob_ocean/)
       call h5_write_dataset_collect_hyperslab(dset_name, rmass_ocean_load, (/sum(offset_nglob_ocean(0:myrank-1))/),H5_COL)
     endif
-    !pll Stacey
+    ! Stacey
     dset_name = "rho_vp" ! 4 r (/0,0,0,offset_nspec/)
     call h5_write_dataset_collect_hyperslab(dset_name, rho_vp, (/0,0,0,sum(offset_nspec(0:myrank-1))/),H5_COL)
     dset_name = "rho_vs" ! 4 r (/0,0,0,offset_nspec/)
@@ -1079,22 +1049,6 @@
     dset_name = "abs_boundary_normal" ! 3 r (/0,0,offset_num_abs_boundary_faces/)
     call h5_write_dataset_collect_hyperslab(dset_name, abs_boundary_normal, &
             (/0,0,sum(offset_num_abs_boundary_faces(0:myrank-1))/), H5_COL)
-
-    if (STACEY_ABSORBING_CONDITIONS .and. (.not. PML_CONDITIONS)) then
-      ! store mass matrix contributions
-      if (ELASTIC_SIMULATION) then
-        dset_name = "rmassx" ! 1 r (/offset_nglob_xy/)
-        call h5_write_dataset_collect_hyperslab(dset_name, rmassx, (/sum(offset_nglob_xy(0:myrank-1))/),H5_COL)
-        dset_name = "rmassy" ! 1 r (/offset_nglob_xy/)
-        call h5_write_dataset_collect_hyperslab(dset_name, rmassy, (/sum(offset_nglob_xy(0:myrank-1))/),H5_COL)
-        dset_name = "rmassz" ! 1 r (/offset_nglob_xy/)
-        call h5_write_dataset_collect_hyperslab(dset_name, rmassz, (/sum(offset_nglob_xy(0:myrank-1))/),H5_COL)
-     endif
-      if (ACOUSTIC_SIMULATION) then
-        dset_name = "rmassz_acoustic" ! 1 r (/offset_nglob_xy/)
-        call h5_write_dataset_collect_hyperslab(dset_name, rmassz_acoustic, (/sum(offset_nglob_xy(0:myrank-1))/),H5_COL)
-     endif
-    endif
   else
     dset_name = "abs_boundary_ispec" ! 1 i (/myrank/)
     call h5_write_dataset_collect_hyperslab(dset_name, (/0/), (/myrank/),H5_COL)
@@ -1104,23 +1058,6 @@
     call h5_write_dataset_collect_hyperslab(dset_name, r2d_dummy, (/0,myrank/),H5_COL)
     dset_name = "abs_boundary_normal" ! 3 r (/0,0,myrank/)
     call h5_write_dataset_collect_hyperslab(dset_name, r3d_dummy, (/0,0,myrank/),H5_COL)
-
-    if (STACEY_ABSORBING_CONDITIONS .and. (.not. PML_CONDITIONS)) then
-      ! store mass matrix contributions
-      if (ELASTIC_SIMULATION) then
-        dset_name = "rmassx" ! 1 r (/myrank/)
-        call h5_write_dataset_collect_hyperslab(dset_name, (/0.0/), (/myrank/),H5_COL)
-        dset_name = "rmassy" ! 1 r (/myrank/)
-        call h5_write_dataset_collect_hyperslab(dset_name, (/0.0/), (/myrank/),H5_COL)
-        dset_name = "rmassz" ! 1 r (/myrank/)
-        call h5_write_dataset_collect_hyperslab(dset_name, (/0.0/), (/myrank/),H5_COL)
-      endif
-      if (ACOUSTIC_SIMULATION) then
-        dset_name = "rmassz_acoustic" ! 1 r (/myrank/)
-        call h5_write_dataset_collect_hyperslab(dset_name, (/0.0/), (/myrank/),H5_COL)
-      endif
-    endif
-
   endif
 
   dset_name = "nspec2D_xmin" ! 1 i (/myrank/)

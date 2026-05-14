@@ -532,8 +532,8 @@ contains
          NGLLX, NGLLY, NGLLZ, NSPEC_AB, NGLOB_AB, num_abs_boundary_faces, abs_boundary_ispec, abs_boundary_ijk, &
          abs_boundary_normal, abs_boundary_jacobian2Dw, num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
          nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, my_neighbors_ext_mesh
-    use specfem_par_elastic, only: rmass, rmassx, rmassy, rmassz, rho_vp, rho_vs, ispec_is_elastic
-    use specfem_par_acoustic, only: rmass_acoustic, rmassz_acoustic, ispec_is_acoustic
+    use specfem_par_elastic, only: rmassx, rmassy, rmassz, rho_vp, rho_vs, ispec_is_elastic
+    use specfem_par_acoustic, only: rmass_acoustic, ispec_is_acoustic
 
     integer                           :: i, j, k, ispec, ispec_irreg, iglob, iface, igll, ier
     double precision                  :: weight
@@ -546,7 +546,7 @@ contains
     if (ACOUSTIC_SIMULATION) then
       ! allocates memory
       if (.not. allocated(rmass_acoustic)) then
-        allocate(rmass_acoustic(NGLOB_AB),stat=ier)
+        allocate(rmass_acoustic(NGLOB_AB), stat=ier)
         if (ier /= 0) call exit_MPI_without_rank('error allocating array 330')
         if (ier /= 0) stop 'error allocating array rmass_acoustic'
       endif
@@ -583,11 +583,15 @@ contains
 
     if (ELASTIC_SIMULATION) then
       ! returns elastic mass matrix
-      if (.not. allocated(rmass)) then
-        allocate(rmass(NGLOB_AB),stat=ier)
+      if (.not. allocated(rmassx)) then
+        allocate(rmassx(NGLOB_AB), &
+                 rmassy(NGLOB_AB), &
+                 rmassz(NGLOB_AB), stat=ier)
         if (ier /= 0) call exit_MPI_without_rank('error allocating array 331')
       endif
-      rmass(:) = 0._CUSTOM_REAL
+      rmassx(:) = 0._CUSTOM_REAL
+      rmassy(:) = 0._CUSTOM_REAL
+      rmassz(:) = 0._CUSTOM_REAL
 
       if (PML_CONDITIONS) then
         write(*,*) 'PML  not implemented yet '
@@ -606,125 +610,85 @@ contains
                   weight = wxgll(i)*wygll(j)*wzgll(k)
                   if (ispec_irreg /= 0) jacobianl = jacobianstore(i,j,k,ispec_irreg)
 
-                  rmass(iglob) = rmass(iglob) + &
-                                 real( dble(jacobianl) * weight * dble(rhostore(i,j,k,ispec)),kind=CUSTOM_REAL)
+                  rmassz(iglob) = rmassz(iglob) + real( dble(jacobianl) * weight * dble(rhostore(i,j,k,ispec)),kind=CUSTOM_REAL)
                 enddo
               enddo
             enddo
           endif
         enddo
+        ! copy initial mass matrix on all components
+        rmassx(:) = rmassz(:)
+        rmassy(:) = rmassz(:)
       endif
     endif
 
+    ! adds boundary contributions for newmark scheme
     if (STACEY_ABSORBING_CONDITIONS) then
+      ! use the non-dimensional time step to make the mass matrix correction
+      deltat = real(DT,kind=CUSTOM_REAL)
+      deltatover2 = real(0.5d0*deltat,kind=CUSTOM_REAL)
 
-       ! use the non-dimensional time step to make the mass matrix correction
-       deltat = real(DT,kind=CUSTOM_REAL)
-       deltatover2 = real(0.5d0*deltat,kind=CUSTOM_REAL)
+      do iface = 1,num_abs_boundary_faces
+        ispec = abs_boundary_ispec(iface)
 
-        if (ELASTIC_SIMULATION) then
-           rmassx(:) = 0._CUSTOM_REAL
-           rmassy(:) = 0._CUSTOM_REAL
-           rmassz(:) = 0._CUSTOM_REAL
-        endif
-        ! acoustic domains
-        if (ACOUSTIC_SIMULATION) then
-           if (.not. allocated(rmassz_acoustic)) then
-             allocate(rmassz_acoustic(nglob_ab), stat=ier)
-             if (ier /= 0) call exit_MPI_without_rank('error allocating array 332')
-           endif
-           rmassz_acoustic(:) = 0._CUSTOM_REAL
-        endif
+        ! elastic element
+        if (ispec_is_elastic(ispec)) then
+          ! reference GLL points on boundary face
+          do igll = 1,NGLLSQUARE
+             ! gets local indices for GLL point
+             i = abs_boundary_ijk(1,igll,iface)
+             j = abs_boundary_ijk(2,igll,iface)
+             k = abs_boundary_ijk(3,igll,iface)
 
-        do iface = 1,num_abs_boundary_faces
-           ispec = abs_boundary_ispec(iface)
-           if (ispec_is_elastic(ispec)) then
-              ! reference GLL points on boundary face
-              do igll = 1,NGLLSQUARE
-                 ! gets local indices for GLL point
-                 i = abs_boundary_ijk(1,igll,iface)
-                 j = abs_boundary_ijk(2,igll,iface)
-                 k = abs_boundary_ijk(3,igll,iface)
+             ! gets velocity
+             iglob = ibool(i,j,k,ispec)
 
-                 ! gets velocity
-                 iglob = ibool(i,j,k,ispec)
+             ! gets associated normal
+             nx = abs_boundary_normal(1,igll,iface)
+             ny = abs_boundary_normal(2,igll,iface)
+             nz = abs_boundary_normal(3,igll,iface)
 
-                 ! gets associated normal
-                 nx = abs_boundary_normal(1,igll,iface)
-                 ny = abs_boundary_normal(2,igll,iface)
-                 nz = abs_boundary_normal(3,igll,iface)
+             vn = deltatover2*(nx+ny+nz)
 
-                 vn = deltatover2*(nx+ny+nz)
+             ! C*deltat/2 contributions
+             tx = rho_vp(i,j,k,ispec)*vn*nx + rho_vs(i,j,k,ispec)*(deltatover2-vn*nx)
+             ty = rho_vp(i,j,k,ispec)*vn*ny + rho_vs(i,j,k,ispec)*(deltatover2-vn*ny)
+             tz = rho_vp(i,j,k,ispec)*vn*nz + rho_vs(i,j,k,ispec)*(deltatover2-vn*nz)
 
-                 ! C*deltat/2 contributions
-                 tx = rho_vp(i,j,k,ispec)*vn*nx + rho_vs(i,j,k,ispec)*(deltatover2-vn*nx)
-                 ty = rho_vp(i,j,k,ispec)*vn*ny + rho_vs(i,j,k,ispec)*(deltatover2-vn*ny)
-                 tz = rho_vp(i,j,k,ispec)*vn*nz + rho_vs(i,j,k,ispec)*(deltatover2-vn*nz)
+             ! gets associated, weighted jacobian
+             jacobianw = abs_boundary_jacobian2Dw(igll,iface)
 
-                 ! gets associated, weighted jacobian
-                 jacobianw = abs_boundary_jacobian2Dw(igll,iface)
+             ! assembles mass matrix on global points
+             rmassx(iglob) = rmassx(iglob) + tx*jacobianw
+             rmassy(iglob) = rmassy(iglob) + ty*jacobianw
+             rmassz(iglob) = rmassz(iglob) + tz*jacobianw
+          enddo
+        endif ! elastic
 
-                 ! assembles mass matrix on global points
-                 rmassx(iglob) = rmassx(iglob) + tx*jacobianw
-                 rmassy(iglob) = rmassy(iglob) + ty*jacobianw
-                 rmassz(iglob) = rmassz(iglob) + tz*jacobianw
-              enddo
-           endif ! elastic
+        ! acoustic element
+        if (ispec_is_acoustic(ispec)) then
+          ! reference GLL points on boundary face
+          do igll = 1,NGLLSQUARE
+             ! gets local indices for GLL point
+             i = abs_boundary_ijk(1,igll,iface)
+             j = abs_boundary_ijk(2,igll,iface)
+             k = abs_boundary_ijk(3,igll,iface)
 
-           ! acoustic element
-           if (ispec_is_acoustic(ispec)) then
+             ! gets global index
+             iglob = ibool(i,j,k,ispec)
 
-              ! reference GLL points on boundary face
-              do igll = 1,NGLLSQUARE
-                 ! gets local indices for GLL point
-                 i = abs_boundary_ijk(1,igll,iface)
-                 j = abs_boundary_ijk(2,igll,iface)
-                 k = abs_boundary_ijk(3,igll,iface)
+             ! gets associated, weighted jacobian
+             jacobianw = abs_boundary_jacobian2Dw(igll,iface)
 
-                 ! gets global index
-                 iglob = ibool(i,j,k,ispec)
+             ! C * DT/2 contribution
+             !! need to divide by rho_vp
+             sn = deltatover2/ sqrt(kappastore(i,j,k,ispec) * rhostore(i,j,k,ispec))
 
-                 ! gets associated, weighted jacobian
-                 jacobianw = abs_boundary_jacobian2Dw(igll,iface)
-
-                 ! C * DT/2 contribution
-                 !! need to divide by rho_vp
-                 sn = deltatover2/ sqrt(kappastore(i,j,k,ispec) * rhostore(i,j,k,ispec))
-
-                 rmassz_acoustic(iglob) = rmassz_acoustic(iglob) + jacobianw*sn
-              enddo
-           endif ! acoustic
-
-        enddo
-
-     endif
-
-     !! need to create new masss matrix because the model is changed compared to
-     !! the one stored in databases_mpi
-     if (ELASTIC_SIMULATION) then
-        if (STACEY_ABSORBING_CONDITIONS) then
-           rmassx(:) = rmass(:) + rmassx(:)
-           rmassy(:) = rmass(:) + rmassy(:)
-           rmassz(:) = rmass(:) + rmassz(:)
-        else
-           rmassx(:) = rmass(:)
-           rmassy(:) = rmass(:)
-           rmassz(:) = rmass(:)
-        endif
-     endif
-
-     if (ACOUSTIC_SIMULATION) then
-        ! adds contributions
-        if (STACEY_ABSORBING_CONDITIONS) then
-           !if (USE_LDDRK) then
-           !   rmass_acoustic(:) = rmass_acoustic(:)
-           !else
-              ! adds boundary contributions for newmark scheme
-              rmass_acoustic(:) = rmass_acoustic(:) + rmassz_acoustic(:)
-           !endif
-
-        endif
-     endif
+             rmass_acoustic(iglob) = rmass_acoustic(iglob) + jacobianw*sn
+          enddo
+        endif ! acoustic
+      enddo
+    endif
 
      ! synchronize all the processes before assembling the mass matrix
      ! to make sure all the nodes have finished to read their databases
@@ -752,9 +716,6 @@ contains
         rmassx(:) = 1._CUSTOM_REAL / rmassx(:)
         rmassy(:) = 1._CUSTOM_REAL / rmassy(:)
         rmassz(:) = 1._CUSTOM_REAL / rmassz(:)
-
-        ! not needed anymore
-        deallocate(rmass)
      endif
 
      if (ACOUSTIC_SIMULATION) then
@@ -766,8 +727,6 @@ contains
         ! fill mass matrix with fictitious non-zero values to make sure it can be inverted globally
         where(rmass_acoustic <= 0._CUSTOM_REAL) rmass_acoustic = 1._CUSTOM_REAL
         rmass_acoustic(:) = 1._CUSTOM_REAL / rmass_acoustic(:)
-        ! not needed anymore
-        if (STACEY_ABSORBING_CONDITIONS) deallocate(rmassz_acoustic)
      endif
 
    end subroutine create_mass_matrices_Stacey_duplication_routine

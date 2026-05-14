@@ -33,7 +33,7 @@
 
   use shared_parameters, only: &
     ACOUSTIC_SIMULATION, ELASTIC_SIMULATION, POROELASTIC_SIMULATION, &
-    STACEY_ABSORBING_CONDITIONS,SAVE_MESH_FILES,PML_CONDITIONS, &
+    SAVE_MESH_FILES,PML_CONDITIONS, &
     ANISOTROPY,APPROXIMATE_OCEAN_LOAD,OLSEN_ATTENUATION_RATIO, &
     ATTENUATION,USE_OLSEN_ATTENUATION, &
     SAVE_MOHO_MESH,ATTENUATION_f0_REFERENCE, &
@@ -450,13 +450,8 @@
   if (.not. SAVE_MOHO_MESH) deallocate(xstore_unique,ystore_unique,zstore_unique)
 
   if (ACOUSTIC_SIMULATION) deallocate(rmass_acoustic)
-  if (ELASTIC_SIMULATION) deallocate(rmass)
+  if (ELASTIC_SIMULATION) deallocate(rmassx,rmassy,rmassz)
   if (POROELASTIC_SIMULATION) deallocate(rmass_solid_poroelastic,rmass_fluid_poroelastic)
-
-  if (STACEY_ABSORBING_CONDITIONS) then
-    if (ELASTIC_SIMULATION) deallocate(rmassx,rmassy,rmassz)
-    if (ACOUSTIC_SIMULATION) deallocate(rmassz_acoustic)
-  endif
 
   ! user output
   call synchronize_all()

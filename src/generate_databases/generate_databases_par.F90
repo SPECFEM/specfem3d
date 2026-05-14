@@ -215,13 +215,9 @@
   real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: rho_vpI,rho_vpII,rho_vsI
 
   ! mass matrix
-  real(kind=CUSTOM_REAL), dimension(:), allocatable :: rmass,rmass_acoustic, &
-    rmass_solid_poroelastic,rmass_fluid_poroelastic
-
-  ! mass matrix contributions
   real(kind=CUSTOM_REAL), dimension(:), allocatable :: rmassx,rmassy,rmassz
-  real(kind=CUSTOM_REAL), dimension(:), allocatable :: rmassz_acoustic
-  integer :: nglob_xy
+  real(kind=CUSTOM_REAL), dimension(:), allocatable :: rmass_acoustic
+  real(kind=CUSTOM_REAL), dimension(:), allocatable :: rmass_solid_poroelastic,rmass_fluid_poroelastic
 
   ! ocean load
   integer :: NGLOB_OCEAN

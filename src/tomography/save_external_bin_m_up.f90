@@ -34,8 +34,8 @@
   subroutine save_external_bin_m_up(nspec,nglob, &
                                     rho_vp,rho_vs,qmu_attenuation_store, &
                                     rhostore,kappastore,mustore, &
-                                    rmass,rmass_acoustic,rmass_solid_poroelastic,rmass_fluid_poroelastic, &
-                                    nglob_xy,rmassx,rmassy,rmassz, &
+                                    rmassx,rmassy,rmassz, &
+                                    rmass_acoustic,rmass_solid_poroelastic,rmass_fluid_poroelastic, &
                                     APPROXIMATE_OCEAN_LOAD,rmass_ocean_load,NGLOB_OCEAN, &
                                     ibool, &
                                     xstore,ystore,zstore, &
@@ -69,7 +69,7 @@
     nspec_inner_elastic,nspec_outer_elastic,num_phase_ispec_elastic,phase_ispec_inner_elastic, &
     num_colors_outer_elastic,num_colors_inner_elastic,num_elem_colors_elastic
 
-  use specfem_par_acoustic, only: rmassz_acoustic,num_coupling_ac_po_faces, &
+  use specfem_par_acoustic, only: num_coupling_ac_po_faces, &
     num_coupling_ac_el_faces,coupling_ac_el_ijk,coupling_ac_el_ispec, &
     nspec_inner_acoustic,nspec_outer_acoustic,num_phase_ispec_acoustic,phase_ispec_inner_acoustic, &
     num_colors_outer_acoustic,num_colors_inner_acoustic,num_elem_colors_acoustic
@@ -88,11 +88,9 @@
 
   ! material
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,nspec) :: rhostore,kappastore,mustore
-  real(kind=CUSTOM_REAL), dimension(nglob) :: rmass,rmass_acoustic, &
+  real(kind=CUSTOM_REAL), dimension(nglob) :: rmassx,rmassy,rmassz, &
+            rmass_acoustic, &
             rmass_solid_poroelastic,rmass_fluid_poroelastic
-
-  integer :: nglob_xy
-  real(kind=CUSTOM_REAL), dimension(nglob_xy) :: rmassx,rmassy,rmassz
 
   ! ocean load
   logical :: APPROXIMATE_OCEAN_LOAD
@@ -199,7 +197,9 @@
 ! elastic
   call any_all_l( ANY(ispec_is_elastic), ELASTIC_SIMULATION )
   if (ELASTIC_SIMULATION) then
-    write(IOUT) rmass
+    write(IOUT) rmassx
+    write(IOUT) rmassy
+    write(IOUT) rmassz
     if (APPROXIMATE_OCEAN_LOAD) then
       write(IOUT) rmass_ocean_load
     endif
@@ -223,15 +223,6 @@
     write(IOUT) abs_boundary_ijk
     write(IOUT) abs_boundary_jacobian2Dw
     write(IOUT) abs_boundary_normal
-    ! store mass matrix contributions
-    if (ELASTIC_SIMULATION) then
-     write(IOUT) rmassx
-     write(IOUT) rmassy
-     write(IOUT) rmassz
-    endif
-    if (ACOUSTIC_SIMULATION) then
-      write(IOUT) rmassz_acoustic
-    endif
   endif
 
 ! free surface
