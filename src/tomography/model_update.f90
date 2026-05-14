@@ -821,10 +821,8 @@ subroutine save_new_databases()
   real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: rhostore_new
 
   integer :: i,j,k,ispec
-  integer :: nglob_xy
 
   ! mass matrices
-  real(kind=CUSTOM_REAL), dimension(:), allocatable :: rmass_new
   real(kind=CUSTOM_REAL), dimension(:), allocatable :: rmassx_new,rmassy_new,rmassz_new
   real(kind=CUSTOM_REAL), dimension(:), allocatable :: rmass_acoustic_new,rmass_solid_poroelastic_new,rmass_fluid_poroelastic_new
 
@@ -875,9 +873,13 @@ subroutine save_new_databases()
   call zwgljd(zigll,wzgll,NGLLZ,GAUSSALPHA,GAUSSBETA)
 
   ! create mass matrix ONLY for the elastic case
-  allocate(rmass_new(NGLOB_AB),stat=ier)
+  allocate(rmassx_new(NGLOB_AB), &
+           rmassy_new(NGLOB_AB), &
+           rmassz_new(NGLOB_AB), stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 958')
-  rmass_new(:) = 0._CUSTOM_REAL
+  rmassx_new(:) = 0._CUSTOM_REAL
+  rmassy_new(:) = 0._CUSTOM_REAL
+  rmassz_new(:) = 0._CUSTOM_REAL
 
   ! user output
   if (myrank == 0) then
@@ -889,32 +891,15 @@ subroutine save_new_databases()
   call define_mass_matrices_elastic(NGLOB_AB,NSPEC_AB,nspec_irregular,ibool,rhostore_new, &
                                     jacobianstore,irregular_element_number,jacobian_regular, &
                                     wxgll,wygll,wzgll,ispec_is_elastic, &
-                                    rmass_new)
+                                    rmassx_new,rmassy_new,rmassz_new)
 
   ! this does update the absorbing boundary contributions to the mass matrix
   if (STACEY_ABSORBING_CONDITIONS) then
-    ! checks if anything to do
-    if (num_abs_boundary_faces > 0) then
-      nglob_xy = NGLOB_AB
-    else
-      nglob_xy = 1
-    endif
-
-    ! elastic domains
-    allocate( rmassx_new(nglob_xy), rmassy_new(nglob_xy), rmassz_new(nglob_xy), stat=ier)
-    if (ier /= 0) call exit_MPI_without_rank('error allocating array 666')
-    if (ier /= 0) stop 'error in allocate 21'
-    rmassx_new(:) = 0._CUSTOM_REAL
-    rmassy_new(:) = 0._CUSTOM_REAL
-    rmassz_new(:) = 0._CUSTOM_REAL
-
-    if (num_abs_boundary_faces > 0) then
-      call define_mass_matrices_Stacey_elastic(NGLOB_AB,NSPEC_AB,DT,ibool,rho_vp_new,rho_vs_new, &
-                                               num_abs_boundary_faces,abs_boundary_ispec,abs_boundary_ijk, &
-                                               abs_boundary_normal,abs_boundary_jacobian2Dw, &
-                                               ispec_is_elastic, &
-                                               rmassx_new, rmassy_new, rmassz_new)
-    endif
+    call add_mass_matrices_Stacey_elastic(NGLOB_AB,NSPEC_AB,DT,ibool,rho_vp_new,rho_vs_new, &
+                                             num_abs_boundary_faces,abs_boundary_ispec,abs_boundary_ijk, &
+                                             abs_boundary_normal,abs_boundary_jacobian2Dw, &
+                                             ispec_is_elastic, &
+                                             rmassx_new,rmassy_new,rmassz_new)
   endif
 
   call synchronize_all()
@@ -1074,8 +1059,8 @@ subroutine save_new_databases()
   call save_external_bin_m_up(NSPEC_AB,NGLOB_AB, &
                               rho_vp_new,rho_vs_new,qmu_attenuation_store, &
                               rhostore_new,kappastore_new,mustore_new, &
-                              rmass_new,rmass_acoustic_new,rmass_solid_poroelastic_new,rmass_fluid_poroelastic_new, &
-                              nglob_xy,rmassx_new,rmassy_new,rmassz_new, &
+                              rmassx_new,rmassy_new,rmassz_new, &
+                              rmass_acoustic_new,rmass_solid_poroelastic_new,rmass_fluid_poroelastic_new, &
                               APPROXIMATE_OCEAN_LOAD,rmass_ocean_load,NGLOB_OCEAN,ibool,xstore,ystore,zstore, &
                               abs_boundary_normal,abs_boundary_jacobian2Dw, &
                               abs_boundary_ijk,abs_boundary_ispec,num_abs_boundary_faces, &
@@ -1091,7 +1076,6 @@ subroutine save_new_databases()
                               ispec_is_acoustic,ispec_is_elastic,ispec_is_poroelastic)
 
   deallocate(rhostore_new, kappastore_new, mustore_new, rho_vp_new, rho_vs_new)
-  deallocate(rmass_new)
   deallocate(rmassx_new,rmassy_new,rmassz_new)
   deallocate(rmass_acoustic_new,rmass_solid_poroelastic_new,rmass_fluid_poroelastic_new)
   deallocate(qmu_attenuation_store,qkappa_attenuation_store)

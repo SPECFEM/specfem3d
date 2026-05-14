@@ -43,7 +43,7 @@
     nspec2D_xmin,nspec2D_xmax,nspec2D_ymin,nspec2D_ymax,NSPEC2D_BOTTOM,NSPEC2D_TOP, &
     ibelm_xmin,ibelm_xmax,ibelm_ymin,ibelm_ymax,ibelm_bottom,ibelm_top, &
     SIMULATION_TYPE,SAVE_FORWARD, &
-    STACEY_ABSORBING_CONDITIONS,USE_MESH_COLORING_GPU
+    USE_MESH_COLORING_GPU
 
   ! MPI interfaces
   use generate_databases_par, only: num_interfaces_ext_mesh,my_neighbors_ext_mesh, &
@@ -164,7 +164,9 @@
 
   ! elastic
   if (ELASTIC_SIMULATION) then
-    write(IOUT) rmass
+    write(IOUT) rmassx
+    write(IOUT) rmassy
+    write(IOUT) rmassz
     if (APPROXIMATE_OCEAN_LOAD) then
       write(IOUT) rmass_ocean_load
     endif
@@ -228,17 +230,6 @@
     write(IOUT) abs_boundary_ijk
     write(IOUT) abs_boundary_jacobian2Dw
     write(IOUT) abs_boundary_normal
-    if (STACEY_ABSORBING_CONDITIONS .and. (.not. PML_CONDITIONS)) then
-      ! store mass matrix contributions
-      if (ELASTIC_SIMULATION) then
-        write(IOUT) rmassx
-        write(IOUT) rmassy
-        write(IOUT) rmassz
-      endif
-      if (ACOUSTIC_SIMULATION) then
-        write(IOUT) rmassz_acoustic
-      endif
-    endif
   endif
 
   ! stamp for checking i/o so far

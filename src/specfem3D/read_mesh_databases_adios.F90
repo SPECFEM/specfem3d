@@ -129,8 +129,7 @@
     local_dim_alpha_store_z, &
     local_dim_points_interface_PML_acoustic, &
     local_dim_points_interface_PML_elastic, &
-    local_dim_rmassx, local_dim_rmassy, local_dim_rmassz, &
-    local_dim_rmassz_acoustic, local_dim_coupling_el_po_ispec, &
+    local_dim_coupling_el_po_ispec, &
     local_dim_coupling_po_el_ispec, local_dim_coupling_el_po_ijk, &
     local_dim_coupling_po_el_ijk, &
     local_dim_coupling_el_po_jacobian2Dw, &
@@ -361,7 +360,9 @@
     call read_adios_scalar_local_dim(myadios_file, myadios_group, myrank, "rmass_acoustic", local_dim_rmass_acoustic)
   endif
   if (ELASTIC_SIMULATION) then
-    call read_adios_scalar_local_dim(myadios_file, myadios_group, myrank, "rmass", local_dim_rmass)
+    call read_adios_scalar_local_dim(myadios_file, myadios_group, myrank, "rmassx", local_dim_rmass)
+    !call read_adios_scalar_local_dim(myadios_file, myadios_group, myrank, "rmassy", local_dim_rmass) ! same dimensions
+    !call read_adios_scalar_local_dim(myadios_file, myadios_group, myrank, "rmassz", local_dim_rmass)
 
     if (APPROXIMATE_OCEAN_LOAD) then
       call read_adios_scalar_local_dim(myadios_file, myadios_group, myrank, "rmass_ocean_load", local_dim_rmass_ocean_load)
@@ -419,17 +420,6 @@
                                      "abs_boundary_jacobian2Dw", local_dim_abs_boundary_jacobian2Dw)
     call read_adios_scalar_local_dim(myadios_file, myadios_group, myrank, &
                                      "abs_boundary_normal", local_dim_abs_boundary_normal)
-    if (STACEY_ABSORBING_CONDITIONS .and. (.not. PML_CONDITIONS)) then
-      ! mass matrix contributions
-      if (ELASTIC_SIMULATION) then
-        call read_adios_scalar_local_dim(myadios_file, myadios_group, myrank, "rmassx", local_dim_rmassx)
-        call read_adios_scalar_local_dim(myadios_file, myadios_group, myrank, "rmassy", local_dim_rmassy)
-        call read_adios_scalar_local_dim(myadios_file, myadios_group, myrank, "rmassz", local_dim_rmassz)
-      endif
-      if (ACOUSTIC_SIMULATION) then
-        call read_adios_scalar_local_dim(myadios_file, myadios_group, myrank, "rmassz_acoustic", local_dim_rmassz_acoustic)
-      endif
-    endif
   endif
 
   if (nspec2d_xmin > 0) then
@@ -574,12 +564,6 @@
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 1795')
     if (ier /= 0) stop 'error allocating array rmass_acoustic'
     rmass_acoustic(:) = 0.0_CUSTOM_REAL
-
-    ! initializes mass matrix contribution
-    allocate(rmassz_acoustic(NGLOB_AB),stat=ier)
-    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1796')
-    if (ier /= 0) stop 'error allocating array rmassz_acoustic'
-    rmassz_acoustic(:) = 0._CUSTOM_REAL
   endif
 
 !TODO
@@ -608,18 +592,10 @@
     endif
 
     ! allocates mass matrix
-    allocate(rmass(NGLOB_AB),stat=ier)
+    allocate(rmassx(NGLOB_AB), &
+             rmassy(NGLOB_AB), &
+             rmassz(NGLOB_AB), stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 1802')
-    rmass(:) = 0.0_CUSTOM_REAL
-
-    if (ier /= 0) stop 'error allocating array rmass'
-    ! initializes mass matrix contributions
-    allocate(rmassx(NGLOB_AB),stat=ier)
-    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1803')
-    allocate(rmassy(NGLOB_AB),stat=ier)
-    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1804')
-    allocate(rmassz(NGLOB_AB), stat=ier)
-    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1805')
     if (ier /= 0) stop 'error allocating array rmassx,rmassy,rmassz'
     rmassx(:) = 0._CUSTOM_REAL
     rmassy(:) = 0._CUSTOM_REAL
@@ -1191,7 +1167,9 @@
     sel_num = sel_num+1
     sel => selections(sel_num)
     call set_selection_boundingbox(sel, start, count_ad)
-    call read_adios_schedule_array(myadios_file, myadios_group, sel, start, count_ad, "rmass/array", rmass)
+    call read_adios_schedule_array(myadios_file, myadios_group, sel, start, count_ad, "rmassx/array", rmassx)
+    call read_adios_schedule_array(myadios_file, myadios_group, sel, start, count_ad, "rmassy/array", rmassy)
+    call read_adios_schedule_array(myadios_file, myadios_group, sel, start, count_ad, "rmassz/array", rmassz)
 
     if (APPROXIMATE_OCEAN_LOAD) then
       ! ocean mass matrix
@@ -1346,29 +1324,6 @@
     call set_selection_boundingbox(sel, start, count_ad)
     call read_adios_schedule_array(myadios_file, myadios_group, sel, start, count_ad, &
                                    "abs_boundary_normal/array", abs_boundary_normal)
-
-    if (STACEY_ABSORBING_CONDITIONS .and. (.not. PML_CONDITIONS)) then
-      ! store mass matrix contributions
-      if (ELASTIC_SIMULATION) then
-        start(1) = local_dim_rmassx * myrank
-        count_ad(1) = NGLOB_AB  ! == nglob_xy in generate_databse
-        sel_num = sel_num+1
-        sel => selections(sel_num)
-        call set_selection_boundingbox(sel, start, count_ad)
-        call read_adios_schedule_array(myadios_file, myadios_group, sel, start, count_ad, "rmassx/array", rmassx)
-        call read_adios_schedule_array(myadios_file, myadios_group, sel, start, count_ad, "rmassy/array", rmassy)
-        call read_adios_schedule_array(myadios_file, myadios_group, sel, start, count_ad, "rmassz/array", rmassz)
-      endif
-      if (ACOUSTIC_SIMULATION) then
-        start(1) = local_dim_rmassz_acoustic * myrank
-        count_ad(1) = NGLOB_AB ! == nglob_xy in generate_databse
-        sel_num = sel_num+1
-        sel => selections(sel_num)
-        call set_selection_boundingbox(sel, start, count_ad)
-        call read_adios_schedule_array(myadios_file, myadios_group, sel, start, count_ad, &
-                                       "rmassz_acoustic/array", rmassz_acoustic)
-      endif
-    endif
   endif
 
   if (nspec2d_xmin > 0) then

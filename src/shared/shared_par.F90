@@ -105,8 +105,12 @@ end module constants
   character(len=MAX_STRING_LEN) :: SEP_MODEL_DIRECTORY
 
   ! physical parameters
-  logical :: APPROXIMATE_OCEAN_LOAD,TOPOGRAPHY,ATTENUATION,ANISOTROPY
-  logical :: GRAVITY
+  logical :: APPROXIMATE_OCEAN_LOAD = .false.
+  logical :: TOPOGRAPHY = .false.
+  logical :: ATTENUATION = .false.
+  logical :: ANISOTROPY = .false.
+  logical :: GRAVITY = .false.
+  logical :: ROTATION = .false.
 
   character(len=MAX_STRING_LEN) :: TOMOGRAPHY_PATH
 

@@ -201,13 +201,6 @@
       write(*,*)
     endif
 
-    call read_value_logical(ATTENUATION, 'ATTENUATION', ier)
-    if (ier /= 0) then
-      some_parameters_missing_from_Par_file = .true.
-      write(*,'(a)') 'ATTENUATION                     = .false.'
-      write(*,*)
-    endif
-
     call read_value_logical(ANISOTROPY, 'ANISOTROPY', ier)
     if (ier /= 0) then
       some_parameters_missing_from_Par_file = .true.
@@ -219,6 +212,20 @@
     if (ier /= 0) then
       some_parameters_missing_from_Par_file = .true.
       write(*,'(a)') 'GRAVITY                         = .false.'
+      write(*,*)
+    endif
+
+    call read_value_logical(ROTATION, 'ROTATION', ier)
+    if (ier /= 0) then
+      some_parameters_missing_from_Par_file = .true.
+      write(*,'(a)') 'ROTATION                         = .false.'
+      write(*,*)
+    endif
+
+    call read_value_logical(ATTENUATION, 'ATTENUATION', ier)
+    if (ier /= 0) then
+      some_parameters_missing_from_Par_file = .true.
+      write(*,'(a)') 'ATTENUATION                     = .false.'
       write(*,*)
     endif
 
@@ -1457,6 +1464,7 @@
   call bcast_all_singlel(ATTENUATION)
   call bcast_all_singlel(ANISOTROPY)
   call bcast_all_singlel(GRAVITY)
+  call bcast_all_singlel(ROTATION)
 
   ! (optional) gravity min/max
   call bcast_all_singlel(USE_GRAVITY_MINMAX)

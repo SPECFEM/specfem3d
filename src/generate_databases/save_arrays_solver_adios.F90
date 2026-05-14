@@ -49,7 +49,6 @@
     NSPEC2D_BOTTOM, NSPEC2D_TOP, &
     ibelm_xmin, ibelm_xmax,ibelm_ymin, ibelm_ymax, ibelm_bottom, ibelm_top, &
     SIMULATION_TYPE, SAVE_FORWARD, &
-    STACEY_ABSORBING_CONDITIONS, &
     LOCAL_PATH, myrank, sizeprocs
 
   ! MPI interfaces
@@ -108,7 +107,7 @@
              num_phase_ispec_poroelastic_wmax, num_colors_outer_acoustic_wmax, &
              num_colors_inner_acoustic_wmax, num_colors_outer_elastic_wmax, &
              num_colors_inner_elastic_wmax, &
-             nglob_ocean_wmax, nglob_xy_wmax, nspec_aniso_wmax, &
+             nglob_ocean_wmax, nspec_aniso_wmax, &
              max_nibool_interfaces_ext_mesh_wmax, &
              num_neighbors_all_wmax
 
@@ -200,7 +199,7 @@
   max_global_values(35) = num_colors_inner_elastic
   max_global_values(36) = 0 ! dummy for future use
   max_global_values(37) = nglob_ocean
-  max_global_values(38) = nglob_xy
+  max_global_values(38) = 0 ! dummy for future use
   max_global_values(39) = 0 ! dummy for future use
   max_global_values(40) = nspec_aniso
   max_global_values(41) = nspec_irregular
@@ -247,7 +246,7 @@
   num_colors_inner_elastic_wmax       = max_global_values(35)
   ! idummy                            = max_global_values(36) ! for future use
   nglob_ocean_wmax                    = max_global_values(37)
-  nglob_xy_wmax                       = max_global_values(38)
+  ! idummy                            = max_global_values(38)
   ! idummy                            = max_global_values(39) ! for future use
   nspec_aniso_wmax                    = max_global_values(40)
   nspec_irreg_wmax                    = max_global_values(41)
@@ -314,7 +313,9 @@
   ! elastic
   if (ELASTIC_SIMULATION) then
     local_dim = nglob_wmax
-    call define_adios_global_array1D(myadios_group, group_size_inc, local_dim, '', STRINGIFY_VAR(rmass))
+    call define_adios_global_array1D(myadios_group, group_size_inc,local_dim, '', STRINGIFY_VAR(rmassx))
+    call define_adios_global_array1D(myadios_group, group_size_inc,local_dim, '', STRINGIFY_VAR(rmassy))
+    call define_adios_global_array1D(myadios_group, group_size_inc,local_dim, '', STRINGIFY_VAR(rmassz))
 
     if (APPROXIMATE_OCEAN_LOAD) then
       local_dim = nglob_ocean_wmax
@@ -405,19 +406,6 @@
     local_dim = NDIM * NGLLSQUARE * num_abs_boundary_faces_wmax
     call define_adios_global_array1D(myadios_group, group_size_inc,local_dim, '', &
                                      STRINGIFY_VAR(abs_boundary_normal))
-    if (STACEY_ABSORBING_CONDITIONS .and. (.not. PML_CONDITIONS)) then
-      ! store mass matrix contributions
-      if (ELASTIC_SIMULATION) then
-        local_dim = nglob_xy_wmax
-        call define_adios_global_array1D(myadios_group, group_size_inc,local_dim, '', STRINGIFY_VAR(rmassx))
-        call define_adios_global_array1D(myadios_group, group_size_inc,local_dim, '', STRINGIFY_VAR(rmassy))
-        call define_adios_global_array1D(myadios_group, group_size_inc,local_dim, '', STRINGIFY_VAR(rmassz))
-      endif
-      if (ACOUSTIC_SIMULATION) then
-        local_dim = nglob_xy_wmax
-        call define_adios_global_array1D(myadios_group, group_size_inc,local_dim, '', STRINGIFY_VAR(rmassz_acoustic))
-      endif
-    endif
   endif
 
   call define_adios_scalar(myadios_group, group_size_inc, '', STRINGIFY_VAR(nspec2d_xmin))
@@ -705,7 +693,10 @@
   ! elastic
   if (ELASTIC_SIMULATION) then
     local_dim = nglob_wmax
-    call write_adios_global_1d_array(myadios_file, myadios_group, myrank, sizeprocs, local_dim, STRINGIFY_VAR(rmass))
+    call write_adios_global_1d_array(myadios_file, myadios_group, myrank, sizeprocs, local_dim, STRINGIFY_VAR(rmassx))
+    call write_adios_global_1d_array(myadios_file, myadios_group, myrank, sizeprocs, local_dim, STRINGIFY_VAR(rmassy))
+    call write_adios_global_1d_array(myadios_file, myadios_group, myrank, sizeprocs, local_dim, STRINGIFY_VAR(rmassz))
+
     if (APPROXIMATE_OCEAN_LOAD) then
       local_dim = nglob_ocean_wmax
       call write_adios_global_1d_array(myadios_file, myadios_group, myrank, sizeprocs, local_dim, &
@@ -806,20 +797,6 @@
     local_dim = NDIM * NGLLSQUARE * num_abs_boundary_faces_wmax
     call write_adios_global_1d_array(myadios_file, myadios_group, myrank, sizeprocs, local_dim, &
                                      STRINGIFY_VAR(abs_boundary_normal))
-    if (STACEY_ABSORBING_CONDITIONS .and. (.not. PML_CONDITIONS)) then
-      ! store mass matrix contributions
-      if (ELASTIC_SIMULATION) then
-        local_dim = nglob_xy_wmax
-        call write_adios_global_1d_array(myadios_file, myadios_group, myrank, sizeprocs, local_dim, STRINGIFY_VAR(rmassx))
-        call write_adios_global_1d_array(myadios_file, myadios_group, myrank, sizeprocs, local_dim, STRINGIFY_VAR(rmassy))
-        call write_adios_global_1d_array(myadios_file, myadios_group, myrank, sizeprocs, local_dim, STRINGIFY_VAR(rmassz))
-      endif
-      if (ACOUSTIC_SIMULATION) then
-        local_dim = nglob_xy_wmax
-        call write_adios_global_1d_array(myadios_file, myadios_group, myrank, sizeprocs, local_dim, &
-                                         STRINGIFY_VAR(rmassz_acoustic))
-      endif
-    endif
   endif
 
   call write_adios_scalar(myadios_file, myadios_group, STRINGIFY_VAR(nspec2d_xmin))
