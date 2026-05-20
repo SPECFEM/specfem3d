@@ -328,6 +328,18 @@ module specfem_par
   double precision, dimension(NTOTAL_OBSERVATION) :: x_observation,y_observation,z_observation, &
     g_x,g_y,g_z,G_xx,G_yy,G_zz,G_xy,G_xz,G_yz,temporary_array_for_sum
 
+
+  !-----------------------------------------------------------------
+  ! rotation
+  !-----------------------------------------------------------------
+
+  ! rotation factor for angular velocity (2 * Omega)
+  real(kind=CUSTOM_REAL), dimension(NDIM) :: two_omega_rotation,b_two_omega_rotation
+
+  !-----------------------------------------------------------------
+  ! optimization
+  !-----------------------------------------------------------------
+
   ! force vectorization
 #ifdef FORCE_VECTORIZATION
   logical, parameter :: FORCE_VECTORIZATION_VAL = .true.

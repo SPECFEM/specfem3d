@@ -825,6 +825,27 @@
 
 !!-----------------------------------------------------------
 !!
+!! ROTATION
+!!
+!!-----------------------------------------------------------
+
+! number of hours per day for rotation rate of the Earth
+! Solar day is 24 * 3600 s
+  double precision, parameter :: EARTH_HOURS_PER_DAY = 24.d0
+  double precision, parameter :: EARTH_SECONDS_PER_HOUR = 3600.d0
+! Sidereal day is ~86,164.0905 s ~ 23 h 56 min 4.0905 s or 23.9344696 h
+!  double precision, parameter :: EARTH_HOURS_PER_DAY = 23.9344696d0
+!  double precision, parameter :: EARTH_SECONDS_PER_HOUR = 3600.d0
+
+! default angular velocity (in rad/s) - Earth's rotation rate
+  double precision, dimension(NDIM), parameter :: DEFAULT_ROTATION_OMEGA = &
+    (/ 0.d0, 0.d0, TWO_PI / (EARTH_HOURS_PER_DAY * EARTH_SECONDS_PER_HOUR) /)  ! rotation around vertical Z-axis
+
+! default origin of center of rotation (in m)
+  double precision, dimension(NDIM), parameter :: DEFAULT_ROTATION_ORIGIN = (/ 0.d0, 0.d0, 0.d0 /)
+
+!!-----------------------------------------------------------
+!!
 !! DOMAINS
 !!
 !!-----------------------------------------------------------

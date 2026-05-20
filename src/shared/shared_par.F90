@@ -61,7 +61,8 @@ end module constants
 
 ! holds input parameters given in DATA/Par_file
 
-  use constants, only: MAX_STRING_LEN,STANDARD_GRAVITY
+  use constants, only: MAX_STRING_LEN,STANDARD_GRAVITY,NDIM, &
+                       DEFAULT_ROTATION_OMEGA,DEFAULT_ROTATION_ORIGIN
 
   implicit none
 
@@ -112,6 +113,11 @@ end module constants
   logical :: GRAVITY = .false.
   logical :: ROTATION = .false.
 
+  ! (optional) rotation angular velocity and origin of center of rotation (relative to mesh coordinates)
+  double precision, dimension(NDIM) :: ROTATION_OMEGA = DEFAULT_ROTATION_OMEGA
+  double precision, dimension(NDIM) :: ROTATION_ORIGIN = DEFAULT_ROTATION_ORIGIN
+
+  ! tomography model file path
   character(len=MAX_STRING_LEN) :: TOMOGRAPHY_PATH
 
   ! attenuation

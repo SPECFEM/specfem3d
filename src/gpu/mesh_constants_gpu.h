@@ -861,6 +861,10 @@ typedef struct mesh_ {
   int* d_lts_interface_p_refine_boundary;
   int lts_max_nibool_interfaces_boundary;
 
+  // rotation
+  realw two_omega_rotation[3] = { 0.f, 0.f, 0.f };
+  realw b_two_omega_rotation[3] = { 0.f, 0.f, 0.f };
+
   // ------------------------------------------------------------------ //
   // optimizations
   // ------------------------------------------------------------------ //

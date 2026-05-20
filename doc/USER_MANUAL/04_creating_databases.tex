@@ -154,6 +154,11 @@ on how to specify your own 3D tomographic model.
 
 \end{description}
 
+\item [{\texttt{TOMOGRAPHY\_PATH}}] Directory in which the tomography files
+are stored for using external tomographic Earth models (please read
+Chapter \ref{cha:-Changing-the} and Section \ref{sec:Using-tomographic}
+`Using external tomographic Earth models' for further details.).
+%
 \item [{\texttt{APPROXIMATE\_OCEAN\_LOAD}}] Set to \texttt{.true.} if the
 effect of the oceans on seismic wave propagation should be incorporated
 based upon the (rough) approximate treatment discussed in \citet{KoTr02b}.
@@ -172,6 +177,21 @@ bathymetry should be read in based upon the topography file specified
 in the main constants file \texttt{setup/constants.h} to evaluate elevations. If not set, elevations
 will be read from the numerical mesh.
 %
+\item [{\texttt{ANISOTROPY}}] Set to \texttt{.true.} if you want to use
+an anisotropy model. Please see the file \texttt{model\_aniso.f90}
+in subdirectory \texttt{src/generate\_databases/} for the current
+implementation of anisotropic models.
+%
+\item [{\texttt{GRAVITY}}] Set to \texttt{.true.} if self-gravitation should
+be incorporated in the Cowling approximation \citep{KoTr02b,DaTr98}.
+Turning this feature on is relatively inexpensive, both from the perspective
+of memory requirements as well as in terms of computational speed.
+The gravitational acceleration is assumed to be constant and acts in vertical direction (z-axis).
+%
+\item [{\texttt{ROTATION}}] Set to \texttt{.true.} if the Coriolis effect
+should be incorporated. Turning this feature on is relatively cheap
+numerically.
+%
 \item [{\texttt{ATTENUATION}}] Set to \texttt{.true.} if attenuation should
 be incorporated. Turning this feature on increases the memory requirements
 significantly (roughly by a factor of~1.5), and is numerically fairly
@@ -186,22 +206,6 @@ Note that Qmu is always equal to Qs, but Qkappa is in general not equal to Qp.
 To convert one to the other see \texttt{doc/note\_on\_Qkappa\_versus\_Qp.pdf}
 and in folder \texttt{utils/small\_utilities/attenuation}, the tool
 \texttt{conversion\_from\_Qkappa\_Qmu\_to\_Qp\_Qs\_from\_Dahlen\_Tromp\_959\_960.f90}.
-%
-\item [{\texttt{ANISOTROPY}}] Set to \texttt{.true.} if you want to use
-an anisotropy model. Please see the file \texttt{model\_aniso.f90}
-in subdirectory \texttt{src/generate\_databases/} for the current
-implementation of anisotropic models.
-%
-\item [{\texttt{GRAVITY}}] Set to \texttt{.true.} if self-gravitation should
-be incorporated in the Cowling approximation \citep{KoTr02b,DaTr98}.
-Turning this feature on is relatively inexpensive, both from the perspective
-of memory requirements as well as in terms of computational speed.
-The gravitational acceleration is assumed to be constant and acts in vertical direction (z-axis).
-%
-\item [{\texttt{TOMOGRAPHY\_PATH}}] Directory in which the tomography files
-are stored for using external tomographic Earth models (please read
-Chapter \ref{cha:-Changing-the} and Section \ref{sec:Using-tomographic}
-`Using external tomographic Earth models' for further details.).
 %
 \item [{\texttt{USE\_OLSEN\_ATTENUATION}}] Set to \texttt{.true.} if you
 want to use the attenuation model that scaled from the S-wave speed
