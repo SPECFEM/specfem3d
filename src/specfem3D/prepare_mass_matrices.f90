@@ -271,7 +271,7 @@
 
   ! acoustic domains
   if (ACOUSTIC_SIMULATION) then
-    call add_mass_matrices_Stacey_acoustic(NGLOB_AB,NSPEC_AB,DT,ibool,rho_vp, &
+    call add_mass_matrices_Stacey_acoustic(NGLOB_AB,NSPEC_AB,DT,ibool,rhostore,kappastore, &
                                               num_abs_boundary_faces,abs_boundary_ispec,abs_boundary_ijk, &
                                               abs_boundary_jacobian2Dw, &
                                               ispec_is_acoustic, &

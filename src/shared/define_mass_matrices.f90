@@ -447,7 +447,7 @@
 !-------------------------------------------------------------------------------------------------
 !
 
-  subroutine add_mass_matrices_Stacey_acoustic(nglob,nspec,DT,ibool,rho_vp, &
+  subroutine add_mass_matrices_Stacey_acoustic(nglob,nspec,DT,ibool,rhostore,kappastore, &
                                                   num_abs_boundary_faces,abs_boundary_ispec,abs_boundary_ijk, &
                                                   abs_boundary_jacobian2Dw, &
                                                   ispec_is_acoustic, &
@@ -468,7 +468,7 @@
   double precision, intent(in) :: DT
 
   integer, dimension(NGLLX,NGLLY,NGLLZ,nspec), intent(in) :: ibool
-  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,nspec), intent(in) :: rho_vp
+  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,nspec), intent(in) :: rhostore,kappastore
 
   integer, intent(in) :: num_abs_boundary_faces
   integer, dimension(num_abs_boundary_faces), intent(in) :: abs_boundary_ispec
@@ -480,7 +480,7 @@
   real(kind=CUSTOM_REAL), dimension(nglob), intent(inout) :: rmass_acoustic
 
   ! local parameters
-  real(kind=CUSTOM_REAL) :: jacobianw
+  real(kind=CUSTOM_REAL) :: rhol,cpl,jacobianw
   real(kind=CUSTOM_REAL) :: deltatover2
   real(kind=CUSTOM_REAL) :: sn
   integer :: ispec,iglob,i,j,k,iface,igll
@@ -508,8 +508,12 @@
         j = abs_boundary_ijk(2,igll,iface)
         k = abs_boundary_ijk(3,igll,iface)
 
+        ! determines bulk sound speed
+        rhol = rhostore(i,j,k,ispec)
+        cpl = sqrt( kappastore(i,j,k,ispec) / rhol )
+
         ! C * DT/2 contribution
-        sn = deltatover2 / rho_vp(i,j,k,ispec)
+        sn = deltatover2 / cpl / rhol
 
         ! gets associated, weighted jacobian
         jacobianw = abs_boundary_jacobian2Dw(igll,iface)
