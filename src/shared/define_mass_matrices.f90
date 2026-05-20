@@ -81,7 +81,8 @@
             weight = wxgll(i)*wygll(j)*wzgll(k)
             if (ispec_irreg /= 0) jacobianl = jacobianstore(i,j,k,ispec_irreg)
 
-            rmass_elastic(iglob) = rmass_elastic(iglob) + real( dble(jacobianl) * weight * dble(rhostore(i,j,k,ispec)),kind=CUSTOM_REAL)
+            rmass_elastic(iglob) = rmass_elastic(iglob) &
+                                   + real( dble(jacobianl) * weight * dble(rhostore(i,j,k,ispec)),kind=CUSTOM_REAL)
           enddo
         enddo
       enddo
@@ -149,8 +150,8 @@
             if (ispec_irreg /= 0) jacobianl = jacobianstore(i,j,k,ispec_irreg)
 
             ! distinguish between single and double precision for reals
-            rmass_acoustic(iglob) = rmass_acoustic(iglob) + &
-                                    real( dble(jacobianl) * weight / dble(kappastore(i,j,k,ispec)),kind=CUSTOM_REAL)
+            rmass_acoustic(iglob) = rmass_acoustic(iglob) &
+                                    + real( dble(jacobianl) * weight / dble(kappastore(i,j,k,ispec)),kind=CUSTOM_REAL)
           enddo
         enddo
       enddo
