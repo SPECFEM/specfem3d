@@ -115,6 +115,7 @@ specfem3D_OBJECTS = \
 	$O/prepare_attenuation.spec.o \
 	$O/prepare_gpu.spec.o \
 	$O/prepare_gravity.spec.o \
+	$O/prepare_mass_matrices.spec.o \
 	$O/prepare_noise.spec.o \
 	$O/prepare_optimized_arrays.spec.o \
 	$O/prepare_timerun.spec.o \

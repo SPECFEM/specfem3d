@@ -410,11 +410,7 @@
 
     ! elastic
     if (ELASTIC_SIMULATION) then
-      dset_name = "rmassx" ! 1 r (/offset_nglob/)
-      call h5_create_dataset_gen(dset_name, (/sum(offset_nglob(:))/), 1, CUSTOM_REAL)
-      dset_name = "rmassy" ! 1 r (/offset_nglob/)
-      call h5_create_dataset_gen(dset_name, (/sum(offset_nglob(:))/), 1, CUSTOM_REAL)
-      dset_name = "rmassz" ! 1 r (/offset_nglob/)
+      dset_name = "rmass_elastic" ! 1 r (/offset_nglob/)
       call h5_create_dataset_gen(dset_name, (/sum(offset_nglob(:))/), 1, CUSTOM_REAL)
       if (APPROXIMATE_OCEAN_LOAD) then
         dset_name = "rmass_ocean_load" ! 1 r (/offset_nglob_ocean/)
@@ -927,12 +923,8 @@
 
   ! elastic
   if (ELASTIC_SIMULATION) then
-    dset_name = "rmassx" ! 1 r (/offset_nglob/)
-    call h5_write_dataset_collect_hyperslab(dset_name, rmassx, (/sum(offset_nglob(0:myrank-1))/),H5_COL)
-    dset_name = "rmassy" ! 1 r (/offset_nglob/)
-    call h5_write_dataset_collect_hyperslab(dset_name, rmassy, (/sum(offset_nglob(0:myrank-1))/),H5_COL)
-    dset_name = "rmassz" ! 1 r (/offset_nglob/)
-    call h5_write_dataset_collect_hyperslab(dset_name, rmassz, (/sum(offset_nglob(0:myrank-1))/),H5_COL)
+    dset_name = "rmass_elastic" ! 1 r (/offset_nglob/)
+    call h5_write_dataset_collect_hyperslab(dset_name, rmass_elastic, (/sum(offset_nglob(0:myrank-1))/),H5_COL)
     if (APPROXIMATE_OCEAN_LOAD) then
       dset_name = "rmass_ocean_load" ! 1 r (/offset_nglob_ocean/)
       call h5_write_dataset_collect_hyperslab(dset_name, rmass_ocean_load, (/sum(offset_nglob_ocean(0:myrank-1))/),H5_COL)

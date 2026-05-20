@@ -518,15 +518,9 @@
 
     ! reads mass matrices
     if (I_should_read_the_database) then
-      dsetname = "rmassx"
-      call h5_read_dataset_collect_hyperslab(dsetname, rmassx, (/sum(offset_nglob(0:myrank-1))/), H5_COL)
-      dsetname = "rmassy"
-      call h5_read_dataset_collect_hyperslab(dsetname, rmassy, (/sum(offset_nglob(0:myrank-1))/), H5_COL)
-      dsetname = "rmassz"
+      dsetname = "rmass_elastic"
       call h5_read_dataset_collect_hyperslab(dsetname, rmassz, (/sum(offset_nglob(0:myrank-1))/), H5_COL)
     endif
-    if (size(rmassx) > 0) call bcast_all_cr_for_database(rmassx(1), size(rmassx,kind=4))
-    if (size(rmassy) > 0) call bcast_all_cr_for_database(rmassy(1), size(rmassy,kind=4))
     if (size(rmassz) > 0) call bcast_all_cr_for_database(rmassz(1), size(rmassz,kind=4))
 
     if (APPROXIMATE_OCEAN_LOAD) then

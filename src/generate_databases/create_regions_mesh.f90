@@ -450,7 +450,7 @@
   if (.not. SAVE_MOHO_MESH) deallocate(xstore_unique,ystore_unique,zstore_unique)
 
   if (ACOUSTIC_SIMULATION) deallocate(rmass_acoustic)
-  if (ELASTIC_SIMULATION) deallocate(rmassx,rmassy,rmassz)
+  if (ELASTIC_SIMULATION) deallocate(rmass_elastic)
   if (POROELASTIC_SIMULATION) deallocate(rmass_solid_poroelastic,rmass_fluid_poroelastic)
 
   ! user output
@@ -771,52 +771,27 @@ contains
     call flush_IMAIN()
   endif
 
-  if (nspec_irregular > 0) then
-    allocate(xixstore(NGLLX,NGLLY,NGLLZ,nspec_irregular),stat=ier)
-    if (ier /= 0) call exit_MPI_without_rank('error allocating array 766')
-    allocate(xiystore(NGLLX,NGLLY,NGLLZ,nspec_irregular),stat=ier)
-    if (ier /= 0) call exit_MPI_without_rank('error allocating array 767')
-    allocate(xizstore(NGLLX,NGLLY,NGLLZ,nspec_irregular),stat=ier)
-    if (ier /= 0) call exit_MPI_without_rank('error allocating array 768')
-    allocate(etaxstore(NGLLX,NGLLY,NGLLZ,nspec_irregular),stat=ier)
-    if (ier /= 0) call exit_MPI_without_rank('error allocating array 769')
-    allocate(etaystore(NGLLX,NGLLY,NGLLZ,nspec_irregular),stat=ier)
-    if (ier /= 0) call exit_MPI_without_rank('error allocating array 770')
-    allocate(etazstore(NGLLX,NGLLY,NGLLZ,nspec_irregular),stat=ier)
-    if (ier /= 0) call exit_MPI_without_rank('error allocating array 771')
-    allocate(gammaxstore(NGLLX,NGLLY,NGLLZ,nspec_irregular),stat=ier)
-    if (ier /= 0) call exit_MPI_without_rank('error allocating array 772')
-    allocate(gammaystore(NGLLX,NGLLY,NGLLZ,nspec_irregular),stat=ier)
-    if (ier /= 0) call exit_MPI_without_rank('error allocating array 773')
-    allocate(gammazstore(NGLLX,NGLLY,NGLLZ,nspec_irregular),stat=ier)
-    if (ier /= 0) call exit_MPI_without_rank('error allocating array 774')
-    allocate(jacobianstore(NGLLX,NGLLY,NGLLZ,nspec_irregular),stat=ier)
-    if (ier /= 0) call exit_MPI_without_rank('error allocating array 775')
-    if (ier /= 0) call exit_MPI(myrank,'not enough memory to allocate arrays')
-  else
-    ! dummy arrays
-    allocate(xixstore(1,1,1,1),stat=ier)
-    if (ier /= 0) call exit_MPI_without_rank('error allocating array 756')
-    allocate(xiystore(1,1,1,1),stat=ier)
-    if (ier /= 0) call exit_MPI_without_rank('error allocating array 757')
-    allocate(xizstore(1,1,1,1),stat=ier)
-    if (ier /= 0) call exit_MPI_without_rank('error allocating array 758')
-    allocate(etaxstore(1,1,1,1),stat=ier)
-    if (ier /= 0) call exit_MPI_without_rank('error allocating array 759')
-    allocate(etaystore(1,1,1,1),stat=ier)
-    if (ier /= 0) call exit_MPI_without_rank('error allocating array 760')
-    allocate(etazstore(1,1,1,1),stat=ier)
-    if (ier /= 0) call exit_MPI_without_rank('error allocating array 761')
-    allocate(gammaxstore(1,1,1,1),stat=ier)
-    if (ier /= 0) call exit_MPI_without_rank('error allocating array 762')
-    allocate(gammaystore(1,1,1,1),stat=ier)
-    if (ier /= 0) call exit_MPI_without_rank('error allocating array 763')
-    allocate(gammazstore(1,1,1,1),stat=ier)
-    if (ier /= 0) call exit_MPI_without_rank('error allocating array 764')
-    allocate(jacobianstore(1,1,1,1),stat=ier)
-    if (ier /= 0) call exit_MPI_without_rank('error allocating array 765')
-    if (ier /= 0) call exit_MPI(myrank,'not enough memory to allocate arrays')
-  endif
+  allocate(xixstore(NGLLX,NGLLY,NGLLZ,nspec_irregular),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 766')
+  allocate(xiystore(NGLLX,NGLLY,NGLLZ,nspec_irregular),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 767')
+  allocate(xizstore(NGLLX,NGLLY,NGLLZ,nspec_irregular),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 768')
+  allocate(etaxstore(NGLLX,NGLLY,NGLLZ,nspec_irregular),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 769')
+  allocate(etaystore(NGLLX,NGLLY,NGLLZ,nspec_irregular),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 770')
+  allocate(etazstore(NGLLX,NGLLY,NGLLZ,nspec_irregular),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 771')
+  allocate(gammaxstore(NGLLX,NGLLY,NGLLZ,nspec_irregular),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 772')
+  allocate(gammaystore(NGLLX,NGLLY,NGLLZ,nspec_irregular),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 773')
+  allocate(gammazstore(NGLLX,NGLLY,NGLLZ,nspec_irregular),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 774')
+  allocate(jacobianstore(NGLLX,NGLLY,NGLLZ,nspec_irregular),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 775')
+  if (ier /= 0) call exit_MPI(myrank,'not enough memory to allocate arrays')
   xixstore(:,:,:,:) = 0.0_CUSTOM_REAL; xiystore(:,:,:,:) = 0.0_CUSTOM_REAL; xizstore(:,:,:,:) = 0.0_CUSTOM_REAL
   etaxstore(:,:,:,:) = 0.0_CUSTOM_REAL; etaystore(:,:,:,:) = 0.0_CUSTOM_REAL; etazstore(:,:,:,:) = 0.0_CUSTOM_REAL
   gammaxstore(:,:,:,:) = 0.0_CUSTOM_REAL; gammaystore(:,:,:,:) = 0.0_CUSTOM_REAL; gammazstore(:,:,:,:) = 0.0_CUSTOM_REAL
@@ -842,22 +817,15 @@ contains
   endif
 
   ! allocates arrays to store info for each face (assumes NGLLX=NGLLY=NGLLZ)
-  if (num_abs_boundary_faces > 0) then
-    allocate(abs_boundary_ispec(num_abs_boundary_faces),stat=ier)
-    if (ier /= 0) call exit_MPI_without_rank('error allocating array 776')
-    allocate(abs_boundary_ijk(3,NGLLSQUARE,num_abs_boundary_faces),stat=ier)
-    if (ier /= 0) call exit_MPI_without_rank('error allocating array 777')
-    allocate(abs_boundary_jacobian2Dw(NGLLSQUARE,num_abs_boundary_faces),stat=ier)
-    if (ier /= 0) call exit_MPI_without_rank('error allocating array 778')
-    allocate(abs_boundary_normal(NDIM,NGLLSQUARE,num_abs_boundary_faces),stat=ier)
-    if (ier /= 0) call exit_MPI_without_rank('error allocating array 779')
-    if (ier /= 0) call exit_MPI(myrank,'not enough memory to allocate arrays')
-  else
-    ! dummy allocations
-    allocate(abs_boundary_ispec(1),abs_boundary_ijk(1,1,1), &
-             abs_boundary_jacobian2Dw(1,1),abs_boundary_normal(1,1,1),stat=ier)
-    if (ier /= 0) stop 'Error allocating dummy arrays'
-  endif
+  allocate(abs_boundary_ispec(num_abs_boundary_faces),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 776')
+  allocate(abs_boundary_ijk(3,NGLLSQUARE,num_abs_boundary_faces),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 777')
+  allocate(abs_boundary_jacobian2Dw(NGLLSQUARE,num_abs_boundary_faces),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 778')
+  allocate(abs_boundary_normal(NDIM,NGLLSQUARE,num_abs_boundary_faces),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 779')
+  if (ier /= 0) call exit_MPI(myrank,'not enough memory to allocate arrays')
   abs_boundary_ispec(:) = 0; abs_boundary_ijk(:,:,:) = 0
   abs_boundary_jacobian2Dw(:,:) = 0.0_CUSTOM_REAL; abs_boundary_normal(:,:,:) = 0.0_CUSTOM_REAL
 
@@ -879,22 +847,15 @@ contains
   endif
 
   ! allocates arrays to store info for each face (assumes NGLLX=NGLLY=NGLLZ)
-  if (num_free_surface_faces > 0) then
-    allocate(free_surface_ispec(num_free_surface_faces),stat=ier)
-    if (ier /= 0) call exit_MPI_without_rank('error allocating array 780')
-    allocate(free_surface_ijk(3,NGLLSQUARE,num_free_surface_faces),stat=ier)
-    if (ier /= 0) call exit_MPI_without_rank('error allocating array 781')
-    allocate(free_surface_jacobian2Dw(NGLLSQUARE,num_free_surface_faces),stat=ier)
-    if (ier /= 0) call exit_MPI_without_rank('error allocating array 782')
-    allocate(free_surface_normal(NDIM,NGLLSQUARE,num_free_surface_faces),stat=ier)
-    if (ier /= 0) call exit_MPI_without_rank('error allocating array 783')
-    if (ier /= 0) call exit_MPI(myrank,'not enough memory to allocate arrays')
-  else
-    ! dummy allocation
-    allocate(free_surface_ispec(1),free_surface_ijk(1,1,1), &
-             free_surface_jacobian2Dw(1,1),free_surface_normal(1,1,1),stat=ier)
-    if (ier /= 0) stop 'Error allocating dummy arrays'
-  endif
+  allocate(free_surface_ispec(num_free_surface_faces),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 780')
+  allocate(free_surface_ijk(3,NGLLSQUARE,num_free_surface_faces),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 781')
+  allocate(free_surface_jacobian2Dw(NGLLSQUARE,num_free_surface_faces),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 782')
+  allocate(free_surface_normal(NDIM,NGLLSQUARE,num_free_surface_faces),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 783')
+  if (ier /= 0) call exit_MPI(myrank,'not enough memory to allocate arrays')
   free_surface_ispec(:) = 0; free_surface_ijk(:,:,:) = 0
   free_surface_jacobian2Dw(:,:) = 0.0; free_surface_normal(:,:,:) = 0.0
 

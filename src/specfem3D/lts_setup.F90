@@ -1631,7 +1631,10 @@
       call define_mass_matrices_elastic(NGLOB_AB,NSPEC_AB,NSPEC_IRREGULAR,ibool,rhostore, &
                                         jacobianstore,irregular_element_number,jacobian_regular, &
                                         wxgll,wygll,wzgll,ispec_is_elastic, &
-                                        rmassx,rmassy,rmassz)
+                                        rmassz)
+      ! switch to three-component mass matrix
+      rmassx(:) = rmassz(:)
+      rmassy(:) = rmassz(:)
 
       ! initial mass matrix (rmass)
       rmassxyz(1,:) = rmassx(:)
