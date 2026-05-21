@@ -47,7 +47,7 @@
   implicit none
 
   ! number of spectral elements in each block
-  integer :: npointot
+  integer :: npointot = 0
 
   ! local to global indexing array
   integer, dimension(:,:,:,:), allocatable :: ibool
@@ -56,9 +56,10 @@
   double precision, dimension(:,:,:,:), allocatable :: xstore,ystore,zstore
 
   ! proc numbers for MPI
-  integer :: sizeprocs
+  integer :: sizeprocs = 0
 
-  integer :: NX_TOPO,NY_TOPO
+  integer :: NX_TOPO = 0
+  integer :: NY_TOPO = 0
   integer, dimension(:,:), allocatable :: itopo_bathy
 
   ! timer MPI
@@ -69,11 +70,12 @@
 
   ! this for all the regions
   ! number of elements
-  integer :: NSPEC_AB
+  integer :: NSPEC_AB = 0
   ! number of (unique) global nodes
-  integer :: NGLOB_AB
+  integer :: NGLOB_AB = 0
 
-  integer :: NSPEC2D_BOTTOM,NSPEC2D_TOP
+  integer :: NSPEC2D_BOTTOM = 0
+  integer :: NSPEC2D_TOP = 0
 
   double precision :: min_elevation,max_elevation
   double precision :: min_elevation_all,max_elevation_all
@@ -114,10 +116,10 @@
 
   ! C-PML absorbing boundary conditions
   ! local number of C-PML spectral elements
-  integer :: nspec_cpml
+  integer :: nspec_cpml = 0
 
   ! global number of C-PML spectral elements
-  integer :: nspec_cpml_tot
+  integer :: nspec_cpml_tot = 0
 
   ! C-PML spectral elements global indexing
   integer, dimension(:), allocatable :: CPML_to_spec
@@ -147,7 +149,7 @@
   integer, dimension(:), allocatable :: points_interface_PML_acoustic, points_interface_PML_elastic
 
   ! moho (optional)
-  integer :: nspec2D_moho_ext
+  integer :: nspec2D_moho_ext = 0
   integer, dimension(:), allocatable  :: ibelm_moho
   integer, dimension(:,:), allocatable  :: nodes_ibelm_moho
 
@@ -158,7 +160,7 @@
   ! adjacency arrays
   integer,dimension(:),allocatable :: neighbors_xadj   ! adjacency indexing
   integer,dimension(:),allocatable :: neighbors_adjncy ! adjacency
-  integer :: num_neighbors_all
+  integer :: num_neighbors_all = 0
 
   end module generate_databases_par
 
@@ -177,7 +179,7 @@
   real(kind=CUSTOM_REAL), dimension(:), allocatable :: ystore_unique
   real(kind=CUSTOM_REAL), dimension(:), allocatable :: zstore_unique
   ! number of unique global points
-  integer :: nglob_unique
+  integer :: nglob_unique = 0
 
   ! ******
   ! added by Ping Tong (TP / Tong Ping) for the FK3D calculation
@@ -199,7 +201,7 @@
   ! regular elements
   real(kind=CUSTOM_REAL) :: xix_regular,jacobian_regular
   integer, dimension(:), allocatable :: irregular_element_number
-  integer :: nspec_irregular
+  integer :: nspec_irregular = 0
 
   ! arrays with mesh parameters
   real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: xixstore,xiystore,xizstore, &
@@ -209,7 +211,7 @@
   real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: rhostore,kappastore,mustore
 
   ! for poroelastic model
-  integer :: NSPEC_PORO
+  integer :: NSPEC_PORO = 0
   real(kind=CUSTOM_REAL),dimension(:,:,:,:), allocatable :: etastore,phistore,tortstore
   real(kind=CUSTOM_REAL),dimension(:,:,:,:,:), allocatable :: rhoarraystore,kappaarraystore,permstore
   real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: rho_vpI,rho_vpII,rho_vsI
@@ -220,7 +222,7 @@
   real(kind=CUSTOM_REAL), dimension(:), allocatable :: rmass_solid_poroelastic,rmass_fluid_poroelastic
 
   ! ocean load
-  integer :: NGLOB_OCEAN
+  integer :: NGLOB_OCEAN = 0
   real(kind=CUSTOM_REAL), dimension(:), allocatable :: rmass_ocean_load
 
   ! attenuation
@@ -236,49 +238,49 @@
   real(kind=CUSTOM_REAL), dimension(:,:), allocatable :: abs_boundary_jacobian2Dw
   integer, dimension(:,:,:), allocatable :: abs_boundary_ijk
   integer, dimension(:), allocatable :: abs_boundary_ispec
-  integer :: num_abs_boundary_faces
+  integer :: num_abs_boundary_faces = 0
 
   ! free surface arrays
   real(kind=CUSTOM_REAL), dimension(:,:,:), allocatable :: free_surface_normal
   real(kind=CUSTOM_REAL), dimension(:,:), allocatable :: free_surface_jacobian2Dw
   integer, dimension(:,:,:), allocatable :: free_surface_ijk
   integer, dimension(:), allocatable :: free_surface_ispec
-  integer :: num_free_surface_faces
+  integer :: num_free_surface_faces = 0
 
   ! acoustic-elastic coupling surface
   real(kind=CUSTOM_REAL), dimension(:,:,:), allocatable :: coupling_ac_el_normal
   real(kind=CUSTOM_REAL), dimension(:,:), allocatable :: coupling_ac_el_jacobian2Dw
   integer, dimension(:,:,:), allocatable :: coupling_ac_el_ijk
   integer, dimension(:), allocatable :: coupling_ac_el_ispec
-  integer :: num_coupling_ac_el_faces
+  integer :: num_coupling_ac_el_faces = 0
 
   ! acoustic-poroelastic coupling surface
   real(kind=CUSTOM_REAL), dimension(:,:,:), allocatable :: coupling_ac_po_normal
   real(kind=CUSTOM_REAL), dimension(:,:), allocatable :: coupling_ac_po_jacobian2Dw
   integer, dimension(:,:,:), allocatable :: coupling_ac_po_ijk
   integer, dimension(:), allocatable :: coupling_ac_po_ispec
-  integer :: num_coupling_ac_po_faces
+  integer :: num_coupling_ac_po_faces = 0
 
   ! elastic-poroelastic coupling surface
   real(kind=CUSTOM_REAL), dimension(:,:,:), allocatable :: coupling_el_po_normal
   real(kind=CUSTOM_REAL), dimension(:,:), allocatable :: coupling_el_po_jacobian2Dw
   integer, dimension(:,:,:), allocatable :: coupling_el_po_ijk,coupling_po_el_ijk
   integer, dimension(:), allocatable :: coupling_el_po_ispec,coupling_po_el_ispec
-  integer :: num_coupling_el_po_faces
+  integer :: num_coupling_el_po_faces = 0
 
   ! Moho mesh
   real(kind=CUSTOM_REAL), dimension(:,:,:),allocatable :: normal_moho_top
   real(kind=CUSTOM_REAL), dimension(:,:,:),allocatable :: normal_moho_bot
   integer,dimension(:,:,:),allocatable :: ijk_moho_top, ijk_moho_bot
   integer,dimension(:),allocatable :: ibelm_moho_top, ibelm_moho_bot
-  integer :: NSPEC2D_MOHO
+  integer :: NSPEC2D_MOHO = 0
   logical, dimension(:),allocatable :: is_moho_top, is_moho_bot
 
   ! for stacey
   real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: rho_vp,rho_vs
 
   ! anisotropy
-  integer :: NSPEC_ANISO
+  integer :: NSPEC_ANISO = 0
   real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: &
             c11store,c12store,c13store,c14store,c15store,c16store, &
             c22store,c23store,c24store,c25store,c26store,c33store, &
@@ -316,7 +318,7 @@
   ! Vs30 model
   logical :: USE_MODEL_LAYER_VS30 = .false.
   ! Ss30 interface definition
-  logical :: SUPPRESS_UTM_PROJECTION_VS30
+  logical :: SUPPRESS_UTM_PROJECTION_VS30 = .false.
   real(kind=CUSTOM_REAL),dimension(:,:), allocatable :: interface_model_vs30
   integer :: npx_interface_vs30,npy_interface_vs30
   double precision :: orig_x_interface_vs30,orig_y_interface_vs30
