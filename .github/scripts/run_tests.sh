@@ -159,6 +159,10 @@ fi
 if [ "$TESTDIR" == "EXAMPLES/applications/waterlayered_halfspace/" ]; then
   sed -i "s:^NSTEP .*:NSTEP    = 600:" DATA/Par_file
 fi
+# waterlayered_halfspace example
+if [ "$TESTDIR" == "EXAMPLES/applications/waterlayered_poroelastic/" ]; then
+  sed -i "s:^NSTEP .*:NSTEP    = 600:" DATA/Par_file
+fi
 # tomographic model
 if [ "$TESTDIR" == "EXAMPLES/applications/tomographic_model/" ]; then
   sed -i "s:^NSTEP .*:NSTEP    = 500:" DATA/Par_file

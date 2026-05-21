@@ -51,7 +51,7 @@
     if (myrank == 0) then
       write(IMAIN,*) '     elastic mass matrix'
     endif
-  
+
     ! allocates memory
     allocate(rmass_elastic(nglob),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 660')
