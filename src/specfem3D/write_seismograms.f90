@@ -42,7 +42,7 @@
   double precision :: write_time_begin,write_time
 
   ! checks if anything to do
-  if (.not. do_save_seismograms) return
+  if (.not. do_save_seismograms .and. .not. INVERSE_FWI_FULL_PROBLEM) return
 
   ! checks subsampling recurrence
   if (mod(it-1,NTSTEP_BETWEEN_OUTPUT_SAMPLE) == 0) then
