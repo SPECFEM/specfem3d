@@ -39,7 +39,8 @@
 
   use constants
 
-  use specfem_par, only: SAVE_STACEY,SIMULATION_TYPE
+  use specfem_par, only: SAVE_STACEY,SIMULATION_TYPE, &
+    xstore,ystore,zstore,hprime_xx,rhostore
 
   ! Kirchoff-Helmholtz integrals
   use specfem_par_elastic, only: displ
@@ -82,6 +83,36 @@
   real(kind=CUSTOM_REAL) :: vx,vy,vz,nx,ny,nz,tx,ty,tz,vn,jacobianw
   integer :: ispec,iglob,i,j,k,iface,igll
 
+  ! for improved Stacey condition using P3 approximation
+  ! 2D local arrays for surface geometry and displacements
+  real(kind=CUSTOM_REAL) :: x_2D(NGLLX, NGLLY), y_2D(NGLLX, NGLLY), z_2D(NGLLX, NGLLY)
+  real(kind=CUSTOM_REAL) :: un_2D(NGLLX, NGLLY), ut1_2D(NGLLX, NGLLY), ut2_2D(NGLLX, NGLLY)
+  real(kind=CUSTOM_REAL) :: nx_2D(NGLLX, NGLLY), ny_2D(NGLLX, NGLLY), nz_2D(NGLLX, NGLLY)
+  real(kind=CUSTOM_REAL) :: t1x_2D(NGLLX, NGLLY), t1y_2D(NGLLX, NGLLY), t1z_2D(NGLLX, NGLLY)
+  real(kind=CUSTOM_REAL) :: t2x_2D(NGLLX, NGLLY), t2y_2D(NGLLX, NGLLY), t2z_2D(NGLLX, NGLLY)
+
+  ! Derivative arrays
+  real(kind=CUSTOM_REAL) :: dx_ds1(NGLLX, NGLLY), dx_ds2(NGLLX, NGLLY)
+  real(kind=CUSTOM_REAL) :: dy_ds1(NGLLX, NGLLY), dy_ds2(NGLLX, NGLLY)
+  real(kind=CUSTOM_REAL) :: dz_ds1(NGLLX, NGLLY), dz_ds2(NGLLX, NGLLY)
+  real(kind=CUSTOM_REAL) :: dun_ds1(NGLLX, NGLLY), dun_ds2(NGLLX, NGLLY)
+  real(kind=CUSTOM_REAL) :: dut1_ds1(NGLLX, NGLLY), dut1_ds2(NGLLX, NGLLY)
+  real(kind=CUSTOM_REAL) :: dut2_ds1(NGLLX, NGLLY), dut2_ds2(NGLLX, NGLLY)
+
+  real(kind=CUSTOM_REAL) :: a11, a12, a22, det_a, inv_a11, inv_a12, inv_a22
+  real(kind=CUSTOM_REAL) :: dot_g1_t1, dot_g2_t1, dot_g1_t2, dot_g2_t2
+  real(kind=CUSTOM_REAL) :: dt1_un, dt2_un, dt1_ut1, dt2_ut2
+
+  real(kind=CUSTOM_REAL) :: rhol, csl, cpl
+  real(kind=CUSTOM_REAL) :: t1x, t1y, t1z, t2x, t2y, t2z, t1_norm, hp1, hp2
+  real(kind=CUSTOM_REAL) :: t2_n2, t2_t1, t2_t2
+
+  logical :: mask_vary(3)
+  integer :: id1, id2, a, b, l
+  integer :: face_iglob(NGLLX, NGLLY)
+  !debug
+  !real(kind=CUSTOM_REAL) :: nt1, nt2, t1t2, rh
+
   ! only add these contributions in first pass
   if (iphase /= 1) return
 
@@ -95,67 +126,348 @@
   endif
 
   ! absorbs absorbing-boundary surface using Stacey condition (Clayton and Engquist)
+  if (.not. USE_SECOND_ORDER_STACEY) then
+    ! uses Stacey P1 approximation
+    !
+    ! uses velocities like
+    !   T_n = - rho Vp v_n                          (normal)
+    !   T_tangential1 = - rho Vs v_tangential       (tangential)
+    !
+    ! units:  [Pa] =  [kg/m^3] [m/s] [m/s] = [kg / m / s^2 ]
+
 ! openmp solver
 !$OMP PARALLEL if (num_abs_boundary_faces > 100) &
 !$OMP DEFAULT(SHARED) &
 !$OMP PRIVATE(iface,ispec,igll,i,j,k,iglob,vx,vy,vz,vn,nx,ny,nz,tx,ty,tz,jacobianw)
 !$OMP DO
-  do iface = 1,num_abs_boundary_faces
+    do iface = 1,num_abs_boundary_faces
 
-    ispec = abs_boundary_ispec(iface)
+      ispec = abs_boundary_ispec(iface)
 
-    if (ispec_is_elastic(ispec)) then
+      if (ispec_is_elastic(ispec)) then
 
-      ! reference GLL points on boundary face
-      do igll = 1,NGLLSQUARE
-        ! gets local indices for GLL point
-        i = abs_boundary_ijk(1,igll,iface)
-        j = abs_boundary_ijk(2,igll,iface)
-        k = abs_boundary_ijk(3,igll,iface)
+        ! reference GLL points on boundary face
+        do igll = 1,NGLLSQUARE
+          ! gets local indices for GLL point
+          i = abs_boundary_ijk(1,igll,iface)
+          j = abs_boundary_ijk(2,igll,iface)
+          k = abs_boundary_ijk(3,igll,iface)
 
-        ! gets velocity
-        iglob = ibool(i,j,k,ispec)
+          ! gets velocity
+          iglob = ibool(i,j,k,ispec)
 
-        vx = veloc(1,iglob)
-        vy = veloc(2,iglob)
-        vz = veloc(3,iglob)
+          vx = veloc(1,iglob)
+          vy = veloc(2,iglob)
+          vz = veloc(3,iglob)
 
-        ! gets associated normal
-        nx = abs_boundary_normal(1,igll,iface)
-        ny = abs_boundary_normal(2,igll,iface)
-        nz = abs_boundary_normal(3,igll,iface)
+          ! gets associated normal
+          nx = abs_boundary_normal(1,igll,iface)
+          ny = abs_boundary_normal(2,igll,iface)
+          nz = abs_boundary_normal(3,igll,iface)
 
-        ! velocity component in normal direction (normal points out of element)
-        vn = vx*nx + vy*ny + vz*nz
+          ! velocity component in normal direction (normal points out of element)
+          vn = vx*nx + vy*ny + vz*nz
 
-        ! stacey term: velocity vector component * vp * rho in normal direction + vs * rho component tangential to it
-        tx = rho_vp(i,j,k,ispec)*vn*nx + rho_vs(i,j,k,ispec)*(vx-vn*nx)
-        ty = rho_vp(i,j,k,ispec)*vn*ny + rho_vs(i,j,k,ispec)*(vy-vn*ny)
-        tz = rho_vp(i,j,k,ispec)*vn*nz + rho_vs(i,j,k,ispec)*(vz-vn*nz)
+          ! stacey term: velocity vector component * vp * rho in normal direction + vs * rho component tangential to it
+          tx = rho_vp(i,j,k,ispec)*vn*nx + rho_vs(i,j,k,ispec)*(vx-vn*nx)
+          ty = rho_vp(i,j,k,ispec)*vn*ny + rho_vs(i,j,k,ispec)*(vy-vn*ny)
+          tz = rho_vp(i,j,k,ispec)*vn*nz + rho_vs(i,j,k,ispec)*(vz-vn*nz)
 
-        ! gets associated, weighted jacobian
-        jacobianw = abs_boundary_jacobian2Dw(igll,iface)
+          ! gets associated, weighted jacobian
+          jacobianw = abs_boundary_jacobian2Dw(igll,iface)
 
-        ! adds stacey term (weak form)
+          ! adds stacey term (weak form)
 !$OMP ATOMIC
-        accel(1,iglob) = accel(1,iglob) - tx*jacobianw
+          accel(1,iglob) = accel(1,iglob) - tx*jacobianw
 !$OMP ATOMIC
-        accel(2,iglob) = accel(2,iglob) - ty*jacobianw
+          accel(2,iglob) = accel(2,iglob) - ty*jacobianw
 !$OMP ATOMIC
-        accel(3,iglob) = accel(3,iglob) - tz*jacobianw
+          accel(3,iglob) = accel(3,iglob) - tz*jacobianw
 
-        ! for kernel simulations
-        if (SAVE_STACEY .and. SIMULATION_TYPE == 1) then
-          b_absorb_field(1,igll,iface) = tx*jacobianw
-          b_absorb_field(2,igll,iface) = ty*jacobianw
-          b_absorb_field(3,igll,iface) = tz*jacobianw
-        endif
+          ! for kernel simulations
+          if (SAVE_STACEY .and. SIMULATION_TYPE == 1) then
+            b_absorb_field(1,igll,iface) = tx*jacobianw
+            b_absorb_field(2,igll,iface) = ty*jacobianw
+            b_absorb_field(3,igll,iface) = tz*jacobianw
+          endif
 
-      enddo
-    endif ! ispec_is_elastic
-  enddo
+        enddo
+      endif ! ispec_is_elastic
+    enddo
 !$OMP ENDDO
 !$OMP END PARALLEL
+
+  else
+    ! uses Stacey P3 approximation (second-order)
+    !
+    ! uses spatial derivatives of displacement like
+    !   T_n = - rho Vs (2 Vs - Vp)( \partial_tangential1 u_tangential1 + \partial_tangential2 u_tangential2 )
+    !
+    !   T_tangential1 = + rho Vs (2 Vs - Vp) \partial_tangential1 u_n
+    !   T_tangential2 = + rho Vs (2 Vs - Vp) \partial_tangential2 u_n
+    !
+    ! units [Pa] = [kg/m^3] [m/s] [m/s] [ m/m ] = [kg / m / s^2]
+
+! openmp solver
+!$OMP PARALLEL if (num_abs_boundary_faces > 100) &
+!$OMP DEFAULT(SHARED) &
+!$OMP PRIVATE(iface,ispec,igll,i,j,k,iglob,vx,vy,vz,vn,nx,ny,nz,tx,ty,tz,jacobianw, &
+!$OMP         x_2D,y_2D,z_2D,un_2D,ut1_2D,ut2_2D,nx_2D,ny_2D,nz_2D, &
+!$OMP         t1x_2D,t1y_2D,t1z_2D,t2x_2D,t2y_2D,t2z_2D, &
+!$OMP         dx_ds1,dx_ds2,dy_ds1,dy_ds2,dz_ds1,dz_ds2, &
+!$OMP         dun_ds1,dun_ds2,dut1_ds1,dut1_ds2,dut2_ds1,dut2_ds2, &
+!$OMP         a11,a12,a22,det_a,inv_a11,inv_a12,inv_a22, &
+!$OMP         dot_g1_t1,dot_g2_t1,dot_g1_t2,dot_g2_t2, &
+!$OMP         dt1_un,dt2_un,dt1_ut1,dt2_ut2, &
+!$OMP         rhol,csl,cpl,t1x,t1y,t1z,t2x,t2y,t2z,t1_norm,hp1,hp2, &
+!$OMP         t2_n2,t2_t1,t2_t2,mask_vary,id1,id2,a,b,l,face_iglob)
+!$OMP DO
+    do iface = 1,num_abs_boundary_faces
+
+      ispec = abs_boundary_ispec(iface)
+
+      if (ispec_is_elastic(ispec)) then
+
+        ! prepare P3 approximation spatial derivative arrays
+        ! Find the varying local coordinates for the face to map 1D index igll to 2D grid (a,b)
+        mask_vary(:) = .false.
+        do igll = 2, NGLLSQUARE
+          if (abs_boundary_ijk(1, igll, iface) /= abs_boundary_ijk(1, 1, iface)) mask_vary(1) = .true.
+          if (abs_boundary_ijk(2, igll, iface) /= abs_boundary_ijk(2, 1, iface)) mask_vary(2) = .true.
+          if (abs_boundary_ijk(3, igll, iface) /= abs_boundary_ijk(3, 1, iface)) mask_vary(3) = .true.
+        enddo
+
+        id1 = 0; id2 = 0
+        if (.not. mask_vary(1)) then
+          id1 = 2; id2 = 3
+        else if (.not. mask_vary(2)) then
+          id1 = 1; id2 = 3
+        else
+          id1 = 1; id2 = 2
+        endif
+
+        ! Gather coordinates and fields onto the 2D grid face
+        do igll = 1, NGLLSQUARE
+          i = abs_boundary_ijk(1,igll,iface)
+          j = abs_boundary_ijk(2,igll,iface)
+          k = abs_boundary_ijk(3,igll,iface)
+          iglob = ibool(i,j,k,ispec)
+
+          a = abs_boundary_ijk(id1,igll,iface)
+          b = abs_boundary_ijk(id2,igll,iface)
+
+          face_iglob(a,b) = iglob
+
+          x_2D(a,b) = xstore(iglob)
+          y_2D(a,b) = ystore(iglob)
+          z_2D(a,b) = zstore(iglob)
+
+          nx_2D(a,b) = abs_boundary_normal(1,igll,iface)
+          ny_2D(a,b) = abs_boundary_normal(2,igll,iface)
+          nz_2D(a,b) = abs_boundary_normal(3,igll,iface)
+        enddo
+
+        ! Pre-compute the orthonormal tangential basis and projections at each point
+        ! (assumes NGLLX == NGLLY == NGLLZ)
+        do b = 1,NGLLY
+          do a = 1,NGLLX
+            iglob = face_iglob(a,b)
+
+            ! normal
+            nx = nx_2D(a,b)
+            ny = ny_2D(a,b)
+            nz = nz_2D(a,b)
+
+            ! Construct right-handed orthonormal tangential basis t1, t2
+            ! Choose a non-collinear vector to n to compute t1
+            ! (Hughes-Moeller method)
+            if (abs(nx) < 0.9_CUSTOM_REAL) then
+              t1x = 0.0_CUSTOM_REAL
+              t1y = -nz
+              t1z = ny
+            else
+              t1x = -ny
+              t1y = nx
+              t1z = 0.0_CUSTOM_REAL
+            endif
+            t1_norm = sqrt(t1x*t1x + t1y*t1y + t1z*t1z)
+
+            ! avoid divison by zero
+            if (abs(t1_norm) < 1.d-24) t1_norm = 1._CUSTOM_REAL
+
+            ! normalizes t1
+            t1x = t1x / t1_norm; t1y = t1y / t1_norm; t1z = t1z / t1_norm
+
+            ! t2 = n x t1
+            t2x = ny * t1z - nz * t1y
+            t2y = nz * t1x - nx * t1z
+            t2z = nx * t1y - ny * t1x
+
+            ! debug
+            !if (myrank == 0) &
+            !  print '("debug:",i4," iface ",i8," iglob ",i8,"t1",3(1x,f12.6)," t2",3(1x,f12.6))', &
+            !        myrank,iface,iglob,t1x,t1y,t1z,t2x,t2y,t2z
+            ! check orthonormal basis orientation
+            !nt1 = nx*t1x + ny*t1y + nz*t1z     ! dot-product n · t1
+            !nt2 = nx*t2x + ny*t2y + nz*t2z     !             n · t2
+            !t1t2 = t1x*t2x + t1y*t2y + t1z*t2z !             t1 · t2
+            !rh = nx*(t1y*t2z - t1z*t2y) + ny*(t1z*t2x - t1x*t2z) + nz*(t1x*t2y - t1y*t2x)  ! right-handedness: n · (t1 x t2)
+            !if (abs(rh - 1.d0) > 1.d-20 .or. abs(nt1) > 1.d-20 .or. abs(nt2) > 1.d-20 .or. abs(t1t2) > 1.d-20) &
+            !  print '("debug:",i4," iface ",i8," iglob ",i8,3(1x,f12.6),1x,"rh",f12.6)',  &
+            !          myrank,iface,iglob,nt1,nt2,t1t2,rh
+
+            ! Store basis for reuse in igll loop
+            t1x_2D(a,b) = t1x; t1y_2D(a,b) = t1y; t1z_2D(a,b) = t1z
+            t2x_2D(a,b) = t2x; t2y_2D(a,b) = t2y; t2z_2D(a,b) = t2z
+
+            ! Project displacement
+            un_2D(a,b)  = displ(1,iglob) * nx  + displ(2,iglob) * ny  + displ(3,iglob) * nz
+            ut1_2D(a,b) = displ(1,iglob) * t1x + displ(2,iglob) * t1y + displ(3,iglob) * t1z
+            ut2_2D(a,b) = displ(1,iglob) * t2x + displ(2,iglob) * t2y + displ(3,iglob) * t2z
+          enddo
+        enddo
+
+        ! Compute reference derivatives using 1D GLL derivative matrix
+        ! (assumes NGLLX == NGLLY == NGLLZ)
+        do b = 1, NGLLY
+          do a = 1, NGLLX
+            dx_ds1(a,b) = 0.0_CUSTOM_REAL; dx_ds2(a,b) = 0.0_CUSTOM_REAL
+            dy_ds1(a,b) = 0.0_CUSTOM_REAL; dy_ds2(a,b) = 0.0_CUSTOM_REAL
+            dz_ds1(a,b) = 0.0_CUSTOM_REAL; dz_ds2(a,b) = 0.0_CUSTOM_REAL
+            dun_ds1(a,b) = 0.0_CUSTOM_REAL; dun_ds2(a,b) = 0.0_CUSTOM_REAL
+            dut1_ds1(a,b) = 0.0_CUSTOM_REAL; dut1_ds2(a,b) = 0.0_CUSTOM_REAL
+            dut2_ds1(a,b) = 0.0_CUSTOM_REAL; dut2_ds2(a,b) = 0.0_CUSTOM_REAL
+
+            do l = 1, NGLLX
+              hp1 = hprime_xx(a,l)
+              dx_ds1(a,b) = dx_ds1(a,b) + x_2D(l,b) * hp1
+              dy_ds1(a,b) = dy_ds1(a,b) + y_2D(l,b) * hp1
+              dz_ds1(a,b) = dz_ds1(a,b) + z_2D(l,b) * hp1
+              dun_ds1(a,b) = dun_ds1(a,b) + un_2D(l,b) * hp1
+              dut1_ds1(a,b) = dut1_ds1(a,b) + ut1_2D(l,b) * hp1
+              dut2_ds1(a,b) = dut2_ds1(a,b) + ut2_2D(l,b) * hp1
+
+              hp2 = hprime_xx(b,l)
+              dx_ds2(a,b) = dx_ds2(a,b) + x_2D(a,l) * hp2
+              dy_ds2(a,b) = dy_ds2(a,b) + y_2D(a,l) * hp2
+              dz_ds2(a,b) = dz_ds2(a,b) + z_2D(a,l) * hp2
+              dun_ds2(a,b) = dun_ds2(a,b) + un_2D(a,l) * hp2
+              dut1_ds2(a,b) = dut1_ds2(a,b) + ut1_2D(a,l) * hp2
+              dut2_ds2(a,b) = dut2_ds2(a,b) + ut2_2D(a,l) * hp2
+            enddo
+          enddo
+        enddo
+
+        ! reference GLL points on boundary face
+        do igll = 1,NGLLSQUARE
+          ! gets local indices for GLL point
+          i = abs_boundary_ijk(1,igll,iface)
+          j = abs_boundary_ijk(2,igll,iface)
+          k = abs_boundary_ijk(3,igll,iface)
+
+          ! gets velocity
+          iglob = ibool(i,j,k,ispec)
+
+          vx = veloc(1,iglob)
+          vy = veloc(2,iglob)
+          vz = veloc(3,iglob)
+
+          ! gets associated normal
+          nx = abs_boundary_normal(1,igll,iface)
+          ny = abs_boundary_normal(2,igll,iface)
+          nz = abs_boundary_normal(3,igll,iface)
+
+          ! velocity component in normal direction (normal points out of element)
+          vn = vx*nx + vy*ny + vz*nz
+
+          ! P1 contribution
+          ! stacey term: velocity vector component * vp * rho in normal direction + vs * rho component tangential to it
+          tx = rho_vp(i,j,k,ispec)*vn*nx + rho_vs(i,j,k,ispec)*(vx-vn*nx)
+          ty = rho_vp(i,j,k,ispec)*vn*ny + rho_vs(i,j,k,ispec)*(vy-vn*ny)
+          tz = rho_vp(i,j,k,ispec)*vn*nz + rho_vs(i,j,k,ispec)*(vz-vn*nz)
+
+          ! additional P3 second-order contribution
+          a = abs_boundary_ijk(id1,igll,iface)
+          b = abs_boundary_ijk(id2,igll,iface)
+
+          ! Metric tensor components a_{alpha beta} = g_alpha . g_beta
+          a11 = dx_ds1(a,b)**2 + dy_ds1(a,b)**2 + dz_ds1(a,b)**2
+          a12 = dx_ds1(a,b) * dx_ds2(a,b) + dy_ds1(a,b) * dy_ds2(a,b) + dz_ds1(a,b) * dz_ds2(a,b)
+          a22 = dx_ds2(a,b)**2 + dy_ds2(a,b)**2 + dz_ds2(a,b)**2
+
+          det_a = a11*a22 - a12**2
+
+          ! avoid divison by zero
+          if (abs(det_a) < 1.d-24) det_a = 1._CUSTOM_REAL
+
+          ! Inverse metric tensor
+          inv_a11 = a22 / det_a
+          inv_a12 = -a12 / det_a
+          inv_a22 = a11 / det_a
+
+          ! look up pre-computed basis and normal
+          nx = nx_2D(a,b)
+          ny = ny_2D(a,b)
+          nz = nz_2D(a,b)
+          t1x = t1x_2D(a,b); t1y = t1y_2D(a,b); t1z = t1z_2D(a,b)
+          t2x = t2x_2D(a,b); t2y = t2y_2D(a,b); t2z = t2z_2D(a,b)
+
+          dot_g1_t1 = dx_ds1(a,b)*t1x + dy_ds1(a,b)*t1y + dz_ds1(a,b)*t1z
+          dot_g2_t1 = dx_ds2(a,b)*t1x + dy_ds2(a,b)*t1y + dz_ds2(a,b)*t1z
+
+          dot_g1_t2 = dx_ds1(a,b)*t2x + dy_ds1(a,b)*t2y + dz_ds1(a,b)*t2z
+          dot_g2_t2 = dx_ds2(a,b)*t2x + dy_ds2(a,b)*t2y + dz_ds2(a,b)*t2z
+
+          dt1_un  = (inv_a11*dun_ds1(a,b) + inv_a12*dun_ds2(a,b)) * dot_g1_t1 &
+                  + (inv_a12*dun_ds1(a,b) + inv_a22*dun_ds2(a,b)) * dot_g2_t1
+          dt2_un  = (inv_a11*dun_ds1(a,b) + inv_a12*dun_ds2(a,b)) * dot_g1_t2 &
+                  + (inv_a12*dun_ds1(a,b) + inv_a22*dun_ds2(a,b)) * dot_g2_t2
+
+          dt1_ut1 = (inv_a11*dut1_ds1(a,b) + inv_a12*dut1_ds2(a,b)) * dot_g1_t1 &
+                  + (inv_a12*dut1_ds1(a,b) + inv_a22*dut1_ds2(a,b)) * dot_g2_t1
+          dt2_ut2 = (inv_a11*dut2_ds1(a,b) + inv_a12*dut2_ds2(a,b)) * dot_g1_t2 &
+                  + (inv_a12*dut2_ds1(a,b) + inv_a22*dut2_ds2(a,b)) * dot_g2_t2
+
+          ! T_normal2     = - rho * vs * (2 * vs - vp) (du_t1/dt1 + du_t2/dt2)
+          ! T_tangential2 = + rho * vs * (2 * vs - vp) du_normal / dx_tangential
+          rhol = rhostore(i,j,k,ispec)
+          csl = rho_vs(i,j,k,ispec) / rhol
+          cpl = rho_vp(i,j,k,ispec) / rhol
+
+          ! note: accel gets subtracted by tx, ty, tz, so we add -T^(2) to tx, ty, tz
+          t2_n2 = rho_vs(i,j,k,ispec) * (2.0_CUSTOM_REAL * csl - cpl) * (dt1_ut1 + dt2_ut2)
+          t2_t1 = -rho_vs(i,j,k,ispec) * (2.0_CUSTOM_REAL * csl - cpl) * dt1_un
+          t2_t2 = -rho_vs(i,j,k,ispec) * (2.0_CUSTOM_REAL * csl - cpl) * dt2_un
+
+          tx = tx + t2_n2 * nx + t2_t1 * t1x + t2_t2 * t2x
+          ty = ty + t2_n2 * ny + t2_t1 * t1y + t2_t2 * t2y
+          tz = tz + t2_n2 * nz + t2_t1 * t1z + t2_t2 * t2z
+
+          ! gets associated, weighted jacobian
+          jacobianw = abs_boundary_jacobian2Dw(igll,iface)
+
+          ! adds stacey term (weak form)
+!$OMP ATOMIC
+          accel(1,iglob) = accel(1,iglob) - tx*jacobianw
+!$OMP ATOMIC
+          accel(2,iglob) = accel(2,iglob) - ty*jacobianw
+!$OMP ATOMIC
+          accel(3,iglob) = accel(3,iglob) - tz*jacobianw
+
+          ! for kernel simulations
+          if (SAVE_STACEY .and. SIMULATION_TYPE == 1) then
+            b_absorb_field(1,igll,iface) = tx*jacobianw
+            b_absorb_field(2,igll,iface) = ty*jacobianw
+            b_absorb_field(3,igll,iface) = tz*jacobianw
+          endif
+
+        enddo
+      endif ! ispec_is_elastic
+    enddo
+!$OMP ENDDO
+!$OMP END PARALLEL
+
+  endif  ! USE_SECOND_ORDER_STACEY
 
   ! for kernel simulations: stores absorbed wavefield part
   if (SAVE_STACEY .and. SIMULATION_TYPE == 1) then

@@ -225,6 +225,16 @@
 
 !!-----------------------------------------------------------
 !!
+!! Stacey absorbing conditions
+!!
+!!-----------------------------------------------------------
+! reference: Stacey, 1988, IMPROVED TRANSPARENT BOUNDARY FORMULATIONS FOR THE ELASTIC-WAVE EQUATION,
+!            BSSA, 78 (6), p. 2089-2097.
+! for improved Stacey condition using P3 approximation
+  logical, parameter :: USE_SECOND_ORDER_STACEY = .false.
+
+!!-----------------------------------------------------------
+!!
 !! CPML perfectly matched absorbing layers
 !!
 !!-----------------------------------------------------------
