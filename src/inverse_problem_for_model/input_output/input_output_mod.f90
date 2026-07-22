@@ -111,8 +111,8 @@ contains
     type(inver),                             intent(inout) ::  inversion_param
     ! locals
     integer                                   :: ievent
-    character(len=MAX_LEN_STRING)             :: name_file
-    character(len=MAX_LEN_STRING)             :: acqui_file, inver_file
+    character(len=MAX_STRING_LEN)             :: name_file
+    character(len=MAX_STRING_LEN)             :: acqui_file, inver_file
     real(kind=CUSTOM_REAL)                    :: elemsize_min_glob,elemsize_max_glob
     real(kind=CUSTOM_REAL)                    :: distance_min_glob,distance_max_glob
 
@@ -291,8 +291,8 @@ contains
     integer,                             intent(in)       :: myrank
 
     ! local
-    character(len=MAX_LEN_STRING)                         :: acqui_file_ref
-    character(len=MAX_LEN_STRING)                         :: name_file
+    character(len=MAX_STRING_LEN)                         :: acqui_file_ref
+    character(len=MAX_STRING_LEN)                         :: name_file
     integer                                               :: sizeprocs
     integer                                               :: ier
 
@@ -370,14 +370,14 @@ contains
   subroutine read_and_distribute_events_for_simultaneous_runs(NUMBER_OF_SIMULTANEOUS_RUNS, acqui_file_ref)
 
     implicit none
-    character(len=MAX_LEN_STRING),       intent(in)       :: acqui_file_ref
+    character(len=MAX_STRING_LEN),       intent(in)       :: acqui_file_ref
     integer,                             intent(in)       :: NUMBER_OF_SIMULTANEOUS_RUNS
     ! local
     integer                                               :: number_of_events_in_acqui_file_ref
     integer                                               :: nevent_per_group, nevent_remained
     integer                                               :: igroup, ievent_in_group, ievent, ievent_global, ier
     integer,  dimension(:),     allocatable               :: nevent_in_group
-    character(len=MAX_LEN_STRING)                         :: line, prefix_to_path_tmp
+    character(len=MAX_STRING_LEN)                         :: line, prefix_to_path_tmp
 
 
     write(*,*)
@@ -456,7 +456,7 @@ contains
     implicit none
     integer,                       intent(in)   :: iproc, ievent
     ! name of the database file
-    character(len=MAX_LEN_STRING), intent(inout) :: prname
+    character(len=MAX_STRING_LEN), intent(inout) :: prname
     character(len=MAX_STRING_LEN), intent(in   ) :: LOCAL_PATH
     ! local
     character(len=MAX_STRING_LEN)                :: procname
@@ -494,9 +494,9 @@ contains
 
     implicit none
     type(inver),                                    intent(inout) :: inversion_param
-    character(len=MAX_LEN_STRING),                  intent(inout) :: mode_running
+    character(len=MAX_STRING_LEN),                  intent(inout) :: mode_running
     integer                                                       :: ier
-    character(len=MAX_LEN_STRING)                                 :: arg
+    character(len=MAX_STRING_LEN)                                 :: arg
 
     ! gets program arguments
     if (myrank == 0) then
@@ -512,7 +512,7 @@ contains
         endif
     endif
 
-    call MPI_BCAST(mode_running,MAX_LEN_STRING,MPI_CHARACTER,0,my_local_mpi_comm_world,ier)
+    call MPI_BCAST(mode_running,MAX_STRING_LEN,MPI_CHARACTER,0,my_local_mpi_comm_world,ier)
 
     select case(trim(adjustl(mode_running)))
     case('forward')
@@ -533,7 +533,7 @@ contains
     if (myrank == 0) then
       call get_command_argument(2, arg)
     endif
-    call MPI_BCAST(arg,MAX_LEN_STRING,MPI_CHARACTER,0,my_local_mpi_comm_world,ier)
+    call MPI_BCAST(arg,MAX_STRING_LEN,MPI_CHARACTER,0,my_local_mpi_comm_world,ier)
 
     if (len_trim(arg) > 0) then
       type_input = trim(adjustl(arg))
@@ -573,7 +573,7 @@ contains
     integer,                    intent(in)    :: ievent, myrank
     type(acqui),  dimension(:), intent(inout) :: acqui_simu
     ! local
-    character(len=MAX_LEN_STRING)             :: name_file_tmp, ch_to_add
+    character(len=MAX_STRING_LEN)             :: name_file_tmp, ch_to_add
     integer                                   :: global_iter
 
     ! combined index for current frequency stage and inversion iteration
@@ -600,7 +600,7 @@ contains
     real(kind=CUSTOM_REAL),  dimension(:,:,:), intent(in)    :: array_to_write
     type(acqui),  dimension(:),                intent(inout) :: acqui_simu
     ! local
-    character(len=MAX_LEN_STRING)                            :: name_file_tmp, ch_to_add
+    character(len=MAX_STRING_LEN)                            :: name_file_tmp, ch_to_add
     integer                                                  :: global_iter
 
     ! combined index for current frequency stage and inversion iteration
@@ -636,7 +636,7 @@ contains
     real(kind=CUSTOM_REAL),  dimension(:,:,:), intent(in)    :: array_to_write
     type(acqui),  dimension(:),                intent(inout) :: acqui_simu
     ! local
-    character(len=MAX_LEN_STRING)                            :: name_file_tmp, ch_to_add
+    character(len=MAX_STRING_LEN)                            :: name_file_tmp, ch_to_add
     integer                                                  :: global_iter
 
     ! combined index for current frequency stage and inversion iteration
@@ -662,7 +662,7 @@ contains
 
     implicit none
     integer,                                   intent(in)    :: myrank, ievent
-    character(len=MAX_LEN_STRING),             intent(in)    :: name_file_to_write
+    character(len=MAX_STRING_LEN),             intent(in)    :: name_file_to_write
     real(kind=CUSTOM_REAL),  dimension(:,:,:), intent(in)    :: array_to_write
     type(acqui),             dimension(:),     intent(inout) :: acqui_simu
     ! local
@@ -1019,7 +1019,7 @@ contains
     real(kind=CUSTOM_REAL), dimension(:),     allocatable      :: weight_loc
     integer                                                    :: status(MPI_STATUS_SIZE)
     real(kind=CUSTOM_REAL)                                     :: dummy_real, W
-    character(len=MAX_LEN_STRING)                              :: filename
+    character(len=MAX_STRING_LEN)                              :: filename
     logical                                                    :: data_comp_inv, data_comp_read
     character(len=1)                                           :: data_type_inv, data_type_read
     character(len=3)                                           :: data_sys_inv, data_sys_read
@@ -1321,10 +1321,10 @@ contains
     integer,                                   intent(in)    :: myrank, ievent
     real(kind=CUSTOM_REAL),  dimension(:,:,:), intent(in)    :: array_to_write
     type(acqui),             dimension(:),     intent(inout) :: acqui_simu
-    character(len=MAX_LEN_STRING),             intent(in)    :: name_file_to_write
+    character(len=MAX_STRING_LEN),             intent(in)    :: name_file_to_write
     type(inver),                               intent(in)    :: inversion_param
     ! local
-    character(len=MAX_LEN_STRING)                            :: filename
+    character(len=MAX_STRING_LEN)                            :: filename
     integer                                                  :: idim, NSTA, NSTA_LOC, Nt, irec, irec_local
     integer                                                  :: tag, ier, nsta_irank, irank, icomp
     real(kind=CUSTOM_REAL), dimension(:,:,:), allocatable    :: Gather, Gather_loc
@@ -1523,11 +1523,11 @@ contains
     use my_mpi             !! module from specfem
 
     implicit none
-    character(len=MAX_LEN_STRING),           intent(in)    ::  acqui_file
+    character(len=MAX_STRING_LEN),           intent(in)    ::  acqui_file
     integer,                                 intent(in)    ::  myrank
     type(acqui),  dimension(:), allocatable, intent(inout) ::  acqui_simu
     ! locals
-    character(len=MAX_LEN_STRING)                          :: line, keyw, line_to_read
+    character(len=MAX_STRING_LEN)                          :: line, keyw, line_to_read
     integer                                                :: ipos0, ipos1, ievent
     integer                                                :: ier
 
@@ -1695,13 +1695,13 @@ contains
     endif
     do ievent = 1, NEVENT
        acqui_simu(ievent)%nevent_tot = NEVENT
-       call MPI_BCAST(acqui_simu(ievent)%traction_dir,MAX_LEN_STRING,MPI_CHARACTER,0,my_local_mpi_comm_world,ier)
-       call MPI_BCAST(acqui_simu(ievent)%data_file_gather,MAX_LEN_STRING,MPI_CHARACTER,0,my_local_mpi_comm_world,ier)
-       call MPI_BCAST(acqui_simu(ievent)%source_type,MAX_LEN_STRING,MPI_CHARACTER,0,my_local_mpi_comm_world,ier)
-       call MPI_BCAST(acqui_simu(ievent)%source_file,MAX_LEN_STRING,MPI_CHARACTER,0,my_local_mpi_comm_world,ier)
-       call MPI_BCAST(acqui_simu(ievent)%source_wavelet_file, MAX_LEN_STRING,MPI_CHARACTER,0,my_local_mpi_comm_world,ier)
-       call MPI_BCAST(acqui_simu(ievent)%adjoint_source_type,MAX_LEN_STRING,MPI_CHARACTER,0,my_local_mpi_comm_world,ier)
-       call MPI_BCAST(acqui_simu(ievent)%event_name,MAX_LEN_STRING,MPI_CHARACTER,0,my_local_mpi_comm_world,ier)
+       call MPI_BCAST(acqui_simu(ievent)%traction_dir,MAX_STRING_LEN,MPI_CHARACTER,0,my_local_mpi_comm_world,ier)
+       call MPI_BCAST(acqui_simu(ievent)%data_file_gather,MAX_STRING_LEN,MPI_CHARACTER,0,my_local_mpi_comm_world,ier)
+       call MPI_BCAST(acqui_simu(ievent)%source_type,MAX_STRING_LEN,MPI_CHARACTER,0,my_local_mpi_comm_world,ier)
+       call MPI_BCAST(acqui_simu(ievent)%source_file,MAX_STRING_LEN,MPI_CHARACTER,0,my_local_mpi_comm_world,ier)
+       call MPI_BCAST(acqui_simu(ievent)%source_wavelet_file, MAX_STRING_LEN,MPI_CHARACTER,0,my_local_mpi_comm_world,ier)
+       call MPI_BCAST(acqui_simu(ievent)%adjoint_source_type,MAX_STRING_LEN,MPI_CHARACTER,0,my_local_mpi_comm_world,ier)
+       call MPI_BCAST(acqui_simu(ievent)%event_name,MAX_STRING_LEN,MPI_CHARACTER,0,my_local_mpi_comm_world,ier)
        call MPI_BCAST(acqui_simu(ievent)%component,6,MPI_CHARACTER,0,my_local_mpi_comm_world,ier)
        call MPI_BCAST(acqui_simu(ievent)%Nt_data,1,MPI_INTEGER,0,my_local_mpi_comm_world,ier)
        call MPI_BCAST(acqui_simu(ievent)%dt_data,1,CUSTOM_MPI_TYPE,0,my_local_mpi_comm_world,ier)
@@ -1729,11 +1729,11 @@ contains
     use my_mpi             !! module from specfem
 
     implicit none
-    character(len=MAX_LEN_STRING), intent(in)    ::  inver_file
+    character(len=MAX_STRING_LEN), intent(in)    ::  inver_file
     integer,                       intent(in)    ::  myrank
     type(inver),                   intent(inout) ::  inversion_param
     ! locals
-    character(len=MAX_LEN_STRING)                :: line, keyw
+    character(len=MAX_STRING_LEN)                :: line, keyw
     integer                                      :: ipos0,ipos1,ier
 
     ! only main reads inver_file
@@ -1940,8 +1940,8 @@ contains
     call MPI_BCAST(inversion_param%max_relative_pert,1,CUSTOM_MPI_TYPE,0,my_local_mpi_comm_world,ier)
     ! inversion parameters
     call MPI_BCAST(inversion_param%NinvPar,1,MPI_INTEGER,0,my_local_mpi_comm_world,ier)
-    call MPI_BCAST(inversion_param%parameter_family_name,MAX_LEN_STRING,MPI_CHARACTER,0,my_local_mpi_comm_world,ier)
-    call MPI_BCAST(inversion_param%param_inv_name, 50*MAX_LEN_STRING,MPI_CHARACTER,0,my_local_mpi_comm_world,ier)
+    call MPI_BCAST(inversion_param%parameter_family_name,MAX_STRING_LEN,MPI_CHARACTER,0,my_local_mpi_comm_world,ier)
+    call MPI_BCAST(inversion_param%param_inv_name, 50*MAX_STRING_LEN,MPI_CHARACTER,0,my_local_mpi_comm_world,ier)
     ! band pass filter
     call MPI_BCAST(inversion_param%use_band_pass_filter,1,MPI_LOGICAL,0,my_local_mpi_comm_world,ier)
     if (inversion_param%use_band_pass_filter) then
@@ -2079,7 +2079,7 @@ contains
   logical function is_blank_line(line)
 
     implicit none
-    character(len=MAX_LEN_STRING), intent(in) :: line
+    character(len=MAX_STRING_LEN), intent(in) :: line
     is_blank_line = .false.
     if (len(trim(adjustl(line))) == 0) is_blank_line = .true.
     if (INDEX(trim(adjustl(line)),'#') == 1) is_blank_line = .true.
@@ -2092,8 +2092,8 @@ contains
   subroutine remove_blank_in_line(line, line_without_blank)
 
     implicit none
-    character(len=MAX_LEN_STRING), intent(in)    :: line
-    character(len=MAX_LEN_STRING), intent(inout) :: line_without_blank
+    character(len=MAX_STRING_LEN), intent(in)    :: line
+    character(len=MAX_STRING_LEN), intent(inout) :: line_without_blank
     integer                                      :: n, i, k
 
     n = len_trim(adjustl(line))
@@ -2118,7 +2118,7 @@ contains
     type(acqui), dimension(:), intent(inout)               :: acqui_simu
 
     integer                                                :: ievent, irec, nsta, nrec_loc, ier
-    character(len=MAX_LEN_STRING)                          :: rec_filename,filtered_rec_filename
+    character(len=MAX_STRING_LEN)                          :: rec_filename,filtered_rec_filename
 
     ! log output
     if (myrank == 0) then
@@ -2676,13 +2676,13 @@ contains
        ! events
 !       acqui_simu(i)%nevent_tot=NEVENT
        ! bcast file paths
-!       call MPI_BCAST(acqui_simu(i)%source_file,MAX_LEN_STRING,MPI_CHARACTER,0,my_local_mpi_comm_world,ier)
-!       call MPI_BCAST(acqui_simu(i)%traction_dir,MAX_LEN_STRING,MPI_CHARACTER,0,my_local_mpi_comm_world,ier)
-!       call MPI_BCAST(acqui_simu(i)%data_file_gather,MAX_LEN_STRING,MPI_CHARACTER,0,my_local_mpi_comm_world,ier)
-!       call MPI_BCAST(acqui_simu(i)%source_type,MAX_LEN_STRING,MPI_CHARACTER,0,my_local_mpi_comm_world,ier)
-!       call MPI_BCAST(acqui_simu(i)%adjoint_source_type,MAX_LEN_STRING,MPI_CHARACTER,0,my_local_mpi_comm_world,ier)
-!       call MPI_BCAST(acqui_simu(i)%station_file,MAX_LEN_STRING,MPI_CHARACTER,0,my_local_mpi_comm_world,ier)
-!       call MPI_BCAST(acqui_simu(i)%event_name,MAX_LEN_STRING,MPI_CHARACTER,0,my_local_mpi_comm_world,ier)
+!       call MPI_BCAST(acqui_simu(i)%source_file,MAX_STRING_LEN,MPI_CHARACTER,0,my_local_mpi_comm_world,ier)
+!       call MPI_BCAST(acqui_simu(i)%traction_dir,MAX_STRING_LEN,MPI_CHARACTER,0,my_local_mpi_comm_world,ier)
+!       call MPI_BCAST(acqui_simu(i)%data_file_gather,MAX_STRING_LEN,MPI_CHARACTER,0,my_local_mpi_comm_world,ier)
+!       call MPI_BCAST(acqui_simu(i)%source_type,MAX_STRING_LEN,MPI_CHARACTER,0,my_local_mpi_comm_world,ier)
+!       call MPI_BCAST(acqui_simu(i)%adjoint_source_type,MAX_STRING_LEN,MPI_CHARACTER,0,my_local_mpi_comm_world,ier)
+!       call MPI_BCAST(acqui_simu(i)%station_file,MAX_STRING_LEN,MPI_CHARACTER,0,my_local_mpi_comm_world,ier)
+!       call MPI_BCAST(acqui_simu(i)%event_name,MAX_STRING_LEN,MPI_CHARACTER,0,my_local_mpi_comm_world,ier)
 !       call MPI_BCAST(acqui_simu(i)%component, 6,MPI_CHARACTER,0,my_local_mpi_comm_world,ier)
 
 !       call MPI_BCAST(acqui_simu(i)%Nt_data,1,MPI_INTEGER,0,my_local_mpi_comm_world,ier)
@@ -2706,7 +2706,7 @@ contains
 
 !       call MPI_BCAST(acqui_simu(i)%t_shift,1,CUSTOM_MPI_TYPE,0,my_local_mpi_comm_world,ier)
 !       call MPI_BCAST(acqui_simu(i)%hdur,1,CUSTOM_MPI_TYPE,0,my_local_mpi_comm_world,ier)
-!       call MPI_BCAST(acqui_simu(i)%source_wavelet_file, MAX_LEN_STRING,MPI_CHARACTER,0,my_local_mpi_comm_world,ier)
+!       call MPI_BCAST(acqui_simu(i)%source_wavelet_file, MAX_STRING_LEN,MPI_CHARACTER,0,my_local_mpi_comm_world,ier)
 
 !       call MPI_BCAST(acqui_simu(i)%external_source_wavelet, 1,MPI_LOGICAL,0,my_local_mpi_comm_world,ier)
 !       if (acqui_simu(i)%external_source_wavelet) then
@@ -2750,7 +2750,7 @@ contains
 !       call MPI_BCAST(inversion_param%dump_model_at_each_iteration, 1,MPI_LOGICAL,0,my_local_mpi_comm_world,ier)
 !       call MPI_BCAST(inversion_param%dump_gradient_at_each_iteration, 1,MPI_LOGICAL,0,my_local_mpi_comm_world,ier)
 !       call MPI_BCAST(inversion_param%dump_descent_direction_at_each_iteration, 1,MPI_LOGICAL,0,my_local_mpi_comm_world,ier)
-!       call MPI_BCAST(inversion_param%param_family, MAX_LEN_STRING,MPI_CHARACTER,0,my_local_mpi_comm_world,ier)
+!       call MPI_BCAST(inversion_param%param_family, MAX_STRING_LEN,MPI_CHARACTER,0,my_local_mpi_comm_world,ier)
 
        ! user taper on gradient (MASK)
 !       call MPI_BCAST(inversion_param%xmin_taper,1,CUSTOM_MPI_TYPE,0,my_local_mpi_comm_world,ier)

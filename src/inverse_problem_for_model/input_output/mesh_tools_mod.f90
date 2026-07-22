@@ -446,7 +446,7 @@ contains
     double precision,                                         intent(in)     :: Fx,Fy,Fz
     double precision,       dimension(NDIM,NDIM)                             :: nu_source
     integer,                                                  intent(in)     :: ispec
-    character(len=10),                                        intent(in)     :: type
+    character(len=MAX_STRING_LEN),                            intent(in)     :: type
 
     ! local
     double precision,       dimension(NGLLX)                                 :: hxis,hpxis

@@ -1833,7 +1833,7 @@ contains
 !   real(kind=CUSTOM_REAL)                                                 :: L2_error, L1_error, Linf_error, max_val
 
     !! for DEBUG_MODE ----- can be removed --------------------------------------------------------------
-!   character(len=256)                                                     :: path_file, name_file
+!   character(len=MAX_STRING_LEN)                                          :: path_file, name_file
     !! --------------------------------------------------------------------------------------------------
 
 !   L2_error=0.
@@ -2943,7 +2943,7 @@ contains
 !   integer                                                 :: ig, i, j, k, ie
 !   integer                                                 :: iglob, iglob_index
 !   real(kind=CUSTOM_REAL)                                  :: omega, lambda
-!   character(len=256)                                      :: name_file, path_file
+!   character(len=MAX_STRING_LEN)                           :: name_file, path_file
 
 !   !! compute Finite Difference Derivative Matrix and store in structure --------------------------------
 !   !!call compute_and_store_FD_derivatives_matrix(regularization_fd)
@@ -4443,7 +4443,7 @@ contains
     integer                                                 :: i,j,k,ispec, iglob
     integer                                                 :: ier
     real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: dd
-    character(len=256)                                      :: path_file, name_file
+    character(len=MAX_STRING_LEN)                           :: path_file, name_file
     integer                                                 :: itest
 
     itest = 1

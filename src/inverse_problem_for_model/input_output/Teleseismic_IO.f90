@@ -54,11 +54,11 @@ contains
     use my_mpi             !! module from specfem
 
     implicit none
-    character(len=MAX_LEN_STRING),           intent(in)    ::  acqui_file
+    character(len=MAX_STRING_LEN),           intent(in)    ::  acqui_file
     integer,                                 intent(in)    ::  myrank
     type(acqui),  dimension(:), allocatable, intent(inout) ::  acqui_simu
     ! locals
-    character(len=MAX_LEN_STRING)                          :: line, keyw, filename, val !, line_to_read
+    character(len=MAX_STRING_LEN)                          :: line, keyw, filename, val !, line_to_read
     integer                                                :: ipos0, ipos1, ievent
     integer                                                :: ier, nsta, nt, ista
     double precision                                       :: baz, dist, gcarc
@@ -280,21 +280,21 @@ contains
                      my_local_mpi_comm_world, ier)
 
       ! broadcast strings
-      call mpi_bcast(acqui_simu(ievent)%event_name,           max_len_string, mpi_character, 0, &
+      call mpi_bcast(acqui_simu(ievent)%event_name,           MAX_STRING_LEN, mpi_character, 0, &
                      my_local_mpi_comm_world, ier)
-      call mpi_bcast(acqui_simu(ievent)%event_rep,            max_len_string, mpi_character, 0, &
+      call mpi_bcast(acqui_simu(ievent)%event_rep,            MAX_STRING_LEN, mpi_character, 0, &
                      my_local_mpi_comm_world, ier)
-      call mpi_bcast(acqui_simu(ievent)%source_type_physical,            256, mpi_character, 0, &
+      call mpi_bcast(acqui_simu(ievent)%source_type_physical, MAX_STRING_LEN, mpi_character, 0, &
                      my_local_mpi_comm_world, ier)
-      call mpi_bcast(acqui_simu(ievent)%source_type_modeling,            256, mpi_character, 0, &
+      call mpi_bcast(acqui_simu(ievent)%source_type_modeling, MAX_STRING_LEN, mpi_character, 0, &
                      my_local_mpi_comm_world, ier)
-      call mpi_bcast(acqui_simu(ievent)%source_file,          max_len_string, mpi_character, 0, &
+      call mpi_bcast(acqui_simu(ievent)%source_file,          MAX_STRING_LEN, mpi_character, 0, &
                      my_local_mpi_comm_world, ier)
-      call mpi_bcast(acqui_simu(ievent)%station_coord_system, max_len_string, mpi_character, 0, &
+      call mpi_bcast(acqui_simu(ievent)%station_coord_system, MAX_STRING_LEN, mpi_character, 0, &
                      my_local_mpi_comm_world, ier)
-      call mpi_bcast(acqui_simu(ievent)%source_wavelet_file,  max_len_string, mpi_character, 0, &
+      call mpi_bcast(acqui_simu(ievent)%source_wavelet_file,  MAX_STRING_LEN, mpi_character, 0, &
                      my_local_mpi_comm_world, ier)
-      call mpi_bcast(acqui_simu(ievent)%traction_dir,         max_len_string, mpi_character, 0, &
+      call mpi_bcast(acqui_simu(ievent)%traction_dir,         MAX_STRING_LEN, mpi_character, 0, &
                      my_local_mpi_comm_world, ier)
       !call mpi_bcast(acqui_simu(ievent)%component,                         6, mpi_character, 0, &
       !               my_local_mpi_comm_world, ier)

@@ -27,6 +27,7 @@
 
 module passive_imaging_format_mod
 
+  use constants, only: MAX_STRING_LEN
   use interpolation_mod, only: si, sp, di, dp, cp, hp, deg2rad, rad2deg
   use rotations_mod, only: define_mesh_rotation_matrix, global_earth_coordinate, local_mesh_coordinate
 
@@ -48,19 +49,19 @@ module passive_imaging_format_mod
 
   !*** Some parameters for IO
   integer(kind=si),   private :: iunit=34, io_err, debug_level=0
-  character(len=256), private :: line, keyword, keyval
+  character(len=MAX_STRING_LEN), private :: line, keyword, keyval
 
   !*** Define type for station file header
   type hdr_type
 
-     character(len=256) :: event_name        = 'undef'  ! name of event
-     character(len=256) :: source_type       = 'undef'  ! type of source 'moment' or 'force'
-     character(len=256) :: source_components = 'undef'  ! file with parameters of source
-     character(len=256) :: modeling_tool     = 'undef'  ! kind of modeling (pointsource,
-                                                        !    finitesource, Axisem, FK, PW)
-     character(len=256) :: modeling_path     = 'undef'  ! repository of tractions or parameter file
-                                                        !    or STF file for point source
-     character(len=256) :: estimated_src     = 'undef'  ! repository of tractions or parameter file
+     character(len=MAX_STRING_LEN) :: event_name        = 'undef'  ! name of event
+     character(len=MAX_STRING_LEN) :: source_type       = 'undef'  ! type of source 'moment' or 'force'
+     character(len=MAX_STRING_LEN) :: source_components = 'undef'  ! file with parameters of source
+     character(len=MAX_STRING_LEN) :: modeling_tool     = 'undef'  ! kind of modeling (pointsource,
+                                                                   !    finitesource, Axisem, FK, PW)
+     character(len=MAX_STRING_LEN) :: modeling_path     = 'undef'  ! repository of tractions or parameter file
+                                                                   !    or STF file for point source
+     character(len=MAX_STRING_LEN) :: estimated_src     = 'undef'  ! repository of tractions or parameter file
      character(len=1)   :: data_type         = 'v'      ! kind of data (d=displacement, !
                                                         ! v=velocities, a=acceleration)
      character(len=3)   :: data_comp         = 'enz'    ! data coordinate system (geo 'zen'),
@@ -121,8 +122,8 @@ module passive_imaging_format_mod
      integer(kind=si) :: yy=0,     mo=0,     dd=0, jday=0  ! event datetime : year, month, day, julian day
      real(kind=dp)    :: hh=0._dp, mi=0._dp, ss=0._dp      !                  hour, minute, decimal sec
 
-     character(len=254) :: hdr    ! header of cmtfile
-     character(len=254) :: name   ! name of event in cmt file
+     character(len=MAX_STRING_LEN) :: hdr    ! header of cmtfile
+     character(len=MAX_STRING_LEN) :: name   ! name of event in cmt file
 
      real(kind=dp) :: tshift      ! time shift from cmtsolution
      real(kind=dp) :: hdur        ! half duration from cmtsolution
