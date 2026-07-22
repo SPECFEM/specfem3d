@@ -6,7 +6,7 @@ Plot seismograms from SPECFEM3D output
 import sys,os
 import matplotlib.pyplot as plt
 from mpl_toolkits.axisartist.axislines import Axes
-from mpl_toolkits.axes_grid1.inset_locator import zoomed_inset_axes 
+from mpl_toolkits.axes_grid1.inset_locator import zoomed_inset_axes
 from mpl_toolkits.axes_grid1.inset_locator import mark_inset
 
 import numpy as np
@@ -16,7 +16,7 @@ from scipy import signal
 def apply_filter(data, dt, filter_type='bandpass', lowcut=None, highcut=None, order=4):
     """
     Apply Butterworth filter to seismogram data
-    
+
     Parameters:
         data: input signal
         dt: sampling interval
@@ -24,14 +24,15 @@ def apply_filter(data, dt, filter_type='bandpass', lowcut=None, highcut=None, or
         lowcut: low cutoff frequency (Hz)
         highcut: high cutoff frequency (Hz)
         order: filter order
-    
+
     Returns:
         filtered data
     """
     # Calculate sampling frequency
     fs = 1.0 / dt
     nyquist = 0.5 * fs
-    print(f"filter: Nyquist = {nyquist:.4f} Hz")
+
+    print(f"  filter: Nyquist = {nyquist:.4f} Hz | sampling interval = {dt}")
 
     if filter_type == 'lowpass':
         if highcut is None:
@@ -65,7 +66,7 @@ def apply_filter(data, dt, filter_type='bandpass', lowcut=None, highcut=None, or
         sos = signal.butter(order, [low, high], btype='band', analog=False, output='sos')
     else:
         raise ValueError(f"Unknown filter type: {filter_type}")
-    
+
     # Apply the filter forward and backward (zero-phase shift)
     #filtered_data = signal.filtfilt(b, a, data)
     # Use second-order sections format
@@ -75,7 +76,9 @@ def apply_filter(data, dt, filter_type='bandpass', lowcut=None, highcut=None, or
 
 
 def plot_trace(files=[]):
-    print("Plot trace:")
+    print("*" * 30)
+    print("Plot trace(s):")
+    print("*" * 30)
     print(f"files: {' '.join(files)}")
     print("")
 
@@ -86,70 +89,142 @@ def plot_trace(files=[]):
             print(f"File {file} not found.")
             sys.exit(1)
 
+    ## options
+    # color-blind palette
+    use_colorblind = False
+    if "--color-blind" in sys.argv:
+        use_colorblind = True
+        print(f"using color-blind palette")
+
+    # line width
+    lw_val = 1.0
+    if "--lw" in sys.argv:
+        idx = sys.argv.index("--lw")
+        lw_val = float(sys.argv[idx + 1]) if idx + 1 < len(sys.argv) else 1.0
+        print(f"using line width {lw_val}")
+
+    # line color
+    linecolor = None
+    if "--linecolor" in sys.argv:
+        idx = sys.argv.index("--linecolor")
+        color = sys.argv[idx + 1] if idx + 1 < len(sys.argv) else ""
+        if color == "red":
+            linecolor = (0.75, 0.2, 0.2)
+        elif color == "green":
+            linecolor = (0.2, 0.75, 0.2)
+        elif color == "blue":
+            linecolor = (0.2, 0.2, 0.75)
+        elif color == "gray":
+            linecolor = (0.5, 0.5, 0.5)
+        elif color == "darkgray":
+            linecolor = (0.3, 0.3, 0.3)
+        else:
+            linecolor = None
+        # user info
+        if linecolor:
+            print(f"using line color '{color}' {linecolor}")
+        else:
+            print(f"line color '{color}' - not recognized (only 'red', 'green', 'blue', 'gray', 'darkgray')")
+
+    # filter options
+    use_filter = False
+    filter_type = 'bandpass'
+    lowcut = 0.001   # 1 mHz
+    highcut = 1.0    # 1 Hz
+    order = 4
+    # filter setup
+    if "--filter" in sys.argv:
+        use_filter = True
+    if "--filter-type" in sys.argv:
+        use_filter = True
+        idx = sys.argv.index("--filter-type")
+        filter_type = sys.argv[idx + 1]
+    if "--lowcut" in sys.argv:
+        use_filter = True
+        idx = sys.argv.index("--lowcut")
+        lowcut = float(sys.argv[idx + 1])
+    if "--highcut" in sys.argv:
+        use_filter = True
+        idx = sys.argv.index("--highcut")
+        highcut = float(sys.argv[idx + 1])
+    if "--filter-order" in sys.argv:
+        use_filter = True
+        idx = sys.argv.index("--filter-order")
+        order = int(sys.argv[idx + 1])
+    # user info
+    if use_filter:
+        if filter_type == 'bandpass':
+            print(f"using filter '{filter_type}' | lowcut {lowcut} (Hz) / highcut {highcut} (Hz) / order {order}")
+        elif filter_type == 'lowpass':
+            print(f"using filter '{filter_type}' | highcut-off {highcut} (Hz)")
+        elif filter_type == 'hipass':
+            print(f"using filter '{filter_type}' | lowcut-off {lowcut} (Hz)")
+        else:
+            print(f"using filter '{filter_type}' | lowcut {lowcut} (Hz) / highcut {highcut} (Hz) / order {order}")
+
+    # scaling factor
+    if "--scale" in sys.argv:
+        idx = sys.argv.index("--scale")
+        scale_val = float(sys.argv[idx + 1])
+        print(f"using scaling factor {scale_val}")
+    else:
+        scale_val = None
+
+    # shifting x-values
+    if "--xshift" in sys.argv:
+        idx = sys.argv.index("--xshift")
+        xshift_val = float(sys.argv[idx + 1])
+        print(f"using x-values shift {xshift_val}")
+    else:
+        xshift_val = None
+
+    print("")
+
+    # Read seismogram data
     times = []
     values = []
 
-    # Read seismogram data
     for file in files:
         print(f"file: {file}")
 
         # data
         data = np.loadtxt(file)
-        print(f"data: length           = {len(data)}")
+        print(f"  length          = {len(data)}")
 
         time = data[:, 0]
         trace = data[:, 1]
 
         if len(trace) <= 1:
-            print("not enough data.")
-            sys.exit(1)
+            print("  not enough data, skipping file...\n")
+            continue
 
-        # filter options
-        use_filter = False
-        filter_type = 'bandpass'
-        lowcut = 0.001   # 1 mHz
-        highcut = 1.0    # 1 Hz
-        order = 4
-
-        if "--filter" in sys.argv:
-            use_filter = True
-        if "--filter-type" in sys.argv:
-            use_filter = True
-            idx = sys.argv.index("--filter-type")
-            filter_type = sys.argv[idx + 1]
-        if "--lowcut" in sys.argv:
-            use_filter = True
-            idx = sys.argv.index("--lowcut")
-            lowcut = float(sys.argv[idx + 1])
-        if "--highcut" in sys.argv:
-            use_filter = True
-            idx = sys.argv.index("--highcut")
-            highcut = float(sys.argv[idx + 1])
-        if "--filter-order" in sys.argv:
-            use_filter = True
-            idx = sys.argv.index("--filter-order")
-            order = int(sys.argv[idx + 1])
+        # shift x-values
+        if xshift_val:
+            time += xshift_val
 
         # Apply filter if requested
         if use_filter:
             # sampling interval
             dt = time[1] - time[0]
-
-            print(f"filter: {filter_type} - lowcut {lowcut} (Hz) / highcut {highcut} (Hz) / order {order}")
-            print(f"filter: sampling interval = {dt}")
-
+            # filter
             trace = apply_filter(trace, dt, filter_type, lowcut, highcut, order)
 
-        print(f"      time  start/end = {time[0]} / {time[-1]}")
-        print(f"      trace min/max   = {np.min(trace)} / {np.max(trace)}")
+        # info
+        print(f"  time  start/end = {time[0]} / {time[-1]}")
+        print(f"  trace min/max   = {np.min(trace)} / {np.max(trace)}")
+        # apply scaling factor
+        if scale_val:
+            trace *= scale_val
+            print(f"  scaled trace min/max   = {np.min(trace)} / {np.max(trace)}")
         print("")
 
+        # store trace
         times.append(time)
         values.append(trace)
 
     # Determine figure layout
     # color-blind friendly colors
-    if "--color-blind" in sys.argv:
+    if use_colorblind:
         # see: https://matplotlib.org/stable/gallery/style_sheets/style_sheets_reference.html
         plt.style.use('tableau-colorblind10')
     else:
@@ -171,26 +246,42 @@ def plot_trace(files=[]):
     ylabel = 'amplitude'
     for i,file in enumerate(files):
         basename = os.path.basename(file)
-    
+
         time = times[i]
         trace = values[i]
 
         # line plot
         if len(files) == 1:
+            # single trace
             if "--label" in sys.argv:
                 idx = sys.argv.index("--label")
                 label = sys.argv[idx + 1] if idx + 1 < len(sys.argv) else basename
+            elif "--label1" in sys.argv:
+                idx = sys.argv.index("--label1")
+                label = sys.argv[idx + 1] if idx + 1 < len(sys.argv) else basename
             else:
                 label = basename
-            ax.plot(time, trace, 'b-', linewidth=1.0, label=f"{label}")
+            # line plot
+            if linecolor:
+                ax.plot(time, trace, '-', color=linecolor, linewidth=lw_val, label=f"{label}")
+            else:
+                ax.plot(time, trace, '-', linewidth=lw_val, label=f"{label}")
         else:
+            # multiple traces
             labelN = f"--label{i+1}"
             if labelN in sys.argv:
                 idx = sys.argv.index(labelN)
                 label = sys.argv[idx + 1] if idx + 1 < len(sys.argv) else basename
             else:
                 label = basename
-            ax.plot(time, trace, '-', linewidth=1.0, label=f"{label}")
+            # line plot
+            if linecolor:
+                # darkens color for increasing trace files
+                factor = (len(files) - i) / len(files)
+                linecolor = tuple(factor * elem for elem in linecolor)
+                ax.plot(time, trace, '-', color=linecolor, linewidth=lw_val, label=f"{label}")
+            else:
+                ax.plot(time, trace, '-', linewidth=lw_val, label=f"{label}")
 
         # axis label
         if "semd" in basename.split("."):
@@ -199,6 +290,10 @@ def plot_trace(files=[]):
             ylabel = 'velocity (m/s)'
         elif "sema" in basename.split("."):
             ylabel = 'acceleration (m/s^2)'
+
+        # for scaled y-values
+        if scale_val:
+            ylabel = f"scaled {ylabel} x {scale_val}"
 
     # Only show x-axis label on bottom row
     ax.set_xlabel('time (s)', fontsize=10)
@@ -210,7 +305,7 @@ def plot_trace(files=[]):
         idx = sys.argv.index("--zoom")
         x1 = float(sys.argv[idx + 1]) if idx + 1 < len(sys.argv) else time[0]
         x2 = float(sys.argv[idx + 2]) if idx + 2 < len(sys.argv) else time[-1]
-        print(f"  zoom window: x-range {x1} to {x2}")
+        print(f"using zoom window x-range {x1} to {x2}")
         # select y range for zoomin
         y1 = float('inf')
         y2 = -float('inf')
@@ -222,7 +317,7 @@ def plot_trace(files=[]):
             y2 = max(y2,np.max(trace[mask]))
         y1 = y1 * 1.05 if y1 < 0 else y1 * 0.95 # add margin
         y2 = y2 * 1.05 if y2 > 0 else y2 * 0.95
-        print(f"               y min/max = {y1} / {y2}\n")
+        print(f"                  y min/max = {y1} / {y2}\n")
         # Plot a zoom-in graph
         axins = ax.inset_axes([0.7, 0.8, 0.25, 0.25])   # x0,y0,width,height
         #axins = zoomed_inset_axes(ax, 2, loc=1) # zoom = 2
@@ -242,7 +337,7 @@ def plot_trace(files=[]):
     if "--title" in sys.argv:
         idx = sys.argv.index("--title")
         title = sys.argv[idx + 1]
-        print(f"  title: {title}")
+        print(f"using title '{title}'")
         plt.suptitle(f'{title}',fontsize=14, fontweight='bold')
     else:
         title = f"{'\n'.join(files)}"
@@ -262,15 +357,37 @@ def plot_trace(files=[]):
         idx = sys.argv.index("--xlim")
         x1 = float(sys.argv[idx + 1]) if idx + 1 < len(sys.argv) else time[0]
         x2 = float(sys.argv[idx + 2]) if idx + 2 < len(sys.argv) else time[-1]
-        print(f"  xlim: x-range {x1} to {x2}")
+        print(f"using xlim x-range {x1} to {x2}")
         ax.set_xlim(x1, x2)
     if "--ylim" in sys.argv:
         # get input x-range
         idx = sys.argv.index("--ylim")
         y1 = float(sys.argv[idx + 1]) if idx + 1 < len(sys.argv) else trace.min()
         y2 = float(sys.argv[idx + 2]) if idx + 2 < len(sys.argv) else trace.max()
-        print(f"  ylim: y-range {y1} to {y2}")
+        print(f"using ylim y-range {y1} to {y2}")
         ax.set_ylim(y1, y2)
+
+    # background image
+    if "--img" in sys.argv:
+        idx = sys.argv.index("--img")
+        img_file = sys.argv[idx + 1] if idx + 1 < len(sys.argv) else None
+        # read the background (JPG) image
+        if img_file:
+            try:
+                img = plt.imread(img_file)
+            except FileNotFoundError:
+                img = None
+            if not img is None:
+                print(f"using background image {img_file}")
+                # define the physical coordinates where the image should sit
+                # Format: [left, right, bottom, top] matching your data axes
+                x1,x2 = ax.get_xlim()
+                y1,y2 = ax.get_ylim()
+                img_extent = [x1, x2, y1, y2]
+                # render the image on the axes
+                # zorder=0 pushes it to the bottom layer safely behind lines
+                # alpha controls the transparency so the line stays legible
+                ax.imshow(img, extent=img_extent, zorder=0, alpha=0.5, aspect='auto')
 
     #ax.grid(True, linestyle=':', alpha=0.5)
     #ax.ticklabel_format(style='scientific', axis='both', scilimits=(-3,3))
@@ -292,9 +409,11 @@ def usage():
     print("usage:")
     print("    ./plot_trace.py <file,e.g., DB.A1.FXZ.semd> [--title 'text'] [--label 'my trace' or --label1 'trace1', --label2 'trace2', ..]")
     print("                                                [--filter] [--filter-type type] [--lowcut val] [--highcut val] [--filter-order val]")
-    print("                                                [--show] [--color-blind]")
+    print("                                                [--show] [--color-blind] [--lw val] [--linecolor col]")
     print("                                                [--xlim x1 x2] [--ylim y1 y2]")
     print("                                                [--zoom x1 x2]")
+    print("                                                [--img file(e.g., myimage.jpg]")
+    print("                                                [--scale val]")
     print("  with")
     print("    title              - title text")
     print("    label              - trace label text")
@@ -308,6 +427,10 @@ def usage():
     print("    xlim x1 x2         - limit x-axis range")
     print("    ylim y1 y2         - limit y-axis range")
     print("    zoom x1 x2         - add zoom-in figure for x-range x1 to x2")
+    print("    image file         - adds file (like a jpg image) as background image")
+    print("    lw val             - line width value")
+    print("    linecolor col      - use line color 'col' ('red','green','blue','gray','darkgray'")
+    print("    scale val          - scale trace by a factor val")
     sys.exit(1)
 
 if __name__ == "__main__":
