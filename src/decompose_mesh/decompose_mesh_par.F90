@@ -51,15 +51,15 @@ module decompose_mesh_par
   logical, parameter :: PORO_INTERFACE_REPARTITIONING = .true.
 
   ! number of partitions
-  integer :: nparts
+  integer :: nparts = 0
 
   ! mesh arrays
-  integer :: nspec
+  integer :: nspec = 0
   integer, dimension(:,:), allocatable  :: elmnts
   integer, dimension(:,:), allocatable  :: mat
   integer, dimension(:), allocatable  :: part
 
-  integer :: nnodes
+  integer :: nnodes = 0
   double precision, dimension(:,:), allocatable  :: nodes_coords
 
   integer, dimension(:), allocatable  :: xadj
@@ -76,29 +76,34 @@ module decompose_mesh_par
   integer, dimension(:), pointer  :: tab_size_interfaces, tab_interfaces
   integer, dimension(:), allocatable  :: my_interfaces
   integer, dimension(:), allocatable  :: my_nb_interfaces
-  integer :: ninterfaces
+  integer :: ninterfaces = 0
 
   integer :: nsize           ! max number of elements that contain the same node
   integer :: nb_edges
 
   integer :: sup_neighbor   ! majoration (overestimate) of the maximum number of neighbors per element
 
-  integer :: ipart, nnodes_loc, nspec_local,ncommonnodes
+  integer :: ipart, nnodes_loc, nspec_local, ncommonnodes
   integer :: num_elmnt, num_node, num_mat
 
   ! boundaries
-  integer :: nspec2D_xmin, nspec2D_xmax, nspec2D_ymin, nspec2D_ymax, nspec2D_bottom, nspec2D_top
+  integer :: nspec2D_xmin = 0
+  integer :: nspec2D_xmax = 0
+  integer :: nspec2D_ymin = 0
+  integer :: nspec2D_ymax = 0
+  integer :: nspec2D_bottom = 0
+  integer :: nspec2D_top = 0
   integer, dimension(:), allocatable :: ibelm_xmin, ibelm_xmax, ibelm_ymin, ibelm_ymax, ibelm_bottom, ibelm_top
   integer, dimension(:,:), allocatable :: nodes_ibelm_xmin, nodes_ibelm_xmax, nodes_ibelm_ymin
   integer, dimension(:,:), allocatable :: nodes_ibelm_ymax, nodes_ibelm_bottom, nodes_ibelm_top
 
   ! C-PML absorbing boundary conditions
-  integer :: nspec_cpml
+  integer :: nspec_cpml = 0
   integer, dimension(:), allocatable :: CPML_to_spec, CPML_regions
   logical, dimension(:), allocatable :: is_CPML
 
   ! moho surface (optional)
-  integer :: nspec2D_moho
+  integer :: nspec2D_moho = 0
   integer, dimension(:), allocatable :: ibelm_moho
   integer, dimension(:,:), allocatable :: nodes_ibelm_moho
 
@@ -120,7 +125,7 @@ module decompose_mesh_par
   integer,dimension(:),allocatable :: ispec_p_refine
   integer,dimension(:),allocatable :: p_level
   integer,dimension(:),allocatable :: num_ispec_level
-  integer :: num_p_level
+  integer :: num_p_level = 0
 
   ! wavefield discontinuity
   !! boundary of wavefield discontinuity, read from database file

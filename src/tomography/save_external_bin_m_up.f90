@@ -34,8 +34,8 @@
   subroutine save_external_bin_m_up(nspec,nglob, &
                                     rho_vp,rho_vs,qmu_attenuation_store, &
                                     rhostore,kappastore,mustore, &
-                                    rmassx,rmassy,rmassz, &
-                                    rmass_acoustic,rmass_solid_poroelastic,rmass_fluid_poroelastic, &
+                                    rmass_elastic,rmass_acoustic, &
+                                    rmass_solid_poroelastic,rmass_fluid_poroelastic, &
                                     APPROXIMATE_OCEAN_LOAD,rmass_ocean_load,NGLOB_OCEAN, &
                                     ibool, &
                                     xstore,ystore,zstore, &
@@ -88,9 +88,8 @@
 
   ! material
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,nspec) :: rhostore,kappastore,mustore
-  real(kind=CUSTOM_REAL), dimension(nglob) :: rmassx,rmassy,rmassz, &
-            rmass_acoustic, &
-            rmass_solid_poroelastic,rmass_fluid_poroelastic
+  real(kind=CUSTOM_REAL), dimension(nglob) :: rmass_elastic,rmass_acoustic, &
+                                              rmass_solid_poroelastic,rmass_fluid_poroelastic
 
   ! ocean load
   logical :: APPROXIMATE_OCEAN_LOAD
@@ -197,9 +196,7 @@
 ! elastic
   call any_all_l( ANY(ispec_is_elastic), ELASTIC_SIMULATION )
   if (ELASTIC_SIMULATION) then
-    write(IOUT) rmassx
-    write(IOUT) rmassy
-    write(IOUT) rmassz
+    write(IOUT) rmass_elastic
     if (APPROXIMATE_OCEAN_LOAD) then
       write(IOUT) rmass_ocean_load
     endif

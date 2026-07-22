@@ -97,6 +97,26 @@
 
   end subroutine read_value_string
 
+
+!--------------------
+
+  subroutine read_value_double_precision_vector(vector_to_read, name, ier)
+
+  use constants, only: NDIM,MAX_STRING_LEN
+  implicit none
+
+  double precision, dimension(NDIM), intent(inout) :: vector_to_read
+  character(len=*), intent(in) :: name
+  character(len=MAX_STRING_LEN) :: string_read
+  integer, intent(inout) :: ier
+
+  call param_read(string_read, len(string_read), name, len(name), ier)
+  if (ier /= 0) return
+
+  read(string_read,*,iostat=ier) vector_to_read
+
+  end subroutine read_value_double_precision_vector
+
 !--------------------
 
   subroutine open_parameter_file_from_main_only(ier)

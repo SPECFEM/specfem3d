@@ -55,7 +55,7 @@ contains
     integer :: ipar
     integer :: ipar_inv, ier
     logical, dimension(3) :: is_selected
-    character(len=MAX_LEN_STRING), dimension(3) :: vti_family_name
+    character(len=MAX_STRING_LEN), dimension(3) :: vti_family_name
 
     vti_family_name(1) = "rho"
     vti_family_name(2) = "vp"

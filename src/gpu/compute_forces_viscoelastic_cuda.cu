@@ -1288,3 +1288,88 @@ void FC_FUNC_(compute_forces_viscoelastic_cuda,
 
 }
 
+/* ----------------------------------------------------------------------------------------------- */
+
+
+extern EXTERN_LANG
+void FC_FUNC_(compute_forces_viscoelastic_rotation_cuda,
+              COMPUTE_FORCES_VISCOELASTIC_ROTATION_CUDA)(long* Mesh_pointer,
+                                                         int* FORWARD_OR_ADJOINT) {
+
+  TRACE("compute_forces_viscoelastic_rotation_cuda");
+
+  Mesh* mp = (Mesh*)(*Mesh_pointer); // get Mesh from fortran integer wrapper
+
+  // safety check
+  if (*FORWARD_OR_ADJOINT != 1 && *FORWARD_OR_ADJOINT != 3) {
+    exit_on_error("Error invalid FORWARD_OR_ADJOINT in compute_forces_viscoelastic_rotation_cuda() routine");
+  }
+
+  // not implemented yet
+  exit_on_error("Coriolis force on GPU not implemented yet.");
+/*
+
+  int size = mp->NGLOB_AB;
+
+  int blocksize = BLOCKSIZE_KERNEL3;
+  int size_padded = ((int)ceil(((double)size)/((double)blocksize)))*blocksize;
+
+  int num_blocks_x, num_blocks_y;
+  get_blocks_xy(size_padded/blocksize,&num_blocks_x,&num_blocks_y);
+
+  dim3 grid(num_blocks_x,num_blocks_y);
+  dim3 threads(blocksize,1,1);
+
+  // sets gpu arrays
+  realw *displ, *veloc, *accel;
+  realw omegax,omegay,omegaz;
+  if (*FORWARD_OR_ADJOINT == 1) {
+    displ = mp->d_displ;
+    veloc = mp->d_veloc;
+    accel = mp->d_accel;
+    two_omegax = mp->two_omega_rotation[0];
+    two_omegay = mp->two_omega_rotation[1];
+    two_omegaz = mp->two_omega_rotation[2];
+  } else {
+    // for backward/reconstructed fields
+    displ = mp->d_b_displ;
+    veloc = mp->d_b_veloc;
+    accel = mp->d_b_accel;
+    two_omegax = mp->b_two_omega_rotation[0];
+    two_omegay = mp->b_two_omega_rotation[1];
+    two_omegaz = mp->b_two_omega_rotation[2];
+  }
+
+ // updates accel
+#ifdef USE_CUDA
+ if (run_cuda){
+   compute_forces_coriolis_device<<<grid,threads,0,mp->compute_stream>>>(accel,
+                                                                         veloc,
+                                                                         displ,
+                                                                         size,
+                                                                         mp->d_rmassx,
+                                                                         mp->d_rmassy,
+                                                                         mp->d_rmassz
+                                                                         omegax,omegay,omegaz);
+  }
+#endif
+#ifdef USE_HIP
+  if (run_hip){
+    hipLaunchKernelGGL(compute_forces_coriolis_device, dim3(grid), dim3(threads), 0, mp->compute_stream,
+                                                       accel,
+                                                       veloc,
+                                                       displ,
+                                                       size,
+                                                       mp->d_rmassx,
+                                                       mp->d_rmassy,
+                                                       mp->d_rmassz,
+                                                       omegax,omegay,omegaz);
+  }
+#endif
+*/
+
+  //printf("checking updatedispl_kernel launch...with %dx%d blocks\n",num_blocks_x,num_blocks_y);
+  GPU_ERROR_CHECKING("after Coriolis");
+}
+
+

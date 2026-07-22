@@ -64,6 +64,9 @@
     stop 'Error invalid number of NSTEP_STF'
   endif
 
+  ! clear the array for that source
+  user_source_time_function(:,isource) = 0._CUSTOM_REAL
+
   ! for STF file names like "***.bin" - ending with ".bin", we will read it in as a binary file instead of as an ASCII file
   ! to enhance the speed for reading in many STF files in case.
 
@@ -94,9 +97,6 @@
       return
     endif
   endif
-
-  ! clear the array for that source
-  user_source_time_function(:,isource) = 0._CUSTOM_REAL
 
   ! ASCII source time function file
   ! format: the ASCII source time function file can use a format like
@@ -175,33 +175,35 @@
       if (len_trim(line) == 0) cycle
       if (line(1:1) == '#' .or. line(1:1) == '!') cycle
 
-      ! reads the STF values
-      read(line,*,iostat=ier) stf_val
-      if (ier /= 0) then
-        print *,'Problem when reading external ASCII source time file: ', trim(external_stf_filename)
-        print *,'Please check, file format should be: '
-        print *,'  # DT-time-step-size'
-        print *,'  # stf-value'
-        print *,'  # ..'
-        stop 'Error reading external ASCII source time file with invalid format'
-      endif
-
       ! increases counter
       i = i + 1
 
-      ! checks first STF value
-      if (i == 1 .and. stf_val > SMALL_STF_VAL) then
-        print *
-        print *,'****************************************************************************************'
-        print *,'Warning: ',trim(external_stf_filename), &
-                ' starts with an STF value ',stf_val
-        print *,'         Onset values should be close to zero to avoid numerical, high-frequency oscillations artifacts'
-        print *,'****************************************************************************************'
-        print *
-      endif
+      if (i <= NSTEP_STF) then
+        ! reads the STF values
+        read(line,*,iostat=ier) stf_val
+        if (ier /= 0) then
+          print *,'Problem when reading external ASCII source time file: ', trim(external_stf_filename)
+          print *,'Please check, file format should be: '
+          print *,'  # DT-time-step-size'
+          print *,'  # stf-value'
+          print *,'  # ..'
+          stop 'Error reading external ASCII source time file with invalid format'
+        endif
 
-      ! stores source time function
-      user_source_time_function(i,isource) = stf_val
+        ! checks first STF value
+        if (i == 1 .and. stf_val > SMALL_STF_VAL) then
+          print *
+          print *,'****************************************************************************************'
+          print *,'Warning: ',trim(external_stf_filename), &
+                  ' starts with an STF value ',stf_val
+          print *,'         Onset values should be close to zero to avoid numerical, high-frequency oscillations artifacts'
+          print *,'****************************************************************************************'
+          print *
+        endif
+
+        ! stores source time function
+        user_source_time_function(i,isource) = stf_val
+      endif
 
       ! checks if all steps read
       if (i == NSTEP_STF) exit

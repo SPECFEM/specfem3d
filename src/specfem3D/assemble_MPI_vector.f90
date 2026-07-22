@@ -136,7 +136,7 @@
                                                  nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
                                                  my_neighbors_ext_mesh)
 
-! kbai added this subroutine to synchronize a vector field
+! added this subroutine to synchronize a vector field
 ! to ensure that its values at nodes on MPI interfaces stay equal on all processors that share the node.
 !
 ! Synchronize by setting the value to that of the processor with highest rank

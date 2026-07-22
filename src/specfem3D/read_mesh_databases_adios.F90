@@ -101,7 +101,7 @@
     local_dim_jacobianstore, &
     local_dim_kappastore, local_dim_mustore, local_dim_rhostore, &
     local_dim_ispec_is_acoustic, local_dim_ispec_is_elastic, &
-    local_dim_ispec_is_poroelastic, local_dim_rmass, &
+    local_dim_ispec_is_poroelastic, local_dim_rmass_elastic, &
     local_dim_rmass_ocean_load, local_dim_rmass_acoustic, &
     local_dim_rho_vp, local_dim_rho_vs, local_dim_abs_boundary_ispec, &
     local_dim_abs_boundary_ijk, local_dim_abs_boundary_jacobian2Dw, &
@@ -360,10 +360,7 @@
     call read_adios_scalar_local_dim(myadios_file, myadios_group, myrank, "rmass_acoustic", local_dim_rmass_acoustic)
   endif
   if (ELASTIC_SIMULATION) then
-    call read_adios_scalar_local_dim(myadios_file, myadios_group, myrank, "rmassx", local_dim_rmass)
-    !call read_adios_scalar_local_dim(myadios_file, myadios_group, myrank, "rmassy", local_dim_rmass) ! same dimensions
-    !call read_adios_scalar_local_dim(myadios_file, myadios_group, myrank, "rmassz", local_dim_rmass)
-
+    call read_adios_scalar_local_dim(myadios_file, myadios_group, myrank, "rmass_elastic", local_dim_rmass_elastic)
     if (APPROXIMATE_OCEAN_LOAD) then
       call read_adios_scalar_local_dim(myadios_file, myadios_group, myrank, "rmass_ocean_load", local_dim_rmass_ocean_load)
     endif
@@ -1162,14 +1159,12 @@
   endif
 
   if (ELASTIC_SIMULATION) then
-    start(1) = local_dim_rmass * myrank
+    start(1) = local_dim_rmass_elastic * myrank
     count_ad(1) = NGLOB_AB
     sel_num = sel_num+1
     sel => selections(sel_num)
     call set_selection_boundingbox(sel, start, count_ad)
-    call read_adios_schedule_array(myadios_file, myadios_group, sel, start, count_ad, "rmassx/array", rmassx)
-    call read_adios_schedule_array(myadios_file, myadios_group, sel, start, count_ad, "rmassy/array", rmassy)
-    call read_adios_schedule_array(myadios_file, myadios_group, sel, start, count_ad, "rmassz/array", rmassz)
+    call read_adios_schedule_array(myadios_file, myadios_group, sel, start, count_ad, "rmass_elastic/array", rmassz)
 
     if (APPROXIMATE_OCEAN_LOAD) then
       ! ocean mass matrix

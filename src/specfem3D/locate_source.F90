@@ -916,8 +916,7 @@
   hdur(:) = 0.d0
   min_tshift_src_original = 0.d0
   !user_source_time_function(:,:) = 0.0_CUSTOM_REAL
-  if (.not. USE_BINARY_SOURCE_FILE) &
-    user_source_time_function(:,:) = 0.0_CUSTOM_REAL
+  if (.not. USE_BINARY_SOURCE_FILE) user_source_time_function(:,:) = 0.0_CUSTOM_REAL
 
   yr_PDE = 0
   jda_PDE = 0
@@ -976,11 +975,10 @@
       ! point forces
       if (myrank == 0) then
         ! only main process reads in FORCESOLUTION file
-        call get_force(filename,tshift_src,hdur, &
-                      lat,lon,depth,NSOURCES, &
-                      min_tshift_src_original,force_stf,factor_force_source, &
-                      comp_dir_vect_source_E,comp_dir_vect_source_N,comp_dir_vect_source_Z_UP, &
-                      user_source_time_function)
+        call get_force(filename,tshift_src,hdur,lat,lon,depth,NSOURCES, &
+                       min_tshift_src_original,force_stf,factor_force_source, &
+                       comp_dir_vect_source_E,comp_dir_vect_source_N,comp_dir_vect_source_Z_UP, &
+                       user_source_time_function)
       endif
       ! broadcasts specific point force infos
       call bcast_all_i(force_stf,NSOURCES)
@@ -993,10 +991,8 @@
       ! CMT moment tensors
       if (myrank == 0) then
         ! only main process reads in CMTSOLUTION file
-        call get_cmt(filename,yr,jda,mo,da,ho,mi,sec, &
-                    tshift_src,hdur, &
-                    lat,lon,depth,moment_tensor, &
-                    DT,NSOURCES,min_tshift_src_original,user_source_time_function)
+        call get_cmt(filename,yr,jda,mo,da,ho,mi,sec,tshift_src,hdur, &
+                     lat,lon,depth,moment_tensor,DT,NSOURCES,min_tshift_src_original,user_source_time_function)
 
         ! stores infos for ASDF/SAC files
         yr_PDE = yr     ! year
@@ -1014,10 +1010,8 @@
               IN_DATA_FILES(1:len_trim(IN_DATA_FILES))//'CMTSOLUTION'
     filename = trim(filename)
     if (myrank == 0) then
-      call get_cmt(filename,yr,jda,mo,da,ho,mi,sec, &
-                   tshift_src,hdur, &
-                   lat,lon,depth,moment_tensor, &
-                   DT,NSOURCES_CMT,min_tshift_src_original,user_source_time_function)
+      call get_cmt(filename,yr,jda,mo,da,ho,mi,sec,tshift_src,hdur, &
+                   lat,lon,depth,moment_tensor,DT,NSOURCES_CMT,min_tshift_src_original,user_source_time_function)
       ! stores infos for ASDF/SAC files
       yr_PDE = yr     ! year
       jda_PDE = jda   ! day of the year

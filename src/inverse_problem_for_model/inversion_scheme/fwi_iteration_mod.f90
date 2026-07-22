@@ -78,7 +78,7 @@ contains
     integer                                   :: ievent, Niv, global_iter
     logical                                   :: flag_wolfe
     logical                                   :: ModelIsSuitable
-    character(len=MAX_LEN_STRING)             :: prefix_name
+    character(len=MAX_STRING_LEN)             :: prefix_name
     real(kind=CUSTOM_REAL)                    :: tmp_val
     ! timing
     double precision                          :: tCPU,tstart
@@ -382,7 +382,7 @@ contains
     type(inver),                intent(inout) :: inversion_param
     ! local
     integer                                   :: ievent,ipar,global_iter
-    character(len=MAX_LEN_STRING)             :: prefix_name
+    character(len=MAX_STRING_LEN)             :: prefix_name
     real(kind=CUSTOM_REAL)                    :: tmp_val
     ! timing
     double precision                          :: tCPU,tstart

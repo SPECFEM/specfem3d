@@ -56,7 +56,7 @@
   call prepare_timerun_user_output()
 
   ! sets up mass matrices
-  call prepare_timerun_mass_matrices()
+  call prepare_mass_matrices()
 
   ! sets up time increments
   call prepare_timerun_constants()
@@ -72,6 +72,9 @@
 
   ! prepares gravity arrays
   call prepare_gravity()
+
+  ! prepares rotation
+  call prepare_rotation()
 
   ! prepares LDDRK time scheme
   ! note: do not use if (USE_LDDRK) call prepare_timerun_lddrk()
@@ -224,6 +227,12 @@
       write(IMAIN,*) '  no gravity'
     endif
 
+    if (ROTATION) then
+      write(IMAIN,*) 'incorporating rotation'
+    else
+      write(IMAIN,*) '  no rotation'
+    endif
+
     if (MOVIE_SIMULATION) then
       write(IMAIN,*) 'incorporating movie simulation'
     else
@@ -249,140 +258,6 @@
 !
 !-------------------------------------------------------------------------------------------------
 !
-
-  subroutine prepare_timerun_mass_matrices()
-
-  use specfem_par
-  use specfem_par_acoustic
-  use specfem_par_elastic
-  use specfem_par_poroelastic
-
-  implicit none
-
-  ! user output
-  if (myrank == 0) then
-    write(IMAIN,*) "preparing mass matrices"
-    call flush_IMAIN()
-  endif
-
-  ! synchronize all the processes before assembling the mass matrix
-  ! to make sure all the nodes have finished to read their databases
-  call synchronize_all()
-
-  ! LTS mass matrices
-  if (LTS_MODE) call lts_prepare_mass_matrices()
-
-  ! the mass matrices need to be assembled with MPI here once and for all
-  ! acoustic domains
-  if (ACOUSTIC_SIMULATION) then
-    call assemble_MPI_scalar_blocking(NPROC,NGLOB_AB,rmass_acoustic, &
-                                      num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
-                                      nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
-                                      my_neighbors_ext_mesh)
-
-    ! fill mass matrix with fictitious non-zero values to make sure it can be inverted globally
-    where(rmass_acoustic <= 0._CUSTOM_REAL) rmass_acoustic = 1._CUSTOM_REAL
-
-    ! checks mass matrix
-    if (minval(rmass_acoustic) <= 0._CUSTOM_REAL) &
-      call exit_MPI(myrank,'negative mass matrix term for rmass_acoustic')
-
-    ! mass matrix inversion
-    ! for efficiency, invert final mass matrix once and for all on each slice
-    rmass_acoustic(:) = 1._CUSTOM_REAL / rmass_acoustic(:)
-  endif
-
-  ! elastic domains
-  if (ELASTIC_SIMULATION) then
-    ! assemble mass matrix
-    call assemble_MPI_scalar_blocking(NPROC,NGLOB_AB,rmassx, &
-                                      num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
-                                      nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
-                                      my_neighbors_ext_mesh)
-    call assemble_MPI_scalar_blocking(NPROC,NGLOB_AB,rmassy, &
-                                      num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
-                                      nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
-                                      my_neighbors_ext_mesh)
-    call assemble_MPI_scalar_blocking(NPROC,NGLOB_AB,rmassz, &
-                                      num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
-                                      nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
-                                      my_neighbors_ext_mesh)
-
-    ! fill mass matrix with fictitious non-zero values to make sure it can be inverted globally
-    where(rmassx <= 0._CUSTOM_REAL) rmassx = 1._CUSTOM_REAL
-    where(rmassy <= 0._CUSTOM_REAL) rmassy = 1._CUSTOM_REAL
-    where(rmassz <= 0._CUSTOM_REAL) rmassz = 1._CUSTOM_REAL
-
-    ! checks mass matrix
-    if (minval(rmassx) <= 0._CUSTOM_REAL) &
-      call exit_MPI(myrank,'negative mass matrix term for rmassx')
-    if (minval(rmassy) <= 0._CUSTOM_REAL) &
-      call exit_MPI(myrank,'negative mass matrix term for rmassy')
-    if (minval(rmassz) <= 0._CUSTOM_REAL) &
-      call exit_MPI(myrank,'negative mass matrix term for rmassz')
-
-    ! mass matrix inversion
-    ! for efficiency, invert final mass matrix once and for all on each slice
-    rmassx(:) = 1._CUSTOM_REAL / rmassx(:)
-    rmassy(:) = 1._CUSTOM_REAL / rmassy(:)
-    rmassz(:) = 1._CUSTOM_REAL / rmassz(:)
-
-    ! ocean load
-    if (APPROXIMATE_OCEAN_LOAD) then
-      call assemble_MPI_scalar_blocking(NPROC,NGLOB_AB,rmass_ocean_load, &
-                                        num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
-                                        nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
-                                        my_neighbors_ext_mesh)
-      where(rmass_ocean_load <= 0._CUSTOM_REAL) rmass_ocean_load = 1._CUSTOM_REAL
-      ! checks mass matrix
-      if (minval(rmass_ocean_load) <= 0._CUSTOM_REAL) &
-      call exit_MPI(myrank,'negative mass matrix term for rmass_ocean_load')
-      ! mass matrix inversion
-      ! for efficiency, invert final mass matrix once and for all on each slice
-      rmass_ocean_load(:) = 1._CUSTOM_REAL / rmass_ocean_load(:)
-    endif
-  endif
-
-  ! poroelastic domains
-  if (POROELASTIC_SIMULATION) then
-    call assemble_MPI_scalar_blocking(NPROC,NGLOB_AB,rmass_solid_poroelastic, &
-                                      num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
-                                      nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
-                                      my_neighbors_ext_mesh)
-
-    call assemble_MPI_scalar_blocking(NPROC,NGLOB_AB,rmass_fluid_poroelastic, &
-                                      num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
-                                      nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
-                                      my_neighbors_ext_mesh)
-
-    ! fills mass matrix with fictitious non-zero values to make sure it can be inverted globally
-    where(rmass_solid_poroelastic <= 0._CUSTOM_REAL) rmass_solid_poroelastic = 1._CUSTOM_REAL
-    where(rmass_fluid_poroelastic <= 0._CUSTOM_REAL) rmass_fluid_poroelastic = 1._CUSTOM_REAL
-
-    ! checks mass matrix
-    if (minval(rmass_solid_poroelastic) <= 0._CUSTOM_REAL) &
-      call exit_MPI(myrank,'negative mass matrix term for rmass_solid_poroelastic')
-    if (minval(rmass_fluid_poroelastic) <= 0._CUSTOM_REAL) &
-      call exit_MPI(myrank,'negative mass matrix term for rmass_fluid_poroelastic')
-
-    ! mass matrix inversion
-    ! for efficiency, invert final mass matrix once and for all on each slice
-    rmass_solid_poroelastic(:) = 1._CUSTOM_REAL / rmass_solid_poroelastic(:)
-    rmass_fluid_poroelastic(:) = 1._CUSTOM_REAL / rmass_fluid_poroelastic(:)
-  endif
-
-  ! LTS mass matrices
-  if (LTS_MODE) call lts_prepare_mass_matrices_invert()
-
-  ! synchonizes
-  call synchronize_all()
-
-  end subroutine prepare_timerun_mass_matrices
-
-!
-!-------------------------------------------------------------------------------------------------
-!
-
 
   subroutine prepare_timerun_constants()
 
@@ -1200,6 +1075,9 @@
   use specfem_par_poroelastic
   use specfem_par_coupling
 
+  ! H-W boundary
+  use stacey_par, only: USE_HW_ABC,allocate_hw_abc
+
   implicit none
 
   ! local parameters
@@ -1212,10 +1090,22 @@
   ! stacey absorbing fields will be reconstructed for adjoint simulations
   ! using snapshot files of wavefields
   if (STACEY_ABSORBING_CONDITIONS) then
-
     if (myrank == 0) then
       write(IMAIN,*) "preparing Stacey absorbing boundaries"
+      if (USE_HW_ABC) then
+        write(IMAIN,*) "  using Hagstrom-Warburton condition"
+      else if (USE_STACEY_P3) then
+        write(IMAIN,*) "  using Stacey second-order (P3) condition"
+      else
+        write(IMAIN,*) "  using Stacey first-order (P1) condition"
+      endif
       call flush_IMAIN()
+    endif
+
+    ! Hagstrom-Warburton boundary
+    if (USE_HW_ABC) then
+      ! allocate auxiliary state variables
+      call allocate_hw_abc()
     endif
 
     ! sets flag to check if we need to save the stacey contributions to file
@@ -1553,3 +1443,54 @@
   call synchronize_all()
 
   end subroutine prepare_timerun_faults
+
+!
+!-------------------------------------------------------------------------------------------------
+!
+
+  subroutine prepare_rotation()
+
+  use specfem_par
+
+  implicit none
+
+  ! initialize
+  two_omega_rotation(:) = 0._CUSTOM_REAL
+  b_two_omega_rotation(:) = 0._CUSTOM_REAL
+
+  ! checks if anything to do
+  if (.not. ROTATION) return
+
+  ! user output
+  if (myrank == 0) then
+    write(IMAIN,*) "preparing rotation"
+    write(IMAIN,*) "  angular velocity (counter-clockwise): ",sngl(ROTATION_OMEGA(:)),"(rad/s)"
+    write(IMAIN,*) "  center of rotation                  : ",sngl(ROTATION_ORIGIN(:))
+    call flush_IMAIN()
+  endif
+
+  ! rotation rate
+  ! measured counter-clockwise
+  select case(SIMULATION_TYPE)
+  case (1)
+    ! forward wavefield - spinning forward
+    two_omega_rotation(:) = real( 2.d0 * ROTATION_OMEGA(:),kind=CUSTOM_REAL)
+  case (2)
+    ! adjoint wavefield - spinning backward (time-reversed)
+    two_omega_rotation(:) = - real( 2.d0 * ROTATION_OMEGA(:),kind=CUSTOM_REAL)
+  case (3)
+    ! adjoint wavefield - spinning backward (time-reversed)
+    two_omega_rotation(:) = - real( 2.d0 * ROTATION_OMEGA(:),kind=CUSTOM_REAL)
+    ! backward/reconstructed wavefield
+    if (UNDO_ATTENUATION_AND_OR_PML) then
+      ! spinning forward
+      b_two_omega_rotation(:) = real( 2.d0 * ROTATION_OMEGA(:),kind=CUSTOM_REAL)
+    else
+      ! spinning backward
+      b_two_omega_rotation(:) = - real( 2.d0 * ROTATION_OMEGA(:),kind=CUSTOM_REAL)
+    endif
+  case default
+    stop 'Invalid SIMULATION_TYPE in prepare_rotation()'
+  end select
+
+  end subroutine prepare_rotation

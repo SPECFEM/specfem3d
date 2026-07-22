@@ -41,14 +41,15 @@ module specfem_par
   !-----------------------------------------------------------------
 
   ! number of spectral element and global points
-  integer :: NSPEC_AB, NGLOB_AB
+  integer :: NSPEC_AB = 0
+  integer :: NGLOB_AB = 0
 
   ! mesh parameters
   integer, dimension(:,:,:,:), allocatable :: ibool
   real(kind=CUSTOM_REAL), dimension(:), allocatable :: xstore,ystore,zstore
 
   ! regular/irregular element shapes
-  integer :: NSPEC_IRREGULAR
+  integer :: NSPEC_IRREGULAR = 0
   integer, dimension(:), allocatable :: irregular_element_number
   real(kind=CUSTOM_REAL) :: xix_regular,jacobian_regular
 
@@ -67,7 +68,8 @@ module specfem_par
   real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: rhostore
 
   ! use integer array to store topography values
-  integer :: NX_TOPO,NY_TOPO
+  integer :: NX_TOPO = 0
+  integer :: NY_TOPO = 0
   integer, dimension(:,:), allocatable :: itopo_bathy
 
   ! absorbing boundary arrays (for all boundaries) - keeps all infos, allowing for irregular surfaces
@@ -88,7 +90,7 @@ module specfem_par
   integer :: num_free_surface_faces
 
   ! attenuation
-  integer :: NSPEC_ATTENUATION_AB
+  integer :: NSPEC_ATTENUATION_AB = 0
   character(len=MAX_STRING_LEN) :: prname_Q
 
   ! additional mass matrix for ocean load
@@ -104,8 +106,10 @@ module specfem_par
   real(kind=CUSTOM_REAL) :: b_deltat, b_deltatover2, b_deltatsqover2
 
   ! LDDRK time scheme
-  integer :: NSTAGE_TIME_SCHEME,istage
-  integer :: NGLOB_AB_LDDRK,NSPEC_ATTENUATION_AB_LDDRK
+  integer :: NSTAGE_TIME_SCHEME = 0
+  integer :: istage
+  integer :: NGLOB_AB_LDDRK = 0
+  integer :: NSPEC_ATTENUATION_AB_LDDRK = 0
 
   ! time loop step
   integer :: it
@@ -116,7 +120,7 @@ module specfem_par
   integer :: it_begin,it_end
 
   ! UNDO_ATTENUATION_AND_OR_PML
-  integer :: NSUBSET_ITERATIONS
+  integer :: NSUBSET_ITERATIONS = 0
   integer :: iteration_on_subset,it_of_this_subset
   integer :: it_subset_end
 
@@ -297,14 +301,15 @@ module specfem_par
 
   ! absorbing stacey wavefield parts
   integer :: b_num_abs_boundary_faces
-  logical :: SAVE_STACEY
+  logical :: SAVE_STACEY = .false.
 
   ! Moho mesh
   real(kind=CUSTOM_REAL), dimension(:,:,:),allocatable :: normal_moho_top
   real(kind=CUSTOM_REAL), dimension(:,:,:),allocatable :: normal_moho_bot
   integer,dimension(:,:,:),allocatable :: ijk_moho_top, ijk_moho_bot
   integer,dimension(:),allocatable :: ibelm_moho_top, ibelm_moho_bot
-  integer :: NSPEC_BOUN,NSPEC2D_MOHO
+  integer :: NSPEC_BOUN = 0
+  integer :: NSPEC2D_MOHO = 0
   logical, dimension(:),allocatable :: is_moho_top, is_moho_bot
 
   ! adjoint source frechet derivatives
@@ -312,7 +317,8 @@ module specfem_par
   real(kind=CUSTOM_REAL), dimension(:,:), allocatable :: sloc_der
 
   ! adjoint elements
-  integer :: NSPEC_ADJOINT, NGLOB_ADJOINT
+  integer :: NSPEC_ADJOINT = 0
+  integer :: NGLOB_ADJOINT = 0
 
   !-----------------------------------------------------------------
   ! gravity
@@ -327,6 +333,18 @@ module specfem_par
   ! for gravity integrals
   double precision, dimension(NTOTAL_OBSERVATION) :: x_observation,y_observation,z_observation, &
     g_x,g_y,g_z,G_xx,G_yy,G_zz,G_xy,G_xz,G_yz,temporary_array_for_sum
+
+
+  !-----------------------------------------------------------------
+  ! rotation
+  !-----------------------------------------------------------------
+
+  ! rotation factor for angular velocity (2 * Omega)
+  real(kind=CUSTOM_REAL), dimension(NDIM) :: two_omega_rotation,b_two_omega_rotation
+
+  !-----------------------------------------------------------------
+  ! optimization
+  !-----------------------------------------------------------------
 
   ! force vectorization
 #ifdef FORCE_VECTORIZATION
@@ -436,11 +454,11 @@ module specfem_par_elastic
             c22store,c23store,c24store,c25store,c26store,c33store, &
             c34store,c35store,c36store,c44store,c45store,c46store, &
             c55store,c56store,c66store
-  integer :: NSPEC_ANISO
+  integer :: NSPEC_ANISO = 0
 
   ! for attenuation and/or kernel simulations
-  integer :: NSPEC_STRAIN_ONLY
-  logical :: COMPUTE_AND_STORE_STRAIN
+  integer :: NSPEC_STRAIN_ONLY = 0
+  logical :: COMPUTE_AND_STORE_STRAIN = .false.
 
   ! material flag
   logical, dimension(:), allocatable :: ispec_is_elastic
@@ -710,7 +728,7 @@ module specfem_par_movie
   integer :: nfaces_surface_glob_ext_mesh,nfaces_surface_glob_points
 
   ! movie parameters
-  logical :: MOVIE_SIMULATION
+  logical :: MOVIE_SIMULATION = .false.
 
 end module specfem_par_movie
 
@@ -880,7 +898,7 @@ module specfem_par_lts
   !integer, dimension(:), allocatable :: p_level_iglob_inner_end
 
   integer :: lts_it_local
-  integer :: NSTEP_LOCAL
+  integer :: NSTEP_LOCAL = 0
 
   ! boundary element nodes -- used to update the degrees of freedom on a p-level boundary
   ! equivalent to R and R*

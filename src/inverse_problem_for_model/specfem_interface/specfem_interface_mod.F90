@@ -67,7 +67,7 @@ contains
   type(acqui),  dimension(:), intent(inout) ::  acqui_simu
   type(inver),                intent(inout) ::  inversion_param
   ! local
-  character(len=MAX_LEN_STRING)             ::  name_file_tmp
+  character(len=MAX_STRING_LEN)             ::  name_file_tmp
 
   !! set the parameters to perform the forward simulation
   SIMULATION_TYPE          = 1
@@ -128,7 +128,7 @@ contains
   type(acqui),  dimension(:), intent(inout) :: acqui_simu
   type(inver),                intent(inout) :: inversion_param
   ! local
-  character(len=MAX_LEN_STRING)             :: name_file_tmp
+  character(len=MAX_STRING_LEN)             :: name_file_tmp
   logical                                   :: save_COUPLE_WITH_INJECTION_TECHNIQUE
 
   ! log output
@@ -234,11 +234,11 @@ contains
   integer                                                       :: icomp, it, irec_local
   real(kind=CUSTOM_REAL)                                        :: DT_cr, lw_tap
   double precision                                              :: DT
-  character(len=256)                                            :: name_file
+  character(len=MAX_STRING_LEN)                                 :: name_file
   character(len=MAX_STRING_LEN)                                 :: TRAC_PATH, dsname
   integer(kind=8)                                               :: filesize
   real(kind=CUSTOM_REAL), dimension(:), allocatable             :: raw_stf, filt_stf
-  character(len=MAX_LEN_STRING)                                 :: name_file_tmp, ch_to_add
+  character(len=MAX_STRING_LEN)                                 :: name_file_tmp, ch_to_add
   logical                                                       :: file_exists
 
   ! output

@@ -66,7 +66,7 @@ subroutine inverse_problem_main()
 
   integer                                :: ievent
   logical                                :: finished
-  character(len=MAX_LEN_STRING)          :: mode_running
+  character(len=MAX_STRING_LEN)          :: mode_running
   ! timing
   double precision                       :: tCPU,tstart,tstart_begin
   integer                                :: ihours,iminutes,iseconds,int_tCPU

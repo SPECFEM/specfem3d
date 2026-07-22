@@ -115,6 +115,7 @@ specfem3D_OBJECTS = \
 	$O/prepare_attenuation.spec.o \
 	$O/prepare_gpu.spec.o \
 	$O/prepare_gravity.spec.o \
+	$O/prepare_mass_matrices.spec.o \
 	$O/prepare_noise.spec.o \
 	$O/prepare_optimized_arrays.spec.o \
 	$O/prepare_timerun.spec.o \
@@ -159,6 +160,7 @@ specfem3D_SHARED_OBJECTS = \
 	$O/get_attenuation_model.shared.o \
 	$O/get_element_face.shared.o \
 	$O/get_jacobian_boundaries.shared.o \
+	$O/get_shape2D.shared.o \
 	$O/get_shape3D.shared.o \
 	$O/gll_library.shared.o \
 	$O/hdf5_manager.shared_hdf5_module.o \
@@ -202,6 +204,7 @@ specfem3D_MODULES = \
 	$(FC_MODDIR)/specfem_par_coupling.$(FC_MODEXT) \
 	$(FC_MODDIR)/specfem_par_noise.$(FC_MODEXT) \
 	$(FC_MODDIR)/specfem_par_lts.$(FC_MODEXT) \
+	$(FC_MODDIR)/stacey_par.$(FC_MODEXT) \
 	$(FC_MODDIR)/user_noise_distribution.$(FC_MODEXT) \
 	$(FC_MODDIR)/wavefield_discontinuity_solver.$(FC_MODEXT) \
 	$(EMPTY_MACRO)
@@ -386,6 +389,10 @@ $O/write_output_HDF5.spec_hdf5.o: $O/hdf5_io_server.spec_hdf5.o
 ## LTS
 $O/lts_iterate_time.spec.o: $O/gravity_perturbation.spec.o $O/hdf5_io_server.spec_hdf5.o
 $O/lts_global_step.spec.o: $O/fault_solver_dynamic.spec.o $O/fault_solver_kinematic.spec.o
+
+## Stacey
+$O/compute_forces_viscoelastic_calling_routine.spec.o: $O/compute_stacey_viscoelastic.spec.o
+$O/prepare_timerun.spec.o: $O/compute_stacey_viscoelastic.spec.o
 
 ####
 #### rule to build each .o file below

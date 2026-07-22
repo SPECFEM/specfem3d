@@ -6,7 +6,7 @@ Folder for examples of full-waveform inversion (FWI) approaches.
 The examples in this folder will use very simple workflows, based mostly on the fortran tools provided in this SPECFEM3D package.
 
 
-For more serious approaches, please consider additional external packages built to run FWI with SPECFEM solvers.
+For alternative approaches, please consider additional external packages built to run FWI with SPECFEM solvers.
 A recommended landing page which hosts the latest inversion tools is [adjTomo](https://github.com/adjtomo).
 
 Training material can be [found here](https://specfem.org/training).
@@ -16,8 +16,8 @@ Further links to inversion frameworks:
   - [Seisflows](https://github.com/adjtomo/seisflows)
 
 and somewhat older frameworks which at some point worked with SPECFEM3D:
-  - [Lasif](http://lasif.net)
-  - [ASKI](http://www.gmg.ruhr-uni-bochum.de/geophysik/seismology/aski.html)
+  - [Lasif](https://github.com/krischer/LASIF)
+  - [ASKI](https://github.com/seismology-RUB/ASKI)
   - [specfem_FWI_workflow](https://github.com/alanschiemenz/specfem_FWI_workflow)
 
 

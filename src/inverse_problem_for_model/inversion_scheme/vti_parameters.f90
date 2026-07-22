@@ -59,7 +59,7 @@ module vti_parameters_mod
     integer :: ipar
     integer :: ipar_inv, ier
     logical, dimension(6) :: is_selected
-    character(len=MAX_LEN_STRING), dimension(6) :: vti_family_name
+    character(len=MAX_STRING_LEN), dimension(6) :: vti_family_name
 
     vti_family_name(1)="rho"
     vti_family_name(2)="vp"

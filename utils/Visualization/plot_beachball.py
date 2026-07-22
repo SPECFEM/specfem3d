@@ -83,7 +83,7 @@ def read_CMT(cmt_file):
         print("number of filelines %i doesn't match for a CMTSOLUTION file, exiting..." % i)
         sys.exit(1)
 
-    number_of_cmts = i / 13
+    number_of_cmts = int(i / 13)
     print("number of CMTs contained in file: ", number_of_cmts)
     print("")
 

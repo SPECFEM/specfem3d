@@ -437,13 +437,9 @@
 
     ! reads mass matrices
     if (I_should_read_the_database) then
-      read(IIN,iostat=ier) rmassx
-      read(IIN,iostat=ier) rmassy
       read(IIN,iostat=ier) rmassz
-      if (ier /= 0) stop 'Error reading in array rmassx,rmassy,rmassz'
+      if (ier /= 0) stop 'Error reading in array rmassz'
     endif
-    call bcast_all_cr_for_database(rmassx(1), size(rmassx,kind=4))
-    call bcast_all_cr_for_database(rmassy(1), size(rmassy,kind=4))
     call bcast_all_cr_for_database(rmassz(1), size(rmassz,kind=4))
 
     if (APPROXIMATE_OCEAN_LOAD) then
@@ -1664,7 +1660,7 @@ contains
       allocate(cijkl_kl(21,NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT),stat=ier)
       if (ier /= 0) call exit_MPI_without_rank('error allocating array 1591')
       if (ier /= 0) stop 'Error allocating array cijkl_kl'
-      !dummy
+      ! dummy
       allocate(mu_kl(1,1,1,1),stat=ier)
       if (ier /= 0) call exit_MPI_without_rank('error allocating array 1592')
       allocate(kappa_kl(1,1,1,1),stat=ier)
@@ -1678,7 +1674,7 @@ contains
       allocate(kappa_kl(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT),stat=ier)
       if (ier /= 0) call exit_MPI_without_rank('error allocating array 1595')
       if (ier /= 0) stop 'Error allocating array kappa_kl'
-      !dummy
+      ! dummy
       allocate(cijkl_kl(1,1,1,1,1),stat=ier)
       if (ier /= 0) call exit_MPI_without_rank('error allocating array 1596')
     endif

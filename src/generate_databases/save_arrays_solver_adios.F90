@@ -313,10 +313,7 @@
   ! elastic
   if (ELASTIC_SIMULATION) then
     local_dim = nglob_wmax
-    call define_adios_global_array1D(myadios_group, group_size_inc,local_dim, '', STRINGIFY_VAR(rmassx))
-    call define_adios_global_array1D(myadios_group, group_size_inc,local_dim, '', STRINGIFY_VAR(rmassy))
-    call define_adios_global_array1D(myadios_group, group_size_inc,local_dim, '', STRINGIFY_VAR(rmassz))
-
+    call define_adios_global_array1D(myadios_group, group_size_inc,local_dim, '', STRINGIFY_VAR(rmass_elastic))
     if (APPROXIMATE_OCEAN_LOAD) then
       local_dim = nglob_ocean_wmax
       call define_adios_global_array1D(myadios_group, group_size_inc, local_dim, '', STRINGIFY_VAR(rmass_ocean_load))
@@ -693,10 +690,7 @@
   ! elastic
   if (ELASTIC_SIMULATION) then
     local_dim = nglob_wmax
-    call write_adios_global_1d_array(myadios_file, myadios_group, myrank, sizeprocs, local_dim, STRINGIFY_VAR(rmassx))
-    call write_adios_global_1d_array(myadios_file, myadios_group, myrank, sizeprocs, local_dim, STRINGIFY_VAR(rmassy))
-    call write_adios_global_1d_array(myadios_file, myadios_group, myrank, sizeprocs, local_dim, STRINGIFY_VAR(rmassz))
-
+    call write_adios_global_1d_array(myadios_file, myadios_group, myrank, sizeprocs, local_dim, STRINGIFY_VAR(rmass_elastic))
     if (APPROXIMATE_OCEAN_LOAD) then
       local_dim = nglob_ocean_wmax
       call write_adios_global_1d_array(myadios_file, myadios_group, myrank, sizeprocs, local_dim, &

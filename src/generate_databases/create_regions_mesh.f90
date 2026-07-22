@@ -450,7 +450,7 @@
   if (.not. SAVE_MOHO_MESH) deallocate(xstore_unique,ystore_unique,zstore_unique)
 
   if (ACOUSTIC_SIMULATION) deallocate(rmass_acoustic)
-  if (ELASTIC_SIMULATION) deallocate(rmassx,rmassy,rmassz)
+  if (ELASTIC_SIMULATION) deallocate(rmass_elastic)
   if (POROELASTIC_SIMULATION) deallocate(rmass_solid_poroelastic,rmass_fluid_poroelastic)
 
   ! user output

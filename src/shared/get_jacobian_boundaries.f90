@@ -334,24 +334,24 @@
       zxi = ZERO
       zeta = ZERO
       do ia = 1,NGNOD2D
-        xxi = xxi+dershape2D(1,ia,i,j)*xelm(ia)
-        xeta = xeta+dershape2D(2,ia,i,j)*xelm(ia)
+        xxi = xxi + dershape2D(1,ia,i,j)*xelm(ia)
+        xeta = xeta + dershape2D(2,ia,i,j)*xelm(ia)
 
-        yxi = yxi+dershape2D(1,ia,i,j)*yelm(ia)
-        yeta = yeta+dershape2D(2,ia,i,j)*yelm(ia)
+        yxi = yxi + dershape2D(1,ia,i,j)*yelm(ia)
+        yeta = yeta + dershape2D(2,ia,i,j)*yelm(ia)
 
-        zxi = zxi+dershape2D(1,ia,i,j)*zelm(ia)
-        zeta = zeta+dershape2D(2,ia,i,j)*zelm(ia)
+        zxi = zxi + dershape2D(1,ia,i,j)*zelm(ia)
+        zeta = zeta + dershape2D(2,ia,i,j)*zelm(ia)
       enddo
 
-      !   calculate the unnormalized normal to the boundary
-      unx = yxi*zeta-yeta*zxi
-      uny = zxi*xeta-zeta*xxi
-      unz = xxi*yeta-xeta*yxi
-      jacobian = dsqrt(unx*unx+uny*uny+unz*unz)
+      ! calculate the unnormalized normal to the boundary
+      unx = yxi*zeta - yeta*zxi
+      uny = zxi*xeta - zeta*xxi
+      unz = xxi*yeta - xeta*yxi
+      jacobian = dsqrt(unx*unx + uny*uny + unz*unz)
       if (jacobian <= ZERO) call exit_MPI(myrank,'2D Jacobian undefined')
 
-      !   normalize normal vector and store weighted surface jacobian
+      ! normalize normal vector and store weighted surface jacobian
       ! distinguish if single or double precision for reals
       jacobian2Dw_face(i,j) = real(jacobian * wgllwgll(i,j),kind=CUSTOM_REAL)
 

@@ -164,9 +164,7 @@
 
   ! elastic
   if (ELASTIC_SIMULATION) then
-    write(IOUT) rmassx
-    write(IOUT) rmassy
-    write(IOUT) rmassz
+    write(IOUT) rmass_elastic
     if (APPROXIMATE_OCEAN_LOAD) then
       write(IOUT) rmass_ocean_load
     endif

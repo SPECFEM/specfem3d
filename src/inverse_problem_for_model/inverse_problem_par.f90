@@ -35,9 +35,6 @@ module inverse_problem_par
   implicit none
 
   !! ------------------------------ compilation config parameters ---------------------------------
-
-  !! maximum line length allowed in input files
-  integer,                       public, parameter  :: MAX_LEN_STRING = 256
   !! log file for inversion
   integer,                       public, parameter  :: INVERSE_LOG_FILE = 6666
   ! uncomment this to write messages to the screen
@@ -91,17 +88,17 @@ module inverse_problem_par
   ! INVERSION PARAMETERS STRUCTURE
   type, public :: inver
      !! inputs files to read -------------------------------------------------------------------------------
-     character(len= MAX_LEN_STRING)                                           :: input_acqui_file
-     character(len= MAX_LEN_STRING)                                           :: input_inver_file
+     character(len=MAX_STRING_LEN)                                            :: input_acqui_file
+     character(len=MAX_STRING_LEN)                                            :: input_inver_file
 
      !! managing parameters family -------------------------------------------------------------------------
      !! choice of family parameters  :
      !! ISO : rho vp vs
      !! VTI : rho vp vs ep gm de
      !! ... todo add more ...
-     character(len=MAX_LEN_STRING)                                            :: parameter_family_name = "ISO"
-     character(len=MAX_LEN_STRING), dimension(50)                             :: param_inv_name
-     character(len=MAX_LEN_STRING), dimension(50)                             :: param_ref_name
+     character(len=MAX_STRING_LEN)                                            :: parameter_family_name = "ISO"
+     character(len=MAX_STRING_LEN), dimension(50)                             :: param_inv_name
+     character(len=MAX_STRING_LEN), dimension(50)                             :: param_ref_name
      integer                                                                  :: NfamilyPar = 3
      integer                                                                  :: NinvPar = 3
      integer, dimension(:), allocatable                                       :: Index_Invert
@@ -231,17 +228,17 @@ module inverse_problem_par
   type, public :: acqui
      !!------------------  event general parameters ----------------------
      !! number total of events
-     integer                                                                   :: nevent_tot
+     integer                                                                  :: nevent_tot
      !! id for the event
-     character(len= MAX_LEN_STRING)                                            :: event_name
+     character(len=MAX_STRING_LEN)                                            :: event_name
      !! name of pif event repository
-     character(len= MAX_LEN_STRING)                                            :: event_rep
+     character(len=MAX_STRING_LEN)                                            :: event_rep
      !! name for outputs files
-     character(len= MAX_LEN_STRING)                                            :: prname_inversion
+     character(len=MAX_STRING_LEN)                                            :: prname_inversion
      !! file contains source parameter for 'moment' or 'fk' or axisem traction
-     character(len= MAX_LEN_STRING)                                            :: source_file
+     character(len=MAX_STRING_LEN)                                            :: source_file
      !! kind of source to be used ('moment', 'force', 'axisem', 'dsm', 'fk')
-     character(len=MAX_LEN_STRING)                                             :: source_type
+     character(len=MAX_STRING_LEN)                                            :: source_type
      !!
      !! SB SB add source_type_physical and source_type_modeling to distinguish
      !!       between the method used for modeling (local point source(s), injection)
@@ -250,9 +247,9 @@ module inverse_problem_par
      !!       these informations.
      !!
      !! kind of source to be used ('moment', 'force')
-     character(len=MAX_LEN_STRING)                                             :: source_type_physical
+     character(len=MAX_STRING_LEN)                                             :: source_type_physical
      !! kind of source to be used ('pointsource', 'finitefault','axisem', 'dsm', 'fk')
-     character(len=MAX_LEN_STRING)                                             :: source_type_modeling
+     character(len=MAX_STRING_LEN)                                             :: source_type_modeling
      !! position of source in case of internal point source
      double precision, dimension(:), allocatable                               :: Xs,Ys,Zs
      !! source time function
@@ -261,7 +258,7 @@ module inverse_problem_par
      real(kind=CUSTOM_REAL), dimension(:), allocatable                         :: fl_event, fh_event
      real(kind=CUSTOM_REAL), dimension(:,:), allocatable                       :: user_source_time_function
      !! use external source time function
-     character(len= MAX_LEN_STRING)                                            :: source_wavelet_file
+     character(len=MAX_STRING_LEN)                                             :: source_wavelet_file
      logical                                                                   :: external_source_wavelet = .false.
      !! in case of exploration geophysics,
      !! saving temporary shot point to be able to read it directly in acqui_file
@@ -281,7 +278,7 @@ module inverse_problem_par
      double precision                                                          :: t0
      !! ------------------- station general parameters ----------------------------------
      !! stations (in specfem format)
-     character(len= MAX_LEN_STRING)                                            :: station_file
+     character(len=MAX_STRING_LEN)                                             :: station_file
      !! id of stations
      character(len= MAX_LENGTH_STATION_NAME), dimension(:),       allocatable  :: station_name
      !! id of stations
@@ -315,7 +312,7 @@ module inverse_problem_par
 
      !! ----------------- waveform data local in MPI slice -----------------
      !! file contains the waveform
-     character(len= MAX_LEN_STRING)                                            :: data_file_gather
+     character(len=MAX_STRING_LEN)                                             :: data_file_gather
      !! traces stored in memory (NCOMP,NSTA, NT)
      real(kind=CUSTOM_REAL),                  dimension(:,:,:),   allocatable  :: data_traces
      !! synthetics stored in memory (NCOMP,NSTA, NT)
@@ -339,7 +336,7 @@ module inverse_problem_par
      logical, dimension(3)                                                     :: read_data_comp
      character                                                                 :: read_data_type
      !! adjoint source to use
-     character(len= MAX_LEN_STRING)                                            :: adjoint_source_type
+     character(len=MAX_STRING_LEN)                                             :: adjoint_source_type
 
      !! ---------------------- information needed for teleseismic fwi -----------------------------
      !! for rotation matrices
@@ -352,14 +349,14 @@ module inverse_problem_par
      real(kind=CUSTOM_REAL)                                                    :: time_before_pick, time_after_pick
 
      !! stations network
-     character(len= MAX_LEN_STRING)                                            :: station_coord_system
+     character(len=MAX_STRING_LEN)                                             :: station_coord_system
      !! station list
      real(kind=CUSTOM_REAL), dimension(:,:), allocatable                       :: read_station_position
      real(kind=CUSTOM_REAL), dimension(:), allocatable                         :: time_pick, baz, inc
      real(kind=CUSTOM_REAL), dimension(:), allocatable                         :: dist, gcarc
 
      !! traction directory in case of AxiSem or DSM coupling
-     character(len= MAX_LEN_STRING)                                            :: traction_dir
+     character(len=MAX_STRING_LEN)                                             :: traction_dir
   end type acqui
 
   ! SET OF POINT SOURCES  (in development test not working yet)

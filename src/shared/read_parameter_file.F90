@@ -222,6 +222,16 @@
       write(*,*)
     endif
 
+    ! (optional) rotation omega & origin
+    if (ROTATION) then
+      ! angular velocity (in rad/s)
+      ! for example: ROTATION_OMEGA = 0 0 2.0 for rotation around z-axis
+      call read_value_double_precision_vector(ROTATION_OMEGA, 'ROTATION_OMEGA', ier); ier = 0
+      ! origin of center of rotation (in m)
+      ! for example: ROTATION_ORIGIN = 0 0 -10000.0 for rotation center positioned at -10 km (in current mesh coordinates)
+      call read_value_double_precision_vector(ROTATION_ORIGIN, 'ROTATION_ORIGIN', ier); ier = 0
+    endif
+
     call read_value_logical(ATTENUATION, 'ATTENUATION', ier)
     if (ier /= 0) then
       some_parameters_missing_from_Par_file = .true.
@@ -1465,6 +1475,10 @@
   call bcast_all_singlel(ANISOTROPY)
   call bcast_all_singlel(GRAVITY)
   call bcast_all_singlel(ROTATION)
+
+  ! (optional) rotation omega & origin
+  call bcast_all_dp(ROTATION_OMEGA,NDIM)
+  call bcast_all_dp(ROTATION_ORIGIN,NDIM)
 
   ! (optional) gravity min/max
   call bcast_all_singlel(USE_GRAVITY_MINMAX)

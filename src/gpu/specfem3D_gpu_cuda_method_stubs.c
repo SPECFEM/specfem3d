@@ -233,6 +233,10 @@ void FC_FUNC_(compute_forces_viscoelastic_cuda,
                                                 int* ATTENUATION,
                                                 int* FORWARD_OR_ADJOINT_f) {}
 
+void FC_FUNC_(compute_forces_viscoelastic_rotation_cuda,
+              COMPUTE_FORCES_VISCOELASTIC_ROTATION_CUDA)(long* Mesh_pointer,
+                                                         int* FORWARD_OR_ADJOINT) {}
+
 
 //
 // src/gpu/compute_kernels_cuda.cu

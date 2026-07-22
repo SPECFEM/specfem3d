@@ -61,48 +61,49 @@ end module constants
 
 ! holds input parameters given in DATA/Par_file
 
-  use constants, only: MAX_STRING_LEN,STANDARD_GRAVITY
+  use constants, only: MAX_STRING_LEN,STANDARD_GRAVITY,NDIM, &
+                       DEFAULT_ROTATION_OMEGA,DEFAULT_ROTATION_ORIGIN
 
   implicit none
 
   ! parameters read from parameter file
-  integer :: NPROC
+  integer :: NPROC = 0
 
   ! simulation parameters
-  integer :: SIMULATION_TYPE
-  integer :: NOISE_TOMOGRAPHY
-  logical :: SAVE_FORWARD
-  logical :: INVERSE_FWI_FULL_PROBLEM
+  integer :: SIMULATION_TYPE = 1
+  integer :: NOISE_TOMOGRAPHY = 0
+  logical :: SAVE_FORWARD = .false.
+  logical :: INVERSE_FWI_FULL_PROBLEM = .false.
 
-  integer :: UTM_PROJECTION_ZONE
-  logical :: SUPPRESS_UTM_PROJECTION
+  integer :: UTM_PROJECTION_ZONE = 0
+  logical :: SUPPRESS_UTM_PROJECTION = .true.
 
-  logical :: UNDO_ATTENUATION_AND_OR_PML
-  integer :: NT_DUMP_ATTENUATION
+  logical :: UNDO_ATTENUATION_AND_OR_PML = .false.
+  integer :: NT_DUMP_ATTENUATION = 0
 
   ! number of time steps
-  integer :: NSTEP
-  double precision :: DT
+  integer :: NSTEP = 0
+  double precision :: DT = 0.d0
 
   ! number of time step for external source time function
-  integer :: NSTEP_STF
+  integer :: NSTEP_STF = 0
 
   ! Local Time Stepping (LTS)
-  logical :: LTS_MODE
+  logical :: LTS_MODE = .false.
 
   ! partitioning scheme
-  integer :: PARTITIONING_TYPE
+  integer :: PARTITIONING_TYPE = 1
 
   ! LDD Runge-Kutta time scheme
-  logical :: USE_LDDRK
-  logical :: INCREASE_CFL_FOR_LDDRK
-  double precision :: RATIO_BY_WHICH_TO_INCREASE_IT
+  logical :: USE_LDDRK = .false.
+  logical :: INCREASE_CFL_FOR_LDDRK = .false.
+  double precision :: RATIO_BY_WHICH_TO_INCREASE_IT = 1.4d0
 
   ! mesh
-  integer :: NGNOD
+  integer :: NGNOD = 8
 
-  character(len=MAX_STRING_LEN) :: MODEL
-  character(len=MAX_STRING_LEN) :: SEP_MODEL_DIRECTORY
+  character(len=MAX_STRING_LEN) :: MODEL = 'default'
+  character(len=MAX_STRING_LEN) :: SEP_MODEL_DIRECTORY = './DATA/sep_model'
 
   ! physical parameters
   logical :: APPROXIMATE_OCEAN_LOAD = .false.
@@ -112,34 +113,44 @@ end module constants
   logical :: GRAVITY = .false.
   logical :: ROTATION = .false.
 
-  character(len=MAX_STRING_LEN) :: TOMOGRAPHY_PATH
+  ! (optional) rotation angular velocity and origin of center of rotation (relative to mesh coordinates)
+  double precision, dimension(NDIM) :: ROTATION_OMEGA = DEFAULT_ROTATION_OMEGA
+  double precision, dimension(NDIM) :: ROTATION_ORIGIN = DEFAULT_ROTATION_ORIGIN
+
+  ! tomography model file path
+  character(len=MAX_STRING_LEN) :: TOMOGRAPHY_PATH = './DATA/tomo_files'
 
   ! attenuation
   ! reference frequency of seismic model
-  double precision :: ATTENUATION_f0_REFERENCE
+  double precision :: ATTENUATION_f0_REFERENCE = 1.d0
   ! Olsen attenuation (scaling from Vs)
-  logical :: USE_OLSEN_ATTENUATION
-  double precision :: OLSEN_ATTENUATION_RATIO
+  logical :: USE_OLSEN_ATTENUATION = .false.
+  double precision :: OLSEN_ATTENUATION_RATIO = 0.05d0
   ! automatic frequency band selection
-  logical :: COMPUTE_FREQ_BAND_AUTOMATIC
+  logical :: COMPUTE_FREQ_BAND_AUTOMATIC = .true.
   ! attenuation period range over which we try to mimic a constant Q factor
-  double precision :: MIN_ATTENUATION_PERIOD,MAX_ATTENUATION_PERIOD
+  double precision :: MIN_ATTENUATION_PERIOD = 999999.d0
+  double precision :: MAX_ATTENUATION_PERIOD = 999999.d0
   ! logarithmic center frequency (center of attenuation band)
-  double precision :: ATT_F_C_SOURCE
+  double precision :: ATT_F_C_SOURCE = 1.d0
 
   ! absorbing boundaries
-  logical :: PML_CONDITIONS,PML_INSTEAD_OF_FREE_SURFACE
-  double precision :: f0_FOR_PML
-  logical :: STACEY_ABSORBING_CONDITIONS,STACEY_INSTEAD_OF_FREE_SURFACE
+  ! PML
+  logical :: PML_CONDITIONS = .false.
+  logical :: PML_INSTEAD_OF_FREE_SURFACE = .false.
+  double precision :: f0_FOR_PML = 1.d0
+  ! Stacey
+  logical :: STACEY_ABSORBING_CONDITIONS = .false.
+  logical :: STACEY_INSTEAD_OF_FREE_SURFACE = .false.
   ! To use a bottom free surface instead of absorbing Stacey or PML condition
-  logical :: BOTTOM_FREE_SURFACE
+  logical :: BOTTOM_FREE_SURFACE = .false.
 
   ! sources and receivers Z coordinates given directly instead of with depth
-  logical :: USE_SOURCES_RECEIVERS_Z
+  logical :: USE_SOURCES_RECEIVERS_Z = .false.
 
   ! for simultaneous runs from the same batch job
-  integer :: NUMBER_OF_SIMULTANEOUS_RUNS
-  logical :: BROADCAST_SAME_MESH_AND_MODEL
+  integer :: NUMBER_OF_SIMULTANEOUS_RUNS = 1
+  logical :: BROADCAST_SAME_MESH_AND_MODEL = .false.
 
   ! movies
   logical :: CREATE_SHAKEMAP = .false.
@@ -150,46 +161,64 @@ end module constants
   logical :: MOVIE_VOLUME_STRESS = .false.
   integer :: MOVIE_TYPE = 1
 
-  integer :: NTSTEP_BETWEEN_FRAMES
-  double precision :: HDUR_MOVIE
+  integer :: NTSTEP_BETWEEN_FRAMES = 100
+  double precision :: HDUR_MOVIE = 0.d0
 
   ! mesh
-  logical :: SAVE_MESH_FILES
-  character(len=MAX_STRING_LEN) :: LOCAL_PATH
+  logical :: SAVE_MESH_FILES = .false.
+  character(len=MAX_STRING_LEN) :: LOCAL_PATH = './DATABASES_MPI'
 
   ! seismograms
-  integer :: NTSTEP_BETWEEN_OUTPUT_INFO
-  integer :: NTSTEP_BETWEEN_OUTPUT_SEISMOS,NTSTEP_BETWEEN_READ_ADJSRC
-  integer :: NTSTEP_BETWEEN_OUTPUT_SAMPLE ! subsamp_seismos is deprecated and renamed to NTSTEP_BETWEEN_OUTPUT_SAMPLE
-  logical :: SAVE_SEISMOGRAMS_DISPLACEMENT,SAVE_SEISMOGRAMS_VELOCITY,SAVE_SEISMOGRAMS_ACCELERATION,SAVE_SEISMOGRAMS_PRESSURE
-  logical :: SAVE_SEISMOGRAMS_STRAIN
-  logical :: SAVE_SEISMOGRAMS_IN_ADJOINT_RUN
-  logical :: WRITE_SEISMOGRAMS_BY_MAIN,SAVE_ALL_SEISMOS_IN_ONE_FILE,USE_BINARY_FOR_SEISMOGRAMS,SU_FORMAT
-  logical :: ASDF_FORMAT, READ_ADJSRC_ASDF
+  integer :: NTSTEP_BETWEEN_OUTPUT_INFO = 500
+  integer :: NTSTEP_BETWEEN_OUTPUT_SEISMOS = 100000
+  integer :: NTSTEP_BETWEEN_READ_ADJSRC = 0
+  integer :: NTSTEP_BETWEEN_OUTPUT_SAMPLE = 1 ! subsamp_seismos is deprecated and renamed to NTSTEP_BETWEEN_OUTPUT_SAMPLE
+  logical :: SAVE_SEISMOGRAMS_DISPLACEMENT = .true.
+  logical :: SAVE_SEISMOGRAMS_VELOCITY = .false.
+  logical :: SAVE_SEISMOGRAMS_ACCELERATION = .false.
+  logical :: SAVE_SEISMOGRAMS_PRESSURE = .false.
+  logical :: SAVE_SEISMOGRAMS_STRAIN = .false.
+  logical :: SAVE_SEISMOGRAMS_IN_ADJOINT_RUN = .false.
+  logical :: WRITE_SEISMOGRAMS_BY_MAIN = .true.
+  logical :: SAVE_ALL_SEISMOS_IN_ONE_FILE = .false.
+  logical :: USE_BINARY_FOR_SEISMOGRAMS = .false.
+  logical :: SU_FORMAT = .false.
+  logical :: ASDF_FORMAT = .false.
+  logical :: READ_ADJSRC_ASDF = .false.
 
   ! sources
-  logical :: USE_FORCE_POINT_SOURCE
-  logical :: USE_RICKER_TIME_FUNCTION,PRINT_SOURCE_TIME_FUNCTION
-  logical :: HAS_FINITE_FAULT_SOURCE
+  logical :: USE_FORCE_POINT_SOURCE = .false.
+  logical :: USE_RICKER_TIME_FUNCTION = .false.
+  logical :: PRINT_SOURCE_TIME_FUNCTION = .false.
+  logical :: HAS_FINITE_FAULT_SOURCE = .false.
 
   ! cmt + point force simulation
   logical :: USE_CMT_AND_FORCE_SOURCE = .false.
   logical :: USE_BINARY_SOURCE_FILE = .false.
 
   ! external source time function
-  logical :: USE_EXTERNAL_SOURCE_FILE
+  logical :: USE_EXTERNAL_SOURCE_FILE = .false.
 
-  logical :: USE_TRICK_FOR_BETTER_PRESSURE,USE_SOURCE_ENCODING,OUTPUT_ENERGY
-  logical :: ANISOTROPIC_KL,SAVE_TRANSVERSE_KL,APPROXIMATE_HESS_KL,SAVE_MOHO_MESH
-  logical :: ANISOTROPIC_VELOCITY_KL
-  integer :: NTSTEP_BETWEEN_OUTPUT_ENERGY
+  logical :: USE_TRICK_FOR_BETTER_PRESSURE = .false.
+  logical :: USE_SOURCE_ENCODING = .false.
+  logical :: OUTPUT_ENERGY = .false.
+  logical :: ANISOTROPIC_KL = .false.
+  logical :: SAVE_TRANSVERSE_KL = .false.
+  logical :: APPROXIMATE_HESS_KL = .false.
+  logical :: SAVE_MOHO_MESH = .false.
+  logical :: ANISOTROPIC_VELOCITY_KL = .false.
+  integer :: NTSTEP_BETWEEN_OUTPUT_ENERGY = 10
 
   ! GPU simulations
-  logical :: GPU_MODE
+  logical :: GPU_MODE = .false.
 
   ! adios file output
-  logical :: ADIOS_ENABLED
-  logical :: ADIOS_FOR_DATABASES, ADIOS_FOR_MESH, ADIOS_FOR_FORWARD_ARRAYS, ADIOS_FOR_KERNELS, ADIOS_FOR_UNDO_ATTENUATION
+  logical :: ADIOS_ENABLED = .false.
+  logical :: ADIOS_FOR_DATABASES = .false.
+  logical :: ADIOS_FOR_MESH = .false.
+  logical :: ADIOS_FOR_FORWARD_ARRAYS = .false.
+  logical :: ADIOS_FOR_KERNELS = .false.
+  logical :: ADIOS_FOR_UNDO_ATTENUATION = .false.
 
   ! HDF5 file i/o
   logical :: HDF5_ENABLED = .false.              ! for all databases i/o in hdf5
@@ -212,8 +241,8 @@ end module constants
   ! external code coupling (DSM, AxiSEM)
   logical :: COUPLE_WITH_INJECTION_TECHNIQUE = .false.
   integer :: INJECTION_TECHNIQUE_TYPE = 0
-  character(len=MAX_STRING_LEN) :: TRACTION_PATH
-  character(len=MAX_STRING_LEN) :: FKMODEL_FILE
+  character(len=MAX_STRING_LEN) :: TRACTION_PATH = 'DATA/tractions'
+  character(len=MAX_STRING_LEN) :: FKMODEL_FILE = 'DATA/FKMODEL'
   logical :: MESH_A_CHUNK_OF_THE_EARTH = .false.
   logical :: RECIPROCITY_AND_KH_INTEGRAL = .false.
   double precision :: INJECTION_START_TIME = -999999.d0
@@ -249,19 +278,20 @@ end module constants
   implicit none
 
   ! number of sources given in CMTSOLUTION file
-  integer :: NSOURCES
+  integer :: NSOURCES = 0
 
   !number of sources in CMTSOLUTION/FORCESOLUTION
-  integer :: NSOURCES_CMT, NSOURCES_FORCE
+  integer :: NSOURCES_CMT = 0
+  integer :: NSOURCES_FORCE = 0
 
   ! anchor points
-  integer :: NGNOD2D
+  integer :: NGNOD2D = 0
 
   ! model
-  integer :: IMODEL
+  integer :: IMODEL = 0
 
   !! VM VM number of source for external source time function
-  integer :: NSOURCES_STF
+  integer :: NSOURCES_STF = 0
 
   ! simulation type
   logical :: ACOUSTIC_SIMULATION = .false.

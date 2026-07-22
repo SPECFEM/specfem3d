@@ -283,9 +283,9 @@
 !
 
   subroutine get_element_face_normal(ispec,iface,xcoord,ycoord,zcoord, &
-                                ibool,nspec,nglob, &
-                                xstore_unique,ystore_unique,zstore_unique, &
-                                normal)
+                                     ibool,nspec,nglob, &
+                                     xstore_unique,ystore_unique,zstore_unique, &
+                                     normal)
 
 ! only changes direction of normal to point outwards of element
 
@@ -319,7 +319,7 @@
   real(kind=CUSTOM_REAL) :: face_n(NDIM),tmp,v_tmp(NDIM)
   integer :: iglob
 
-! determines initial orientation given by three corners on the face
+  ! determines initial orientation given by three corners on the face
   ! cross-product of vectors from corner 1 to corner 2 and from corner 1 to corner 3
   face_n(1) =   (ycoord(2)-ycoord(1))*(zcoord(3)-zcoord(1)) - (zcoord(2)-zcoord(1))*(ycoord(3)-ycoord(1))
   face_n(2) = - (xcoord(2)-xcoord(1))*(zcoord(3)-zcoord(1)) + (zcoord(2)-zcoord(1))*(xcoord(3)-xcoord(1))

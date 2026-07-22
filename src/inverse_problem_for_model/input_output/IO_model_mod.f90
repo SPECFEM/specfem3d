@@ -122,7 +122,7 @@ contains
 
     type(inver),                                                intent(in)    :: inversion_param
     ! local
-    character(len=256)                                                        :: path_file,name_file
+    character(len=MAX_STRING_LEN)                                             :: path_file,name_file
     real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable                   :: wks_model_rho, wks_model_vp, wks_model_vs
     real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable                   :: wks_model_cij
 
@@ -299,7 +299,7 @@ contains
 
     type(inver),                                                intent(inout) :: inversion_param
     ! local
-    character(len=256)                                                        :: path_file,name_file
+    character(len=MAX_STRING_LEN)                                             :: path_file,name_file
     real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable                   :: wks_model
     !real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable                   :: wks_model_cij
 
@@ -371,7 +371,7 @@ contains
 
     type(inver),                                                intent(in)    :: inversion_param
     ! local
-    character(len=256)                                                        :: path_file,name_file
+    character(len=MAX_STRING_LEN)                                             :: path_file,name_file
     real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable                   :: wks_model_rho, wks_model_vp, wks_model_vs
     real(kind=CUSTOM_REAL)                                                    :: vp_min,vp_max,vs_min,vs_max,rho_min,rho_max
     real(kind=CUSTOM_REAL)                                                    :: vp_min_glob,vp_max_glob,vs_min_glob,vs_max_glob, &
@@ -578,7 +578,7 @@ contains
     type(inver),                                                intent(in)    :: inversion_param
     real(kind=CUSTOM_REAL), dimension(:,:,:,:,:),               intent(in)    :: model, gradient, descent
     ! local
-    character(len=MAX_LEN_STRING)                                             :: prefix_name
+    character(len=MAX_STRING_LEN)                                             :: prefix_name
     integer                                                                   :: global_iter
 
     ! combined index for current frequency stage and inversion iteration
@@ -648,8 +648,8 @@ contains
     real(kind=CUSTOM_REAL), dimension(:,:,:,:,:),               intent(in)    :: field
     integer,                                                    intent(in)    :: current_iter
     type(inver),                                                intent(in)    :: inversion_param
-    character(len=MAX_LEN_STRING),                              intent(in)    :: current_name
-    character(len=MAX_LEN_STRING)                                             :: file_name, file_prefix, file_sufix
+    character(len=MAX_STRING_LEN),                              intent(in)    :: current_name
+    character(len=MAX_STRING_LEN)                                             :: file_name, file_prefix, file_sufix
     integer                                                                   :: i
 
     do i = 1, inversion_param%NinvPar
@@ -678,8 +678,8 @@ contains
     real(kind=CUSTOM_REAL), dimension(:,:,:,:,:),               intent(in)    :: field
     integer,                                                    intent(in)    :: current_iter
     type(inver),                                                intent(in)    :: inversion_param
-    character(len=MAX_LEN_STRING),                              intent(in)    :: current_name
-    character(len=MAX_LEN_STRING)                                             :: file_name, file_prefix, file_sufix
+    character(len=MAX_STRING_LEN),                              intent(in)    :: current_name
+    character(len=MAX_STRING_LEN)                                             :: file_name, file_prefix, file_sufix
     integer                                                                   :: i
 
     do i = 1, inversion_param%NinvPar
@@ -1437,7 +1437,7 @@ contains
 
   subroutine write_vti_sem_model(ifrq)
     integer,                                                       intent(in) :: ifrq
-    character(len=256)                                                        :: path_file,name_file
+    character(len=MAX_STRING_LEN)                                             :: path_file,name_file
     real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable                   :: wks_model_rho, wks_model_vp, wks_model_vs
     real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable                   :: wks_model_ep, wks_model_de, wks_model_ga
 

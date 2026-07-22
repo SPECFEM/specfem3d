@@ -489,7 +489,7 @@ def read_data_array(var_name,model_data):
     global use_replace_missing_values_with_average
 
     # gets variable data array
-    var_array = np.array(model_data.variables[var_name])
+    var_array = np.asarray(model_data.variables[var_name])
 
     # determines indexing (which index for which dimension)
     # needed also to get index of depth for the data array averaging
@@ -1773,22 +1773,22 @@ def netCDF_2_tomo(input_file,UTM_zone=None,mesh_area=None,maximum_depth=None):
     output_data = list()
 
     # initializes header variables
-    header_origin_x = sys.float_info.max
-    header_origin_y = sys.float_info.max
-    header_origin_z = sys.float_info.max
+    header_origin_x = np.inf
+    header_origin_y = np.inf
+    header_origin_z = np.inf
 
-    header_end_x = -sys.float_info.max
-    header_end_y = -sys.float_info.max
-    header_end_z = -sys.float_info.max
+    header_end_x = -np.inf
+    header_end_y = -np.inf
+    header_end_z = -np.inf
 
-    header_vp_min = sys.float_info.max
-    header_vp_max = -sys.float_info.max
+    header_vp_min = np.inf
+    header_vp_max = -np.inf
 
-    header_vs_min = sys.float_info.max
-    header_vs_max = -sys.float_info.max
+    header_vs_min = np.inf
+    header_vs_max = -np.inf
 
-    header_rho_min = sys.float_info.max
-    header_rho_max = -sys.float_info.max
+    header_rho_min = np.inf
+    header_rho_max = -np.inf
 
     print("creating tomography model...")
     print("")

@@ -31,17 +31,12 @@
 
   use constants, only: CUSTOM_REAL,IMAIN,myrank
 
-  use shared_parameters, only: ACOUSTIC_SIMULATION, ELASTIC_SIMULATION, POROELASTIC_SIMULATION, &
-    PML_CONDITIONS, STACEY_ABSORBING_CONDITIONS, DT
+  use shared_parameters, only: ACOUSTIC_SIMULATION, ELASTIC_SIMULATION, POROELASTIC_SIMULATION
 
   ! global indices
   use generate_databases_par, only: nspec => NSPEC_AB, ibool
 
   use create_regions_mesh_ext_par
-
-  ! PML
-  use generate_databases_par, only: is_CPML,nspec_cpml,CPML_regions,CPML_to_spec, &
-    d_store_x,d_store_y,d_store_z,K_store_x,K_store_y,K_store_z
 
   implicit none
 
@@ -52,76 +47,42 @@
 
   ! elastic domains
   if (ELASTIC_SIMULATION) then
-    ! allocates memory
-    allocate(rmassx(nglob), &
-             rmassy(nglob), &
-             rmassz(nglob),stat=ier)
-    if (ier /= 0) call exit_MPI_without_rank('error allocating array 660')
-    if (ier /= 0) call exit_MPI_without_rank('error allocating array rmassx,rmassy,rmassz')
-    rmassx(:) = 0._CUSTOM_REAL
-    rmassy(:) = 0._CUSTOM_REAL
-    rmassz(:) = 0._CUSTOM_REAL
-
-    ! returns elastic mass matrix
-    if (PML_CONDITIONS) then
-      ! user info
-      if (myrank == 0) then
-        write(IMAIN,*) '     elastic mass matrix w/ PML elements'
-      endif
-
-      call define_mass_matrices_pml_elastic(nglob,nspec,nspec_irregular,DT,ibool,rhostore, &
-                                            jacobianstore,irregular_element_number,jacobian_regular, &
-                                            wxgll,wygll,wzgll,ispec_is_elastic, &
-                                            nspec_cpml,is_CPML,CPML_regions,CPML_to_spec, &
-                                            d_store_x,d_store_y,d_store_z, &
-                                            K_store_x,K_store_y,K_store_z, &
-                                            rmassx,rmassy,rmassz)
-    else
-      ! user info
-      if (myrank == 0) then
-        write(IMAIN,*) '     elastic mass matrix'
-      endif
-
-      call define_mass_matrices_elastic(nglob,nspec,nspec_irregular,ibool,rhostore, &
-                                        jacobianstore,irregular_element_number,jacobian_regular, &
-                                        wxgll,wygll,wzgll,ispec_is_elastic, &
-                                        rmassx,rmassy,rmassz)
+    ! user info
+    if (myrank == 0) then
+      write(IMAIN,*) '     elastic mass matrix'
     endif
+
+    ! allocates memory
+    allocate(rmass_elastic(nglob),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 660')
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array rmass_elastic')
+    rmass_elastic(:) = 0._CUSTOM_REAL
+
+    ! defines mass matrix on all elastic elements
+    call define_mass_matrices_elastic(nglob,nspec,nspec_irregular,ibool,rhostore, &
+                                      jacobianstore,irregular_element_number,jacobian_regular, &
+                                      wxgll,wygll,wzgll,ispec_is_elastic, &
+                                      rmass_elastic)
   endif
 
   ! acoustic domains
   if (ACOUSTIC_SIMULATION) then
+    ! user info
+    if (myrank == 0) then
+      write(IMAIN,*) '     acoustic mass matrix'
+    endif
+
     ! allocates memory
     allocate(rmass_acoustic(nglob),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 661')
     if (ier /= 0) call exit_MPI_without_rank('error allocating array rmass_acoustic')
     rmass_acoustic(:) = 0._CUSTOM_REAL
 
-    ! returns acoustic mass matrix
-    if (PML_CONDITIONS) then
-      ! user info
-      if (myrank == 0) then
-        write(IMAIN,*) '     acoustic mass matrix w/ PML elements'
-      endif
-
-      call define_mass_matrices_pml_acoustic(nglob,nspec,nspec_irregular,DT,ibool,kappastore, &
-                                             jacobianstore,irregular_element_number,jacobian_regular, &
-                                             wxgll,wygll,wzgll,ispec_is_acoustic, &
-                                             nspec_cpml,is_CPML,CPML_regions,CPML_to_spec, &
-                                             d_store_x,d_store_y,d_store_z, &
-                                             K_store_x,K_store_y,K_store_z, &
-                                             rmass_acoustic)
-    else
-      ! user info
-      if (myrank == 0) then
-        write(IMAIN,*) '     acoustic mass matrix'
-      endif
-
-      call define_mass_matrices_acoustic(nglob,nspec,nspec_irregular,ibool,kappastore, &
-                                         jacobianstore,irregular_element_number,jacobian_regular, &
-                                         wxgll,wygll,wzgll,ispec_is_acoustic, &
-                                         rmass_acoustic)
-    endif
+    ! defines mass matrix on all acoustic elements
+    call define_mass_matrices_acoustic(nglob,nspec,nspec_irregular,ibool,kappastore, &
+                                       jacobianstore,irregular_element_number,jacobian_regular, &
+                                       wxgll,wygll,wzgll,ispec_is_acoustic, &
+                                       rmass_acoustic)
   endif
 
   ! poroelastic domains
@@ -148,11 +109,6 @@
                                           rmass_solid_poroelastic,rmass_fluid_poroelastic)
   endif
 
-  ! Stacey absorbing conditions (adds C*deltat/2 contribution to the mass matrices on Stacey edges)
-  if (STACEY_ABSORBING_CONDITIONS) then
-    call create_mass_matrices_Stacey(nglob)
-  endif
-
   ! ocean load mass matrix
   call create_mass_matrices_ocean_load(nglob)
 
@@ -168,7 +124,7 @@
 
   use constants, only: myrank,CUSTOM_REAL,IMAIN
 
-  use shared_parameters, only: APPROXIMATE_OCEAN_LOAD
+  use shared_parameters, only: ELASTIC_SIMULATION,APPROXIMATE_OCEAN_LOAD
 
   use generate_databases_par, only: NX_TOPO,NY_TOPO,itopo_bathy
 
@@ -184,11 +140,11 @@
   ! local parameters
   integer :: ier
 
-  ! creates ocean load mass matrix
-  if (APPROXIMATE_OCEAN_LOAD) then
+  ! creates ocean load mass matrix (only for elastic domains)
+  if (APPROXIMATE_OCEAN_LOAD .and. ELASTIC_SIMULATION) then
     ! user info
     if (myrank == 0) then
-      write(IMAIN,*) '     creating ocean load mass matrix '
+      write(IMAIN,*) '     ocean load mass matrix '
     endif
 
     ! adding ocean load mass matrix at ocean bottom
@@ -206,7 +162,7 @@
                                          ispec_is_elastic,rmass_ocean_load)
 
     ! adds regular mass matrix to ocean load contribution
-    rmass_ocean_load(:) = rmass_ocean_load(:) + rmassz(:)
+    rmass_ocean_load(:) = rmass_ocean_load(:) + rmass_elastic(:)
   else
     ! allocate dummy array if no oceans
     NGLOB_OCEAN = 1
@@ -216,58 +172,3 @@
   endif
 
   end subroutine create_mass_matrices_ocean_load
-
-!
-!-------------------------------------------------------------------------------------------------
-!
-
-  subroutine create_mass_matrices_Stacey(nglob)
-
-! in the case of Stacey boundary conditions, add C*deltat/2 contribution to the mass matrix on Stacey edges;
-! thus the mass matrix must be replaced by three mass matrices including the "C" damping matrix
-
-  use constants, only: CUSTOM_REAL,IMAIN,myrank
-
-  use shared_parameters, only: ACOUSTIC_SIMULATION, ELASTIC_SIMULATION, USE_LDDRK, DT
-
-  ! global indices
-  use generate_databases_par, only: nspec => NSPEC_AB, ibool
-
-  use create_regions_mesh_ext_par
-
-  implicit none
-
-  integer,intent(in) :: nglob
-
-  ! only for Newmark time schemes
-  if (USE_LDDRK) return
-
-  ! user info
-  if (myrank == 0) then
-    write(IMAIN,*) '     adding Stacey contributions'
-  endif
-
-  ! checks if anything to do in this slice
-  if (num_abs_boundary_faces == 0) return
-
-  ! adds Stacey contributions to mass matrices
-  ! elastic domains
-  if (ELASTIC_SIMULATION) then
-    call add_mass_matrices_Stacey_elastic(nglob,nspec,DT,ibool,rho_vp,rho_vs, &
-                                             num_abs_boundary_faces,abs_boundary_ispec,abs_boundary_ijk, &
-                                             abs_boundary_normal,abs_boundary_jacobian2Dw, &
-                                             ispec_is_elastic, &
-                                             rmassx, rmassy, rmassz)
-  endif
-
-  ! acoustic domains
-  if (ACOUSTIC_SIMULATION) then
-    call add_mass_matrices_Stacey_acoustic(nglob,nspec,DT,ibool,rho_vp, &
-                                              num_abs_boundary_faces,abs_boundary_ispec,abs_boundary_ijk, &
-                                              abs_boundary_jacobian2Dw, &
-                                              ispec_is_acoustic, &
-                                              rmass_acoustic)
-  endif
-
-  end subroutine create_mass_matrices_Stacey
-

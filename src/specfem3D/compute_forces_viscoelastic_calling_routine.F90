@@ -35,6 +35,7 @@
   use specfem_par_elastic
   use specfem_par_poroelastic
   use pml_par
+  use stacey_par, only: USE_HW_ABC,update_hw_abc_states
 
   ! fault simulations
   use constants, only: FAULT_SYNCHRONIZE_DISPL_VELOC,FAULT_SYNCHRONIZE_ACCEL
@@ -78,7 +79,7 @@
   ! forward fields
   backward_simulation = .false.
 
-  ! kbai added the following two synchronizations to ensure that the displacement and velocity values
+  ! added the following two synchronizations to ensure that the displacement and velocity values
   ! at nodes on MPI interfaces stay equal on all processors that share the node.
   ! Do this only for dynamic rupture simulations
   if (FAULT_SIMULATION) then
@@ -337,6 +338,17 @@
     endif
   enddo
 
+  ! adds rotation contributions
+  if (ROTATION) then
+    if (.not. GPU_MODE) then
+      ! on CPU
+      call compute_forces_viscoelastic_rotation(accel,veloc,displ,rmassx,rmassy,rmassz,two_omega_rotation)
+    else
+      ! on GPU
+      call compute_forces_viscoelastic_rotation_cuda(Mesh_pointer,1)  ! 1 == forward
+    endif
+  endif
+
   ! Fault boundary term B*tau is added to the assembled forces
   ! which at this point are stored in the array 'accel'
   if (FAULT_SIMULATION) then
@@ -454,6 +466,18 @@
     if (SIMULATION_TYPE == 1 .and. SAVE_FORWARD) then
       if (nglob_interface_PML_elastic > 0) then
         call save_field_on_pml_interface(nglob_interface_PML_elastic,b_PML_field,b_reclen_PML_field)
+      endif
+    endif
+  endif
+
+  ! Hagstrom-Warburton absorbing boundary
+  if (STACEY_ABSORBING_CONDITIONS) then
+    if (USE_HW_ABC) then
+      ! state update
+      if (.not. GPU_MODE) then
+        call update_hw_abc_states(displ, veloc, accel)
+      else
+        stop 'Hagstrom-Warburton boundary not implemented on GPU yet!'
       endif
     endif
   endif
@@ -644,6 +668,17 @@
       endif
     endif
   enddo
+
+  ! adds rotation contributions (Coriolis force)
+  if (ROTATION) then
+    if (.not. GPU_MODE) then
+      ! on CPU
+      call compute_forces_viscoelastic_rotation(b_accel,b_veloc,b_displ,rmassx,rmassy,rmassz,b_two_omega_rotation)
+    else
+      ! on GPU
+      call compute_forces_viscoelastic_rotation_cuda(Mesh_pointer,3)  ! 3 == backward
+    endif
+  endif
 
   ! multiplies with inverse of mass matrix (note: rmass has been inverted already)
   if (.not. GPU_MODE) then
@@ -896,3 +931,117 @@
 
   end subroutine compute_forces_viscoelastic_GPU_calling
 
+!
+!-------------------------------------------------------------------------------------------------
+!
+
+  subroutine compute_forces_viscoelastic_rotation(accel,veloc,displ,rmassx,rmassy,rmassz,two_omega_rotation)
+
+! adds rotation contribution (Coriolis and centrifugal force) for elastic domain
+!
+! From strong form
+!  \rho \partial_t^2 u + 2 \rho (\Omega \times \partial_t u) = \nabla \cdot T + f_centrifugal
+! it follows
+!  \partial_t^2 u = 1/\rho \nabla \cdot T - 1/rho 2 \rho (\Omega \times \partial_t u)
+!                                         - 1/rho \rho \Omega \times (\Omega \times r)
+!                 = 1/\rho \nabla \cdot T - 2 (\Omega \times \partial_t u)
+!                                         - \Omega \times (\Omega \times r)
+!
+! The term -2 (\Omega \times \partial_t u) is the Coriolis force.
+! The centrifugal force f_centrigual is equal to - \rho \Omega \times (\Omega \times r) acting radially outward from the origin.
+!
+! Note that the centrifugal force can be split into a static and dynamic term since r = r_xyz + displ
+! with r_xyz being the (static) grid point position and displ the displacement induced by the propagating wave.
+! Since \Omega \times r == \Omega \times (r_xyz + displ) == \Omega \times r_xyz + \Omega \times displ,
+! we can split the centrifugal force into a static term
+!   - \rho \Omega \times (\Omega \times r_xyz)
+! and a dynamic term
+!   - \rho \Omega \times (\Omega \times displ)
+! The static term can be used to calculate a static pre-stress with \nabla \cdot sigma = \rho \Omega \times (\Omega \times r_xyz)
+! added to the elastic tensor, taking into account the centrifugal stiffening of the material.
+!
+! Here, we will add the Coriolis and dynamic centrifugal terms
+! to the acceleration accel() before multiplying accel() with the inverse of the mass matrix.
+! This separates the rotation contribution from the mass matrix multiplication.
+!
+! Note that the multiplication of accel() with the inverse mass matrix
+!   accel = accel * rmass
+! is computed with rmass being already inverted in the prepare_timerun() routines.
+!
+! Given the equation above, we need to multiply the Omega-terms with the mass matrix (which is now 1/rmass) such that after
+! accel has been multiplied with the inverse mass matrix, the Omega-terms' mass cancels out.
+
+  use constants, only: CUSTOM_REAL,NDIM
+  use specfem_par, only: NGLOB_AB
+
+  implicit none
+
+  ! acceleration
+  real(kind=CUSTOM_REAL), dimension(NDIM,NGLOB_AB),intent(inout) :: accel
+  ! velocity
+  real(kind=CUSTOM_REAL), dimension(NDIM,NGLOB_AB),intent(in) :: veloc,displ
+  ! mass matrix
+  real(kind=CUSTOM_REAL), dimension(NGLOB_AB),intent(in) :: rmassx,rmassy,rmassz
+  ! rotation factor 2 * Omega
+  real(kind=CUSTOM_REAL), dimension(NDIM),intent(in) :: two_omega_rotation
+
+  ! local parameter
+  real(kind=CUSTOM_REAL) :: omegax,omegay,omegaz,two_omegax,two_omegay,two_omegaz
+  real(kind=CUSTOM_REAL) :: vx,vy,vz,facx,facy,facz,rx,ry,rz
+  real(kind=CUSTOM_REAL),dimension(NDIM) :: f_coriolis,f_centrifugal,f_contrib
+  integer :: iglob
+
+  ! factor 2 * Omega
+  two_omegax = two_omega_rotation(1)
+  two_omegay = two_omega_rotation(2)
+  two_omegaz = two_omega_rotation(3)
+
+  ! Omega
+  omegax = 0.5_CUSTOM_REAL * two_omegax
+  omegay = 0.5_CUSTOM_REAL * two_omegay
+  omegaz = 0.5_CUSTOM_REAL * two_omegaz
+
+  do iglob = 1,NGLOB_AB
+    ! Coriolis term
+    ! velocity
+    vx = veloc(1,iglob)
+    vy = veloc(2,iglob)
+    vz = veloc(3,iglob)
+
+    ! term 2 \Omega \times \partial_t u
+    f_coriolis(1) = two_omegay * vz - two_omegaz * vy
+    f_coriolis(2) = two_omegaz * vx - two_omegax * vz
+    f_coriolis(3) = two_omegax * vy - two_omegay * vx
+
+    ! dynamic centrifugal force term
+    !
+    ! note: the total position vector would be
+    !         r = r_xyz + displ
+    !       implemented as position vector relative to the center of rotation
+    !         rx = xstore(iglob) + displ(1,iglob) - ROTATION_ORIGIN(1); ry = ..; rz = ..
+    !       here, we consider only the dynamic part (r = displ)
+    rx = displ(1,iglob)
+    ry = displ(2,iglob)
+    rz = displ(3,iglob)
+
+    ! first cross product: v1 = Omega x r
+    facx = omegay * rz - omegaz * ry
+    facy = omegaz * rx - omegax * rz
+    facz = omegax * ry - omegay * rx
+
+    ! centripetal acceleration: ac = Omega x (Omega x r)
+    f_centrifugal(1) = omegay * facz - omegaz * facy
+    f_centrifugal(2) = omegaz * facx - omegax * facz
+    f_centrifugal(3) = omegax * facy - omegay * facx
+
+    ! adds mass term
+    ! contribution 2 (\Omega \times \partial_t u) \rho + \rho \Omega \times (\Omega \times r)
+    f_contrib(1) = (f_coriolis(1) + f_centrifugal(1)) / rmassx(iglob)
+    f_contrib(2) = (f_coriolis(2) + f_centrifugal(2)) / rmassy(iglob)
+    f_contrib(3) = (f_coriolis(3) + f_centrifugal(3)) / rmassz(iglob)
+
+    ! adds contribution to accel (negative sign)
+    accel(:,iglob) = accel(:,iglob) - f_contrib(:)
+  enddo
+
+  end subroutine compute_forces_viscoelastic_rotation

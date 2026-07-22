@@ -51,7 +51,7 @@ module meshfem_par
   implicit none
 
   ! number of spectral elements in each block
-  integer :: nspec
+  integer :: nspec = 0
 
   ! meshing parameters
   double precision, dimension(:,:,:), allocatable :: xgrid,ygrid,zgrid
@@ -61,7 +61,7 @@ module meshfem_par
   double precision, dimension(:,:,:,:), allocatable :: xstore,ystore,zstore
 
   ! proc numbers for MPI
-  integer :: sizeprocs
+  integer :: sizeprocs = 0
 
   ! mesh point steps for interfaces
   integer :: npx_element_steps,npy_element_steps
@@ -74,22 +74,35 @@ module meshfem_par
   integer :: iproc_xi_current,iproc_eta_current
 
   ! parameters read from mesh parameter file
-  integer :: NEX_XI,NEX_ETA,NPROC_XI,NPROC_ETA
+  integer :: NEX_XI = 0
+  integer :: NEX_ETA = 0
+  integer :: NPROC_XI = 0
+  integer :: NPROC_ETA = 0
 
-  double precision :: UTM_X_MIN,UTM_X_MAX,UTM_Y_MIN,UTM_Y_MAX
-  double precision :: Z_DEPTH_BLOCK
-  double precision :: LATITUDE_MIN,LATITUDE_MAX,LONGITUDE_MIN,LONGITUDE_MAX
+  double precision :: UTM_X_MIN = 0.d0
+  double precision :: UTM_X_MAX = 0.d0
+  double precision :: UTM_Y_MIN = 0.d0
+  double precision :: UTM_Y_MAX = 0.d0
+  double precision :: Z_DEPTH_BLOCK = 0.d0
+  double precision :: LATITUDE_MIN = 0.d0
+  double precision :: LATITUDE_MAX = 0.d0
+  double precision :: LONGITUDE_MIN = 0.d0
+  double precision :: LONGITUDE_MAX = 0.d0
 
-  logical :: USE_REGULAR_MESH
+  logical :: USE_REGULAR_MESH = .false.
 
   ! Mesh files for visualization
-  logical :: CREATE_ABAQUS_FILES,CREATE_DX_FILES,CREATE_VTK_FILES
+  logical :: CREATE_ABAQUS_FILES = .false.
+  logical :: CREATE_DX_FILES = .false.
+  logical :: CREATE_VTK_FILES = .false.
 
   ! for Cubit postprocessing
   logical :: SAVE_MESH_AS_CUBIT = .false.
 
   ! CPML
-  double precision :: THICKNESS_OF_X_PML,THICKNESS_OF_Y_PML,THICKNESS_OF_Z_PML
+  double precision :: THICKNESS_OF_X_PML = 0.d0
+  double precision :: THICKNESS_OF_Y_PML = 0.d0
+  double precision :: THICKNESS_OF_Z_PML = 0.d0
   logical :: ADD_PML_AS_EXTRA_MESH_LAYERS = .false.  ! for mesh extension with PML layers
   integer :: NUMBER_OF_PML_LAYERS_TO_ADD = 0
   logical, dimension(:), allocatable :: is_CPML
@@ -97,35 +110,43 @@ module meshfem_par
   integer :: nspec_CPML
 
   ! doublings parameters
-  integer :: NDOUBLINGS
+  integer :: NDOUBLINGS = 0
   integer, dimension(:),allocatable :: ner_doublings
 
   ! parameters deduced from parameters read from file
-  integer :: NEX_PER_PROC_XI,NEX_PER_PROC_ETA
-  integer :: NER
+  integer :: NEX_PER_PROC_XI = 0
+  integer :: NEX_PER_PROC_ETA = 0
+  integer :: NER = 0
 
   ! this for all the regions
-  integer :: NSPEC_AB,NGLOB_AB
-  integer :: NSPEC2D_A_XI,NSPEC2D_B_XI, &
-             NSPEC2D_A_ETA,NSPEC2D_B_ETA, &
-             NSPEC2DMAX_XMIN_XMAX,NSPEC2DMAX_YMIN_YMAX, &
-             NSPEC2D_BOTTOM,NSPEC2D_TOP
+  integer :: NSPEC_AB = 0
+  integer :: NGLOB_AB = 0
+
+  integer :: NSPEC2D_A_XI = 0
+  integer :: NSPEC2D_B_XI = 0
+  integer :: NSPEC2D_A_ETA = 0
+  integer :: NSPEC2D_B_ETA = 0
+  integer :: NSPEC2DMAX_XMIN_XMAX = 0
+  integer :: NSPEC2DMAX_YMIN_YMAX = 0
+  integer :: NSPEC2D_BOTTOM = 0
+  integer :: NSPEC2D_TOP = 0
 
   !integer :: NPOIN2DMAX_XMIN_XMAX,NPOIN2DMAX_YMIN_YMAX - not needed...
 
   ! interfaces parameters
-  integer :: number_of_interfaces,number_of_layers
+  integer :: number_of_interfaces = 0
+  integer :: number_of_layers = 0
   integer :: max_npx_interface,max_npy_interface
 
-  character(len=MAX_STRING_LEN) :: INTERFACES_FILE
+  character(len=MAX_STRING_LEN) :: INTERFACES_FILE = 'interfaces.dat'
 
   integer, dimension(:), allocatable :: ner_layer
 
   ! cavity parameters
-  character(len=MAX_STRING_LEN) :: CAVITY_FILE
+  character(len=MAX_STRING_LEN) :: CAVITY_FILE = 'dummy'
 
   ! subregions parameters
-  integer :: NSUBREGIONS
+  integer :: NSUBREGIONS = 0
   !  definition of the different regions of the model in the mesh (nx,ny,nz)
   !  #1 #2 : nx_begining,nx_end
   !  #3 #4 : ny_begining,ny_end
@@ -134,14 +155,14 @@ module meshfem_par
   integer, dimension(:,:), allocatable :: subregions
 
   ! material properties
-  integer :: NMATERIALS
+  integer :: NMATERIALS = 0
   ! first dimension  : material_id
   ! second dimension : #rho  #vp  #vs  #Q_Kappa  #Q_mu  #anisotropy_flag  #domain_id ..
   double precision , dimension(:,:), allocatable :: material_properties
   ! tomography materials
   character(len=MAX_STRING_LEN), dimension(:,:), allocatable :: material_properties_undef
 
-  logical :: BROADCAST_AFTER_READ
+  logical :: BROADCAST_AFTER_READ = .false.
 
   ! name of the database file
   character(len=MAX_STRING_LEN) :: prname
