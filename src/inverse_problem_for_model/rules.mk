@@ -225,6 +225,7 @@ inverse_problem_for_model_SHARED_OBJECTS = \
 	$O/get_attenuation_model.shared.o \
 	$O/get_element_face.shared.o \
 	$O/get_jacobian_boundaries.shared.o \
+	$O/get_shape2D.shared.o \
 	$O/get_shape3D.shared.o \
 	$O/gll_library.shared.o \
 	$O/hdf5_manager.shared_hdf5_module.o \

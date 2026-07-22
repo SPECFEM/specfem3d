@@ -1075,6 +1075,9 @@
   use specfem_par_poroelastic
   use specfem_par_coupling
 
+  ! H-W boundary
+  use stacey_par, only: USE_HW_ABC,allocate_hw_abc
+
   implicit none
 
   ! local parameters
@@ -1087,10 +1090,22 @@
   ! stacey absorbing fields will be reconstructed for adjoint simulations
   ! using snapshot files of wavefields
   if (STACEY_ABSORBING_CONDITIONS) then
-
     if (myrank == 0) then
       write(IMAIN,*) "preparing Stacey absorbing boundaries"
+      if (USE_HW_ABC) then
+        write(IMAIN,*) "  using Hagstrom-Warburton condition"
+      else if (USE_STACEY_P3) then
+        write(IMAIN,*) "  using Stacey second-order (P3) condition"
+      else
+        write(IMAIN,*) "  using Stacey first-order (P1) condition"
+      endif
       call flush_IMAIN()
+    endif
+
+    ! Hagstrom-Warburton boundary
+    if (USE_HW_ABC) then
+      ! allocate auxiliary state variables
+      call allocate_hw_abc()
     endif
 
     ! sets flag to check if we need to save the stacey contributions to file

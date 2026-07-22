@@ -35,6 +35,7 @@
   use specfem_par_elastic
   use specfem_par_poroelastic
   use pml_par
+  use stacey_par, only: USE_HW_ABC,update_hw_abc_states
 
   ! fault simulations
   use constants, only: FAULT_SYNCHRONIZE_DISPL_VELOC,FAULT_SYNCHRONIZE_ACCEL
@@ -465,6 +466,18 @@
     if (SIMULATION_TYPE == 1 .and. SAVE_FORWARD) then
       if (nglob_interface_PML_elastic > 0) then
         call save_field_on_pml_interface(nglob_interface_PML_elastic,b_PML_field,b_reclen_PML_field)
+      endif
+    endif
+  endif
+
+  ! Hagstrom-Warburton absorbing boundary
+  if (STACEY_ABSORBING_CONDITIONS) then
+    if (USE_HW_ABC) then
+      ! state update
+      if (.not. GPU_MODE) then
+        call update_hw_abc_states(displ, veloc, accel)
+      else
+        stop 'Hagstrom-Warburton boundary not implemented on GPU yet!'
       endif
     endif
   endif
