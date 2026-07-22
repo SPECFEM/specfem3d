@@ -42,7 +42,7 @@
   implicit none
 
   ! local parameters
-  real(kind=CUSTOM_REAL) :: stf_used,time_source
+  real(kind=CUSTOM_REAL) :: stf_used,t_used
   real(kind=CUSTOM_REAL),dimension(NSTEP) :: source_time_function
 
   double precision :: stf,time_source_dble
@@ -84,9 +84,9 @@
             !       thus, at each time loop step it, displ(:) is still at (n) and not (n+1) like for the Newmark scheme
             !       when entering this routine. we therefore at an additional -DT to have the corresponding timing for the source.
             istage = 1  ! only 1. stage output (corresponds to u(n))
-            time_source_dble = dble(it-1-1)*DT + dble(C_LDDRK(istage))*DT - t0 - tshift_src(isource)
+            time_source_dble = dble(it-1-1)*DT + dble(C_LDDRK(istage))*DT
           else
-            time_source_dble = dble(it-1)*DT - t0 - tshift_src(isource)
+            time_source_dble = dble(it-1)*DT
           endif
           ! for external stf
           it_tmp_ext = it
@@ -101,20 +101,25 @@
             istage = 1  ! only 1. stage output (corresponds to u(n))
             if (UNDO_ATTENUATION_AND_OR_PML) then
               ! stepping moves forward from snapshot position
-              time_source_dble = dble(NSTEP-it-1)*DT + dble(C_LDDRK(istage))*DT - t0 - tshift_src(isource)
+              time_source_dble = dble(NSTEP-it-1)*DT + dble(C_LDDRK(istage))*DT
             else
-              time_source_dble = dble(NSTEP-it-1)*DT - dble(C_LDDRK(istage))*DT - t0 - tshift_src(isource)
+              time_source_dble = dble(NSTEP-it-1)*DT - dble(C_LDDRK(istage))*DT
             endif
           else
-            time_source_dble = dble(NSTEP-it)*DT - t0 - tshift_src(isource)
+            time_source_dble = dble(NSTEP-it)*DT
           endif
           ! for external stf
           it_tmp_ext = NSTEP - it + 1
         endif
 
-        ispec = ispec_selected_source(isource)
+        ! adjust current source time by source time shift
+        time_source_dble = time_source_dble - tshift_src(isource)
+
+        ! adjust current source time by simulation start time t0
+        time_source_dble = time_source_dble - t0
 
         ! determines source time function value
+        ispec = ispec_selected_source(isource)
         if (ispec_is_acoustic(ispec)) then
           stf = get_stf_acoustic(time_source_dble,isource,it_tmp_ext)
         else if (ispec_is_elastic(ispec)) then
@@ -126,7 +131,7 @@
         endif
 
         ! distinguishes between single and double precision for reals
-        stf_used = real(stf,kind=CUSTOM_REAL)
+        stf_used = real(stf, kind=CUSTOM_REAL)
 
         ! for file output
         source_time_function(it) = stf_used
@@ -159,6 +164,15 @@
       open(unit=IO_STF,file=trim(OUTPUT_FILES)//trim(plot_file),status='unknown',iostat=ier)
       if (ier /= 0) call exit_mpi(myrank,'Error opening plot_source_time_function file')
 
+      ! header
+      write(IO_STF,'("# source time function")')
+      write(IO_STF,'("# source              : ",i0)') isource
+      write(IO_STF,'("# time shift          : ",es12.5)') tshift_src(isource)
+      write(IO_STF,'("# DT                  : ",es12.5)') DT
+      write(IO_STF,'("# t0                  : ",es12.5)') t0
+      write(IO_STF,'("# format")')
+      write(IO_STF,'("#time  #STF")')
+
       do it = 1,NSTEP
         ! overall time, note that tshift_src will start at zero for simulation
         if (SIMULATION_TYPE == 1 .or. SIMULATION_TYPE == 2) then
@@ -169,9 +183,9 @@
             !       thus, at each time loop step it, displ(:) is still at (n) and not (n+1) like for the Newmark scheme
             !       when entering this routine. we therefore at an additional -DT to have the corresponding timing for the source.
             istage = 1  ! only 1. stage output (corresponds to u(n))
-            time_source = dble(it-1-1)*DT + dble(C_LDDRK(istage))*DT - t0
+            time_source_dble = dble(it-1-1)*DT + dble(C_LDDRK(istage))*DT
           else
-            time_source = dble(it-1)*DT - t0
+            time_source_dble = dble(it-1)*DT
           endif
         else
           ! backward simulation (SIMULATION_TYPE == 3)
@@ -182,14 +196,23 @@
             !       thus, at each time loop step it, displ(:) is still at (n) and not (n+1) like for the Newmark scheme
             !       when entering this routine. we therefore at an additional -DT to have the corresponding timing for the source.
             istage = 1  ! only 1. stage output (corresponds to u(n))
-            time_source = dble(NSTEP-it-1)*DT - dble(C_LDDRK(istage))*DT - t0
+            time_source_dble = dble(NSTEP-it-1)*DT - dble(C_LDDRK(istage))*DT
           else
-            time_source = dble(NSTEP-it)*DT - t0
+            time_source_dble = dble(NSTEP-it)*DT
           endif
         endif
 
+        ! adjust current time by simulation start time t0
+        time_source_dble = time_source_dble - t0
+
+        ! convert to working precision for output
+        t_used = real(time_source_dble, kind=CUSTOM_REAL)
+
+        ! STF
+        stf_used = source_time_function(it)
+
         ! file output
-        write(IO_STF,*) time_source,source_time_function(it)
+        write(IO_STF,*) t_used,stf_used
       enddo
 
       close(IO_STF)
