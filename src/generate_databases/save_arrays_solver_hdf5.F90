@@ -678,6 +678,7 @@
       call h5_create_dataset_gen(dset_name,(/1,1,NPROC/), 3, CUSTOM_REAL)
     endif
 
+    ! MPI interfaces
     dset_name = "num_interfaces_ext_mesh" ! 1 i (/myrank/)
     call h5_create_dataset_gen(dset_name,(/NPROC/), 1, 1)
 
@@ -692,14 +693,16 @@
       call h5_create_dataset_gen(dset_name, &
               (/maxval(offset_max_ni_bool_interfaces_ext_mesh),sum(offset_num_interfaces_ext_mesh(:))/), 2, 1)
     else
-      dset_name = "max_nibool_interfaces_ext_mesh" ! 1 i (/myrank/)
-      call h5_create_dataset_gen(dset_name,(/NPROC/), 1, 1)
-      dset_name = "my_neighbors_ext_mesh" ! 1 i (/myrank/)
-      call h5_create_dataset_gen(dset_name,(/NPROC/), 1, 1)
-      dset_name = "nibool_interfaces_ext_mesh" ! 1 i (/myrank/)
-      call h5_create_dataset_gen(dset_name,(/NPROC/), 1, 1)
-      dset_name = "ibool_interfaces_ext_mesh_dummy" ! 2 i (/0,myrank/)
-      call h5_create_dataset_gen(dset_name,(/1,NPROC/), 2, 1)
+      ! no interfaces
+      !dset_name = "max_nibool_interfaces_ext_mesh" ! 1 i (/myrank/)
+      !call h5_create_dataset_gen(dset_name,(/NPROC/), 1, 1)
+      !dset_name = "my_neighbors_ext_mesh" ! 1 i (/myrank/)
+      !call h5_create_dataset_gen(dset_name,(/NPROC/), 1, 1)
+      !dset_name = "nibool_interfaces_ext_mesh" ! 1 i (/myrank/)
+      !call h5_create_dataset_gen(dset_name,(/NPROC/), 1, 1)
+      !dset_name = "ibool_interfaces_ext_mesh_dummy" ! 2 i (/0,myrank/)
+      !call h5_create_dataset_gen(dset_name,(/1,NPROC/), 2, 1)
+      continue
     endif
 
     ! anisotropy
@@ -1211,6 +1214,7 @@
     call h5_write_dataset_collect_hyperslab(dset_name, r3d_dummy, (/0,0,myrank/),H5_COL)
   endif
 
+  ! MPI interfaces
   dset_name = "num_interfaces_ext_mesh" ! 1 i (/myrank/)
   call h5_write_dataset_collect_hyperslab(dset_name, (/num_interfaces_ext_mesh/), (/myrank/),H5_COL)
 
@@ -1227,14 +1231,16 @@
     call h5_write_dataset_collect_hyperslab(dset_name, ibool_interfaces_ext_mesh_dummy, &
             (/0,sum(offset_num_interfaces_ext_mesh(0:myrank-1))/),H5_COL)
   else
-    dset_name = "max_nibool_interfaces_ext_mesh" ! 1 i (/myrank/)
-    call h5_write_dataset_collect_hyperslab(dset_name, (/0/), (/myrank/),H5_COL)
-    dset_name = "my_neighbors_ext_mesh" ! 1 i (/myrank/)
-    call h5_write_dataset_collect_hyperslab(dset_name, (/0/), (/myrank/),H5_COL)
-    dset_name = "nibool_interfaces_ext_mesh" ! 1 i (/myrank/)
-    call h5_write_dataset_collect_hyperslab(dset_name, (/0/), (/myrank/),H5_COL)
-    dset_name = "ibool_interfaces_ext_mesh_dummy" ! 2 i (/0,myrank/)
-    call h5_write_dataset_collect_hyperslab(dset_name, i2d_dummy, (/myrank/),H5_COL)
+    ! no interfaces
+    !dset_name = "max_nibool_interfaces_ext_mesh" ! 1 i (/myrank/)
+    !call h5_write_dataset_collect_hyperslab(dset_name, (/0/), (/myrank/),H5_COL)
+    !dset_name = "my_neighbors_ext_mesh" ! 1 i (/myrank/)
+    !call h5_write_dataset_collect_hyperslab(dset_name, (/0/), (/myrank/),H5_COL)
+    !dset_name = "nibool_interfaces_ext_mesh" ! 1 i (/myrank/)
+    !call h5_write_dataset_collect_hyperslab(dset_name, (/0/), (/myrank/),H5_COL)
+    !dset_name = "ibool_interfaces_ext_mesh_dummy" ! 2 i (/0,myrank/)
+    !call h5_write_dataset_collect_hyperslab(dset_name, i2d_dummy, (/myrank/),H5_COL)
+    continue
   endif
 
   ! anisotropy
