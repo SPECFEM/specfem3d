@@ -2649,7 +2649,7 @@ contains
 
   ! local parameters
   real(kind=CUSTOM_REAL) :: nx,ny,nz,t1_norm,hp1,hp2,det_a
-  integer :: ispec,iglob,i,j,k,iface,igll,p,isubstep
+  integer :: ispec,iglob,i,j,k,iface,igll,p,prev_p,isubstep
 
   ! 2D local arrays for surface geometry and displacements
   real(kind=CUSTOM_REAL) :: x_2D(NGLLX, NGLLY), y_2D(NGLLX, NGLLY), z_2D(NGLLX, NGLLY)
@@ -3005,19 +3005,20 @@ contains
             enddo
           enddo
         else
+          prev_p = p - 1  ! previous order
           do b = 1, NGLLY
             do a = 1, NGLLX
-              phi_prev_n(a, b) = hw_phi_pred(1, a, b, p-1)
-              phi_prev_t1(a, b) = hw_phi_pred(2, a, b, p-1)
-              phi_prev_t2(a, b) = hw_phi_pred(3, a, b, p-1)
+              phi_prev_n(a, b) = hw_phi_pred(1, a, b, prev_p)
+              phi_prev_t1(a, b) = hw_phi_pred(2, a, b, prev_p)
+              phi_prev_t2(a, b) = hw_phi_pred(3, a, b, prev_p)
 
-              phi_dot_prev_n(a, b) = hw_phi_dot_pred(1, a, b, p-1) + deltatover2_hw * hw_phi_dotdot_new(1, a, b, p-1)
-              phi_dot_prev_t1(a, b) = hw_phi_dot_pred(2, a, b, p-1) + deltatover2_hw * hw_phi_dotdot_new(2, a, b, p-1)
-              phi_dot_prev_t2(a, b) = hw_phi_dot_pred(3, a, b, p-1) + deltatover2_hw * hw_phi_dotdot_new(3, a, b, p-1)
+              phi_dot_prev_n(a, b) = hw_phi_dot_pred(1, a, b, prev_p) + deltatover2_hw * hw_phi_dotdot_new(1, a, b, prev_p)
+              phi_dot_prev_t1(a, b) = hw_phi_dot_pred(2, a, b, prev_p) + deltatover2_hw * hw_phi_dotdot_new(2, a, b, prev_p)
+              phi_dot_prev_t2(a, b) = hw_phi_dot_pred(3, a, b, prev_p) + deltatover2_hw * hw_phi_dotdot_new(3, a, b, prev_p)
 
-              phi_dotdot_prev_n(a, b) = hw_phi_dotdot_new(1, a, b, p-1)
-              phi_dotdot_prev_t1(a, b) = hw_phi_dotdot_new(2, a, b, p-1)
-              phi_dotdot_prev_t2(a, b) = hw_phi_dotdot_new(3, a, b, p-1)
+              phi_dotdot_prev_n(a, b) = hw_phi_dotdot_new(1, a, b, prev_p)
+              phi_dotdot_prev_t1(a, b) = hw_phi_dotdot_new(2, a, b, prev_p)
+              phi_dotdot_prev_t2(a, b) = hw_phi_dotdot_new(3, a, b, prev_p)
             enddo
           enddo
         endif
