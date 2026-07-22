@@ -1480,6 +1480,7 @@ contains
 
   implicit none
 
+  integer, intent(in) :: NGLL
   real(kind=CUSTOM_REAL), dimension(NGLL,NGLL), intent(inout) :: phi_n, phi_t1, phi_t2
   real(kind=CUSTOM_REAL), dimension(NGLL,NGLL), intent(inout) :: phi_n_dot, phi_t1_dot, phi_t2_dot
   real(kind=CUSTOM_REAL), dimension(NGLL,NGLL), intent(inout) :: phi_n_ddot, phi_t1_ddot, phi_t2_ddot
@@ -1491,7 +1492,7 @@ contains
 
   real(kind=CUSTOM_REAL), intent(in) :: Vp, Vs, a_j, deltat
   real(kind=CUSTOM_REAL), intent(in) :: hprime_perp(NGLL,NGLL), jacobian_perp
-  integer, intent(in) :: NGLL, i_edge, sigma, id_perp
+  integer, intent(in) :: i_edge, sigma, id_perp
   integer, intent(in) :: comp_vp(3)
 
   ! local parameters
@@ -1620,6 +1621,7 @@ contains
 
   implicit none
 
+  integer, intent(in) :: NGLL
   real(kind=CUSTOM_REAL), dimension(NGLL,NGLL), intent(inout) :: phi_n, phi_t1, phi_t2
   real(kind=CUSTOM_REAL), dimension(NGLL,NGLL), intent(inout) :: phi_n_dot, phi_t1_dot, phi_t2_dot
   real(kind=CUSTOM_REAL), dimension(NGLL,NGLL), intent(inout) :: phi_n_ddot, phi_t1_ddot, phi_t2_ddot
@@ -1632,7 +1634,7 @@ contains
   real(kind=CUSTOM_REAL), intent(in) :: Vp, Vs, a_j, deltat
   real(kind=CUSTOM_REAL), intent(in) :: hprime_t1(NGLL,NGLL), hprime_t2(NGLL,NGLL)
   real(kind=CUSTOM_REAL), intent(in) :: jacobian_t1, jacobian_t2
-  integer, intent(in) :: NGLL, i_edge_t1, i_edge_t2
+  integer, intent(in) :: i_edge_t1, i_edge_t2
   integer, intent(in) :: sigma_t1, sigma_t2
   integer, intent(in) :: comp_vp_step1(3), comp_vp_step2(3)
 
