@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 #-------------------------------------------------------------
-#     GMSH mesh convertion for SPECFEM3D
+#     GMSH mesh conversion for SPECFEM3D
 #
 #     by Thomas CURTELIN
 #       Centrale Marseille, France, July 2012
