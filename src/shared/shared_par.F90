@@ -190,7 +190,7 @@ end module constants
   logical :: USE_FORCE_POINT_SOURCE = .false.
   logical :: USE_RICKER_TIME_FUNCTION = .false.
   logical :: PRINT_SOURCE_TIME_FUNCTION = .false.
-  logical :: HAS_FINITE_FAULT_SOURCE = .false.
+  character(len=MAX_STRING_LEN) :: CMT_CONVENTION_FORMAT = 'USE'  ! Up-South-East (Harvard) convention
 
   ! cmt + point force simulation
   logical :: USE_CMT_AND_FORCE_SOURCE = .false.
@@ -279,6 +279,7 @@ end module constants
 
   ! number of sources given in CMTSOLUTION file
   integer :: NSOURCES = 0
+  logical :: HAS_FINITE_FAULT_SOURCE = .false.
 
   !number of sources in CMTSOLUTION/FORCESOLUTION
   integer :: NSOURCES_CMT = 0
