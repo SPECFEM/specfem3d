@@ -260,7 +260,7 @@
   call sum_all_i(nspec2D_bottom_ext,num_bottom)
 
   if (myrank == 0) then
-    write(IMAIN,*) 'absorbing boundaries: '
+    write(IMAIN,*) 'absorbing boundaries:'
     write(IMAIN,*) '  xmin,xmax : ',num_xmin,num_xmax
     write(IMAIN,*) '  ymin,ymax : ',num_ymin,num_ymax
     write(IMAIN,*) '  bottom,top: ',num_bottom,num_top

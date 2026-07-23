@@ -86,7 +86,7 @@
   call synchronize_all()
   if (myrank == 0) then
     write(IMAIN,*)
-    write(IMAIN,*) '  ...allocating arrays '
+    write(IMAIN,*) '  ...allocating arrays'
     call flush_IMAIN()
   endif
   call crm_ext_allocate_arrays(nspec2D_xmin,nspec2D_xmax,nspec2D_ymin,nspec2D_ymax, &
@@ -105,7 +105,7 @@
   call synchronize_all()
   if (myrank == 0) then
     write(IMAIN,*)
-    write(IMAIN,*) '  ...setting up jacobian '
+    write(IMAIN,*) '  ...setting up jacobian'
     call flush_IMAIN()
   endif
   if (ANY_FAULT_IN_THIS_PROC) then
@@ -161,7 +161,7 @@
   call synchronize_all()
   if (myrank == 0) then
     write(IMAIN,*)
-    write(IMAIN,*) '  ...preparing MPI interfaces '
+    write(IMAIN,*) '  ...preparing MPI interfaces'
     call flush_IMAIN()
   endif
   call get_MPI_interface(nglob_unique,nspec,ibool)
@@ -239,7 +239,7 @@
   call synchronize_all()
   if (myrank == 0) then
     write(IMAIN,*)
-    write(IMAIN,*) '  ...detecting acoustic-elastic-poroelastic surfaces '
+    write(IMAIN,*) '  ...detecting acoustic-elastic-poroelastic surfaces'
     call flush_IMAIN()
   endif
   call get_coupling_surfaces(nspec,ibool)
@@ -251,7 +251,7 @@
   call synchronize_all()
   if (myrank == 0) then
     write(IMAIN,*)
-    write(IMAIN,*) '  ...element inner/outer separation '
+    write(IMAIN,*) '  ...element inner/outer separation'
     call flush_IMAIN()
   endif
   call crm_setup_inner_outer_elemnts()
@@ -277,7 +277,7 @@
   call synchronize_all()
   if (myrank == 0) then
     write(IMAIN,*)
-    write(IMAIN,*) '  ...element mesh coloring '
+    write(IMAIN,*) '  ...element mesh coloring'
     call flush_IMAIN()
   endif
   call setup_color_perm(nspec,nglob,ibool,ANISOTROPY,SAVE_MESH_FILES)
@@ -289,7 +289,7 @@
   call synchronize_all()
   if (myrank == 0) then
     write(IMAIN,*)
-    write(IMAIN,*) '  ...external binary models '
+    write(IMAIN,*) '  ...external binary models'
     call flush_IMAIN()
   endif
   call get_model_binaries(nspec,LOCAL_PATH)
@@ -302,7 +302,7 @@
     call synchronize_all()
     if (myrank == 0) then
       write(IMAIN,*)
-      write(IMAIN,*) '  ...creating C-PML damping profiles '
+      write(IMAIN,*) '  ...creating C-PML damping profiles'
       call flush_IMAIN()
     endif
     call pml_set_local_dampingcoeff(xstore_unique,ystore_unique,zstore_unique)
@@ -315,7 +315,7 @@
   call synchronize_all()
   if (myrank == 0) then
     write(IMAIN,*)
-    write(IMAIN,*) '  ...creating mass matrix '
+    write(IMAIN,*) '  ...creating mass matrix'
     call flush_IMAIN()
   endif
   call create_mass_matrices(nglob_unique)
@@ -327,7 +327,7 @@
   call synchronize_all()
   if (myrank == 0) then
     write(IMAIN,*)
-    write(IMAIN,*) '  ...setting up mesh adjacency '
+    write(IMAIN,*) '  ...setting up mesh adjacency'
     call flush_IMAIN()
   endif
   call setup_mesh_adjacency()
@@ -340,7 +340,7 @@
     call synchronize_all()
     if (myrank == 0) then
       write(IMAIN,*)
-      write(IMAIN,*) '  ...setting up wavefield discontinuity boundary '
+      write(IMAIN,*) '  ...setting up wavefield discontinuity boundary'
       call flush_IMAIN()
     endif
     call read_partition_files_wavefield_discontinuity()
@@ -527,7 +527,7 @@ contains
     write(IMAIN,*) '    NGNOD   = ',NGNOD
     write(IMAIN,*) '    NGNOD2D = ',NGNOD2D
     write(IMAIN,*)
-    write(IMAIN,*) '    main process setup: '
+    write(IMAIN,*) '    main process setup:'
     write(IMAIN,*) '    nspec           = ',nspec
     write(IMAIN,*)
     call flush_IMAIN()
@@ -1576,9 +1576,9 @@ contains
   call sum_all_i( NSPEC2D_MOHO, imoho_all )
   if (myrank == 0) then
     write(IMAIN,*) '     Moho surface:'
-    write(IMAIN,*) '     total surface elements: ',imoho_all
-    write(IMAIN,*) '     top elements   :',imoho_top_all
-    write(IMAIN,*) '     bottom elements:',imoho_bot_all
+    write(IMAIN,*) '       total surface elements: ',imoho_all
+    write(IMAIN,*) '       top elements          : ',imoho_top_all
+    write(IMAIN,*) '       bottom elements       : ',imoho_bot_all
     call flush_IMAIN()
   endif
 

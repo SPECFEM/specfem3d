@@ -854,7 +854,7 @@
   case default
     ! user output
     if (myrank == 0) then
-      write(IMAIN,*) '     no external binary model used '
+      write(IMAIN,*) '     no external binary model used'
     endif
   end select
 

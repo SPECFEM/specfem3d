@@ -613,7 +613,7 @@
     !write(IMAIN,*) '  external mesh points: ',num
     !write(IMAIN,*) '  defined materials: ',nmat_ext_mesh
     !write(IMAIN,*) '  undefined materials: ',nundefMat_ext_mesh
-    !write(IMAIN,*) '  absorbing boundaries: '
+    !write(IMAIN,*) '  absorbing boundaries:'
     !write(IMAIN,*) '    xmin,xmax: ',num_xmin,num_xmax
     !write(IMAIN,*) '    ymin,ymax: ',num_ymin,num_ymax
     !write(IMAIN,*) '    bottom,top: ',num_bottom,num_top
