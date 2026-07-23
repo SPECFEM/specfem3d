@@ -5,16 +5,16 @@
  ! mesh statistics:
  ! ---------------
  !
- ! note: 
+ ! note:
  !    the values are only approximate and differ for different processes
  !    because the CUBIT + SCOTCH mesh has
  !    a different number of mesh elements and points in each slice
  !
  ! number of processors =            1
  !
- ! number of ES nodes =   0.125000000    
+ ! number of ES nodes =   0.125000000
  ! percentage of total 640 ES nodes =    1.95312500E-02  %
- ! total memory available on these ES nodes (Gb) =    2.00000000    
+ ! total memory available on these ES nodes (Gb) =    2.00000000
  !
  ! min vector length =           25
  ! min critical vector length =           75
@@ -33,14 +33,14 @@
  !
  ! attenuation uses:
  !  NSPEC_ATTENUATION =         2000
- ! 
+ !
  ! anisotropy uses:
  !  NSPEC_ANISO =            1
- ! 
+ !
  ! adjoint uses:
  !  NSPEC_ADJOINT =            1
  !  NGLOB_ADJOINT =            1
- ! 
+ !
  ! approximate least memory needed by the solver:
  ! ----------------------------------------------
  !

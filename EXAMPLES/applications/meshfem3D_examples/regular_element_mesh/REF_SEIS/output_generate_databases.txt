@@ -46,7 +46,7 @@
  defined materials    :            2
  undefined materials  :            0
  total number of spectral elements:         2000
- absorbing boundaries: 
+ absorbing boundaries:
    xmin,xmax :          200         200
    ymin,ymax :          200         200
    bottom,top:          100         100
@@ -61,14 +61,14 @@
 
  create regions:
 
-   ...allocating arrays 
+   ...allocating arrays
      NGLLX   =            5
      NGLLY   =            5
      NGLLZ   =            5
      NGNOD   =            8
      NGNOD2D =            4
 
-     main process setup: 
+     main process setup:
      nspec           =         2000
 
      required minimum memory per process for model setup =    22.8958130     MB
@@ -88,16 +88,16 @@
  File DATA/Par_file_faults not found: assuming that there are no faults
 
 
-   ...setting up jacobian 
+   ...setting up jacobian
       mesh jacobian: min/max =   1.2500E+05 /   1.2500E+05
 
 
    ...indexing global points
-      creating ibool indexing     : x min/max =    0.00000000     /   1000.00000    
+      creating ibool indexing     : x min/max =    0.00000000     /   1000.00000
       creating indirect addressing: nglob =       136161
       creating unique point locations
 
-   ...preparing MPI interfaces 
+   ...preparing MPI interfaces
       number of interfaces        :            0
 
       total MPI interface points:            0
@@ -129,7 +129,7 @@
                90  % - elapsed time:   1.25890002E-02 s
               100  % - elapsed time:   1.39589999E-02 s
 
-   ...detecting acoustic-elastic-poroelastic surfaces 
+   ...detecting acoustic-elastic-poroelastic surfaces
       total acoustic elements   :        1000
       total elastic elements    :        1000
       total poroelastic elements:           0
@@ -139,50 +139,50 @@
        elastic - poroelastic coupling : total number of faces =            0
 
 
-   ...element inner/outer separation 
+   ...element inner/outer separation
       for overlapping of communications with calculations:
       percentage of   edge elements    0.00000000     %
       percentage of volume elements    100.000000     %
 
 
-   ...element mesh coloring 
+   ...element mesh coloring
       use coloring =  F
 
-   ...external binary models 
-      no external binary model used 
+   ...external binary models
+      no external binary model used
 
-   ...creating C-PML damping profiles 
+   ...creating C-PML damping profiles
    CPML boundary values of X-/Y-/Z-regions:
-   X:    0.00000000       1000.00000    
-   Y:    0.00000000       1000.00000    
-   Z:   -2000.00000       0.00000000    
+   X:    0.00000000       1000.00000
+   Y:    0.00000000       1000.00000
+   Z:   -2000.00000       0.00000000
 
-   Origins of left/right X-surface C-PML   200.000000       800.000000    
-   Origins of back/front Y-surface C-PML   200.000000       800.000000    
-   Origin of bottom Z-surface C-PML       -1800.00000    
-   Origin of top Z-surface C-PML          -200.000000    
+   Origins of left/right X-surface C-PML   200.000000       800.000000
+   Origins of back/front Y-surface C-PML   200.000000       800.000000
+   Origin of bottom Z-surface C-PML       -1800.00000
+   Origin of top Z-surface C-PML          -200.000000
 
-   CPML_width_x:    200.000000    
-   CPML_width_y:    200.000000    
-   CPML_width_z:    200.000000    
+   CPML_width_x:    200.000000
+   CPML_width_y:    200.000000
+   CPML_width_z:    200.000000
 
    damping profile:
-     maximum Vp in C-PML                  =   3500.00000    
+     maximum Vp in C-PML                  =   3500.00000
      using reference (dominant) frequency =   12.6999998     Hz
                                    period =   7.87401572E-02 s
 
      resulting dominant wavelength (L) :    275.590546     m
            suggested minimum PML width :    220.472443     m
                   ratio CPML_width_x/L :   0.725714266     (suggested minimum ~ 0.5-0.8)
-                  ratio CPML_width_y/L :   0.725714266    
-                  ratio CPML_width_z/L :   0.725714266    
+                  ratio CPML_width_y/L :   0.725714266
+                  ratio CPML_width_z/L :   0.725714266
 
 
-   ...creating mass matrix 
+   ...creating mass matrix
       elastic mass matrix
       acoustic mass matrix
 
-   ...setting up mesh adjacency 
+   ...setting up mesh adjacency
 
       mesh adjacency:
       total number of elements in this slice          =         2000
@@ -243,27 +243,27 @@
 
 
  ********
- Model: P   velocity min,max =    1520.00000       3500.00000    
- Model: S   velocity min,max =    0.00000000       2000.00000    
+ Model: P   velocity min,max =    1520.00000       3500.00000
+ Model: S   velocity min,max =    0.00000000       2000.00000
 
- Model: Poisson's ratio min,max =   0.257575750      0.500000000    
+ Model: Poisson's ratio min,max =   0.257575750      0.500000000
  ********
 
  *********************************************
  *** Verification of simulation parameters ***
  *********************************************
 
- *** Xmin and Xmax of the model =    0.00000000       1000.00000    
- *** Ymin and Ymax of the model =    0.00000000       1000.00000    
- *** Zmin and Zmax of the model =   -2000.00000       0.00000000    
+ *** Xmin and Xmax of the model =    0.00000000       1000.00000
+ *** Ymin and Ymax of the model =    0.00000000       1000.00000
+ *** Zmin and Zmax of the model =   -2000.00000       0.00000000
 
- *** Max GLL point distance =    32.7326965    
- *** Min GLL point distance =    17.2673035    
- *** Max/min ratio =    1.89564610    
+ *** Max GLL point distance =    32.7326965
+ *** Min GLL point distance =    17.2673035
+ *** Max/min ratio =    1.89564610
 
- *** Max element size =    100.000000    
- *** Min element size =    100.000000    
- *** Max/min ratio =    1.00000000    
+ *** Max element size =    100.000000
+ *** Min element size =    100.000000
+ *** Max/min ratio =    1.00000000
 
  *** Minimum period resolved =    8.22368413E-02 (s)
  ***          (as frequency) =    12.1599998     (Hz)
@@ -280,25 +280,25 @@
    based on a series of Zener standard linear solids (SLS).
 
    Approximation is performed in the following frequency band:
-   Reference frequency requested by the user (Hz):   1.00000000      period (s):   1.00000000    
+   Reference frequency requested by the user (Hz):   1.00000000      period (s):   1.00000000
 
    The following values are computed automatically by the code
    based on the estimated maximum frequency resolution of your mesh
    and can thus vary from what you have requested.
 
-   Frequency band        min/max (Hz):  0.218422994       12.2828283    
-   Period band           min/max (s) :   8.14144760E-02   4.57827234    
-   Logarithmic central frequency (Hz):   1.63794148      period (s):  0.610522449    
+   Frequency band        min/max (Hz):  0.218422994       12.2828283
+   Period band           min/max (s) :   8.14144760E-02   4.57827234
+   Logarithmic central frequency (Hz):   1.63794148      period (s):  0.610522449
 
    Using full attenuation with both Q_kappa and Q_mu.
 
-   Q_mu min/max           :    70.0000000       70.0000000    
-   Q_kappa min/max        :    100.000000       100.000000    
+   Q_mu min/max           :    70.0000000       70.0000000
+   Q_kappa min/max        :    100.000000       100.000000
 
 
  mesh regions done
 
- min and max of elevation (i.e. height of the upper surface of the mesh) included in mesh in m is    0.0000000000000000          0.0000000000000000     
+ min and max of elevation (i.e. height of the upper surface of the mesh) included in mesh in m is    0.0000000000000000          0.0000000000000000
 
 
  done mesh setup
@@ -332,7 +332,7 @@
  smallest and largest possible floating-point numbers are:    1.17549435E-38   3.40282347E+38
 
 
- Elapsed time for mesh generation and buffer creation in seconds =    1.05698705    
+ Elapsed time for mesh generation and buffer creation in seconds =    1.05698705
  Elapsed time for mesh generation and buffer creation in hh:mm:ss =    0 h 00 m 01 s
 
  End of mesh generation

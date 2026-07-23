@@ -65,24 +65,24 @@
 
  region selected:
 
- latitude min =    38.2000000000000
- latitude max =    42.2000000000000
+ latitude min =    38.200000000000003
+ latitude max =    42.200000000000003
 
- longitude min =   -126.500000000000
- longitude max =   -122.000000000000
+ longitude min =   -126.50000000000000
+ longitude max =   -122.00000000000000
 
  this is mapped to UTM in region           10
 
- UTM X min =    193500.552860512
- UTM X max =    582558.201109359
+ UTM X min =    193500.55286051219
+ UTM X max =    582558.20110935858
 
- UTM Y min =    4233799.09935686
- UTM Y max =    4672466.35538657
+ UTM Y min =    4233799.0993568636
+ UTM Y max =    4672466.3553865673
 
- UTM size of model along X is    389.057648248846       km
- UTM size of model along Y is    438.667256029704       km
+ UTM size of model along X is    389.05764824884642       km
+ UTM size of model along Y is    438.66725602970365       km
 
- Bottom of the mesh is at a depth of    100.000000000000       km
+ Bottom of the mesh is at a depth of    100.00000000000000       km
 
 
  using UTM projection in region           10
@@ -97,56 +97,56 @@
  number of interfaces:            2
 
  mesh:
-   origin UTM minimum x/y        (m) =    193500.5       4233799.
-                      lat/lon  (deg) =    38.20000      -126.5000
-   origin UTM maximum x/y        (m) =    582558.2       4672466.
-                      lat/lon  (deg) =    42.20000      -122.0000
+   origin UTM minimum x/y        (m) =    193500.547       4233799.00
+                      lat/lon  (deg) =    38.2000008      -126.500000
+   origin UTM maximum x/y        (m) =    582558.188       4672466.50
+                      lat/lon  (deg) =    42.2000008      -122.000000
 
  reading interface            1
    interface file   : ptopo.xyz.2.dat
 
    number of points x/y =          545         468
-   origin x/y     (deg) =   -126.8000       42.30000
-   spacing x/y    (deg) =   9.0073533E-03 -8.9935763E-03
-                    (m) =    1002.698      -1001.164
+   origin x/y     (deg) =   -126.800003       42.2999992
+   spacing x/y    (deg) =    9.00735334E-03  -8.99357628E-03
+                    (m) =    1002.69757      -1001.16394
 
-   dimension x-direction (deg) =   -126.8000     /  -121.9000
-   dimension y-direction (deg) =    42.30000     /   38.10000
+   dimension x-direction (deg) =   -126.800003     /  -121.900002
+   dimension y-direction (deg) =    42.2999992     /   38.0999985
 
    total number of file points =       255060  should be       255060
    this point total is okay
 
-   original elevation min/max             =   -14452.67      -13602.13
-   interpolated mesh elevation min/max    =   -14448.69      -13622.78
+   original elevation min/max             =   -14452.6738      -13602.1260
+   interpolated mesh elevation min/max    =   -14448.6943      -13622.7754
 
-   interpolated mesh longitude min/max (deg) =   -126.7090     /  -122.0000
-   interpolated mesh latitude  min/max (deg) =    38.20000     /   42.20436
+   interpolated mesh longitude min/max (deg) =   -126.709030     /  -122.000000
+   interpolated mesh latitude  min/max (deg) =    38.2000008     /   42.2043571
 
-   interpolated mesh UTM minimum x/y (m) =    193500.5       4233799.
-   interpolated mesh UTM maximum x/y (m) =    582558.2       4672466.
+   interpolated mesh UTM minimum x/y (m) =    193500.547       4233799.00
+   interpolated mesh UTM maximum x/y (m) =    582558.188       4672466.50
 
  reading interface            2
    interface file   : ptopo.xyz.1.dat
 
    number of points x/y =          545         468
-   origin x/y     (deg) =   -126.8000       42.30000
-   spacing x/y    (deg) =   9.0073533E-03 -8.9935763E-03
-                    (m) =    1002.698      -1001.164
+   origin x/y     (deg) =   -126.800003       42.2999992
+   spacing x/y    (deg) =    9.00735334E-03  -8.99357628E-03
+                    (m) =    1002.69757      -1001.16394
 
-   dimension x-direction (deg) =   -126.8000     /  -121.9000
-   dimension y-direction (deg) =    42.30000     /   38.10000
+   dimension x-direction (deg) =   -126.800003     /  -121.900002
+   dimension y-direction (deg) =    42.2999992     /   38.0999985
 
    total number of file points =       255060  should be       255060
    this point total is okay
 
-   original elevation min/max             =   -4526.739       3978.744
-   interpolated mesh elevation min/max    =   -4486.939       3772.251
+   original elevation min/max             =   -4526.73877       3978.74438
+   interpolated mesh elevation min/max    =   -4486.93896       3772.25073
 
-   interpolated mesh longitude min/max (deg) =   -126.7090     /  -122.0000
-   interpolated mesh latitude  min/max (deg) =    38.20000     /   42.20436
+   interpolated mesh longitude min/max (deg) =   -126.709030     /  -122.000000
+   interpolated mesh latitude  min/max (deg) =    38.2000008     /   42.2043571
 
-   interpolated mesh UTM minimum x/y (m) =    193500.5       4233799.
-   interpolated mesh UTM maximum x/y (m) =    582558.2       4672466.
+   interpolated mesh UTM minimum x/y (m) =    193500.547       4233799.00
+   interpolated mesh UTM maximum x/y (m) =    582558.188       4672466.50
 
 
  **************************
@@ -181,16 +181,16 @@
    creating mesh region            9  (regular mesh)
 
  mesh dimensions:
-   Xmin and Xmax of the model =    193500.5       582558.2
-   Ymin and Ymax of the model =    4233799.       4672466.
-   Zmin and Zmax of the model =   -100000.0       3772.251
+   Xmin and Xmax of the model =    193500.547       582558.188
+   Ymin and Ymax of the model =    4233799.00       4672466.50
+   Zmin and Zmax of the model =   -100000.000       3772.25073
 
- exact area =   1.7066685E+11 (m^2)
-            =    170666.8     (km^2)
+ exact area =    1.70666852E+11 (m^2)
+            =    170666.844     (km^2)
 
-   Max element size =    54833.62     (m)
-   Min element size =    622.6094     (m)
-   Max/min ratio =    88.07066
+   Max element size =    54833.6211     (m)
+   Min element size =    622.609375     (m)
+   Max/min ratio =    88.0706635
 
 
  creating indirect addressing for unstructured mesh
@@ -219,59 +219,56 @@
  diagonal aspect ratio: 1. perfect,  above 1. gives stretching factor
  ------------
 
- minimum length of an edge in the whole mesh (m) =    622.609669505056
+ minimum length of an edge in the whole mesh (m) =    622.60966950505644
 
- maximum length of an edge in the whole mesh (m) =    54833.5349679202
-
- ***
- *** max equiangle skewness =   0.957300457718594       in element           71
-  of slice            9
- ***
-
- max deviation angle from a right angle (90 degrees) is therefore =
-   86.1570411946734
-
- worst angle in the mesh is therefore    3.84295880532655
- or    176.157041194673       degrees
-
- max edge aspect ratio =    28.2013493814105
-
- max diagonal aspect ratio =    2.01069587934677
+ maximum length of an edge in the whole mesh (m) =    54833.534967920205
 
  ***
- *** Maximum suggested time step for simulation =   50.57175472
+ *** max equiangle skewness =   0.95730045771859384       in element           71  of slice            9
  ***
- *** Max CFL stability condition of the time scheme (must be below about 0.55 or
-  so) =   0.470400000000000
- *** computed using the maximum P wave velocity =    1.00000000000000
+
+ max deviation angle from a right angle (90 degrees) is therefore =    86.157041194673440
+
+ worst angle in the mesh is therefore    3.8429588053265542
+ or    176.15704119467344       degrees
+
+ max edge aspect ratio =    28.201349381410580
+
+ max diagonal aspect ratio =    2.0106958793467689
+
  ***
- that value is below the upper CFL limit of   0.550000000000000
+ *** Maximum suggested time step for simulation =   53.75399099
+ ***
+ *** Max CFL stability condition of the time scheme (must be below about 0.55 or so) =   0.50000000000000000
+ *** computed using the maximum P wave velocity =    1.0000000000000000
+ ***
+ that value is below the upper CFL limit of   0.550000012
  therefore the run should be stable
 
  creating histogram of mesh quality
 
  histogram of skewness (0. good - 1. bad):
 
-  0.0000000E+00  -   5.0000001E-02       96000     67.02413      %
-  5.0000001E-02  -   0.1000000           13371     9.335204      %
-  0.1000000      -   0.1500000            6920     4.831323      %
-  0.1500000      -   0.2000000            9510     6.639578      %
-  0.2000000      -   0.2500000            1109    0.7742683      %
-  0.2500000      -   0.3000000               2    1.3963360E-03  %
-  0.3000000      -   0.3500000               0    0.0000000E+00  %
-  0.3500000      -   0.4000000               0    0.0000000E+00  %
-  0.4000000      -   0.4500000               0    0.0000000E+00  %
-  0.4500000      -   0.5000000               0    0.0000000E+00  %
-  0.5000000      -   0.5500000               0    0.0000000E+00  %
-  0.5500000      -   0.6000000               0    0.0000000E+00  %
-  0.6000000      -   0.6500000               0    0.0000000E+00  %
-  0.6500000      -   0.7000000               0    0.0000000E+00  %
-  0.7000000      -   0.7500000               0    0.0000000E+00  %
-  0.7500000      -   0.8000000              46    3.2115728E-02  %
-  0.8000000      -   0.8500000            9182     6.410579      %
-  0.8500000      -   0.9000000            6291     4.392175      %
-  0.9000000      -   0.9500000             659    0.4600927      %
-  0.9500000      -    1.000000             142    9.9139854E-02  %
+   0.00000000      -    5.00000007E-02       96000     67.0241318      %
+   5.00000007E-02  -   0.100000001           13371     9.33520412      %
+  0.100000001      -   0.150000006            6920     4.83132267      %
+  0.150000006      -   0.200000003            9510     6.63957787      %
+  0.200000003      -   0.250000000            1109    0.774268329      %
+  0.250000000      -   0.300000012               2     1.39633601E-03  %
+  0.300000012      -   0.349999994               0     0.00000000      %
+  0.349999994      -   0.400000006               0     0.00000000      %
+  0.400000006      -   0.449999988               0     0.00000000      %
+  0.449999988      -   0.500000000               0     0.00000000      %
+  0.500000000      -   0.550000012               0     0.00000000      %
+  0.550000012      -   0.600000024               0     0.00000000      %
+  0.600000024      -   0.649999976               0     0.00000000      %
+  0.649999976      -   0.699999988               0     0.00000000      %
+  0.699999988      -   0.750000000               0     0.00000000      %
+  0.750000000      -   0.800000012              46     3.21157277E-02  %
+  0.800000012      -   0.850000024            9182     6.41057873      %
+  0.850000024      -   0.899999976            6291     4.39217472      %
+  0.899999976      -   0.949999988             659    0.460092723      %
+  0.949999988      -    1.00000000             142     9.91398543E-02  %
 
 
  *********************************************
@@ -295,19 +292,15 @@
  total number of points in mesh slice 0:        76585
 
  total number of elements in entire mesh:       143232
- approximate total number of points in entire mesh (with duplicates on MPI edges
- ):                1225360
- approximate total number of DOFs in entire mesh (with duplicates on MPI edges):
-                 3676080
+ approximate total number of points in entire mesh (with duplicates on MPI edges):               1225360
+ approximate total number of DOFs in entire mesh (with duplicates on MPI edges):               3676080
 
  using single precision for the calculations
 
- smallest and largest possible floating-point numbers are:   1.1754944E-38
-  3.4028235E+38
+ smallest and largest possible floating-point numbers are:    1.17549435E-38   3.40282347E+38
 
 
- Elapsed time for mesh generation and buffer creation in seconds =
-   1.342271
+ Elapsed time for mesh generation and buffer creation in seconds =    1.02890503
  Elapsed time for mesh generation and buffer creation in hh:mm:ss =    0 h 00 m 01 s
 
  End of mesh generation
