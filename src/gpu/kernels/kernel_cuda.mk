@@ -10,6 +10,7 @@ cuda_kernels_OBJS := \
 	$O/compute_coupling_acoustic_el_kernel.cuda-kernel.o \
 	$O/compute_coupling_elastic_ac_kernel.cuda-kernel.o \
 	$O/compute_coupling_ocean_cuda_kernel.cuda-kernel.o \
+	$O/compute_forces_coriolis_cuda_kernel.cuda-kernel.o \
 	$O/compute_dynamic_fault_cuda.cuda-kernel.o \
 	$O/compute_elastic_seismogram_kernel.cuda-kernel.o \
 	$O/compute_element_strain_cudakernel.cuda-kernel.o \

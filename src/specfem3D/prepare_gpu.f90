@@ -104,7 +104,9 @@
                                 COUPLE_WITH_INJECTION_TECHNIQUE, &
                                 UNDO_ATTENUATION_AND_OR_PML, &
                                 PML_CONDITIONS, &
-                                USE_CUDA_AWARE_MPI)
+                                USE_CUDA_AWARE_MPI, &
+                                two_omega_rotation, &
+                                b_two_omega_rotation)
 
 
   ! prepares fields on GPU for acoustic simulations

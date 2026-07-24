@@ -110,7 +110,9 @@ void FC_FUNC_(prepare_constants_device,
                                         int* IS_COUPLE_WITH_INJECTION,
                                         int* UNDO_ATTENUATION_AND_OR_PML,
                                         int* PML_CONDITIONS,
-                                        int* USE_CUDA_AWARE_MPI_f) {
+                                        int* USE_CUDA_AWARE_MPI_f,
+                                        realw* h_two_omega_rotation,
+                                        realw* h_b_two_omega_rotation) {
 
   TRACE("prepare_constants_device");
 
@@ -416,6 +418,14 @@ void FC_FUNC_(prepare_constants_device,
 
   // gravity flag initialization
   mp->gravity = 0;
+
+  // rotation parameters
+  mp->two_omega_rotation[0] = h_two_omega_rotation[0];
+  mp->two_omega_rotation[1] = h_two_omega_rotation[1];
+  mp->two_omega_rotation[2] = h_two_omega_rotation[2];
+  mp->b_two_omega_rotation[0] = h_b_two_omega_rotation[0];
+  mp->b_two_omega_rotation[1] = h_b_two_omega_rotation[1];
+  mp->b_two_omega_rotation[2] = h_b_two_omega_rotation[2];
 
   // initializes rhostore and wgll_cube pointers
   // for example, rhostore is used by acoustic simulations, gravity and PML,

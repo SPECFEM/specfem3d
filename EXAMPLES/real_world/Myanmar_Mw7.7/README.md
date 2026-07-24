@@ -193,4 +193,5 @@ and create sounds:
 ## Reference solution
 
 For comparison, we provide a reference solution in folder `REF_SEIS/` with corresponding output files.
-The simulation was run in parallel using 16 MPI processes, each using a single Nvidia A100 GPU. The total simulated time is 1000 s with a time-to-solution of ~ 24 min 15 s.
+The simulation was run in parallel using 16 MPI processes, each using a single Nvidia A100 GPU.
+The total simulated time is 1000 s with a time-to-solution of ~ 44 min.

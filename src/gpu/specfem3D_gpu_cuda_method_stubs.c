@@ -632,7 +632,9 @@ void FC_FUNC_(prepare_constants_device,
                                         int* IS_COUPLE_WITH_INJECTION,
                                         int* UNDO_ATTENUATION_AND_OR_PML,
                                         int* PML_CONDITIONS,
-                                        int* USE_CUDA_AWARE_MPI_f) {}
+                                        int* USE_CUDA_AWARE_MPI_f,
+                                        realw* h_two_omega_rotation,
+                                        realw* h_b_two_omega_rotation) {}
 
 void FC_FUNC_(prepare_fields_acoustic_device,
               PREPARE_FIELDS_ACOUSTIC_DEVICE)(long* Mesh_pointer,
