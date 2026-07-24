@@ -45,7 +45,7 @@
  Creating global slice addressing
 
  Spatial distribution of slice numbers:
-    0 
+    0
  This is process            0
  There are            1  MPI processes
  Processes are numbered from 0 to            0
@@ -66,19 +66,19 @@
 
  region selected:
 
- latitude min =    0.0000000000000000     
- latitude max =    1000.0000000000000     
+ latitude min =    0.0000000000000000
+ latitude max =    1000.0000000000000
 
- longitude min =    0.0000000000000000     
- longitude max =    1000.0000000000000     
+ longitude min =    0.0000000000000000
+ longitude max =    1000.0000000000000
 
  this is given directly as UTM
 
- UTM X min =    0.0000000000000000     
- UTM X max =    1000.0000000000000     
+ UTM X min =    0.0000000000000000
+ UTM X max =    1000.0000000000000
 
- UTM Y min =    0.0000000000000000     
- UTM Y max =    1000.0000000000000     
+ UTM Y min =    0.0000000000000000
+ UTM Y max =    1000.0000000000000
 
  UTM size of model along X is    1.0000000000000000       km
  UTM size of model along Y is    1.0000000000000000       km
@@ -105,27 +105,27 @@
  number of interfaces:            1
 
  mesh:
-   origin UTM minimum x/y        (m) =    0.00000000       0.00000000    
-   origin UTM maximum x/y        (m) =    1000.00000       1000.00000    
+   origin UTM minimum x/y        (m) =    0.00000000       0.00000000
+   origin UTM maximum x/y        (m) =    1000.00000       1000.00000
 
  reading interface            1
    interface file   : interface.dat
 
    number of points x/y =            2           2
-   origin x/y     (m) =    0.00000000       0.00000000    
-   spacing x/y    (m) =    1000.00000       1000.00000    
+   origin x/y     (m) =    0.00000000       0.00000000
+   spacing x/y    (m) =    1000.00000       1000.00000
 
-   dimension x-direction (m) =    0.00000000     /   1000.00000    
-   dimension y-direction (m) =    0.00000000     /   1000.00000    
+   dimension x-direction (m) =    0.00000000     /   1000.00000
+   dimension y-direction (m) =    0.00000000     /   1000.00000
 
    total number of file points =            4  should be            4
    this point total is okay
 
-   original elevation min/max             =    0.00000000       0.00000000    
-   interpolated mesh elevation min/max    =    0.00000000       0.00000000    
+   original elevation min/max             =    0.00000000       0.00000000
+   interpolated mesh elevation min/max    =    0.00000000       0.00000000
 
-   interpolated mesh UTM minimum x/y (m) =    0.00000000       0.00000000    
-   interpolated mesh UTM maximum x/y (m) =    1000.00000       1000.00000    
+   interpolated mesh UTM minimum x/y (m) =    0.00000000       0.00000000
+   interpolated mesh UTM maximum x/y (m) =    1000.00000       1000.00000
 
 
  **************************
@@ -150,16 +150,16 @@
    creating mesh region            1  (regular mesh)
 
  mesh dimensions:
-   Xmin and Xmax of the model =    0.00000000       1000.00000    
-   Ymin and Ymax of the model =    0.00000000       1000.00000    
-   Zmin and Zmax of the model =   -2000.00000       0.00000000    
+   Xmin and Xmax of the model =    0.00000000       1000.00000
+   Ymin and Ymax of the model =    0.00000000       1000.00000
+   Zmin and Zmax of the model =   -2000.00000       0.00000000
 
  exact area =    1000000.00     (m^2)
             =    1.00000000     (km^2)
 
    Max element size =    100.000000     (m)
    Min element size =    100.000000     (m)
-   Max/min ratio =    1.00000000    
+   Max/min ratio =    1.00000000
 
 
  creating indirect addressing for unstructured mesh
@@ -169,18 +169,18 @@
 
  creating PML region
 
-   THICKNESS_OF_X_PML (in m) =    200.000000    
-   THICKNESS_OF_Y_PML (in m) =    200.000000    
-   THICKNESS_OF_Z_PML (in m) =    200.000000    
+   THICKNESS_OF_X_PML (in m) =    200.000000
+   THICKNESS_OF_Y_PML (in m) =    200.000000
+   THICKNESS_OF_Z_PML (in m) =    200.000000
 
    PML elements will be determined within mesh region and specified thicknesses
 
    Created a total of         1424  unique CPML elements
     (i.e.,    71.1999969     % of the mesh)
 
-   found PML elements: min/max element size along X sides (in m)      =    100.000000     /   100.000000    
-                       min/max element size along Y sides (in m)      =    100.000000     /   100.000000    
-                       min/max element size along Z sides (in m)      =    100.000000     /   100.000000    
+   found PML elements: min/max element size along X sides (in m)      =    100.000000     /   100.000000
+                       min/max element size along Y sides (in m)      =    100.000000     /   100.000000
+                       min/max element size along Z sides (in m)      =    100.000000     /   100.000000
 
    saving VTK file: ./DATABASES_MPI/proc000000_is_CPML.vtk
 
@@ -191,7 +191,7 @@
  **************************
 
  start computing the minimum and maximum edge size
- done processing 
+ done processing
 
  ------------
  mesh quality parameter definitions:
@@ -202,9 +202,9 @@
  diagonal aspect ratio: 1. perfect,  above 1. gives stretching factor
  ------------
 
- minimum length of an edge in the whole mesh (m) =    99.999999999999773     
+ minimum length of an edge in the whole mesh (m) =    99.999999999999773
 
- maximum length of an edge in the whole mesh (m) =    100.00000000000023     
+ maximum length of an edge in the whole mesh (m) =    100.00000000000023
 
  ***
  *** max equiangle skewness =    1.4135798584282298E-015  in element            7  of slice            0
@@ -212,20 +212,20 @@
 
  max deviation angle from a right angle (90 degrees) is therefore =    1.2722218725854067E-013
 
- worst angle in the mesh is therefore    89.999999999999872     
+ worst angle in the mesh is therefore    89.999999999999872
  or    90.000000000000128       degrees
 
- max edge aspect ratio =    1.0000000000000022     
+ max edge aspect ratio =    1.0000000000000022
 
- max diagonal aspect ratio =    1.0000000000000024     
+ max diagonal aspect ratio =    1.0000000000000024
 
  ***
  *** Maximum suggested time step for simulation =    0.00246676
  ***
- *** Max CFL stability condition of the time scheme (must be below about 0.55 or so) =   0.50000000000000000     
- *** computed using the maximum P wave velocity =    3500.0000000000000     
+ *** Max CFL stability condition of the time scheme (must be below about 0.55 or so) =   0.50000000000000000
+ *** computed using the maximum P wave velocity =    3500.0000000000000
  ***
- that value is below the upper CFL limit of   0.550000012    
+ that value is below the upper CFL limit of   0.550000012
  therefore the run should be stable
 
  creating histogram of mesh quality

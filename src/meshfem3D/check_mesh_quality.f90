@@ -190,7 +190,7 @@
       ispec_max_skewness_MPI = ispec_max_skewness
     endif
 
-    write(IMAIN,*) 'done processing '
+    write(IMAIN,*) 'done processing'
 
     write(IMAIN,*)
     write(IMAIN,*) '------------'

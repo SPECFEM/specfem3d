@@ -21,6 +21,19 @@ About the event:
   > wget https://earthquake.usgs.gov/product/finite-fault/us7000pn9s_1/us/1743603597922/CMTSOLUTION
   ```
 
+  Currently, the USGS produces the finite-fault CMTSOLUTION file with a North-East-Down ('NED'), i.e., Aki & Richards, convention.
+  However, SPECFEM3D by default expects the CMTs to be in a Up-South-East ('USE'), i.e., Harvard, convention.
+  We thus add the (optional) parameter `CMT_CONVENTION_FORMAT` to the `Par_file` to explicitly specify this USGS formatting:
+  ```
+  # CMT convention
+  # Specify moment-tensor(s) format given in CMTSOLUTION file, can be convention:
+  # - 'USE' for Up-South-East, i.e., Harvard (default)
+  # - 'NED' for North-East-Down, i.e., Aki & Richards
+  # - 'NWU' for North-West-Up, i.e., Stein & Wysession
+  CMT_CONVENTION_FORMAT           = NED
+  ```
+
+
 Given the size of this earthquake and its wide-spread affected area, we will use a lon/lat range of about 14 x 20 degrees.
 
 Our region of interest:

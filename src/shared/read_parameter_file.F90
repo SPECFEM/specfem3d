@@ -469,6 +469,10 @@
     call read_value_logical(USE_BINARY_SOURCE_FILE, 'USE_BINARY_SOURCE_FILE', ier); ier = 0
     if (.not. USE_CMT_AND_FORCE_SOURCE) USE_BINARY_SOURCE_FILE = .false.  ! binary file is disabled
 
+    ! (optional) CMT convention
+    call read_value_string(CMT_CONVENTION_FORMAT, 'CMT_CONVENTION_FORMAT', ier); ier = 0
+
+    ! STF
     call read_value_logical(USE_RICKER_TIME_FUNCTION, 'USE_RICKER_TIME_FUNCTION', ier)
     if (ier /= 0) then
       some_parameters_missing_from_Par_file = .true.
@@ -1423,6 +1427,32 @@
     endif
   endif
 
+  ! CMT convention
+  ! converts all string characters to upper case
+  irange = iachar('a') - iachar('A')
+  do i = 1,len_trim(CMT_CONVENTION_FORMAT)
+    if (lge(CMT_CONVENTION_FORMAT(i:i),'a') .and. lle(CMT_CONVENTION_FORMAT(i:i),'z')) then
+      CMT_CONVENTION_FORMAT(i:i) = achar(iachar(CMT_CONVENTION_FORMAT(i:i)) - irange)
+    endif
+  enddo
+  ! checks entry
+  select case (trim(CMT_CONVENTION_FORMAT))
+  ! default mesh model
+  case ('USE','HARVARD')
+    continue
+  case ('NED','AKI','AKI&RICHARDS')
+    continue
+  case ('NWU','STEIN','STEIN&WYSESSION')
+    continue
+  case default
+    print *,"Error: parameter CMT_CONVENTION_FORMAT '",CMT_CONVENTION_FORMAT,"' not recognized."
+    print *
+    print *,"By default, we assume a CMT format 'USE' (Up-South-East, i.e., Harvard)."
+    print *,"Please use 'NED' (North-East-Down, Aki & Richards) or 'NWU' (North-West-Up, Stein & Wysession) otherwise."
+    print *
+    stop 'Invalid CMT_CONVENTION_FORMAT parameter'
+  end select
+
   end subroutine read_compute_parameters
 
 
@@ -1530,6 +1560,8 @@
   ! sources
   call bcast_all_singlel(USE_SOURCES_RECEIVERS_Z)
   call bcast_all_singlel(USE_FORCE_POINT_SOURCE)
+  call bcast_all_string(CMT_CONVENTION_FORMAT)
+
   call bcast_all_singlel(USE_RICKER_TIME_FUNCTION)
   call bcast_all_singlel(USE_EXTERNAL_SOURCE_FILE)
   call bcast_all_singlel(PRINT_SOURCE_TIME_FUNCTION)

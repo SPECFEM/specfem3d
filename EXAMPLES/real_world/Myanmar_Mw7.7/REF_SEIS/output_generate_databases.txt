@@ -55,8 +55,8 @@
 
  number of MPI partition interfaces:           84
 
-   minimum memory used so far     :    288.788818     MB per process
-   minimum total memory requested :    1306.35767     MB per process
+   minimum memory used so far     :    288.7888     MB per process
+   minimum total memory requested :    1306.358     MB per process
 
  create regions:
 
@@ -70,8 +70,8 @@
      main process setup:
      nspec           =        80704
 
-     required minimum memory per process for model setup =    923.891846     MB
-                                                         =   0.902238131     GB
+     required minimum memory per process for model setup =    923.8918     MB
+                                                         =   0.9022381     GB
 
      separating regular/irregular element shapes
      nspec regular   =            0
@@ -92,14 +92,14 @@
 
 
    ...indexing global points
-      creating ibool indexing     : x min/max =   -499054.000     /   969517.500
+      creating ibool indexing     : x min/max =   -499054.0     /   969517.5
       creating indirect addressing: nglob =      5323729
       creating unique point locations
 
    ...preparing MPI interfaces
       number of interfaces        :            3
-      creating MPI indexing       : x min/max =   -499054.000     /   969517.500
-                                    tolerance =    1.4685715027251553E-004
+      creating MPI indexing       : x min/max =   -499054.0     /   969517.5
+                                    tolerance =   1.468571502725155E-004
 
       total MPI interface points:       663252
       total assembled MPI interface points:      658572
@@ -121,7 +121,7 @@
 
       number of tomographic models       =            1
       maximum number of data records     =        93126
-      size of required tomography arrays =    1.42098999     MB per process
+      size of required tomography arrays =    1.420990     MB per process
 
       material id:           -1
       file       : DATA/tomo_files/tomography_model.xyz
@@ -130,16 +130,16 @@
       data format: #x #y #z #vp #vs #density #Q_p #Q_s
       number of grid points = NX*NY*NZ:       93126
 
-               10  % - elapsed time:   20.0168037     s
-               20  % - elapsed time:   39.9305420     s
-               30  % - elapsed time:   59.9834213     s
-               40  % - elapsed time:   80.0341415     s
-               50  % - elapsed time:   100.089523     s
-               60  % - elapsed time:   120.007294     s
-               70  % - elapsed time:   140.077072     s
-               80  % - elapsed time:   160.063187     s
-               90  % - elapsed time:   180.120651     s
-              100  % - elapsed time:   200.146973     s
+               10  % - elapsed time:   22.53668     s
+               20  % - elapsed time:   45.04095     s
+               30  % - elapsed time:   67.75103     s
+               40  % - elapsed time:   90.44287     s
+               50  % - elapsed time:   113.1804     s
+               60  % - elapsed time:   135.8501     s
+               70  % - elapsed time:   158.6346     s
+               80  % - elapsed time:   181.3680     s
+               90  % - elapsed time:   204.1550     s
+              100  % - elapsed time:   226.9672     s
 
    ...detecting acoustic-elastic-poroelastic surfaces
       total acoustic elements   :           0
@@ -153,8 +153,8 @@
 
    ...element inner/outer separation
       for overlapping of communications with calculations:
-      percentage of   edge elements    2.51040649     %
-      percentage of volume elements    97.4895935     %
+      percentage of   edge elements    2.510406     %
+      percentage of volume elements    97.48959     %
 
 
    ...element mesh coloring
@@ -164,7 +164,8 @@
       no external binary model used
 
    ...creating mass matrix
-   ...creating ocean load mass matrix
+      elastic mass matrix
+      ocean load mass matrix
 
    ...setting up mesh adjacency
 
@@ -172,27 +173,27 @@
       total number of elements in this slice          =        80704
 
       maximum number of neighbors allowed             =          300
-      minimum array memory required per slice         =    92.6662598     (MB)
+      minimum array memory required per slice         =    92.66626     (MB)
 
       maximum number of elements per shared node      =           16
-      node-to-element array memory required per slice =    324.934631     (MB)
+      node-to-element array memory required per slice =    324.9346     (MB)
 
-               10  % - elapsed time:  0.617673874     s
-               20  % - elapsed time:   1.01634932     s
-               30  % - elapsed time:   1.51443529     s
-               40  % - elapsed time:   2.01561809     s
-               50  % - elapsed time:   2.51982045     s
-               60  % - elapsed time:   2.98825908     s
-               70  % - elapsed time:   3.23245740     s
-               80  % - elapsed time:   3.48961639     s
-               90  % - elapsed time:   3.57340956     s
-              100  % - elapsed time:   3.65575624     s
+               10  % - elapsed time:  0.4592943     s
+               20  % - elapsed time:  0.7484150     s
+               30  % - elapsed time:   1.093406     s
+               40  % - elapsed time:   1.438882     s
+               50  % - elapsed time:   1.784809     s
+               60  % - elapsed time:   2.108244     s
+               70  % - elapsed time:   2.298520     s
+               80  % - elapsed time:   2.482358     s
+               90  % - elapsed time:   2.564497     s
+              100  % - elapsed time:   2.645413     s
 
       maximum neighbors found per element =           37
           (maximum neighbor of neighbors) =          167
       total number of neighbors           =      9912696
 
-      Elapsed time for detection of neighbors in seconds =    3.98851252
+      Elapsed time for detection of neighbors in seconds =    3.120984
 
 
    ...saving mesh databases
@@ -209,49 +210,55 @@
 
  NSPEC_global_min =        80704
  NSPEC_global_max =        80704
- NSPEC_global_max / NSPEC_global_min imbalance =    1.00000000      =    0.00000000      %
+ NSPEC_global_max / NSPEC_global_min imbalance =    1.000000      =
+  0.0000000E+00  %
  NSPEC_global_sum =      1291264
 
  NGLOB_global_min =      5323729
  NGLOB_global_max =      5323729
- NGLOB_global_max / NGLOB_global_min imbalance =    1.00000000      =    0.00000000      %
+ NGLOB_global_max / NGLOB_global_min imbalance =    1.000000      =
+  0.0000000E+00  %
  NGLOB_global_sum =     85179664
 
- If you have elements of a single type (all acoustic, all elastic, all poroelastic, and without CPML)
- in the whole mesh, then there should be no significant imbalance in the above numbers.
- Otherwise, it is normal to have imbalance in elements and points because the domain decomposer
- compensates for the different cost of different elements by partitioning them unevenly among processes.
+ If you have elements of a single type (all acoustic, all elastic, all poroelast
+ ic, and without CPML)
+ in the whole mesh, then there should be no significant imbalance in the above n
+ umbers.
+ Otherwise, it is normal to have imbalance in elements and points because the do
+ main decomposer
+ compensates for the different cost of different elements by partitioning them u
+ nevenly among processes.
  ********
 
 
  ********
- Model: P   velocity min,max =    1940.67395       8576.67773
- Model: S   velocity min,max =    513.437500       4890.29541
+ Model: P   velocity min,max =    1940.674       8576.678
+ Model: S   velocity min,max =    513.4375       4890.295
 
- Model: Poisson's ratio min,max =   0.142332003      0.463092238
+ Model: Poisson's ratio min,max =   0.1423319      0.4630922
  ********
 
  *********************************************
  *** Verification of simulation parameters ***
  *********************************************
 
- *** Xmin and Xmax of the model =   -499054.000       969517.500
- *** Ymin and Ymax of the model =    1197631.88       3406621.00
- *** Zmin and Zmax of the model =   -150000.000       6764.55225
+ *** Xmin and Xmax of the model =   -499054.0       969517.5
+ *** Ymin and Ymax of the model =    1197632.       3406621.
+ *** Zmin and Zmax of the model =   -150000.0       6764.552
 
- *** Max GLL point distance =    45191.5000
- *** Min GLL point distance =    209.578613
- *** Max/min ratio =    215.630310
+ *** Max GLL point distance =    45191.50
+ *** Min GLL point distance =    209.5786
+ *** Max/min ratio =    215.6303
 
- *** Max element size =    138062.000
- *** Min element size =    1213.72949
- *** Max/min ratio =    113.750221
+ *** Max element size =    138062.0
+ *** Min element size =    1213.729
+ *** Max/min ratio =    113.7502
 
- *** Minimum period resolved =    41.2253227     (s)
- ***          (as frequency) =    2.42569353E-02 (Hz)
- *** Maximum suggested time step =    2.54999995E-02
+ *** Minimum period resolved =    41.22532     (s)
+ ***          (as frequency) =   2.4256935E-02 (Hz)
+ *** Maximum suggested time step =   2.5500000E-02
 
- Elapsed time for checking mesh resolution in seconds =   0.11421228500000780
+ Elapsed time for checking mesh resolution in seconds =   0.120278329000001
 
    ...saving attenuation databases
 
@@ -260,21 +267,24 @@
    based on a series of Zener standard linear solids (SLS).
 
    Approximation is performed in the following frequency band:
-   Reference frequency requested by the user (Hz):   1.00000000      period (s):   1.00000000
+   Reference frequency requested by the user (Hz):   1.000000      period (s):
+   1.000000
 
-   Frequency band        min/max (Hz):   2.00000009E-03   1.00000000
-   Period band           min/max (s) :   1.00000000       500.000000
-   Logarithmic central frequency (Hz):   4.47213612E-02  period (s):   22.3606796
+   Frequency band        min/max (Hz):  2.0000001E-03   1.000000
+   Period band           min/max (s) :   1.000000       500.0000
+   Logarithmic central frequency (Hz):  4.4721361E-02  period (s):
+   22.36068
 
    Using full attenuation with both Q_kappa and Q_mu.
 
-   Q_mu min/max           :    31.0912514       329.318146
-   Q_kappa min/max        :    9000.00000       9000.00000
+   Q_mu min/max           :    31.09125       329.3181
+   Q_kappa min/max        :    9000.000       9000.000
 
 
  mesh regions done
 
- min and max of elevation (i.e. height of the upper surface of the mesh) included in mesh in m is   -3572.5408171601894          6764.5520790027676
+ min and max of elevation (i.e. height of the upper surface of the mesh) include
+ d in mesh in m is   -3572.54081716018          6764.55207900281
 
 
  done mesh setup
@@ -304,7 +314,7 @@
    partition           15        has      4761536  load units
 
    load per partition: min/max   =      4761536     4761536
-   load per partition: imbalance =    0.00000000     %
+   load per partition: imbalance =   0.0000000E+00 %
                        (0% being totally balanced, 100% being unbalanced)
 
  total number of elements in mesh slice 0:        80704
@@ -313,18 +323,22 @@
  total number of points in mesh slice 0:      5323729
 
  total number of elements in entire mesh:      1291264
- approximate total number of points in entire mesh (with duplicates on MPI edges):              85179664
- approximate total number of DOFs   in entire mesh (with duplicates on MPI edges):             255538992
+ approximate total number of points in entire mesh (with duplicates on MPI edges
+ ):               85179664
+ approximate total number of DOFs   in entire mesh (with duplicates on MPI edges
+ ):              255538992
 
- total number of time steps in the solver will be:        40000
+ total number of time steps in the solver will be:        50000
 
  using single precision for the calculations
 
- smallest and largest possible floating-point numbers are:    1.17549435E-38   3.40282347E+38
+ smallest and largest possible floating-point numbers are:   1.1754944E-38
+  3.4028235E+38
 
 
- Elapsed time for mesh generation and buffer creation in seconds =    216.767990
- Elapsed time for mesh generation and buffer creation in hh:mm:ss =    0 h 03 m 36 s
+ Elapsed time for mesh generation and buffer creation in seconds =
+   249.1607
+ Elapsed time for mesh generation and buffer creation in hh:mm:ss =    0 h 04 m 09 s
 
  End of mesh generation
 

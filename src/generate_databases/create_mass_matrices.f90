@@ -144,7 +144,7 @@
   if (APPROXIMATE_OCEAN_LOAD .and. ELASTIC_SIMULATION) then
     ! user info
     if (myrank == 0) then
-      write(IMAIN,*) '     ocean load mass matrix '
+      write(IMAIN,*) '     ocean load mass matrix'
     endif
 
     ! adding ocean load mass matrix at ocean bottom
