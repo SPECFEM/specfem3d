@@ -328,6 +328,22 @@ __global__ void compute_element_strain_cudakernel(int* ispec_is_elastic,
 
 
 //
+// src/gpu/kernels/compute_forces_coriolis_cuda_kernel.cu
+//
+
+__global__ void compute_forces_coriolis_device(realw_p accel,
+                                               realw_const_p veloc,
+                                               realw_const_p displ,
+                                               int size,
+                                               realw_const_p rmassx,
+                                               realw_const_p rmassy,
+                                               realw_const_p rmassz,
+                                               realw two_omegax,
+                                               realw two_omegay,
+                                               realw two_omegaz) ;
+
+
+//
 // src/gpu/kernels/compute_kernels_acoustic_kernel.cu
 //
 

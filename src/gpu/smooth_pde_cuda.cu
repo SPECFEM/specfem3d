@@ -20,21 +20,28 @@ void FC_FUNC_(prepare_smooth_pde_gpu,
 
   gpuCreateCopy_todevice_realw((void**)&sp->d_dat_smooth_glob, dat_smooth_glob, mp->NGLOB_AB);
   gpuMalloc_field((void**)&sp->d_ddat_smooth_glob, mp->NGLOB_AB);
+
   // initializes values to zero
   gpuMemset_realw(sp->d_ddat_smooth_glob,mp->NGLOB_AB,0);
+
   sp->size_mpi_buffer_smooth = (mp->num_interfaces_ext_mesh) * (mp->max_nibool_interfaces_ext_mesh);
   gpuMalloc_field((void**)&sp->d_send_buffer, sp->size_mpi_buffer_smooth);
   gpuCreateCopy_todevice_realw((void**)&sp->d_rvol, rvol, mp->NGLOB_AB);
+
   sp->num_phase_ispec = *num_phase_ispec;
   gpuCreateCopy_todevice_int((void**)&sp->d_phase_ispec_inner, phase_ispec_inner, sp->num_phase_ispec*2);
+
   sp->NSPEC_CPML = *NSPEC_CPML;
   if (sp->NSPEC_CPML > 0) {
     gpuCreateCopy_todevice_int((void**)&sp->d_CPML_to_spec, CPML_to_spec, sp->NSPEC_CPML);
   }
   sp->cv = *cv;
   sp->ch = *ch;
+
   GPU_ERROR_CHECKING("prepare_smooth_pde_gpu");
 }
+
+/* ----------------------------------------------------------------------------------------------- */
 
 extern EXTERN_LANG
 void FC_FUNC_(compute_update_element_smooth_pde_gpu,
@@ -103,8 +110,9 @@ void FC_FUNC_(compute_update_element_smooth_pde_gpu,
 #endif
 
   GPU_ERROR_CHECKING("compute_update_element_smooth_pde_gpu");
-
 }
+
+/* ----------------------------------------------------------------------------------------------- */
 
 extern EXTERN_LANG
 void FC_FUNC_(transfer_boun_dat_smooth_pde_from_device,
@@ -155,6 +163,8 @@ void FC_FUNC_(transfer_boun_dat_smooth_pde_from_device,
 
   GPU_ERROR_CHECKING("transfer_boun_dat_smooth_pde_from_device");
 }
+
+/* ----------------------------------------------------------------------------------------------- */
 
 extern EXTERN_LANG
 void FC_FUNC_(transfer_asmbl_dat_smooth_pde_from_device,
@@ -210,6 +220,8 @@ void FC_FUNC_(transfer_asmbl_dat_smooth_pde_from_device,
   GPU_ERROR_CHECKING("transfer_asmbl_dat_smooth_pde_from_device");
 }
 
+/* ----------------------------------------------------------------------------------------------- */
+
 extern EXTERN_LANG
 void FC_FUNC_(kernel_3_smooth_pde_cuda,
               KERNEL_3_SMOOTH_PDE_CUDA)(long * Mesh_pointer,
@@ -248,6 +260,8 @@ void FC_FUNC_(kernel_3_smooth_pde_cuda,
 
   GPU_ERROR_CHECKING("kernel_3_smooth_pde_cuda");
 }
+
+/* ----------------------------------------------------------------------------------------------- */
 
 extern EXTERN_LANG
 void FC_FUNC_(update_dat_smooth_pde_cuda,
@@ -290,6 +304,8 @@ void FC_FUNC_(update_dat_smooth_pde_cuda,
   GPU_ERROR_CHECKING("update_dat_smooth_pde_cuda");
 }
 
+/* ----------------------------------------------------------------------------------------------- */
+
 extern EXTERN_LANG
 void FC_FUNC_(zero_pml_smooth_pde_cuda,
               ZERO_PML_SMOOTH_PDE_CUDA)(long * Mesh_pointer,
@@ -329,6 +345,8 @@ void FC_FUNC_(zero_pml_smooth_pde_cuda,
 
   GPU_ERROR_CHECKING("zero_pml_smooth_pde_cuda");
 }
+
+/* ----------------------------------------------------------------------------------------------- */
 
 extern EXTERN_LANG
 void FC_FUNC_(get_norm_smooth_pde_from_device,
@@ -415,6 +433,8 @@ void FC_FUNC_(get_norm_smooth_pde_from_device,
   GPU_ERROR_CHECKING("get_norm_smooth_pde_from_device");
 }
 
+/* ----------------------------------------------------------------------------------------------- */
+
 extern EXTERN_LANG
 void FC_FUNC_(transfer_dat_smooth_pde_from_device,
               TRANSFER_DAT_SMOOTH_PDE_FROM_DEVICE)(long * Mesh_pointer,
@@ -429,5 +449,4 @@ void FC_FUNC_(transfer_dat_smooth_pde_from_device,
   gpuMemcpy_tohost_realw(dat_smooth_glob, sp->d_dat_smooth_glob, mp->NGLOB_AB);
 
   GPU_ERROR_CHECKING("transfer_dat_smooth_pde_from_device");
-
 }

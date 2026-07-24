@@ -1305,10 +1305,6 @@ void FC_FUNC_(compute_forces_viscoelastic_rotation_cuda,
     exit_on_error("Error invalid FORWARD_OR_ADJOINT in compute_forces_viscoelastic_rotation_cuda() routine");
   }
 
-  // not implemented yet
-  exit_on_error("Coriolis force on GPU not implemented yet.");
-/*
-
   int size = mp->NGLOB_AB;
 
   int blocksize = BLOCKSIZE_KERNEL3;
@@ -1322,7 +1318,7 @@ void FC_FUNC_(compute_forces_viscoelastic_rotation_cuda,
 
   // sets gpu arrays
   realw *displ, *veloc, *accel;
-  realw omegax,omegay,omegaz;
+  realw two_omegax,two_omegay,two_omegaz;
   if (*FORWARD_OR_ADJOINT == 1) {
     displ = mp->d_displ;
     veloc = mp->d_veloc;
@@ -1340,17 +1336,17 @@ void FC_FUNC_(compute_forces_viscoelastic_rotation_cuda,
     two_omegaz = mp->b_two_omega_rotation[2];
   }
 
- // updates accel
+  // updates accel
 #ifdef USE_CUDA
- if (run_cuda){
-   compute_forces_coriolis_device<<<grid,threads,0,mp->compute_stream>>>(accel,
-                                                                         veloc,
-                                                                         displ,
-                                                                         size,
-                                                                         mp->d_rmassx,
-                                                                         mp->d_rmassy,
-                                                                         mp->d_rmassz
-                                                                         omegax,omegay,omegaz);
+  if (run_cuda){
+    compute_forces_coriolis_device<<<grid,threads,0,mp->compute_stream>>>(accel,
+                                                                          veloc,
+                                                                          displ,
+                                                                          size,
+                                                                          mp->d_rmassx,
+                                                                          mp->d_rmassy,
+                                                                          mp->d_rmassz,
+                                                                          two_omegax,two_omegay,two_omegaz);
   }
 #endif
 #ifdef USE_HIP
@@ -1363,13 +1359,11 @@ void FC_FUNC_(compute_forces_viscoelastic_rotation_cuda,
                                                        mp->d_rmassx,
                                                        mp->d_rmassy,
                                                        mp->d_rmassz,
-                                                       omegax,omegay,omegaz);
+                                                       two_omegax,two_omegay,two_omegaz);
   }
 #endif
-*/
+
 
   //printf("checking updatedispl_kernel launch...with %dx%d blocks\n",num_blocks_x,num_blocks_y);
   GPU_ERROR_CHECKING("after Coriolis");
 }
-
-

@@ -27,4 +27,4 @@
 !=====================================================================
 */
 
-#include "smooth_pde_kernels.cu"
+#include "compute_forces_coriolis_cuda_kernel.cu"
