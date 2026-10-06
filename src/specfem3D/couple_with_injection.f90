@@ -1191,8 +1191,14 @@
           bot_vec(3) = C_3
           bot_vec(4) = coeff(2,ii)
         else
+          ! incident SV: the reflected SV-down amplitude coeff(1,ii) belongs in
+          ! bot_vec(2) (down-going SV mode, column 2), matching the P branch and
+          ! the columns used by the free-surface 2x2 solve above. Placing it in
+          ! bot_vec(3) (the incident P-up slot) left the reflected SV-down mode
+          ! (bot_vec(2)) zero and violated the free-surface zero-traction
+          ! condition for incident SV.
           bot_vec(1) = C_1
-          bot_vec(3) = coeff(1,ii)
+          bot_vec(2) = coeff(1,ii)
           bot_vec(4) = coeff(2,ii)
         endif
 
