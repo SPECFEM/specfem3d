@@ -32,6 +32,9 @@
 
   use generate_databases_par, only: NGNOD,NPROC
 
+  ! double precision GLL point locations (per element)
+  use generate_databases_par, only: xstore,ystore,zstore
+
   ! MPI interfaces
   use generate_databases_par, only: num_interfaces_ext_mesh,my_neighbors_ext_mesh, &
     nibool_interfaces_ext_mesh,max_interface_size_ext_mesh,ibool_interfaces_ext_mesh
@@ -69,6 +72,9 @@
   integer,dimension(:),allocatable :: test_flag_i
   real(kind=CUSTOM_REAL), dimension(:),allocatable :: test_flag_cr
   integer, dimension(:,:), allocatable :: ibool_interfaces_dummy
+
+  ! double precision locations of global points, used for sorting
+  double precision, dimension(:), allocatable :: xglob_dp,yglob_dp,zglob_dp
 
   ! debugging
   integer, dimension(:), allocatable :: iglob_tmp
@@ -141,6 +147,34 @@
     enddo
   endif
 
+  ! double precision locations of global points
+  !
+  ! note: the interface points must be sorted in exactly the same order on
+  !       both partitions sharing an interface. sorting with the
+  !       CUSTOM_REAL locations (x/y/zstore_unique) fails for single
+  !       precision runs when coordinates are large compared to the mesh
+  !       size (e.g., UTM coordinates ~ 4.6e6 m have a single precision
+  !       resolution of ~0.5 m, much larger than SMALLVALTOL). the same
+  !       point can then round to different values on the two partitions,
+  !       which changes the lexicographic segments and pairs up physically
+  !       different points across the MPI interface (see issues #1866/#1880).
+  !       we thus sort using the double precision GLL point locations.
+  allocate(xglob_dp(nglob),yglob_dp(nglob),zglob_dp(nglob),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating xglob_dp')
+  xglob_dp(:) = 0.d0; yglob_dp(:) = 0.d0; zglob_dp(:) = 0.d0
+  do ispec = 1, nspec
+    do k = 1, NGLLZ
+      do j = 1, NGLLY
+        do i = 1, NGLLX
+          iglob = ibool(i,j,k,ispec)
+          xglob_dp(iglob) = xstore(i,j,k,ispec)
+          yglob_dp(iglob) = ystore(i,j,k,ispec)
+          zglob_dp(iglob) = zstore(i,j,k,ispec)
+        enddo
+      enddo
+    enddo
+  enddo
+
   ! sorts ibool comm buffers lexicographically for all MPI interfaces
   num_points1 = 0
   num_points2 = 0
@@ -177,9 +211,9 @@
     do ilocnum = 1, num_interface_points
       iglob = ibool_interfaces_ext_mesh(ilocnum,iinterface)
       ! we will use double precision locations to find/sort MPI points
-      xp(ilocnum) = dble(xstore_unique(iglob))
-      yp(ilocnum) = dble(ystore_unique(iglob))
-      zp(ilocnum) = dble(zstore_unique(iglob))
+      xp(ilocnum) = xglob_dp(iglob)
+      yp(ilocnum) = yglob_dp(iglob)
+      zp(ilocnum) = zglob_dp(iglob)
     enddo
 
     ! sorts (lexicographically?) ibool_interfaces_ext_mesh and updates value
@@ -212,6 +246,8 @@
     deallocate(reorder_interface_ext_mesh)
     deallocate(ninseg_ext_mesh)
   enddo
+
+  deallocate(xglob_dp,yglob_dp,zglob_dp)
 
   ! outputs total number of MPI interface points
   call sum_all_i(num_points2,ilocnum)
