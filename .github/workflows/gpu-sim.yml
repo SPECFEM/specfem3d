@@ -1,0 +1,83 @@
+name: GPU Simulator
+
+# Optional, non-required check. The hosted runners have no GPU, so CI.yml only
+# compiles the CUDA build ("Test on linux w/ CUDA"). This runs the same GPU
+# kernel test as "Test 5b - kernel homogeneous acoustic GPU HIP" (which uses the
+# ROCm HIP-CPU emulation) on the CUDA build instead, on a simulated NVIDIA H100
+# (https://github.com/pantheongpu/pantheonsim). A simulator cannot reproduce
+# hardware-specific behavior or timing, so it complements real-GPU testing and
+# does not replace it.
+
+on:
+  workflow_dispatch:
+  pull_request:
+    branches: [ devel ]
+    paths:
+      - "src/**"
+      - "setup/**"
+      - "configure"
+      - "configure.ac"
+      - "flags.guess"
+      - "Makefile.in"
+      - "EXAMPLES/applications/homogeneous_acoustic/**"
+      - "utils/scripts/change_simulation_type.pl"
+      - "utils/adjoint_sources/traveltime/**"
+      - ".github/scripts/run_tests.sh"
+      - ".github/workflows/gpu-sim.yml"
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  linuxTest_5b_cuda:
+    name: Kernel homogeneous acoustic GPU CUDA on simulated H100
+    runs-on: ubuntu-24.04
+    timeout-minutes: 150
+
+    steps:
+    - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      with:
+        persist-credentials: false
+
+    - name: Set up the simulated GPU and CUDA toolkit
+      uses: pantheongpu/setup-pantheonsim@ca87fe3143b29166822b923d6050945c5179408c # v0.1.5
+      with:
+        gpu: nvidia/h100
+        cuda-toolkit: "13.0"
+
+    - name: Install packages
+      run: |
+        sudo apt-get update
+        sudo apt-get install -yq --no-install-recommends gfortran g++ openmpi-bin libopenmpi-dev
+
+    # --with-cuda=cuda12 selects GENCODE_90 (sm_90 plus compute_90 PTX, Hopper),
+    # which the simulated H100 runs; the Makefile already links --cudart=shared.
+    # FLAGS_CHECK is the gfortran default from flags.guess without
+    # -ffpe-trap=invalid,zero,overflow: the simulator runs device code on host
+    # threads, which inherit the trap mask, so an inf/NaN in a kernel would
+    # raise SIGFPE there (it does not on a real GPU).
+    # IMAIN is sent to stdout as in run_build.sh, for the kernel value check.
+    - name: configure
+      run: |
+        ./configure --with-cuda=cuda12 \
+          CUDA_LIB=/usr/local/cuda-13.0/lib64 CUDA_INC=/usr/local/cuda-13.0/include \
+          FLAGS_CHECK="-std=f2008 -fimplicit-none -fmax-errors=10 -pedantic -pedantic-errors -Waliasing -Wampersand -Wcharacter-truncation -Wline-truncation -Wsurprising -Wno-tabs -Wunderflow -Wunused -O3 -finline-functions"
+        sed -i "s:IMAIN .*:IMAIN = ISTANDARD_OUTPUT:" setup/constants.h
+
+    # only the executables run_this_example_kernel.sh uses
+    - name: make
+      run: make -j3 xdecompose_mesh xgenerate_databases xspecfem3D xcombine_vol_data_vtk
+
+    # run_tests.sh sets NPROC = 1 for this example, turns on GPU_MODE, and
+    # checks the rho and kappa kernel maxima against REF_KERNEL/ (0.1%), for the
+    # plain run and again with UNDO_ATTENUATION_AND_OR_PML.
+    - name: Run test kernel w/ GPU
+      env:
+        TESTDIR: EXAMPLES/applications/homogeneous_acoustic/
+        RUN_KERNEL: true
+        GPU: true
+      run: vgpu run --gpu nvidia/h100 bash ./.github/scripts/run_tests.sh
